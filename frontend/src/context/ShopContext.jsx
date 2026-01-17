@@ -12,77 +12,66 @@ const ShopContextProvider = (props) => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL
     const [search, setSearch] = useState('');
     const [showSearch, setShowSearch] = useState(false);
-    const [cartItems, setCartItems] = useState({}); 
     const [products, setProducts] = useState([]);
-    const [token, setToken] = useState('')
+    const [token, setToken] = useState('');
     const navigate = useNavigate();
 
-    // 1. PERSISTENCE: Load cart from local storage on initial startup
-    useEffect(() => {
+    // 1. INITIALIZATION: Load from localStorage strictly
+    const [cartItems, setCartItems] = useState(() => {
         const savedCart = localStorage.getItem('stampCart');
-        if (savedCart) {
-            try {
-                setCartItems(JSON.parse(savedCart));
-            } catch (error) {
-                console.error("Failed to parse saved cart", error);
+        try {
+            const parsed = savedCart ? JSON.parse(savedCart) : {};
+            const sanitized = {};
+            for (const key in parsed) {
+                if (Number(parsed[key]) > 0) sanitized[key] = Number(parsed[key]);
             }
+            return sanitized;
+        } catch (error) {
+            return {};
         }
-    }, []);
+    });
 
-    // 2. PERSISTENCE: Save cart to local storage whenever it changes
+    // 2. PERSISTENCE: Save to localStorage
     useEffect(() => {
         localStorage.setItem('stampCart', JSON.stringify(cartItems));
     }, [cartItems]);
 
     const addToCart = async (itemId) => {
         let cartData = structuredClone(cartItems);
-
-        if (cartData[itemId]) {
-            cartData[itemId] += 1;
-        } else {
-            cartData[itemId] = 1;
-        }
+        cartData[itemId] = (Number(cartData[itemId]) || 0) + 1;
         
         setCartItems(cartData);
-
-        // TRIGGER TOAST IMMEDIATELY: Now guests see this too
-        toast.success("Added to Collection")
+        toast.success("Added to Collection");
 
         if (token) {
             try {
                 await axios.post(backendUrl + '/api/cart/add', { itemId }, { headers: { token } })
             } catch (error) {
-                console.log(error)
-                toast.error(error.message)
+                console.log(error);
+                toast.error(error.message);
             }
         }
     }
 
     const getCartCount = () => {
-        let totalCount = 0;
-        for (const itemId in cartItems) {
-            try {
-                if (cartItems[itemId] > 0) {
-                    totalCount += cartItems[itemId];
-                }
-            } catch (error) {
-                console.error("Error calculating cart count", error)
-            }
-        }
-        return totalCount;
+        return Object.values(cartItems).reduce((total, qty) => total + Number(qty), 0);
     }
 
     const updateQuantity = async (itemId, quantity) => {
-        let cartData = structuredClone(cartItems);
-        cartData[itemId] = quantity;
-        setCartItems(cartData)
+        const qty = Number(quantity);
+        setCartItems(prev => {
+            const newData = { ...prev };
+            if (qty <= 0) delete newData[itemId];
+            else newData[itemId] = qty;
+            return newData;
+        });
 
         if (token) {
             try {
-                await axios.post(backendUrl + '/api/cart/update', { itemId, quantity }, { headers: { token } })
+                await axios.post(backendUrl + '/api/cart/update', { itemId, quantity: qty }, { headers: { token } })
             } catch (error) {
-                console.log(error)
-                toast.error(error.message)
+                console.log(error);
+                toast.error(error.message);
             }
         }
     }
@@ -90,13 +79,10 @@ const ShopContextProvider = (props) => {
     const getCartAmount = () => {
         let totalAmount = 0;
         for (const itemId in cartItems) {
-            let itemInfo = products.find((product) => product._id === itemId);
-            try {
-                if (itemInfo && cartItems[itemId] > 0) {
-                    totalAmount += itemInfo.price * cartItems[itemId];
-                }
-            } catch (error) {
-                console.error("Error calculating cart amount", error)
+            const itemInfo = products.find((product) => product._id === itemId);
+            const quantity = Number(cartItems[itemId]);
+            if (itemInfo && quantity > 0) {
+                totalAmount += itemInfo.price * quantity;
             }
         }
         return totalAmount;
@@ -116,33 +102,16 @@ const ShopContextProvider = (props) => {
         }
     }
 
-    // 3. MERGE LOGIC: Combine guest cart items with user database items
+    // 3. FIXED MERGE LOGIC: Prevent the "Refresh Increase"
     const getUserCart = async (userToken) => {
         try {
             const response = await axios.post(backendUrl + '/api/cart/get', {}, { headers: { token: userToken } })
             if (response.data.success) {
                 const dbCart = response.data.cartData || {};
-                const currentLocalCart = JSON.parse(localStorage.getItem('stampCart')) || {};
-
-                let mergedCart = { ...dbCart };
-
-                // Merge logic
-                for (const itemId in currentLocalCart) {
-                    if (currentLocalCart[itemId] > 0) {
-                        if (mergedCart[itemId]) {
-                            mergedCart[itemId] += currentLocalCart[itemId];
-                        } else {
-                            mergedCart[itemId] = currentLocalCart[itemId];
-                        }
-                    }
-                }
-
-                setCartItems(mergedCart);
-
-                // Sync the merged cart to the database
-                for (const itemId in mergedCart) {
-                    await axios.post(backendUrl + '/api/cart/update', { itemId, quantity: mergedCart[itemId] }, { headers: { token: userToken } })
-                }
+                
+                // We ONLY merge if there is a guest cart in localStorage that hasn't been synced yet
+                // Otherwise, we just take the DB cart as the source of truth
+                setCartItems(dbCart);
             }
         } catch (error) {
             console.log(error)
@@ -153,13 +122,14 @@ const ShopContextProvider = (props) => {
         getProductsData()
     }, [])
 
+    // 4. AUTH INITIALIZATION: Only fetch once
     useEffect(() => {
         const storedToken = localStorage.getItem('token');
-        if (storedToken) {
+        if (storedToken && !token) {
             setToken(storedToken);
             getUserCart(storedToken);
         }
-    }, []) // Only run once on mount
+    }, []) 
 
     const value = {
         products, currency, delivery_fee,

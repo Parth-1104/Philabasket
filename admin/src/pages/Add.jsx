@@ -67,10 +67,27 @@ const Add = ({ token }) => {
   }
 
   // Placeholder for CSV handler
-  const onCsvUploadHandler = (e) => {
+  const onCsvUploadHandler = async(e) => {
     const file = e.target.files[0];
-    toast.info(`Processing ${file.name}... (Implement backend CSV route next)`);
-    // Logic: Send file to a new route: /api/product/bulk-add
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+        const response = await axios.post(backendUrl + "/api/product/bulk-add", formData, { 
+            headers: { token } 
+        });
+
+        if (response.data.success) {
+            toast.success(response.data.message);
+            setUploadMode('manual'); // Switch back to manual mode after success
+        } else {
+            toast.error(response.data.message);
+        }
+    } catch (error) {
+        toast.error("Upload failed: " + error.message);
+    }
   }
 
   return (

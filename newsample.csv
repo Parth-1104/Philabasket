@@ -1,0 +1,3 @@
+name,description,price,category,year,country,condition,stock,bestseller
+"Penny Black","The world's first adhesive postage stamp.","450","[""Rare"",""Historical""]",1840,"Great Britain","Used",2,true
+"Inverted Jenny","A famous airmail error stamp.","125000","[""Rare"",""Airmail""]",1918,"USA","Fine",1,false

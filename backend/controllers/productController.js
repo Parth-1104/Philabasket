@@ -1,5 +1,136 @@
 import { v2 as cloudinary } from "cloudinary"
 import productModel from "../models/productModel.js"
+import fs from 'fs';
+import csv from 'csv-parser';
+
+
+const bulkAddStamps = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.json({ success: false, message: "Please upload a CSV file" });
+        }
+
+        const stamps = [];
+        const filePath = req.file.path;
+
+        // Parse the CSV file
+        fs.createReadStream(filePath)
+            .pipe(csv())
+            .on('data', (row) => {
+                try {
+                    // SAFER PARSING: Handle potential malformed JSON in category
+                    let parsedCategory = [];
+                    if (row.category) {
+                        const cleanedCategory = row.category.trim();
+                        // Check if it looks like a JSON array, otherwise split by comma
+                        if (cleanedCategory.startsWith('[') && cleanedCategory.endsWith(']')) {
+                            parsedCategory = JSON.parse(cleanedCategory);
+                        } else {
+                            parsedCategory = cleanedCategory.split(',').map(c => c.trim());
+                        }
+                    }
+
+                    stamps.push({
+                        name: row.name,
+                        description: row.description,
+                        price: Number(row.price),
+                        category: parsedCategory,
+                        year: Number(row.year),
+                        country: row.country,
+                        condition: row.condition,
+                        stock: Number(row.stock) || 1,
+                        bestseller: row.bestseller === 'true' || row.bestseller === true,
+                        image: [], 
+                        date: Date.now()
+                    });
+                } catch (rowError) {
+                    console.error("Error processing row:", row, rowError.message);
+                    // We skip the bad row instead of crashing the whole process
+                }
+            })
+            .on('end', async () => {
+                try {
+                    if (stamps.length === 0) {
+                        fs.unlinkSync(filePath);
+                        return res.json({ success: false, message: "No valid data found in CSV" });
+                    }
+
+                    // Bulk insert into MongoDB
+                    await productModel.insertMany(stamps);
+                    
+                    // Cleanup
+                    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                    
+                    res.json({ success: true, message: `${stamps.length} Stamps added successfully` });
+                } catch (err) {
+                    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                    res.json({ success: false, message: "Database Error: " + err.message });
+                }
+            })
+            .on('error', (error) => {
+                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                res.json({ success: false, message: "CSV Parsing Error: " + error.message });
+            });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+const updateProductImages = async (req, res) => {
+    try {
+        const { id } = req.body;
+
+        if (!id) {
+            return res.json({ success: false, message: "Product ID is required" });
+        }
+
+        const { image1, image2, image3, image4 } = req.files;
+        const images = [image1, image2, image3, image4]
+            .map(item => item && item[0])
+            .filter(item => item !== undefined);
+
+        if (images.length === 0) {
+            return res.json({ success: false, message: "No images provided" });
+        }
+
+        let imagesUrl = await Promise.all(
+            images.map(async (item) => {
+                let result = await cloudinary.uploader.upload(item.path, { resource_type: 'image' });
+                // Clean up local file after upload
+                if (fs.existsSync(item.path)) fs.unlinkSync(item.path);
+                return result.secure_url;
+            })
+        );
+
+        const updatedProduct = await productModel.findByIdAndUpdate(
+            id, 
+            { $set: { image: imagesUrl } }, 
+            { new: true }
+        );
+
+        if (!updatedProduct) {
+            return res.json({ success: false, message: "Product not found" });
+        }
+
+        res.json({ success: true, message: "Images updated successfully", image: imagesUrl[0] });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+
+
+
+
+
+
+
+
+
 
 // function for add product
 const addProduct = async (req, res) => {
@@ -89,4 +220,4 @@ const singleProduct = async (req, res) => {
     }
 }
 
-export { listProducts, addProduct, removeProduct, singleProduct }
+export { listProducts, addProduct, removeProduct, singleProduct ,bulkAddStamps,updateProductImages}
