@@ -12,30 +12,45 @@ const ShopContextProvider = (props) => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL
     const [search, setSearch] = useState('');
     const [showSearch, setShowSearch] = useState(false);
-    const [cartItems, setCartItems] = useState({}); // Now: { productId: quantity }
+    const [cartItems, setCartItems] = useState({}); 
     const [products, setProducts] = useState([]);
     const [token, setToken] = useState('')
     const navigate = useNavigate();
 
-    // UPDATED: Removed size validation and simplified object structure
-    const addToCart = async (itemId) => {
+    // 1. PERSISTENCE: Load cart from local storage on initial startup
+    useEffect(() => {
+        const savedCart = localStorage.getItem('stampCart');
+        if (savedCart) {
+            try {
+                setCartItems(JSON.parse(savedCart));
+            } catch (error) {
+                console.error("Failed to parse saved cart", error);
+            }
+        }
+    }, []);
 
+    // 2. PERSISTENCE: Save cart to local storage whenever it changes
+    useEffect(() => {
+        localStorage.setItem('stampCart', JSON.stringify(cartItems));
+    }, [cartItems]);
+
+    const addToCart = async (itemId) => {
         let cartData = structuredClone(cartItems);
 
         if (cartData[itemId]) {
             cartData[itemId] += 1;
-        }
-        else {
+        } else {
             cartData[itemId] = 1;
         }
         
         setCartItems(cartData);
 
+        // TRIGGER TOAST IMMEDIATELY: Now guests see this too
+        toast.success("Added to Collection")
+
         if (token) {
             try {
-                // Sent to backend without 'size'
                 await axios.post(backendUrl + '/api/cart/add', { itemId }, { headers: { token } })
-                toast.success("Added to Collection")
             } catch (error) {
                 console.log(error)
                 toast.error(error.message)
@@ -43,7 +58,6 @@ const ShopContextProvider = (props) => {
         }
     }
 
-    // UPDATED: Simplified loop for flat object
     const getCartCount = () => {
         let totalCount = 0;
         for (const itemId in cartItems) {
@@ -58,13 +72,9 @@ const ShopContextProvider = (props) => {
         return totalCount;
     }
 
-    // UPDATED: Removed size parameter
     const updateQuantity = async (itemId, quantity) => {
-
         let cartData = structuredClone(cartItems);
-
         cartData[itemId] = quantity;
-
         setCartItems(cartData)
 
         if (token) {
@@ -77,7 +87,6 @@ const ShopContextProvider = (props) => {
         }
     }
 
-    // UPDATED: Simplified loop for flat object
     const getCartAmount = () => {
         let totalAmount = 0;
         for (const itemId in cartItems) {
@@ -107,15 +116,36 @@ const ShopContextProvider = (props) => {
         }
     }
 
-    const getUserCart = async (token) => {
+    // 3. MERGE LOGIC: Combine guest cart items with user database items
+    const getUserCart = async (userToken) => {
         try {
-            const response = await axios.post(backendUrl + '/api/cart/get', {}, { headers: { token } })
+            const response = await axios.post(backendUrl + '/api/cart/get', {}, { headers: { token: userToken } })
             if (response.data.success) {
-                setCartItems(response.data.cartData)
+                const dbCart = response.data.cartData || {};
+                const currentLocalCart = JSON.parse(localStorage.getItem('stampCart')) || {};
+
+                let mergedCart = { ...dbCart };
+
+                // Merge logic
+                for (const itemId in currentLocalCart) {
+                    if (currentLocalCart[itemId] > 0) {
+                        if (mergedCart[itemId]) {
+                            mergedCart[itemId] += currentLocalCart[itemId];
+                        } else {
+                            mergedCart[itemId] = currentLocalCart[itemId];
+                        }
+                    }
+                }
+
+                setCartItems(mergedCart);
+
+                // Sync the merged cart to the database
+                for (const itemId in mergedCart) {
+                    await axios.post(backendUrl + '/api/cart/update', { itemId, quantity: mergedCart[itemId] }, { headers: { token: userToken } })
+                }
             }
         } catch (error) {
             console.log(error)
-            toast.error(error.message)
         }
     }
 
@@ -124,14 +154,12 @@ const ShopContextProvider = (props) => {
     }, [])
 
     useEffect(() => {
-        if (!token && localStorage.getItem('token')) {
-            setToken(localStorage.getItem('token'))
-            getUserCart(localStorage.getItem('token'))
+        const storedToken = localStorage.getItem('token');
+        if (storedToken) {
+            setToken(storedToken);
+            getUserCart(storedToken);
         }
-        if (token) {
-            getUserCart(token)
-        }
-    }, [token])
+    }, []) // Only run once on mount
 
     const value = {
         products, currency, delivery_fee,
