@@ -7,16 +7,38 @@ export const ShopContext = createContext();
 
 const ShopContextProvider = (props) => {
 
-    const currency = '$';
-    const delivery_fee = 10;
     const backendUrl = import.meta.env.VITE_BACKEND_URL
+    const navigate = useNavigate();
+
+    // 1. CURRENCY STATE
+    const [currency, setCurrency] = useState('INR'); 
+    const exchangeRate = 83; // Fixed rate for now (1 USD = 83 INR)
+    const delivery_fee = currency === 'INR' ? 80 : 1; // Delivery fee adjusts based on currency
+    
     const [search, setSearch] = useState('');
     const [showSearch, setShowSearch] = useState(false);
     const [products, setProducts] = useState([]);
     const [token, setToken] = useState('');
-    const navigate = useNavigate();
 
-    // 1. INITIALIZATION: Load from localStorage strictly
+    // Load saved currency preference
+    useEffect(() => {
+        const savedCurrency = localStorage.getItem('currency');
+        if (savedCurrency) setCurrency(savedCurrency);
+    }, []);
+
+    const toggleCurrency = (newCurrency) => {
+        setCurrency(newCurrency);
+        localStorage.setItem('currency', newCurrency);
+    };
+
+    // 2. PRICE FORMATTING HELPER
+    // Use this function in your UI to show prices correctly everywhere
+    const formatPrice = (priceInInr) => {
+        const amount = currency === 'USD' ? (priceInInr / exchangeRate).toFixed(2) : priceInInr;
+        const symbol = currency === 'USD' ? '$' : '₹';
+        return `${symbol}${amount}`;
+    };
+
     const [cartItems, setCartItems] = useState(() => {
         const savedCart = localStorage.getItem('stampCart');
         try {
@@ -26,12 +48,9 @@ const ShopContextProvider = (props) => {
                 if (Number(parsed[key]) > 0) sanitized[key] = Number(parsed[key]);
             }
             return sanitized;
-        } catch (error) {
-            return {};
-        }
+        } catch (error) { return {}; }
     });
 
-    // 2. PERSISTENCE: Save to localStorage
     useEffect(() => {
         localStorage.setItem('stampCart', JSON.stringify(cartItems));
     }, [cartItems]);
@@ -39,7 +58,6 @@ const ShopContextProvider = (props) => {
     const addToCart = async (itemId) => {
         let cartData = structuredClone(cartItems);
         cartData[itemId] = (Number(cartData[itemId]) || 0) + 1;
-        
         setCartItems(cartData);
         toast.success("Added to Collection");
 
@@ -85,7 +103,9 @@ const ShopContextProvider = (props) => {
                 totalAmount += itemInfo.price * quantity;
             }
         }
-        return totalAmount;
+        
+        // Return amount in the selected currency
+        return currency === 'USD' ? (totalAmount / exchangeRate) : totalAmount;
     }
 
     const getProductsData = async () => {
@@ -97,32 +117,22 @@ const ShopContextProvider = (props) => {
                 toast.error(response.data.message)
             }
         } catch (error) {
-            console.log(error)
-            toast.error(error.message)
+            console.log(error);
+            toast.error(error.message);
         }
     }
 
-    // 3. FIXED MERGE LOGIC: Prevent the "Refresh Increase"
     const getUserCart = async (userToken) => {
         try {
             const response = await axios.post(backendUrl + '/api/cart/get', {}, { headers: { token: userToken } })
             if (response.data.success) {
-                const dbCart = response.data.cartData || {};
-                
-                // We ONLY merge if there is a guest cart in localStorage that hasn't been synced yet
-                // Otherwise, we just take the DB cart as the source of truth
-                setCartItems(dbCart);
+                setCartItems(response.data.cartData || {});
             }
-        } catch (error) {
-            console.log(error)
-        }
+        } catch (error) { console.log(error); }
     }
 
-    useEffect(() => {
-        getProductsData()
-    }, [])
+    useEffect(() => { getProductsData() }, [])
 
-    // 4. AUTH INITIALIZATION: Only fetch once
     useEffect(() => {
         const storedToken = localStorage.getItem('token');
         if (storedToken && !token) {
@@ -132,8 +142,8 @@ const ShopContextProvider = (props) => {
     }, []) 
 
     const value = {
-        products, currency, delivery_fee,
-        search, setSearch, showSearch, setShowSearch,
+        products, currency, toggleCurrency, formatPrice,
+        delivery_fee, search, setSearch, showSearch, setShowSearch,
         cartItems, addToCart, setCartItems,
         getCartCount, updateQuantity,
         getCartAmount, navigate, backendUrl,

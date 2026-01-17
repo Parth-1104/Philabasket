@@ -9,8 +9,7 @@ import { toast } from 'react-toastify'
 const PlaceOrder = () => {
 
     const [method, setMethod] = useState('cod');
-    const { navigate, backendUrl, token, cartItems, setCartItems, getCartAmount, delivery_fee, products } = useContext(ShopContext);
-    
+    const { navigate, backendUrl, token, cartItems, setCartItems, getCartAmount, delivery_fee, products, currency } = useContext(ShopContext);
     const [formData, setFormData] = useState({
         firstName: '', lastName: '', email: '', street: '',
         city: '', state: '', zipcode: '', country: '', phone: ''
@@ -36,7 +35,6 @@ const PlaceOrder = () => {
     const onSubmitHandler = async (event) => {
         event.preventDefault()
         
-        // Prevent submission if not logged in (double safety)
         if (!token) {
             toast.error("Authentication required");
             return navigate('/login');
@@ -54,24 +52,33 @@ const PlaceOrder = () => {
                 }
             }
 
+            // 2. Updated orderData to include the selected currency
             let orderData = {
                 address: formData,
                 items: orderItems,
-                amount: getCartAmount() + delivery_fee
+                amount: getCartAmount() + delivery_fee,
+                currency: currency // Now sending 'INR' or 'USD' to backend
             }
 
-            // Logic for COD/Stripe/Razorpay stays same as your provided code
-            // Only setCartItems({}) happens AFTER a successful database response
             if (method === 'cod') {
                 const response = await axios.post(backendUrl + '/api/order/place', orderData, { headers: { token } })
                 if (response.data.success) {
-                    setCartItems({}) // Only clear now
+                    setCartItems({})
                     navigate('/orders')
                 } else {
                     toast.error(response.data.message)
                 }
-            }
-            // ... (rest of your payment switch logic)
+            } else if (method === 'stripe') {
+                // Sending currency to Stripe route
+                const responseStripe = await axios.post(backendUrl + '/api/order/stripe', orderData, { headers: { token } })
+                if (responseStripe.data.success) {
+                    const { session_url } = responseStripe.data
+                    window.location.replace(session_url)
+                } else {
+                    toast.error(responseStripe.data.message)
+                }
+            } 
+            // Add Razorpay logic similarly ensuring orderData is passed
 
         } catch (error) {
             console.log(error)

@@ -4,6 +4,39 @@
 @tailwind components;
 @tailwind utilities;
 
+
+
+/* Animation for the Main Center Stamp (keeping it centered) */
+@keyframes heartbeat-center {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  14% { transform: translate(-50%, -50%) scale(1.05); }
+  28% { transform: translate(-50%, -50%) scale(1); }
+  42% { transform: translate(-50%, -50%) scale(1.05); }
+  70% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* Animation for the Side Stamps (no translation needed) */
+@keyframes heartbeat-standard {
+  0% { transform: scale(1); }
+  14% { transform: scale(1.08); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.08); }
+  70% { transform: scale(1); }
+}
+
+.animate-hb-center {
+  animation: heartbeat-center 3s ease-in-out infinite;
+}
+
+.animate-hb-side {
+  animation: heartbeat-standard 3s ease-in-out infinite;
+}
+
+.animate-hb-side-delayed {
+  animation: heartbeat-standard 3s ease-in-out infinite;
+  animation-delay: 1.5s;
+}
+
 a.active hr{
     display: block;
 }

@@ -4,7 +4,6 @@ import Stripe from 'stripe'
 import razorpay from 'razorpay'
 
 // global variables
-const currency = 'inr'
 const deliveryCharge = 10
 
 // gateway initialize
@@ -20,13 +19,14 @@ const placeOrder = async (req,res) => {
     
     try {
         
-        const { userId, items, amount, address} = req.body;
+        const { userId, items, amount, address, currency } = req.body;
 
         const orderData = {
             userId,
             items,
             address,
             amount,
+            currency: currency || 'INR',
             paymentMethod:"COD",
             payment:false,
             date: Date.now()
@@ -59,6 +59,7 @@ const placeOrderStripe = async (req,res) => {
             items,
             address,
             amount,
+            currency: currency || 'INR',
             paymentMethod:"Stripe",
             payment:false,
             date: Date.now()
@@ -69,22 +70,18 @@ const placeOrderStripe = async (req,res) => {
 
         const line_items = items.map((item) => ({
             price_data: {
-                currency:currency,
-                product_data: {
-                    name:item.name
-                },
-                unit_amount: item.price * 100
+                currency: (currency || 'INR').toLowerCase(), // Stripe expects lowercase
+                product_data: { name: item.name },
+                unit_amount: Math.round(item.price * 100) // Ensure integers for Stripe
             },
             quantity: item.quantity
         }))
 
         line_items.push({
             price_data: {
-                currency:currency,
-                product_data: {
-                    name:'Delivery Charges'
-                },
-                unit_amount: deliveryCharge * 100
+                currency: (currency || 'INR').toLowerCase(),
+                product_data: { name: 'Delivery Charges' },
+                unit_amount: defaultDeliveryCharge * 100
             },
             quantity: 1
         })
@@ -96,11 +93,11 @@ const placeOrderStripe = async (req,res) => {
             mode: 'payment',
         })
 
-        res.json({success:true,session_url:session.url});
+        res.json({ success: true, session_url: session.url });
 
     } catch (error) {
         console.log(error)
-        res.json({success:false,message:error.message})
+        res.json({ success: false, message: error.message })
     }
 }
 
@@ -129,16 +126,16 @@ const verifyStripe = async (req,res) => {
 // Placing orders using Razorpay Method
 const placeOrderRazorpay = async (req,res) => {
     try {
-        
-        const { userId, items, amount, address} = req.body
+        const { userId, items, amount, address, currency } = req.body
 
         const orderData = {
             userId,
             items,
             address,
             amount,
-            paymentMethod:"Razorpay",
-            payment:false,
+            currency: currency || 'INR', // Save currency
+            paymentMethod: "Razorpay",
+            payment: false,
             date: Date.now()
         }
 
@@ -146,22 +143,21 @@ const placeOrderRazorpay = async (req,res) => {
         await newOrder.save()
 
         const options = {
-            amount: amount * 100,
-            currency: currency.toUpperCase(),
+            amount: Math.round(amount * 100),
+            currency: (currency || 'INR').toUpperCase(), // Razorpay expects uppercase
             receipt : newOrder._id.toString()
         }
 
-        await razorpayInstance.orders.create(options, (error,order)=>{
+        await razorpayInstance.orders.create(options, (error, order)=>{
             if (error) {
-                console.log(error)
-                return res.json({success:false, message: error})
+                return res.json({ success: false, message: error })
             }
-            res.json({success:true,order})
+            res.json({ success: true, order })
         })
 
     } catch (error) {
         console.log(error)
-        res.json({success:false,message:error.message})
+        res.json({ success: false, message: error.message })
     }
 }
 

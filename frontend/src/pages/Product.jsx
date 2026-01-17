@@ -7,7 +7,8 @@ import RelatedProducts from '../components/RelatedProducts';
 const Product = () => {
 
   const { productId } = useParams();
-  const { products, currency, addToCart } = useContext(ShopContext);
+  // 1. Destructure formatPrice from ShopContext
+  const { products, addToCart, formatPrice } = useContext(ShopContext);
   const [productData, setProductData] = useState(false);
   const [image, setImage] = useState('')
 
@@ -33,7 +34,7 @@ const Product = () => {
           <div className='flex sm:flex-col overflow-x-auto sm:overflow-y-scroll justify-between sm:justify-normal sm:w-[18.7%] w-full'>
               {
                 productData.image.map((item, index) => (
-                  <img onClick={() => setImage(item)} src={item} key={index} className='w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer border hover:border-orange-500' alt="" />
+                  <img onClick={() => setImage(item)} src={item} key={index} className='w-[24%] sm:w-full sm:mb-3 flex-shrink-0 cursor-pointer border hover:border-[#E63946]' alt="" />
                 ))
               }
           </div>
@@ -60,7 +61,10 @@ const Product = () => {
               <p className='pl-2 text-sm'>(Verified Philatelist Review)</p>
           </div>
 
-          <p className='mt-5 text-3xl font-medium text-orange-600'>{currency}{productData.price}</p>
+          {/* 2. CORRECTED PRICE VALUE DISPLAY */}
+          <p className='mt-5 text-3xl font-medium text-[#E63946]'>
+            {formatPrice(productData.price)}
+          </p>
           
           <div className='mt-5 space-y-2'>
             <p className='text-gray-700'><span className='font-semibold'>Condition:</span> {productData.condition}</p>
@@ -121,7 +125,6 @@ const Product = () => {
         </div>
       </div>
 
-      {/* --------- display related products ---------- */}
       <RelatedProducts category={productData.category[0]} />
 
     </div>
