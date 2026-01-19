@@ -4,10 +4,12 @@ import LatestCollection from '../components/LatestCollection'
 import BestSeller from '../components/BestSeller'
 import OurPolicy from '../components/OurPolicy'
 import NewsletterBox from '../components/NewsletterBox'
+import StampCategoryScroll from '../components/StampCategoryScroll'
 
 const Home = () => {
   return (
     <div>
+      <StampCategoryScroll/>
       <Hero />
       <LatestCollection/>
       <BestSeller/>
