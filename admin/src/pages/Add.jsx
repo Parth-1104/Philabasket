@@ -152,7 +152,7 @@ const Add = ({ token }) => {
             <div className='flex gap-2'>
               {[image1, image2, image3, image4].map((img, index) => (
                 <label key={index} htmlFor={`image${index + 1}`}>
-                  <img className='w-24 h-24 object-cover border-2 border-dotted border-gray-300 cursor-pointer' src={!img ? assets.upload_area : URL.createObjectURL(img)} alt="" />
+                  <img draggable="false" className='w-24 h-24 object-cover border-2 border-dotted border-gray-300 cursor-pointer' src={!img ? assets.upload_area : URL.createObjectURL(img)} alt="" />
                   <input onChange={(e) => [setImage1, setImage2, setImage3, setImage4][index](e.target.files[0])} type="file" id={`image${index + 1}`} hidden />
                 </label>
               ))}

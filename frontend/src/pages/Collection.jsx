@@ -97,11 +97,17 @@ const Collection = () => {
   }, [filterSearch]);
 
   return (
-    <div className='flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t'>
-      <div className='min-w-60'>
-        <div onClick={() => setShowFilter(!showFilter)} className='my-2 text-xl flex items-center cursor-pointer gap-2 uppercase tracking-wider group'>
-          FILTERS
-          <img className={`h-3 sm:hidden transition-transform ${showFilter ? 'rotate-90' : ''}`} src={assets.dropdown_icon} alt="" />
+    <div className='flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t select-none'>
+    <div className='min-w-60'>
+      <div onClick={() => setShowFilter(!showFilter)} className='my-2 text-xl flex items-center cursor-pointer gap-2 uppercase tracking-wider group'>
+        FILTERS
+        {/* Added draggable="false" to the icon */}
+        <img 
+          draggable="false" 
+          className={`h-3 sm:hidden transition-transform ${showFilter ? 'rotate-90' : ''}`} 
+          src={assets.dropdown_icon} 
+          alt="" 
+        />
           {(category.length > 0 || condition.length > 0) && (
             <span className='ml-auto text-[10px] bg-black text-white px-2 py-0.5 rounded-full'>
               {category.length + condition.length} Active

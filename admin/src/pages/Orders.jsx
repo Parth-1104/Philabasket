@@ -52,7 +52,7 @@ const Orders = ({ token }) => {
         {
           orders.map((order, index) => (
             <div className='grid grid-cols-1 sm:grid-cols-[0.5fr_2fr_1fr] lg:grid-cols-[0.5fr_2fr_1fr_1fr_1fr] gap-4 items-start border border-gray-200 p-6 my-4 text-xs sm:text-sm text-gray-700 bg-white shadow-sm rounded-md' key={index}>
-              <img className='w-12 opacity-80' src={assets.parcel_icon} alt="Parcel" />
+              <img draggable="false" className='w-12 opacity-80' src={assets.parcel_icon} alt="Parcel" />
               
               {/* Order Items & Customer Info */}
               <div>

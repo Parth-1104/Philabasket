@@ -72,7 +72,7 @@ const StampCategoryScroll = () => {
           onClick={() => scroll('left')}
           className='absolute left-2 sm:left-5 top-1/2 z-20 bg-white/90 p-2 rounded-full shadow-lg hidden group-hover:flex items-center justify-center -translate-y-1/2 border border-gray-100 hover:bg-black hover:invert transition-all'
         >
-          <img src={assets.dropdown_icon} className='w-3 rotate-180' alt="prev" />
+          <img draggable="false" src={assets.dropdown_icon} className='w-3 rotate-180' alt="prev" />
         </button>
 
         {/* Categories Container */}
@@ -92,7 +92,7 @@ const StampCategoryScroll = () => {
         {/* Enforced Constant Circle Wrapper */}
         <div className='w-24 h-24 sm:w-32 sm:h-32 aspect-square flex-none rounded-full border-[3px] border-[#C32127] p-1 transition-all duration-300 group-hover/item:shadow-xl group-hover/item:scale-105'>
           <div className='w-full h-full rounded-full overflow-hidden bg-gray-50 flex items-center justify-center'>
-            <img 
+            <img draggable="false"
               src={displayImage} 
               alt={item} 
               // object-cover is vital here to keep the image centered without stretching
@@ -117,7 +117,7 @@ const StampCategoryScroll = () => {
           onClick={() => scroll('right')}
           className='absolute right-2 sm:right-5 top-1/2 z-20 bg-white/90 p-2 rounded-full shadow-lg hidden group-hover:flex items-center justify-center -translate-y-1/2 border border-gray-100 hover:bg-black hover:invert transition-all'
         >
-          <img src={assets.dropdown_icon} className='w-3 -rotate-360' alt="next" />
+          <img draggable="false" src={assets.dropdown_icon} className='w-3 -rotate-360' alt="next" />
         </button>
       </div>
     </div>

@@ -83,7 +83,7 @@ const List = ({ token }) => {
               
               {/* Image Logic: Show image or Upload button if empty */}
               {item.image && item.image.length > 0 ? (
-                <img className='w-12 h-12 object-cover rounded' src={item.image[0]} alt="" />
+                <img draggable="false" className='w-12 h-12 object-cover rounded' src={item.image[0]} alt="" />
               ) : (
                 <label className='cursor-pointer bg-blue-50 text-blue-600 px-2 py-1 text-[10px] rounded border border-blue-200 text-center'>
                   Add Image
