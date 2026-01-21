@@ -84,7 +84,7 @@ const Navbar = () => {
             
             <Link to='/' className='flex-shrink-0 group'>
                 <div className='flex items-center gap-3'>
-                    <img src={assets.logo} className='w-10 lg:w-12 group-hover:rotate-12 transition-transform duration-300' alt="PhilaBasket Seal" />
+                    <img src={assets.logo} className='w-20 lg:w-22 ' alt="PhilaBasket Seal" />
                     <div className='flex flex-col'>
                         <h1 className='text-2xl font-black text-gray-900 tracking-tighter leading-none'>
                             PHILABASKET <span className='text-red-600'>.</span>
