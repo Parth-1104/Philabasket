@@ -10,15 +10,17 @@ const ShopContextProvider = (props) => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL
     const navigate = useNavigate();
 
-    // 1. CURRENCY STATE
     const [currency, setCurrency] = useState('INR'); 
-    const exchangeRate = 83; // Fixed rate for now (1 USD = 83 INR)
-    const delivery_fee = currency === 'INR' ? 80 : 1; // Delivery fee adjusts based on currency
+    const exchangeRate = 83; 
+    const delivery_fee = currency === 'INR' ? 80 : 1; 
     
     const [search, setSearch] = useState('');
     const [showSearch, setShowSearch] = useState(false);
     const [products, setProducts] = useState([]);
     const [token, setToken] = useState('');
+
+    // --- REWARD POINTS STATE ---
+    const [userPoints, setUserPoints] = useState(0);
 
     // Load saved currency preference
     useEffect(() => {
@@ -31,8 +33,19 @@ const ShopContextProvider = (props) => {
         localStorage.setItem('currency', newCurrency);
     };
 
-    // 2. PRICE FORMATTING HELPER
-    // Use this function in your UI to show prices correctly everywhere
+    // --- FETCH USER POINTS FUNCTION ---
+    const fetchUserPoints = async () => {
+        if (!token) return;
+        try {
+            const response = await axios.get(backendUrl + '/api/user/profile', { headers: { token } });
+            if (response.data.success) {
+                setUserPoints(response.data.user.totalRewardPoints || 0);
+            }
+        } catch (error) {
+            console.log("Error fetching points:", error);
+        }
+    }
+
     const formatPrice = (priceInInr) => {
         const amount = currency === 'USD' ? (priceInInr / exchangeRate).toFixed(2) : priceInInr;
         const symbol = currency === 'USD' ? '$' : '₹';
@@ -103,8 +116,6 @@ const ShopContextProvider = (props) => {
                 totalAmount += itemInfo.price * quantity;
             }
         }
-        
-        // Return amount in the selected currency
         return currency === 'USD' ? (totalAmount / exchangeRate) : totalAmount;
     }
 
@@ -141,13 +152,22 @@ const ShopContextProvider = (props) => {
         }
     }, []) 
 
+    // Fetch points whenever the token changes
+    useEffect(() => {
+        if (token) {
+            fetchUserPoints();
+        }
+    }, [token]);
+
     const value = {
         products, currency, toggleCurrency, formatPrice,
         delivery_fee, search, setSearch, showSearch, setShowSearch,
         cartItems, addToCart, setCartItems,
         getCartCount, updateQuantity,
         getCartAmount, navigate, backendUrl,
-        setToken, token
+        setToken, token,
+        // Exported Reward Points Logic
+        userPoints, setUserPoints, fetchUserPoints 
     }
 
     return (

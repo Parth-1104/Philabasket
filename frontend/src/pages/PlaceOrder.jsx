@@ -10,20 +10,34 @@ const PlaceOrder = () => {
 
     const [method, setMethod] = useState('cod');
     const { navigate, backendUrl, token, cartItems, setCartItems, getCartAmount, delivery_fee, products, currency } = useContext(ShopContext);
+    
+    const [userPoints, setUserPoints] = useState(0); 
+    const [usePoints, setUsePoints] = useState(false); 
+    
     const [formData, setFormData] = useState({
         firstName: '', lastName: '', email: '', street: '',
         city: '', state: '', zipcode: '', country: '', phone: ''
     })
 
-    // --- Auth Guard (Modified to keep cart safe) ---
+    const fetchUserPoints = async () => {
+        try {
+            const response = await axios.get(backendUrl + '/api/user/profile', { headers: { token } });
+            if (response.data.success) {
+                setUserPoints(response.data.user.totalRewardPoints || 0);
+            }
+        } catch (error) {
+            console.error("Error fetching points:", error);
+        }
+    }
+
     useEffect(() => {
         if (!token) {
-            // We do NOT clear cartItems here. 
-            // We just notify and move the user to login.
             toast.info("Your items are saved. Please login to complete your order.");
             navigate('/login');
+        } else {
+            fetchUserPoints();
         }
-    }, [token]); // removed navigate from dependency to prevent unnecessary triggers
+    }, [token]);
 
     const onChangeHandler = (event) => {
         const name = event.target.name
@@ -31,7 +45,36 @@ const PlaceOrder = () => {
         setFormData(data => ({ ...data, [name]: value }))
     }
 
-    // --- Order Logic ---
+    const discountAmount = usePoints ? Math.floor(userPoints / 10) : 0;
+    const finalAmount = (getCartAmount() + delivery_fee) - discountAmount;
+
+    // --- Razorpay Initialization (Commented out as you don't have API keys yet) ---
+    /*
+    const initPay = (order) => {
+        const options = {
+            key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Your Key ID
+            amount: order.amount,
+            currency: order.currency,
+            name: 'Stamp Collection Order',
+            description: 'Payment for Philatelic Items',
+            order_id: order.id,
+            handler: async (response) => {
+                try {
+                    const { data } = await axios.post(backendUrl + '/api/order/verifyRazorpay', response, { headers: { token } })
+                    if (data.success) {
+                        setCartItems({})
+                        navigate('/orders')
+                    }
+                } catch (error) {
+                    toast.error(error.message)
+                }
+            }
+        }
+        const rzp = new window.Razorpay(options)
+        rzp.open()
+    }
+    */
+
     const onSubmitHandler = async (event) => {
         event.preventDefault()
         
@@ -52,12 +95,12 @@ const PlaceOrder = () => {
                 }
             }
 
-            // 2. Updated orderData to include the selected currency
             let orderData = {
                 address: formData,
                 items: orderItems,
-                amount: getCartAmount() + delivery_fee,
-                currency: currency // Now sending 'INR' or 'USD' to backend
+                amount: finalAmount, 
+                currency: currency,
+                usePoints: usePoints 
             }
 
             if (method === 'cod') {
@@ -69,7 +112,6 @@ const PlaceOrder = () => {
                     toast.error(response.data.message)
                 }
             } else if (method === 'stripe') {
-                // Sending currency to Stripe route
                 const responseStripe = await axios.post(backendUrl + '/api/order/stripe', orderData, { headers: { token } })
                 if (responseStripe.data.success) {
                     const { session_url } = responseStripe.data
@@ -77,8 +119,15 @@ const PlaceOrder = () => {
                 } else {
                     toast.error(responseStripe.data.message)
                 }
-            } 
-            // Add Razorpay logic similarly ensuring orderData is passed
+            } else if (method === 'razorpay') {
+                // Logic for Razorpay backend call
+                const responseRazorpay = await axios.post(backendUrl + '/api/order/razorpay', orderData, { headers: { token } })
+                if (responseRazorpay.data.success) {
+                    // initPay(responseRazorpay.data.order) // Commented until API key is ready
+                    toast.info("Razorpay logic triggered (Order created on backend). Connect API key to open popup.")
+                    console.log("Razorpay Order Data:", responseRazorpay.data.order)
+                }
+            }
 
         } catch (error) {
             console.log(error)
@@ -86,7 +135,6 @@ const PlaceOrder = () => {
         }
     }
 
-    // If no token, return null to avoid layout shift before redirect
     if (!token) return null;
 
     return (
@@ -95,16 +143,11 @@ const PlaceOrder = () => {
             <div className='flex flex-col gap-4 w-full sm:max-w-[480px]'>
                 <div className='text-xl sm:text-2xl my-3 flex justify-between items-center'>
                     <Title text1={'SHIPPING'} text2={'DETAILS'} />
-                    <button 
-                        type='button' 
-                        onClick={() => navigate('/cart')} 
-                        className='text-xs text-blue-600 hover:underline'
-                    >
+                    <button type='button' onClick={() => navigate('/cart')} className='text-xs text-blue-600 hover:underline'>
                         Review Collection
                     </button>
                 </div>
                 
-                {/* Form Inputs (same as before) */}
                 <div className='flex gap-3'>
                     <input required onChange={onChangeHandler} name='firstName' value={formData.firstName} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='First name' />
                     <input required onChange={onChangeHandler} name='lastName' value={formData.lastName} className='border border-gray-300 rounded py-1.5 px-3.5 w-full' type="text" placeholder='Last name' />
@@ -123,9 +166,34 @@ const PlaceOrder = () => {
             </div>
 
             <div className='mt-8'>
-                <div className='mt-8 min-w-80'>
+                <div className='min-w-80'>
                     <CartTotal />
+                    
+                    <div className='mt-6 p-4 border border-orange-200 bg-orange-50 rounded-sm'>
+                        <div className='flex items-center justify-between'>
+                            <div className='flex items-center gap-2'>
+                                <input 
+                                    type="checkbox" 
+                                    id="points" 
+                                    checked={usePoints} 
+                                    onChange={() => setUsePoints(!usePoints)}
+                                    className='w-4 h-4 accent-orange-600'
+                                    disabled={userPoints < 10}
+                                />
+                                <label htmlFor="points" className='text-sm font-medium text-gray-700 cursor-pointer'>
+                                    Use Reward Points ({userPoints} pts)
+                                </label>
+                            </div>
+                            <p className='text-sm font-bold text-orange-600'>-₹{discountAmount}</p>
+                        </div>
+                    </div>
+
+                    <div className='flex justify-between mt-4 py-2 border-t border-b'>
+                        <p className='font-bold'>Final Payable:</p>
+                        <p className='font-bold text-lg'>{currency} {finalAmount.toFixed(2)}</p>
+                    </div>
                 </div>
+
                 <div className='mt-12'>
                     <Title text1={'PAYMENT'} text2={'METHOD'} />
                     <div className='flex gap-3 flex-col lg:flex-row'>
@@ -133,13 +201,20 @@ const PlaceOrder = () => {
                             <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'stripe' ? 'bg-green-400' : ''}`}></p>
                             <img className='h-5 mx-4' src={assets.stripe_logo} alt="Stripe" />
                         </div>
+                        {/* Razorpay Option */}
+                        <div onClick={() => setMethod('razorpay')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
+                            <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'razorpay' ? 'bg-green-400' : ''}`}></p>
+                            <img className='h-5 mx-4' src={assets.razorpay_logo} alt="Razorpay" />
+                        </div>
                         <div onClick={() => setMethod('cod')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
                             <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'cod' ? 'bg-green-400' : ''}`}></p>
-                            <p className='text-gray-500 text-sm font-medium mx-4'>CASH ON DELIVERY</p>
+                            <p className='text-gray-500 text-sm font-medium mx-4 uppercase'>Cash on delivery</p>
                         </div>
                     </div>
                     <div className='w-full text-end mt-8'>
-                        <button type='submit' className='bg-black text-white px-16 py-3 text-sm hover:bg-gray-800 transition-all'>PLACE ORDER</button>
+                        <button type='submit' className='bg-black text-white px-16 py-3 text-sm hover:bg-gray-800 transition-all uppercase tracking-widest font-bold'>
+                            Place Order
+                        </button>
                     </div>
                 </div>
             </div>

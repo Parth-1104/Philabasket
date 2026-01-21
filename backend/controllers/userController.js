@@ -99,5 +99,25 @@ const adminLogin = async (req, res) => {
     }
 }
 
+const getUserProfile = async (req, res) => {
+    try {
+        // userId comes from the middleware (auth.js) after decoding the token
+        const { userId } = req.body; 
 
-export { loginUser, registerUser, adminLogin }
+        const user = await userModel.findById(userId).select("-password");
+
+        if (!user) {
+            return res.json({ success: false, message: "User not found" });
+        }
+
+        res.json({ success: true, user });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+
+
+export { loginUser, registerUser, adminLogin ,getUserProfile}

@@ -6,10 +6,8 @@ const productSchema = new mongoose.Schema({
     price: { type: Number, required: true },
     image: { type: Array, required: true },
     
-    // Multiple categories (e.g., ["Rare", "Historical", "Europe"])
     category: { type: [String], required: true }, 
     
-    // Stamp-specific details
     year: { type: Number, required: true },
     condition: { 
         type: String, 
@@ -20,8 +18,14 @@ const productSchema = new mongoose.Schema({
     stock: { type: Number, required: true, default: 1 }, // Usually low for rare stamps
     
     bestseller: { type: Boolean, default: false },
-    date: { type: Number, required: true }
+    date: { type: Number, required: true },
+    rewardPoints: { type: Number, default: 0 },
 })
+
+productSchema.pre('save', function(next) {
+    this.rewardPoints = Math.floor(this.price * 0.10); 
+    next();
+});
 
 const productModel  = mongoose.models.product || mongoose.model("product",productSchema);
 

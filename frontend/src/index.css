@@ -4,42 +4,65 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 1. Global: Keep scrollbars hidden for the body/main page if desired */
-::-webkit-scrollbar {
-  width: 0px;
-  display: none; /* Keep this if you want the main page clean */
+/* --- 1. GLOBAL UI SETTINGS --- */
+* {
+    font-family: Outfit;
 }
 
-/* 2. Specific: RE-ENABLE scrollbar for the category list */
+/* Hide global scrollbars for a clean look */
+::-webkit-scrollbar {
+  width: 0px;
+  display: none; 
+}
+
+/* Prevent text selection and image dragging site-wide */
+body {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Re-enable selection for inputs so users can still type */
+input, textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+img {
+  -webkit-user-drag: none;
+  user-drag: none;
+}
+
+/* --- 2. CUSTOM SCROLLBARS (For Category Filters) --- */
 .scrollbar-thin {
-  /* This ensures the scrollbar is actually visible despite the global rule */
   scrollbar-width: thin; 
   scrollbar-color: #d1d5db transparent;
 }
 
+/* Overrides the global 'none' only for this class */
 .scrollbar-thin::-webkit-scrollbar {
-  display: block; /* Overrides the global 'none' */
+  display: block; 
   width: 5px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-track {
-  background: #f9fafb; /* Light gray track so the user sees the 'path' */
+  background: #f9fafb;
   border-radius: 10px;
 }
 
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background-color: #d1d5db; /* gray-300 */
+  background-color: #d1d5db;
   border-radius: 20px;
   border: 1px solid transparent;
   background-clip: content-box;
 }
 
-/* Micro-interaction: Darken on hover */
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background-color: #9ca3af; /* gray-400 */
+  background-color: #9ca3af;
 }
 
-
+/* For horizontal carousels */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
@@ -48,43 +71,15 @@
   scrollbar-width: none;
 }
 
-/* Optional: Add a smooth fade on the edges of the carousel */
-.mask-edges {
-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-}
+/* --- 3. ANIMATIONS --- */
 
-/* Optional: Pulse effect to guide the eye when the filter is first opened */
-@keyframes scrollbar-hint {
-  0% { background-color: #d1d5db; }
-  50% { background-color: #f97316; } /* Orange hint */
-  100% { background-color: #d1d5db; }
-}
-
-.scrollbar-hint-animate::-webkit-scrollbar-thumb {
-  animation: scrollbar-hint 2s ease-in-out 2;
-}
-
-
-/* Animation for the Main Center Stamp (keeping it centered) */
-@keyframes heartbeat-center {
-  0% { transform: translate(-50%, -50%) scale(1); }
-  14% { transform: translate(-50%, -50%) scale(1.05); }
-  28% { transform: translate(-50%, -50%) scale(1); }
-  42% { transform: translate(-50%, -50%) scale(1.05); }
-  70% { transform: translate(-50%, -50%) scale(1); }
-}
-
-/* Animation for the Side Stamps (no translation needed) */
+/* Hero "Heartbeat" for Stamps */
 @keyframes heartbeat-standard {
   0% { transform: scale(1); }
   14% { transform: scale(1.08); }
   28% { transform: scale(1); }
   42% { transform: scale(1.08); }
   70% { transform: scale(1); }
-}
-
-.animate-hb-center {
-  animation: heartbeat-center 3s ease-in-out infinite;
 }
 
 .animate-hb-side {
@@ -96,27 +91,34 @@ mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transpar
   animation-delay: 1.5s;
 }
 
-a.active hr{
-    display: block;
+/* Scrollbar Orange Hint pulse */
+@keyframes scrollbar-hint {
+  0% { background-color: #d1d5db; }
+  50% { background-color: #f97316; } 
+  100% { background-color: #d1d5db; }
 }
 
-*{
-    font-family: Outfit;
+.scrollbar-hint-animate::-webkit-scrollbar-thumb {
+  animation: scrollbar-hint 2s ease-in-out 2;
 }
 
+/* --- 4. UTILITIES --- */
 .prata-regular {
     font-family: "Prata", serif;
     font-weight: 400;
-    font-style: normal;
   }
 
-  ::-webkit-scrollbar{
-    display: none;
+.mask-edges {
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
+a.active hr {
+    display: block;
+}
+
+@media (max-width:640px) {
+  a.active {
+      background-color: black;
+      color: white;
   }
-  
-  @media (max-width:640px) {
-    a.active{
-        background-color: black;
-        color: white;
-    }
-  }
+}
