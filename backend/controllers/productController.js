@@ -220,4 +220,33 @@ const singleProduct = async (req, res) => {
     }
 }
 
-export { listProducts, addProduct, removeProduct, singleProduct ,bulkAddStamps,updateProductImages}
+const updateProduct = async (req, res) => {
+    try {
+        const { id, name, country, year, price, category } = req.body;
+
+        // Find the product and update it with new values
+        const updatedProduct = await productModel.findByIdAndUpdate(
+            id,
+            {
+                name,
+                country,
+                year: Number(year),
+                price: Number(price),
+                category // This is already an array from our frontend logic
+            },
+            { new: true } // Returns the modified document
+        );
+
+        if (!updatedProduct) {
+            return res.json({ success: false, message: "Stamp not found" });
+        }
+
+        res.json({ success: true, message: "Stamp details updated successfully" });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+export { listProducts, addProduct, removeProduct, singleProduct ,bulkAddStamps,updateProductImages,updateProduct}

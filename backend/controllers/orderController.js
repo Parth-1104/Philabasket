@@ -235,4 +235,51 @@ const updateStatus = async (req, res) => {
     }
 }
 
-export {verifyRazorpay, verifyStripe ,placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus}
+// Add this to your orderController.js
+ const getAdminDashboardStats = async (req, res) => {
+    try {
+        const orders = await orderModel.find({});
+        const users = await userModel.find({});
+        
+        // Detailed Financials
+        const totalRevenue = orders.reduce((acc, order) => acc + (order.amount || 0), 0);
+        const orderCount = orders.length;
+        const avgOrderValue = orderCount > 0 ? (totalRevenue / orderCount).toFixed(2) : 0;
+
+        // Retention Logic (Repeat Customers)
+        const userOrderCounts = {};
+        orders.forEach(o => userOrderCounts[o.userId] = (userOrderCounts[o.userId] || 0) + 1);
+        const repeatCustomers = Object.values(userOrderCounts).filter(count => count > 1).length;
+        const repeatRate = users.length > 0 ? ((repeatCustomers / users.length) * 100).toFixed(1) : 0;
+
+        // Monthly Sales Trend (Last 6 Months)
+        const salesTrend = await orderModel.aggregate([
+            { $group: { 
+                _id: { month: { $month: { $add: [new Date(0), "$date"] } }, year: { $year: { $add: [new Date(0), "$date"] } } }, 
+                sales: { $sum: "$amount" },
+                orders: { $sum: 1 }
+            }},
+            { $sort: { "_id.year": 1, "_id.month": 1 } },
+            { $limit: 6 }
+        ]);
+
+        res.json({
+            success: true,
+            stats: {
+                totalRevenue,
+                orderCount,
+                totalUsers: users.length,
+                avgOrderValue,
+                repeatCustomerRate: repeatRate,
+                salesTrend: salesTrend.map(s => ({ 
+                    date: `${s._id.month}/${s._id.year}`, 
+                    sales: s.sales, 
+                    orders: s.orders 
+                })),
+                // Add your existing lowStock and category logic here
+            }
+        });
+    } catch (error) { res.json({ success: false, message: error.message }); }
+}
+
+export {verifyRazorpay, verifyStripe ,placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus,getAdminDashboardStats}
