@@ -139,9 +139,10 @@ const Navbar = () => {
             {/* RIGHT SIDE ACTIONS */}
             <div className='flex items-center gap-4 lg:gap-6'>
                 {token && (
-                    <div className='hidden md:flex items-center gap-2 bg-white/50 px-3 py-1.5 rounded-full border border-orange-200'>
-                        <div className='w-2 h-2 bg-orange-500 rounded-full animate-pulse'></div>
-                        <span className='text-[10px] font-black text-orange-700 uppercase'>{userPoints} PTS</span>
+                    <div className='hidden md:flex items-center gap-2 bg-white/50 px-5 py-1.5 rounded-full border border-orange-200'>
+                        {/* <div className='w-2 h-2 bg-orange-500 rounded-full animate-pulse'></div> */}
+                        <img className='w-11 h-11 rounded-full ' src={assets.coin}></img>
+                        <span className='text-[13px] font-black text-orange-700 uppercase'>{userPoints} PTS</span>
                     </div>
                 )}
 

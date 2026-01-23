@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState, useMemo } from 'react'
 import Title from '../components/Title'
 import CartTotal from '../components/CartTotal'
 import { assets } from '../assets/assets'
@@ -45,14 +45,31 @@ const PlaceOrder = () => {
         setFormData(data => ({ ...data, [name]: value }))
     }
 
-    const discountAmount = usePoints ? Math.floor(userPoints / 10) : 0;
-    const finalAmount = (getCartAmount() + delivery_fee) - discountAmount;
+    // --- FIX: Optimized Dynamic Point Calculation using useMemo ---
+    // This ensures calculations are always synced with the latest cart total and points
+    const { discountAmount, finalAmount, pointsToDeduct } = useMemo(() => {
+        const cartAmount = getCartAmount();
+        const totalOrderCost = cartAmount + delivery_fee;
+        
+        // Calculate max discount available (₹1 for every 10 points)
+        const maxPotentialDiscount = usePoints ? Math.floor(userPoints / 10) : 0;
+        
+        // Cap the discount: It cannot exceed the total order cost
+        const actualDiscount = Math.min(maxPotentialDiscount, totalOrderCost);
+        const payable = totalOrderCost - actualDiscount;
 
-    // --- Razorpay Initialization (Commented out as you don't have API keys yet) ---
+        return {
+            discountAmount: actualDiscount,
+            finalAmount: payable,
+            pointsToDeduct: actualDiscount * 10 // Only deduct points used to reach ₹0
+        };
+    }, [cartItems, userPoints, usePoints, delivery_fee, getCartAmount]);
+
+    // --- Razorpay Initialization (Commented) ---
     /*
     const initPay = (order) => {
         const options = {
-            key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Your Key ID
+            key: import.meta.env.VITE_RAZORPAY_KEY_ID, 
             amount: order.amount,
             currency: order.currency,
             name: 'Stamp Collection Order',
@@ -100,7 +117,8 @@ const PlaceOrder = () => {
                 items: orderItems,
                 amount: finalAmount, 
                 currency: currency,
-                usePoints: usePoints 
+                usePoints: usePoints,
+                pointsUsed: Math.round(pointsToDeduct) // Sending accurate points used to backend
             }
 
             if (method === 'cod') {
@@ -120,12 +138,10 @@ const PlaceOrder = () => {
                     toast.error(responseStripe.data.message)
                 }
             } else if (method === 'razorpay') {
-                // Logic for Razorpay backend call
                 const responseRazorpay = await axios.post(backendUrl + '/api/order/razorpay', orderData, { headers: { token } })
                 if (responseRazorpay.data.success) {
-                    // initPay(responseRazorpay.data.order) // Commented until API key is ready
-                    toast.info("Razorpay logic triggered (Order created on backend). Connect API key to open popup.")
-                    console.log("Razorpay Order Data:", responseRazorpay.data.order)
+                    // initPay(responseRazorpay.data.order) 
+                    toast.info("Razorpay logic triggered. Connect API key to open popup.")
                 }
             }
 
@@ -138,7 +154,7 @@ const PlaceOrder = () => {
     if (!token) return null;
 
     return (
-        <form onSubmit={onSubmitHandler} className='flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t'>
+        <form onSubmit={onSubmitHandler} className='flex flex-col sm:flex-row justify-between gap-4 pt-5 sm:pt-14 min-h-[80vh] border-t px-3'>
             
             <div className='flex flex-col gap-4 w-full sm:max-w-[480px]'>
                 <div className='text-xl sm:text-2xl my-3 flex justify-between items-center'>
@@ -190,7 +206,9 @@ const PlaceOrder = () => {
 
                     <div className='flex justify-between mt-4 py-2 border-t border-b'>
                         <p className='font-bold'>Final Payable:</p>
-                        <p className='font-bold text-lg'>{currency} {finalAmount.toFixed(2)}</p>
+                        <p className={`font-bold text-lg ${finalAmount <= 0 ? 'text-green-700' : ''}`}>
+                            {finalAmount <= 0 ? "FREE" : `${currency} ${finalAmount.toFixed(2)}`}
+                        </p>
                     </div>
                 </div>
 
@@ -201,7 +219,6 @@ const PlaceOrder = () => {
                             <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'stripe' ? 'bg-green-400' : ''}`}></p>
                             <img className='h-5 mx-4' src={assets.stripe_logo} alt="Stripe" />
                         </div>
-                        {/* Razorpay Option */}
                         <div onClick={() => setMethod('razorpay')} className='flex items-center gap-3 border p-2 px-3 cursor-pointer'>
                             <p className={`min-w-3.5 h-3.5 border rounded-full ${method === 'razorpay' ? 'bg-green-400' : ''}`}></p>
                             <img className='h-5 mx-4' src={assets.razorpay_logo} alt="Razorpay" />
@@ -222,4 +239,4 @@ const PlaceOrder = () => {
     )
 }
 
-export default PlaceOrder
+export default PlaceOrder;

@@ -16,23 +16,42 @@ const razorpayInstance = (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KE
 
 const placeOrder = async (req, res) => {
     try {
-        const { userId, items, amount, address, currency, usePoints } = req.body;
+        // 1. Destructure pointsUsed (which we added to the frontend payload earlier)
+        const { userId, items, amount, address, currency, usePoints, pointsUsed } = req.body;
 
         const orderData = {
-            userId, items, address, amount,
+            userId, 
+            items, 
+            address, 
+            amount, // This is the final price after discount (can be 0)
             currency: currency || 'INR',
-            paymentMethod: "COD", payment: false, date: Date.now()
+            paymentMethod: "COD", 
+            payment: false, 
+            date: Date.now()
         };
 
+        // 2. Save the new order
         const newOrder = new orderModel(orderData);
         await newOrder.save();
 
-        const updateData = { cartData: {} };
-        if (usePoints) updateData.totalRewardPoints = 0;
+        // 3. Prepare the user update
+        // We always clear the cart after a successful order
+        const updateData = { 
+            $set: { cartData: {} } 
+        };
 
+        // 4. FIX: Use $inc with a negative value to deduct ONLY the required points
+        if (usePoints && pointsUsed > 0) {
+            updateData.$inc = { totalRewardPoints: -Math.abs(pointsUsed) };
+        }
+
+        // 5. Update user record in one database call
         await userModel.findByIdAndUpdate(userId, updateData);
-        res.json({ success: true, message: "Order Placed" });
+
+        res.json({ success: true, message: "Order Placed Successfully" });
+
     } catch (error) {
+        console.error(error);
         res.json({ success: false, message: error.message });
     }
 };
