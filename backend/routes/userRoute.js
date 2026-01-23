@@ -1,5 +1,5 @@
 import express from 'express';
-import { loginUser, registerUser, adminLogin, getUserProfile } from '../controllers/userController.js';
+import { loginUser, registerUser, adminLogin, getUserProfile ,googleLogin } from '../controllers/userController.js';
 import authUser from '../middleware/auth.js';
 
 const userRouter = express.Router();
@@ -7,6 +7,7 @@ const userRouter = express.Router();
 userRouter.post('/register', registerUser);
 userRouter.post('/login', loginUser);
 userRouter.post('/admin', adminLogin);
+userRouter.post('/google-login', googleLogin);
 
 // NEW: This is the route the Navbar and ShopContext call to get points
 userRouter.get('/profile', authUser, getUserProfile);

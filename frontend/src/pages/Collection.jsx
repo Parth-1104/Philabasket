@@ -44,12 +44,15 @@ const Collection = () => {
   const [condition, setCondition] = useState([]);
   const [sortType, setSortType] = useState('relavent');
   const [filterSearch, setFilterSearch] = useState("");
+  
   const [searchParams] = useSearchParams();
   const categoryFromUrl = searchParams.get('category');
 
   useEffect(() => {
     if (categoryFromUrl) {
-      setCategory([categoryFromUrl]); // Sets the category filter based on the URL
+      const decoded = decodeURIComponent(categoryFromUrl);
+      setCategory([decoded]); 
+      if (window.innerWidth < 640) setShowFilter(true);
     }
   }, [categoryFromUrl]);
 
@@ -68,6 +71,7 @@ const Collection = () => {
     setCondition([]);
     setFilterSearch("");
   }
+  
 
   const applyFilter = () => {
     let productsCopy = products.slice();
@@ -75,7 +79,7 @@ const Collection = () => {
       productsCopy = productsCopy.filter(item => item.name.toLowerCase().includes(search.toLowerCase()))
     }
     if (category.length > 0) {
-      productsCopy = productsCopy.filter(item => item.category.some(cat => category.includes(cat)));
+      productsCopy = productsCopy.filter(item => item.category && item.category.some(cat => category.includes(cat)));
     }
     if (condition.length > 0) {
       productsCopy = productsCopy.filter(item => condition.includes(item.condition))
@@ -92,91 +96,78 @@ const Collection = () => {
     applyFilter();
   }, [category, condition, search, showSearch, products, sortType]);
 
+  // --- FIXED: SORT SELECTED CATEGORIES TO TOP ---
   const filteredCategoryList = useMemo(() => {
-    return ALL_CATEGORIES.filter(cat => cat.toLowerCase().includes(filterSearch.toLowerCase()));
-  }, [filterSearch]);
+    const searched = ALL_CATEGORIES.filter(cat => 
+      cat.toLowerCase().includes(filterSearch.toLowerCase())
+    );
+
+    // Sort: if category is in 'category' state, move to top
+    return searched.sort((a, b) => {
+      const aSelected = category.includes(a);
+      const bSelected = category.includes(b);
+      
+      if (aSelected && !bSelected) return -1;
+      if (!aSelected && bSelected) return 1;
+      return 0;
+    });
+  }, [filterSearch, category]);
 
   return (
-    <div className='flex flex-col sm:flex-row gap-1 sm:gap-10 pt-10 border-t select-none'>
-    <div className='min-w-60'>
-      <div onClick={() => setShowFilter(!showFilter)} className='my-2 text-xl flex items-center cursor-pointer gap-2 uppercase tracking-wider group'>
-        FILTERS
-        {/* Added draggable="false" to the icon */}
-        <img 
-          draggable="false" 
-          className={`h-3 sm:hidden transition-transform ${showFilter ? 'rotate-90' : ''}`} 
-          src={assets.dropdown_icon} 
-          alt="" 
-        />
+    <div className='flex flex-col px-3 sm:flex-row gap-1 sm:gap-10 pt-10 border-t select-none'>
+      
+      {/* --- SIDEBAR FILTERS --- */}
+      <div className='min-w-60'>
+        <div onClick={() => setShowFilter(!showFilter)} className='my-2 text-xl flex items-center cursor-pointer gap-2 uppercase tracking-wider group'>
+          FILTERS
+          <img draggable="false" className={`h-3 sm:hidden transition-transform ${showFilter ? 'rotate-90' : ''}`} src={assets.dropdown_icon} alt="" />
           {(category.length > 0 || condition.length > 0) && (
-            <span className='ml-auto text-[10px] bg-black text-white px-2 py-0.5 rounded-full'>
-              {category.length + condition.length} Active
-            </span>
+            <span className='ml-auto text-[10px] bg-black text-white px-2 py-0.5 rounded-full'>{category.length + condition.length} Active</span>
           )}
         </div>
 
-        {/* Categories Filter Section */}
         <div className={`border border-gray-300 px-5 py-3 mt-6 ${showFilter ? '' : 'hidden'} sm:block`}>
           <div className='flex justify-between items-center mb-3'>
             <p className='text-sm font-medium uppercase tracking-tighter'>Collections</p>
-            {category.length > 0 && (
-              <button onClick={() => setCategory([])} className='text-[10px] text-orange-600 hover:underline'>Clear</button>
-            )}
+            {category.length > 0 && <button onClick={() => setCategory([])} className='text-[10px] text-orange-600 hover:underline'>Clear</button>}
           </div>
-          
-          <input 
-            type="text" 
-            placeholder="Search categories..." 
-            value={filterSearch}
-            className="border border-gray-200 text-xs px-2 py-2 mb-3 w-full rounded focus:ring-1 focus:ring-orange-400 outline-none transition-all"
-            onChange={(e) => setFilterSearch(e.target.value)}
-          />
-
-          <div className='relative group border-t border-gray-50 pt-2'>
-            {/* Scroll Indicator Gradients */}
-            <div className='absolute top-0 left-0 w-full h-4 bg-gradient-to-b from-white to-transparent z-10 pointer-events-none opacity-80'></div>
-            
-            <div className='flex flex-col gap-2 text-sm font-light text-gray-700 max-h-60 overflow-y-auto pr-2 scrollbar-thin scrollbar-visible'>
-              {filteredCategoryList.map((item) => (
-                <label key={item} className='flex gap-2 items-center cursor-pointer hover:text-black hover:translate-x-1 transition-all duration-200'>
-                  <input 
-                    className='w-3 h-3 accent-orange-600' 
-                    type="checkbox" 
-                    value={item} 
-                    onChange={toggleCategory}
-                    checked={category.includes(item)}
-                  /> 
-                  <span className={category.includes(item) ? "font-normal text-black" : ""}>{item}</span>
-                </label>
-              ))}
-              {filteredCategoryList.length === 0 && <p className='text-xs text-gray-400 italic py-2'>No matches found...</p>}
-            </div>
-
-            <div className='absolute bottom-0 left-0 w-full h-4 bg-gradient-to-t from-white to-transparent z-10 pointer-events-none opacity-80 group-hover:opacity-20 transition-opacity'></div>
-          </div>
-        </div>
-
-        {/* Condition Filter */}
-        <div className={`border border-gray-300 pl-5 py-3 my-5 ${showFilter ? '' : 'hidden'} sm:block`}>
-          <p className='mb-3 text-sm font-medium uppercase tracking-tighter'>Condition</p>
-          <div className='flex flex-col gap-2 text-sm font-light text-gray-700'>
-            {['Mint', 'Used', 'Fine'].map((cond) => (
-              <label key={cond} className='flex gap-2 items-center cursor-pointer hover:text-black transition-colors'>
-                <input 
-                  className='w-3 h-3 accent-orange-600' 
-                  type="checkbox" 
-                  value={cond} 
-                  onChange={toggleCondition}
-                  checked={condition.includes(cond)}
-                /> {cond} {cond === 'Mint' && <span className='text-[10px] text-gray-400'>(Unused)</span>}
+          <input type="text" placeholder="Search categories..." value={filterSearch} className="border border-gray-200 text-xs px-2 py-2 mb-3 w-full rounded focus:ring-1 focus:ring-orange-400 outline-none" onChange={(e) => setFilterSearch(e.target.value)} />
+          <div className='flex flex-col gap-2 text-sm font-light text-gray-700 max-h-60 overflow-y-auto pr-2'>
+            {filteredCategoryList.map((item) => (
+              <label 
+                key={item} 
+                className={`flex gap-2 items-center cursor-pointer p-1 rounded transition-colors ${category.includes(item) ? 'bg-orange-50' : 'hover:text-black'}`}
+              >
+                <input className='w-3 h-3 accent-orange-600' type="checkbox" value={item} onChange={toggleCategory} checked={category.includes(item)} /> 
+                <span className={category.includes(item) ? "font-medium text-black" : ""}>{item}</span>
               </label>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Product Grid */}
+      {/* --- MAIN PRODUCT GRID --- */}
       <div className='flex-1'>
+        
+        {/* --- TOP ACTIVE FILTER CHIPS --- */}
+        {(category.length > 0 || condition.length > 0) && (
+          <div className='flex flex-wrap gap-2 mb-6 animate-fade-in'>
+            {category.map((cat) => (
+              <div key={cat} className='flex items-center gap-2 bg-orange-50 border border-orange-200 text-orange-700 px-3 py-1 rounded-full text-[11px] font-medium'>
+                {cat}
+                <button onClick={() => setCategory(prev => prev.filter(i => i !== cat))} className='hover:text-black'>✕</button>
+              </div>
+            ))}
+            {condition.map((cond) => (
+              <div key={cond} className='flex items-center gap-2 bg-gray-100 border border-gray-200 text-gray-700 px-3 py-1 rounded-full text-[11px] font-medium'>
+                {cond}
+                <button onClick={() => setCondition(prev => prev.filter(i => i !== cond))} className='hover:text-black'>✕</button>
+              </div>
+            ))}
+            <button onClick={resetFilters} className='text-[11px] text-gray-400 hover:text-orange-600 underline underline-offset-4 ml-2'>Clear all</button>
+          </div>
+        )}
+
         <div className='flex justify-between items-center text-base sm:text-2xl mb-4'>
             <Title text1={'PHILATELIC'} text2={'COLLECTIONS'} />
             <select onChange={(e)=>setSortType(e.target.value)} className='border border-gray-300 text-sm px-2 py-1 bg-white outline-none cursor-pointer'>
@@ -188,16 +179,14 @@ const Collection = () => {
 
         <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 gap-y-6'>
           {filterProducts.map((item, index) => (
-            <ProductItem key={item._id || index} name={item.name} id={item._id} price={item.price} image={item.image} />
+            <ProductItem key={item._id || index} name={item.name} id={item._id} price={item.price} image={item.image} category={item.category && item.category[0]} linkToFilter={false} />
           ))}
         </div>
 
         {filterProducts.length === 0 && (
           <div className='flex flex-col items-center justify-center py-20 bg-gray-50 rounded-lg mt-10 border border-dashed border-gray-300'>
             <p className='text-gray-500 font-medium'>No stamps match your selection.</p>
-            <button onClick={resetFilters} className='mt-4 px-6 py-2 bg-black text-white text-sm hover:bg-gray-800 transition-colors'>
-              Reset All Filters
-            </button>
+            <button onClick={resetFilters} className='mt-4 px-6 py-2 bg-black text-white text-sm'>Reset All Filters</button>
           </div>
         )}
       </div>

@@ -2,23 +2,24 @@ import React, { useContext } from 'react'
 import { ShopContext } from '../context/ShopContext'
 import { Link } from 'react-router-dom'
 
-const ProductItem = ({ id, image, name, price }) => {
+const ProductItem = ({ id, image, name, price, category, linkToFilter = false }) => {
     
-  const { formatPrice, currency } = useContext(ShopContext);
-
-  // Hard block for dragging
+  const { formatPrice } = useContext(ShopContext);
   const handleDragStart = (e) => e.preventDefault();
-
-  // Calculate points (10% of price)
   const points = Math.floor(price * 0.10);
+
+  // Decide the URL based on the prop
+  const destination = linkToFilter 
+    ? `/collection?category=${encodeURIComponent(category || "")}` 
+    : `/product/${id}`;
 
   return (
       <Link 
-        className='text-gray-700 cursor-pointer group select-none relative' 
-        to={`/product/${id}`}
+        className='text-gray-700 cursor-pointer group select-none relative block' 
+        to={destination}
+        onClick={() => window.scrollTo(0,0)} 
         onDragStart={handleDragStart} 
       >
-          {/* Reward Point Badge */}
           {points > 0 && (
             <div className='absolute top-2 right-2 z-20 bg-orange-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-sm shadow-sm opacity-0 group-hover:opacity-100 transition-opacity'>
               +{points} PTS
@@ -29,10 +30,9 @@ const ProductItem = ({ id, image, name, price }) => {
               <img 
                   draggable="false"
                   onDragStart={handleDragStart}
-                  className='group-hover:scale-105 transition duration-500 aspect-[3/4] object-contain w-full h-full p-2 select-none' 
+                  className='group-hover:scale-105 transition duration-500 aspect-[3/4] object-contain w-full h-full p-2' 
                   src={image[0]} 
                   alt={name} 
-                  style={{ userDrag: 'none', WebkitUserDrag: 'none' }}
               />
           </div>
           
@@ -42,8 +42,10 @@ const ProductItem = ({ id, image, name, price }) => {
             <p className='text-sm font-bold text-[#E63946]'>
                 {formatPrice(price)}
             </p>
-            {/* Subtle point hint */}
-            <p className='text-[10px] text-gray-400 font-light'>Earn {points} pts</p>
+            {/* Show different hint text depending on the link type */}
+            <p className='text-[10px] text-gray-400 font-light italic'>
+                {linkToFilter ? `More ${category}` : 'View Details'}
+            </p>
           </div>
       </Link>
   )

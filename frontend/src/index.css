@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Prata&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Beau+Rivage&family=Felipa&family=Sirivennela&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -8,6 +8,57 @@
 * {
     font-family: Outfit;
 }
+
+.almendra-regular {
+  font-family: "Almendra", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.almendra-bold {
+  font-family: "Almendra", serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.almendra-regular-italic {
+  font-family: "Almendra", serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.almendra-bold-italic {
+  font-family: "Almendra", serif;
+  font-weight: 1000;
+  font-style: italic;
+}
+
+.gasoek-one-regular {
+  font-family: "Gasoek One", sans-serif;
+  font-weight: 900;
+  font-style: normal;
+}
+
+
+
+
+.sirivennela-regular {
+  font-family: "Sirivennela", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.beau-rivage-regular {
+  font-family: "Beau Rivage", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+.imperial-script-regular {
+  font-family: "Imperial Script", cursive;
+  font-weight: 400;
+  font-style: normal;
+}
+
 
 /* Hide global scrollbars for a clean look */
 ::-webkit-scrollbar {
@@ -74,7 +125,7 @@ img {
 /* --- 3. ANIMATIONS --- */
 
 /* Hero "Heartbeat" for Stamps */
-@keyframes heartbeat-standard {
+/* @keyframes heartbeat-standard {
   0% { transform: scale(1); }
   14% { transform: scale(1.08); }
   28% { transform: scale(1); }
@@ -84,12 +135,12 @@ img {
 
 .animate-hb-side {
   animation: heartbeat-standard 3s ease-in-out infinite;
-}
+} */
 
-.animate-hb-side-delayed {
+/* .animate-hb-side-delayed {
   animation: heartbeat-standard 3s ease-in-out infinite;
   animation-delay: 1.5s;
-}
+} */
 
 /* Scrollbar Orange Hint pulse */
 @keyframes scrollbar-hint {

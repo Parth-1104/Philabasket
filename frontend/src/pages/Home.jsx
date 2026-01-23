@@ -5,12 +5,14 @@ import BestSeller from '../components/BestSeller'
 import OurPolicy from '../components/OurPolicy'
 import NewsletterBox from '../components/NewsletterBox'
 import StampCategoryScroll from '../components/StampCategoryScroll'
+import NewHero from '../components/NewHero'
 
 const Home = () => {
   return (
     <div>
-      <StampCategoryScroll/>
+      {/* <StampCategoryScroll/> */}
       <Hero />
+      {/* <NewHero/> */}
       <LatestCollection/>
       <BestSeller/>
       <OurPolicy/>
