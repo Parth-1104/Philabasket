@@ -22,8 +22,8 @@ const Hero = () => {
 
             {/* Title with the Red "Stamps" highlight */}
             <h1 className='imperial-script-regular text-5xl sm:text-7xl lg:text-8xl text-[#2D2825] leading-[1.1]'>
-                Curated <span className='gasoek-one-regular text-[#E63946]'>Stamps</span> <br />
-                <span className='almendra-regular-italic'>for</span> True Philatelist
+                Curated <span className='felipa-regular'>Stamps</span> <br />
+                <span className='felipa-regular'>for</span> True Philatelist
             </h1>
             
             <div className='hidden lg:block w-28'></div>

@@ -11,18 +11,35 @@ const bulkAddStamps = async (req, res) => {
         }
 
         const stamps = [];
+        const skippedRows = []; // To track rows that failed validation
         const filePath = req.file.path;
 
-        // Parse the CSV file
+        // Fetch existing stamp names to prevent duplicates
+        const existingStamps = await productModel.find({}, 'name');
+        const existingNames = new Set(existingStamps.map(s => s.name.toLowerCase().trim()));
+
         fs.createReadStream(filePath)
             .pipe(csv())
             .on('data', (row) => {
                 try {
-                    // SAFER PARSING: Handle potential malformed JSON in category
+                    // 1. Check for Empty Data in Required Fields
+                    if (!row.name || !row.price || !row.country || !row.year) {
+                        skippedRows.push({ row: row.name || "Unknown", reason: "Missing required fields" });
+                        return;
+                    }
+
+                    const nameTrimmed = row.name.trim();
+
+                    // 2. Duplicate Check (Case-Insensitive)
+                    if (existingNames.has(nameTrimmed.toLowerCase())) {
+                        skippedRows.push({ row: nameTrimmed, reason: "Duplicate entry" });
+                        return;
+                    }
+
+                    // 3. Category Parsing Logic
                     let parsedCategory = [];
                     if (row.category) {
                         const cleanedCategory = row.category.trim();
-                        // Check if it looks like a JSON array, otherwise split by comma
                         if (cleanedCategory.startsWith('[') && cleanedCategory.endsWith(']')) {
                             parsedCategory = JSON.parse(cleanedCategory);
                         } else {
@@ -30,51 +47,68 @@ const bulkAddStamps = async (req, res) => {
                         }
                     }
 
+                    // 4. Data Type & Range Validation
+                    const price = Number(row.price);
+                    const year = Number(row.year);
+
+                    if (isNaN(price) || price <= 0) {
+                        skippedRows.push({ row: nameTrimmed, reason: "Invalid price" });
+                        return;
+                    }
+
+                    // Add to valid list
                     stamps.push({
-                        name: row.name,
-                        description: row.description,
-                        price: Number(row.price),
+                        name: nameTrimmed,
+                        description: row.description || "",
+                        price: price,
                         category: parsedCategory,
-                        year: Number(row.year),
-                        country: row.country,
-                        condition: row.condition,
+                        year: year,
+                        country: row.country.trim(),
+                        condition: row.condition || "Used",
                         stock: Number(row.stock) || 1,
-                        bestseller: row.bestseller === 'true' || row.bestseller === true,
+                        bestseller: String(row.bestseller).toLowerCase() === 'true',
                         image: [], 
                         date: Date.now()
                     });
+
+                    // Add to local Set to prevent duplicates within the SAME CSV file
+                    existingNames.add(nameTrimmed.toLowerCase());
+
                 } catch (rowError) {
-                    console.error("Error processing row:", row, rowError.message);
-                    // We skip the bad row instead of crashing the whole process
+                    skippedRows.push({ row: row.name || "Unknown", reason: "Format error" });
                 }
             })
             .on('end', async () => {
                 try {
                     if (stamps.length === 0) {
-                        fs.unlinkSync(filePath);
-                        return res.json({ success: false, message: "No valid data found in CSV" });
+                        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+                        return res.json({ 
+                            success: false, 
+                            message: "No valid data to upload", 
+                            errors: skippedRows 
+                        });
                     }
 
-                    // Bulk insert into MongoDB
-                    await productModel.insertMany(stamps);
+                    // Bulk insert with ordered:false so one error doesn't kill the batch
+                    await productModel.insertMany(stamps, { ordered: false });
                     
-                    // Cleanup
                     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
                     
-                    res.json({ success: true, message: `${stamps.length} Stamps added successfully` });
+                    res.json({ 
+                        success: true, 
+                        message: `Successfully added ${stamps.length} stamps.`,
+                        skippedCount: skippedRows.length,
+                        skippedDetails: skippedRows.slice(0, 10) // Show first 10 errors
+                    });
+
                 } catch (err) {
                     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
                     res.json({ success: false, message: "Database Error: " + err.message });
                 }
-            })
-            .on('error', (error) => {
-                if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-                res.json({ success: false, message: "CSV Parsing Error: " + error.message });
             });
 
     } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: "Server Error: " + error.message });
     }
 };
 

@@ -1,5 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Prata&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Beau+Rivage&family=Felipa&family=Sirivennela&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Almendra:ital,wght@0,400;0,700;1,400;1,700&family=Beau+Rivage&family=Diplomata+SC&family=Felipa&family=Gasoek+One&family=Imperial+Script&family=Sirivennela&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,6 +7,21 @@
 /* --- 1. GLOBAL UI SETTINGS --- */
 * {
     font-family: Outfit;
+}
+.diplomata-sc-regular {
+  font-family: "Diplomata SC", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+.bokor-regular {
+  font-family: "Bokor", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}
+.rye-regular {
+  font-family: "Rye", serif;
+  font-weight: 400;
+  font-style: normal;
 }
 
 .almendra-regular {

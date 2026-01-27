@@ -1,3 +1,154 @@
 name,description,price,category,year,country,condition,stock,bestseller
-"Penny Black","The world's first adhesive postage stamp.","450","[""Rare"",""Historical""]",1840,"Great Britain","Used",2,true
-"Inverted Jenny","A famous airmail error stamp.","125000","[""Rare"",""Airmail""]",1918,"USA","Fine",1,false
+"Penny Black","The world's first adhesive postage stamp.",450,"[""Rare"",""Historical""]",1840,"Great Britain","Used",2,true
+"Inverted Jenny","A famous airmail error stamp.",125000,"[""Rare"",""Airmail""]",1918,"USA","Fine",1,false
+"Mauritius Post Office","One of the most valuable stamps in the world.",2000000,"[""Rare"",""Historical""]",1847,"Mauritius","Used",1,false
+"British Guiana 1c Magenta","The unique one-cent stamp from 1856.",9480000,"[""Rare"",""Historical""]",1856,"British Guiana","Used",1,true
+"Treskilling Yellow","A color error on a Swedish 3-skilling stamp.",2300000,"[""Rare"",""Error""]",1855,"Sweden","Fine",1,false
+"Vintage Crest #6","A near mint stamp from Canada, issued in 1902.",145.2,"[""Historical""]",1902,"Canada","Near Mint",14,true
+"Royal Portrait #7","A mint stamp from Japan, issued in 1925.",320.5,"[""Commemorative"",""Rare""]",1925,"Japan","Mint",5,false
+"Classic Seal #8","A used stamp from France, issued in 1870.",85.0,"[""Definitive""]",1870,"France","Used",22,true
+"Limited Issue #9","A fine stamp from Germany, issued in 1948.",450.75,"[""Historical"",""Special Edition""]",1948,"Germany","Fine",3,false
+"Imperial Mark #10","A fair stamp from China, issued in 1912.",65.3,"[""Rare""]",1912,"China","Fair",40,false
+"Century Landscape #11","A near mint stamp from Brazil, issued in 1930.",112.0,"[""Historical""]",1930,"Brazil","Near Mint",8,true
+"Postage Portrait #12","A mint stamp from Australia, issued in 1955.",25.5,"[""Commemorative""]",1955,"Australia","Mint",50,false
+"Royal Mark #13","A fine stamp from India, issued in 1947.",550.0,"[""Historical"",""Rare""]",1947,"India","Fine",2,true
+"Classic Crest #14","A used stamp from USA, issued in 1901.",12.4,"[""Definitive""]",1901,"USA","Used",100,false
+"Limited Seal #15","A fine stamp from Great Britain, issued in 1890.",890.0,"[""Special Edition""]",1890,"Great Britain","Fine",4,true
+"Vintage Portrait #16","A fair stamp from France, issued in 1920.",15.0,"[""Historical""]",1920,"France","Fair",60,false
+"Imperial Landscape #17","A mint stamp from China, issued in 1960.",75.25,"[""Rare"",""Commemorative""]",1960,"China","Mint",12,false
+"Century Issue #18","A used stamp from Germany, issued in 1888.",134.0,"[""Definitive""]",1888,"Germany","Used",15,true
+"Royal Stamp #19","A near mint stamp from Canada, issued in 1952.",45.0,"[""Historical""]",1952,"Canada","Near Mint",30,false
+"Classic Mark #20","A fine stamp from Japan, issued in 1895.",1200.0,"[""Rare"",""Historical""]",1895,"Japan","Fine",1,true
+"Limited Portrait #21","A mint stamp from USA, issued in 1945.",85.5,"[""Airmail""]",1945,"USA","Mint",25,false
+"Vintage Seal #22","A used stamp from Brazil, issued in 1910.",33.2,"[""Historical""]",1910,"Brazil","Used",45,true
+"Imperial Crest #23","A fine stamp from Australia, issued in 1934.",210.0,"[""Rare""]",1934,"Australia","Fine",6,false
+"Postage Landscape #24","A fair stamp from India, issued in 1950.",10.5,"[""Commemorative""]",1950,"India","Fair",120,true
+"Century Stamp #25","A mint stamp from France, issued in 1905.",420.0,"[""Historical"",""Special Edition""]",1905,"France","Mint",7,false
+"Royal Seal #26","A fine stamp from Great Britain, issued in 1937.",150.0,"[""Definitive""]",1937,"Great Britain","Fine",18,true
+"Classic Portrait #27","A used stamp from Germany, issued in 1923.",5.0,"[""Historical""]",1923,"Germany","Used",200,false
+"Limited Mark #28","A near mint stamp from Canada, issued in 1915.",275.0,"[""Rare""]",1915,"Canada","Near Mint",3,true
+"Vintage Landscape #29","A fine stamp from Japan, issued in 1940.",95.0,"[""Airmail""]",1940,"Japan","Fine",10,false
+"Imperial Issue #30","A mint stamp from China, issued in 1980.",12.0,"[""Commemorative""]",1980,"China","Mint",85,true
+"Postage Crest #31","A fair stamp from USA, issued in 1892.",310.0,"[""Rare"",""Historical""]",1892,"USA","Fair",2,false
+"Century Mark #32","A used stamp from Brazil, issued in 1955.",8.75,"[""Definitive""]",1955,"Brazil","Used",150,true
+"Royal Portrait #33","A fine stamp from Australia, issued in 1910.",620.0,"[""Rare""]",1910,"Australia","Fine",4,false
+"Classic Stamp #34","A near mint stamp from India, issued in 1962.",14.0,"[""Commemorative""]",1962,"India","Near Mint",40,false
+"Limited Seal #35","A mint stamp from France, issued in 1950.",55.0,"[""Airmail""]",1950,"France","Mint",20,true
+"Vintage Mark #36","A used stamp from Great Britain, issued in 1900.",45.0,"[""Historical""]",1900,"Great Britain","Used",35,false
+"Imperial Portrait #37","A fine stamp from China, issued in 1949.",1800.0,"[""Rare"",""Historical""]",1949,"China","Fine",1,true
+"Postage Landscape #38","A fair stamp from Germany, issued in 1918.",22.0,"[""Definitive""]",1918,"Germany","Fair",75,false
+"Century Crest #39","A mint stamp from Canada, issued in 1935.",95.0,"[""Historical""]",1935,"Canada","Mint",15,true
+"Royal Landscape #40","A near mint stamp from Japan, issued in 1958.",38.0,"[""Commemorative""]",1958,"Japan","Near Mint",22,false
+"Classic Issue #41","A fine stamp from USA, issued in 1920.",110.0,"[""Airmail""]",1920,"USA","Fine",9,true
+"Limited Stamp #42","A used stamp from Brazil, issued in 1898.",240.0,"[""Rare""]",1898,"Brazil","Used",5,false
+"Vintage Seal #43","A fine stamp from Australia, issued in 1945.",42.5,"[""Definitive""]",1945,"Australia","Fine",30,true
+"Imperial Mark #44","A mint stamp from India, issued in 1953.",19.0,"[""Commemorative""]",1953,"India","Mint",55,false
+"Postage Portrait #45","A fair stamp from France, issued in 1885.",520.0,"[""Rare"",""Historical""]",1885,"France","Fair",2,true
+"Century Seal #46","A used stamp from Great Britain, issued in 1922.",12.0,"[""Definitive""]",1922,"Great Britain","Used",90,false
+"Royal Crest #47","A fine stamp from Germany, issued in 1905.",135.0,"[""Historical""]",1905,"Germany","Fine",14,true
+"Classic Landscape #48","A near mint stamp from Canada, issued in 1942.",65.0,"[""Airmail""]",1942,"Canada","Near Mint",11,false
+"Limited Issue #49","A mint stamp from Japan, issued in 1965.",15.5,"[""Commemorative""]",1965,"Japan","Mint",100,true
+"Vintage Stamp #50","A used stamp from China, issued in 1935.",310.0,"[""Rare""]",1935,"China","Used",3,false
+
+"Penny Black","The world's first adhesive postage stamp.",450,"[""Rare"",""Historical""]",1840,"Great Britain","Used",2,true
+"Inverted Jenny","A famous airmail error stamp.",125000,"[""Rare"",""Airmail""]",1918,"USA","Fine",1,false
+"Mauritius Post Office","One of the most valuable stamps in the world.",2000000,"[""Rare"",""Historical""]",1847,"Mauritius","Used",1,false
+"British Guiana 1c Magenta","The unique one-cent stamp from 1856.",9480000,"[""Rare"",""Historical""]",1856,"British Guiana","Used",1,true
+"Treskilling Yellow","A color error on a Swedish 3-skilling stamp.",2300000,"[""Rare"",""Error""]",1855,"Sweden","Fine",1,false
+"Vintage Crest #6","A near mint stamp from Canada, issued in 1902.",145.2,"[""Historical""]",1902,"Canada","Near Mint",14,true
+"Royal Portrait #7","A mint stamp from Japan, issued in 1925.",320.5,"[""Commemorative"",""Rare""]",1925,"Japan","Mint",5,false
+"Classic Seal #8","A used stamp from France, issued in 1870.",85.0,"[""Definitive""]",1870,"France","Used",22,true
+"Limited Issue #9","A fine stamp from Germany, issued in 1948.",450.75,"[""Historical"",""Special Edition""]",1948,"Germany","Fine",3,false
+"Imperial Mark #10","A fair stamp from China, issued in 1912.",65.3,"[""Rare""]",1912,"China","Fair",40,false
+"Century Landscape #11","A near mint stamp from Brazil, issued in 1930.",112.0,"[""Historical""]",1930,"Brazil","Near Mint",8,true
+"Postage Portrait #12","A mint stamp from Australia, issued in 1955.",25.5,"[""Commemorative""]",1955,"Australia","Mint",50,false
+"Royal Mark #13","A fine stamp from India, issued in 1947.",550.0,"[""Historical"",""Rare""]",1947,"India","Fine",2,true
+"Classic Crest #14","A used stamp from USA, issued in 1901.",12.4,"[""Definitive""]",1901,"USA","Used",100,false
+"Limited Seal #15","A fine stamp from Great Britain, issued in 1890.",890.0,"[""Special Edition""]",1890,"Great Britain","Fine",4,true
+"Vintage Portrait #16","A fair stamp from France, issued in 1920.",15.0,"[""Historical""]",1920,"France","Fair",60,false
+"Imperial Landscape #17","A mint stamp from China, issued in 1960.",75.25,"[""Rare"",""Commemorative""]",1960,"China","Mint",12,false
+"Century Issue #18","A used stamp from Germany, issued in 1888.",134.0,"[""Definitive""]",1888,"Germany","Used",15,true
+"Royal Stamp #19","A near mint stamp from Canada, issued in 1952.",45.0,"[""Historical""]",1952,"Canada","Near Mint",30,false
+"Classic Mark #20","A fine stamp from Japan, issued in 1895.",1200.0,"[""Rare"",""Historical""]",1895,"Japan","Fine",1,true
+"Limited Portrait #21","A mint stamp from USA, issued in 1945.",85.5,"[""Airmail""]",1945,"USA","Mint",25,false
+"Vintage Seal #22","A used stamp from Brazil, issued in 1910.",33.2,"[""Historical""]",1910,"Brazil","Used",45,true
+"Imperial Crest #23","A fine stamp from Australia, issued in 1934.",210.0,"[""Rare""]",1934,"Australia","Fine",6,false
+"Postage Landscape #24","A fair stamp from India, issued in 1950.",10.5,"[""Commemorative""]",1950,"India","Fair",120,true
+"Century Stamp #25","A mint stamp from France, issued in 1905.",420.0,"[""Historical"",""Special Edition""]",1905,"France","Mint",7,false
+"Royal Seal #26","A fine stamp from Great Britain, issued in 1937.",150.0,"[""Definitive""]",1937,"Great Britain","Fine",18,true
+"Classic Portrait #27","A used stamp from Germany, issued in 1923.",5.0,"[""Historical""]",1923,"Germany","Used",200,false
+"Limited Mark #28","A near mint stamp from Canada, issued in 1915.",275.0,"[""Rare""]",1915,"Canada","Near Mint",3,true
+"Vintage Landscape #29","A fine stamp from Japan, issued in 1940.",95.0,"[""Airmail""]",1940,"Japan","Fine",10,false
+"Imperial Issue #30","A mint stamp from China, issued in 1980.",12.0,"[""Commemorative""]",1980,"China","Mint",85,true
+"Postage Crest #31","A fair stamp from USA, issued in 1892.",310.0,"[""Rare"",""Historical""]",1892,"USA","Fair",2,false
+"Century Mark #32","A used stamp from Brazil, issued in 1955.",8.75,"[""Definitive""]",1955,"Brazil","Used",150,true
+"Royal Portrait #33","A fine stamp from Australia, issued in 1910.",620.0,"[""Rare""]",1910,"Australia","Fine",4,false
+"Classic Stamp #34","A near mint stamp from India, issued in 1962.",14.0,"[""Commemorative""]",1962,"India","Near Mint",40,false
+"Limited Seal #35","A mint stamp from France, issued in 1950.",55.0,"[""Airmail""]",1950,"France","Mint",20,true
+"Vintage Mark #36","A used stamp from Great Britain, issued in 1900.",45.0,"[""Historical""]",1900,"Great Britain","Used",35,false
+"Imperial Portrait #37","A fine stamp from China, issued in 1949.",1800.0,"[""Rare"",""Historical""]",1949,"China","Fine",1,true
+"Postage Landscape #38","A fair stamp from Germany, issued in 1918.",22.0,"[""Definitive""]",1918,"Germany","Fair",75,false
+"Century Crest #39","A mint stamp from Canada, issued in 1935.",95.0,"[""Historical""]",1935,"Canada","Mint",15,true
+"Royal Landscape #40","A near mint stamp from Japan, issued in 1958.",38.0,"[""Commemorative""]",1958,"Japan","Near Mint",22,false
+"Classic Issue #41","A fine stamp from USA, issued in 1920.",110.0,"[""Airmail""]",1920,"USA","Fine",9,true
+"Limited Stamp #42","A used stamp from Brazil, issued in 1898.",240.0,"[""Rare""]",1898,"Brazil","Used",5,false
+"Vintage Seal #43","A fine stamp from Australia, issued in 1945.",42.5,"[""Definitive""]",1945,"Australia","Fine",30,true
+"Imperial Mark #44","A mint stamp from India, issued in 1953.",19.0,"[""Commemorative""]",1953,"India","Mint",55,false
+"Postage Portrait #45","A fair stamp from France, issued in 1885.",520.0,"[""Rare"",""Historical""]",1885,"France","Fair",2,true
+"Century Seal #46","A used stamp from Great Britain, issued in 1922.",12.0,"[""Definitive""]",1922,"Great Britain","Used",90,false
+"Royal Crest #47","A fine stamp from Germany, issued in 1905.",135.0,"[""Historical""]",1905,"Germany","Fine",14,true
+"Classic Landscape #48","A near mint stamp from Canada, issued in 1942.",65.0,"[""Airmail""]",1942,"Canada","Near Mint",11,false
+"Limited Issue #49","A mint stamp from Japan, issued in 1965.",15.5,"[""Commemorative""]",1965,"Japan","Mint",100,true
+"Vintage Stamp #50","A used stamp from China, issued in 1935.",310.0,"[""Rare""]",1935,"China","Used",3,false
+
+
+"Penny Black","The world's first adhesive postage stamp.",450,"[""Rare"",""Historical""]",1840,"Great Britain","Used",2,true
+"Inverted Jenny","A famous airmail error stamp.",125000,"[""Rare"",""Airmail""]",1918,"USA","Fine",1,false
+"Mauritius Post Office","One of the most valuable stamps in the world.",2000000,"[""Rare"",""Historical""]",1847,"Mauritius","Used",1,false
+"British Guiana 1c Magenta","The unique one-cent stamp from 1856.",9480000,"[""Rare"",""Historical""]",1856,"British Guiana","Used",1,true
+"Treskilling Yellow","A color error on a Swedish 3-skilling stamp.",2300000,"[""Rare"",""Error""]",1855,"Sweden","Fine",1,false
+"Vintage Crest #6","A near mint stamp from Canada, issued in 1902.",145.2,"[""Historical""]",1902,"Canada","Near Mint",14,true
+"Royal Portrait #7","A mint stamp from Japan, issued in 1925.",320.5,"[""Commemorative"",""Rare""]",1925,"Japan","Mint",5,false
+"Classic Seal #8","A used stamp from France, issued in 1870.",85.0,"[""Definitive""]",1870,"France","Used",22,true
+"Limited Issue #9","A fine stamp from Germany, issued in 1948.",450.75,"[""Historical"",""Special Edition""]",1948,"Germany","Fine",3,false
+"Imperial Mark #10","A fair stamp from China, issued in 1912.",65.3,"[""Rare""]",1912,"China","Fair",40,false
+"Century Landscape #11","A near mint stamp from Brazil, issued in 1930.",112.0,"[""Historical""]",1930,"Brazil","Near Mint",8,true
+"Postage Portrait #12","A mint stamp from Australia, issued in 1955.",25.5,"[""Commemorative""]",1955,"Australia","Mint",50,false
+"Royal Mark #13","A fine stamp from India, issued in 1947.",550.0,"[""Historical"",""Rare""]",1947,"India","Fine",2,true
+"Classic Crest #14","A used stamp from USA, issued in 1901.",12.4,"[""Definitive""]",1901,"USA","Used",100,false
+"Limited Seal #15","A fine stamp from Great Britain, issued in 1890.",890.0,"[""Special Edition""]",1890,"Great Britain","Fine",4,true
+"Vintage Portrait #16","A fair stamp from France, issued in 1920.",15.0,"[""Historical""]",1920,"France","Fair",60,false
+"Imperial Landscape #17","A mint stamp from China, issued in 1960.",75.25,"[""Rare"",""Commemorative""]",1960,"China","Mint",12,false
+"Century Issue #18","A used stamp from Germany, issued in 1888.",134.0,"[""Definitive""]",1888,"Germany","Used",15,true
+"Royal Stamp #19","A near mint stamp from Canada, issued in 1952.",45.0,"[""Historical""]",1952,"Canada","Near Mint",30,false
+"Classic Mark #20","A fine stamp from Japan, issued in 1895.",1200.0,"[""Rare"",""Historical""]",1895,"Japan","Fine",1,true
+"Limited Portrait #21","A mint stamp from USA, issued in 1945.",85.5,"[""Airmail""]",1945,"USA","Mint",25,false
+"Vintage Seal #22","A used stamp from Brazil, issued in 1910.",33.2,"[""Historical""]",1910,"Brazil","Used",45,true
+"Imperial Crest #23","A fine stamp from Australia, issued in 1934.",210.0,"[""Rare""]",1934,"Australia","Fine",6,false
+"Postage Landscape #24","A fair stamp from India, issued in 1950.",10.5,"[""Commemorative""]",1950,"India","Fair",120,true
+"Century Stamp #25","A mint stamp from France, issued in 1905.",420.0,"[""Historical"",""Special Edition""]",1905,"France","Mint",7,false
+"Royal Seal #26","A fine stamp from Great Britain, issued in 1937.",150.0,"[""Definitive""]",1937,"Great Britain","Fine",18,true
+"Classic Portrait #27","A used stamp from Germany, issued in 1923.",5.0,"[""Historical""]",1923,"Germany","Used",200,false
+"Limited Mark #28","A near mint stamp from Canada, issued in 1915.",275.0,"[""Rare""]",1915,"Canada","Near Mint",3,true
+"Vintage Landscape #29","A fine stamp from Japan, issued in 1940.",95.0,"[""Airmail""]",1940,"Japan","Fine",10,false
+"Imperial Issue #30","A mint stamp from China, issued in 1980.",12.0,"[""Commemorative""]",1980,"China","Mint",85,true
+"Postage Crest #31","A fair stamp from USA, issued in 1892.",310.0,"[""Rare"",""Historical""]",1892,"USA","Fair",2,false
+"Century Mark #32","A used stamp from Brazil, issued in 1955.",8.75,"[""Definitive""]",1955,"Brazil","Used",150,true
+"Royal Portrait #33","A fine stamp from Australia, issued in 1910.",620.0,"[""Rare""]",1910,"Australia","Fine",4,false
+"Classic Stamp #34","A near mint stamp from India, issued in 1962.",14.0,"[""Commemorative""]",1962,"India","Near Mint",40,false
+"Limited Seal #35","A mint stamp from France, issued in 1950.",55.0,"[""Airmail""]",1950,"France","Mint",20,true
+"Vintage Mark #36","A used stamp from Great Britain, issued in 1900.",45.0,"[""Historical""]",1900,"Great Britain","Used",35,false
+"Imperial Portrait #37","A fine stamp from China, issued in 1949.",1800.0,"[""Rare"",""Historical""]",1949,"China","Fine",1,true
+"Postage Landscape #38","A fair stamp from Germany, issued in 1918.",22.0,"[""Definitive""]",1918,"Germany","Fair",75,false
+"Century Crest #39","A mint stamp from Canada, issued in 1935.",95.0,"[""Historical""]",1935,"Canada","Mint",15,true
+"Royal Landscape #40","A near mint stamp from Japan, issued in 1958.",38.0,"[""Commemorative""]",1958,"Japan","Near Mint",22,false
+"Classic Issue #41","A fine stamp from USA, issued in 1920.",110.0,"[""Airmail""]",1920,"USA","Fine",9,true
+"Limited Stamp #42","A used stamp from Brazil, issued in 1898.",240.0,"[""Rare""]",1898,"Brazil","Used",5,false
+"Vintage Seal #43","A fine stamp from Australia, issued in 1945.",42.5,"[""Definitive""]",1945,"Australia","Fine",30,true
+"Imperial Mark #44","A mint stamp from India, issued in 1953.",19.0,"[""Commemorative""]",1953,"India","Mint",55,false
+"Postage Portrait #45","A fair stamp from France, issued in 1885.",520.0,"[""Rare"",""Historical""]",1885,"France","Fair",2,true
+"Century Seal #46","A used stamp from Great Britain, issued in 1922.",12.0,"[""Definitive""]",1922,"Great Britain","Used",90,false
+"Royal Crest #47","A fine stamp from Germany, issued in 1905.",135.0,"[""Historical""]",1905,"Germany","Fine",14,true
+"Classic Landscape #48","A near mint stamp from Canada, issued in 1942.",65.0,"[""Airmail""]",1942,"Canada","Near Mint",11,false
+"Limited Issue #49","A mint stamp from Japan, issued in 1965.",15.5,"[""Commemorative""]",1965,"Japan","Mint",100,true
+"Vintage Stamp #50","A used stamp from China, issued in 1935.",310.0,"[""Rare""]",1935,"China","Used",3,false
