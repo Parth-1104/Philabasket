@@ -290,9 +290,9 @@ const singleProduct = async (req, res) => {
 
 const updateProduct = async (req, res) => {
     try {
-        const { id, name, country, year, price, category } = req.body;
+        // 1. Added 'stock' to the destructuring
+        const { id, name, country, year, price, category, stock } = req.body;
 
-        // Find the product and update it with new values
         const updatedProduct = await productModel.findByIdAndUpdate(
             id,
             {
@@ -300,13 +300,20 @@ const updateProduct = async (req, res) => {
                 country,
                 year: Number(year),
                 price: Number(price),
-                category // This is already an array from our frontend logic
+                stock: Number(stock), // 2. Added stock to the update object
+                category 
             },
-            { new: true } // Returns the modified document
+            { new: true } 
         );
 
         if (!updatedProduct) {
             return res.json({ success: false, message: "Stamp not found" });
+        }
+
+        // --- RESTOCK ALERT LOGIC ---
+        // If stock is updated and falls below 5, you could trigger a console log or email here
+        if (updatedProduct.stock > 0 && updatedProduct.stock <= 5) {
+            console.log(`Restock Alert: ${updatedProduct.name} is low (${updatedProduct.stock} left)`);
         }
 
         res.json({ success: true, message: "Stamp details updated successfully" });
