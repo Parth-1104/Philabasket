@@ -228,17 +228,51 @@ const listProducts = async (req, res) => {
 }
 
 // function for removing product
+// Function for removing a single product
 const removeProduct = async (req, res) => {
     try {
-        
-        await productModel.findByIdAndDelete(req.body.id)
-        res.json({success:true,message:"Product Removed"})
+        // Use destructuring to get the id
+        const { id } = req.body;
+
+        if (!id) {
+            return res.json({ success: false, message: "ID is required to remove a product" });
+        }
+
+        const deletedProduct = await productModel.findByIdAndDelete(id);
+
+        if (!deletedProduct) {
+            return res.json({ success: false, message: "Stamp not found in inventory" });
+        }
+
+        res.json({ success: true, message: "Stamp Removed Successfully" });
 
     } catch (error) {
-        console.log(error)
-        res.json({ success: false, message: error.message })
+        console.log(error);
+        res.json({ success: false, message: error.message });
     }
 }
+
+// Function for removing multiple products (Bulk Delete)
+const removeBulkProducts = async (req, res) => {
+    try {
+        const { ids } = req.body; // Expecting an array: ["id1", "id2", ...]
+
+        if (!ids || !Array.isArray(ids) || ids.length === 0) {
+            return res.json({ success: false, message: "No items selected for deletion" });
+        }
+
+        // Use $in operator to delete all items in the array
+        await productModel.deleteMany({ _id: { $in: ids } });
+
+        res.json({ success: true, message: `${ids.length} Stamps removed successfully` });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+
 
 // function for single product info
 const singleProduct = async (req, res) => {
@@ -283,4 +317,4 @@ const updateProduct = async (req, res) => {
     }
 }
 
-export { listProducts, addProduct, removeProduct, singleProduct ,bulkAddStamps,updateProductImages,updateProduct}
+export { listProducts, addProduct, removeProduct, singleProduct ,bulkAddStamps,updateProductImages,updateProduct,removeBulkProducts}

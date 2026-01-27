@@ -202,37 +202,39 @@ const updateStatus = async (req, res) => {
 
 const getDetailedAnalytics = async (req, res) => {
     try {
+        const USD_TO_INR = 83;
         const filter = { $or: [{ payment: true }, { status: "Delivered" }] };
 
-        // 1. Top Buyers Logic (Unchanged)
+        const recentOrders = await orderModel.find(filter).sort({ date: -1 }).limit(10).lean();
+
         const topBuyers = await orderModel.aggregate([
             { $match: filter },
-            // Group by userId string
-            { $group: { _id: "$userId", totalSpent: { $sum: "$amount" }, orderCount: { $sum: 1 } }},
-            
-            // JOIN with users collection using type conversion
+            {
+                $project: {
+                    userId: 1,
+                    convertedAmount: {
+                        $cond: {
+                            if: { $eq: ["$currency", "USD"] },
+                            then: { $multiply: ["$amount", USD_TO_INR] },
+                            else: "$amount"
+                        }
+                    }
+                }
+            },
+            { $group: { _id: "$userId", totalSpent: { $sum: "$convertedAmount" }, orderCount: { $sum: 1 } }},
             {
                 $lookup: {
-                    from: "users", // MongoDB pluralizes 'user' model to 'users'
+                    from: "users",
                     let: { orderUserId: "$_id" }, 
                     pipeline: [
-                        { 
-                            $match: { 
-                                $expr: { 
-                                    $eq: ["$_id", { $toObjectId: "$$orderUserId" }] 
-                                } 
-                            } 
-                        }
+                        { $match: { $expr: { $eq: ["$_id", { $toObjectId: "$$orderUserId" }] } } }
                     ],
                     as: "userDetails"
                 }
             },
-            
-            // Flatten the array
             { $unwind: "$userDetails" },
-            
-            // Select final fields
             { $project: { 
+                _id: 1,
                 name: "$userDetails.name", 
                 email: "$userDetails.email", 
                 totalSpent: 1, 
@@ -242,63 +244,7 @@ const getDetailedAnalytics = async (req, res) => {
             { $limit: 10 }
         ]);
 
-        // 2. FIXED: Most Sold Items (Grouping by items._id)
-        const mostSoldProducts = await orderModel.aggregate([
-            { $match: filter },
-            { $unwind: "$items" },
-            { 
-                $group: { 
-                    _id: "$items._id", // Use the unique item ID from the order
-                    name: { $first: "$items.name" }, 
-                    image: { $first: "$items.image" }, 
-                    totalSold: { $sum: "$items.quantity" }, 
-                    revenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } } 
-                } 
-            },
-            { $sort: { totalSold: -1 } }, // Sorted by most selling numbers
-            { $limit: 20 } // Show all top 20 items
-        ]);
-
-        // 3. FIXED: Most in Cart (Adding Name Lookup)
-        const inCartStats = await userModel.aggregate([
-            // 1. Convert the cart object { "prodId": quantity } into an array
-            { $project: { cartArray: { $objectToArray: "$cartData" } } },
-            { $unwind: "$cartArray" },
-            
-            // 2. Count how many users have each product ID in their cart
-            { $group: { _id: "$cartArray.k", totalInCarts: { $sum: 1 } } },
-            
-            // 3. JOIN with the "products" collection to get the name
-            {
-                $lookup: {
-                    from: "products", // Ensure this matches your collection name in Compass
-                    let: { prodId: "$_id" },
-                    pipeline: [
-                        { 
-                            $match: { 
-                                $expr: { $eq: ["$_id", { $toObjectId: "$$prodId" }] } 
-                            } 
-                        },
-                        { $project: { name: 1 } }
-                    ],
-                    as: "productDetails"
-                }
-            },
-            
-            // 4. Flatten the result and clean up
-            { $unwind: "$productDetails" },
-            { 
-                $project: { 
-                    _id: 1, 
-                    totalInCarts: 1, 
-                    name: "$productDetails.name" 
-                } 
-            },
-            { $sort: { totalInCarts: -1 } },
-            { $limit: 5 }
-        ]);
-
-        res.json({ success: true, topBuyers, mostSoldProducts, inCartStats });
+        res.json({ success: true, recentOrders, topBuyers });
     } catch (error) {
         res.json({ success: false, message: error.message });
     }
@@ -309,33 +255,62 @@ const getAdminDashboardStats = async (req, res) => {
         const orders = await orderModel.find({});
         const users = await userModel.find({});
         
-        const totalRevenue = orders.reduce((acc, order) => acc + (order.amount || 0), 0);
-        const orderCount = orders.length;
+        const USD_TO_INR = 83;
+        const totalSystemPoints = users.reduce((acc, user) => acc + (user.totalRewardPoints || 0), 0);
+
+        // --- UPDATED REVENUE LOGIC ---
+        // Only sum the amount if status is 'Delivered'
+        const totalRevenue = orders.reduce((acc, order) => {
+            if (order.status === 'Delivered') {
+                const amt = order.currency === 'USD' ? order.amount * USD_TO_INR : order.amount;
+                return acc + (amt || 0);
+            }
+            return acc;
+        }, 0);
+
+        // Update Order Count to reflect only delivered orders if you want metrics to stay proportional
+        const deliveredOrders = orders.filter(o => o.status === 'Delivered');
+        const orderCount = deliveredOrders.length;
         const avgOrderValue = orderCount > 0 ? (totalRevenue / orderCount).toFixed(2) : 0;
 
-        const userOrderCounts = {};
-        orders.forEach(o => userOrderCounts[o.userId] = (userOrderCounts[o.userId] || 0) + 1);
-        const repeatCustomers = Object.values(userOrderCounts).filter(count => count > 1).length;
-        const repeatRate = users.length > 0 ? ((repeatCustomers / users.length) * 100).toFixed(1) : 0;
-
+        // Update Sales Trend to only include delivered orders
         const salesTrend = await orderModel.aggregate([
-            { $group: { 
-                _id: { month: { $month: { $add: [new Date(0), "$date"] } }, year: { $year: { $add: [new Date(0), "$date"] } } }, 
-                sales: { $sum: "$amount" },
-                orders: { $sum: 1 }
-            }},
-            { $sort: { "_id.year": 1, "_id.month": 1 } },
-            { $limit: 6 }
+            { $match: { status: "Delivered" } }, // Add this filter
+            {
+                $project: {
+                    month: { $month: { $add: [new Date(0), "$date"] } },
+                    year: { $year: { $add: [new Date(0), "$date"] } },
+                    convertedAmount: {
+                        $cond: {
+                            if: { $eq: ["$currency", "USD"] },
+                            then: { $multiply: ["$amount", USD_TO_INR] },
+                            else: "$amount"
+                        }
+                    }
+                }
+            },
+            {
+                $group: { 
+                    _id: { month: "$month", year: "$year" }, 
+                    sales: { $sum: "$convertedAmount" },
+                    orders: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id.year": 1, "_id.month": 1 } }
         ]);
 
         res.json({
             success: true,
             stats: {
-                totalRevenue, orderCount, totalUsers: users.length,
-                avgOrderValue, repeatCustomerRate: repeatRate,
+                totalRevenue, 
+                orderCount, 
+                totalUsers: users.length,
+                totalSystemPoints,
+                avgOrderValue, 
                 salesTrend: salesTrend.map(s => ({ 
                     date: `${s._id.month}/${s._id.year}`, 
-                    sales: s.sales, orders: s.orders 
+                    sales: s.sales, 
+                    orders: s.orders 
                 }))
             }
         });
