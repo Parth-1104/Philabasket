@@ -3,72 +3,77 @@ import { assets } from '../assets/assets'
 
 const Hero = () => {
   return (
-    /* Added 'select-none' to prevent text/image highlighting during drag */
-    <div className='w-full h-[100vh] border-b border-gray-400 bg-[#f9f4ee] py-20 overflow-hidden relative select-none'>
+    <div className='w-full min-h-screen bg-[#0a0a0a] overflow-hidden relative select-none flex flex-col justify-center py-20 px-6 md:px-16 lg:px-24'>
       
-      {/* Top Text Content */}
-      <div className='text-center mb-16 relative z-50 px-6'>
-        <div className='flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-16'>
-
-            {/* Background decorative stamp (Top Left) */}
-            <div className='absolute left-[2%] top-[-18vh] w-1/4 lg:w-1/6 z-0 opacity-40 grayscale rotate-[12deg]'>
-                {/* Added draggable="false" */}
-                <img draggable="false" className='w-full h-auto' src={assets.main02} alt="Background" />
-            </div>
-
-            <p className='hidden lg:block text-[16px] leading-tight text-gray-900 uppercase tracking-[0.2em] text-left w-28'>
-                Explore This Year's <span className='text-[#E63946] felipa-regular'>Exclusive</span> Stamp Releases
-            </p>
-
-            {/* Title with the Red "Stamps" highlight */}
-            <h1 className='imperial-script-regular text-5xl sm:text-7xl lg:text-8xl text-[#2D2825] leading-[1.1]'>
-                Curated <span className='felipa-regular'>Stamps</span> <br />
-                <span className='felipa-regular'>for</span> True Philatelist
-            </h1>
-            
-            <div className='hidden lg:block w-28'></div>
-        </div>
+      {/* --- Ambient Background Layers --- */}
+      {/* Radial Gold Glow */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_rgba(184,134,11,0.1)_0%,_transparent_65%)] pointer-events-none"></div>
+      
+      {/* Decorative Large Watermark */}
+      <div className='absolute left-[-5%] top-[10%] opacity-[0.03] rotate-[-15deg] pointer-events-none'>
+          <img src={assets.main02} className='w-[40vw] filter grayscale invert' alt="" />
       </div>
 
-      {/* Full Width Scattered Image Collage */}
-      <div className='relative w-full h-[500px] sm:h-[650px] lg:h-[750px]'>
+      {/* --- Text Content: Editorial Layout --- */}
+      <div className='relative z-50 flex flex-col items-center text-center'>
         
-        {/* Main Center Stamp - Clean White Border */}
-        <div className='absolute left-[47vh] top-[1vh] w-[85%] sm:w-[65%] lg:w-[30%] z-10 shadow-2xl border-[10px] border-white animate-hb-side'>
-            <img draggable="false" className='w-full h-auto' src={assets.main01} alt="Main Stamp" />
+        {/* Top Tagline */}
+        <div className="flex items-center gap-4 mb-6">
+            <div className="h-[1px] w-8 md:w-16 bg-gradient-to-r from-transparent to-[#B8860B]"></div>
+            <p className='text-[10px] md:text-xs tracking-[0.5em] text-[#B8860B] uppercase font-light'>
+                Philately Excellence • MMXXVI
+            </p>
+            <div className="h-[1px] w-8 md:w-16 bg-gradient-to-l from-transparent to-[#B8860B]"></div>
         </div>
 
-        {/* Floating Stamp Left - Top */}
-        <div className='absolute left-[13vw] top-[-2%] w-1/3 sm:w-1/4 lg:w-[15%] z-20 shadow-xl border-2 border-[#E63946] animate-hb-side'>
-            <img draggable="false" className='w-full h-auto' src={assets.main02} alt="Stamp 2" />
-        </div>
+        {/* Cinematic Title */}
+        <h1 className='font-serif text-5xl sm:text-7xl lg:text-9xl text-white leading-[1] mb-8 tracking-tighter'>
+            The Private <br />
+            <span className="italic font-light text-[#B8860B]/80 ml-8 md:ml-16 leading-none">Archives.</span>
+        </h1>
 
-        {/* Floating Stamp Right - Middle */}
-        <div className='absolute right-[28vw] top-[19%] w-1/3 sm:w-1/4 lg:w-[15%] z-30 shadow-2xl border-4 border-black animate-hb-side'>
-            <img draggable="false" className='w-full h-auto' src={assets.main03} alt="Stamp 3" />
-        </div>
-
-        {/* Floating Stamp Left - Bottom */}
-        <div className='absolute left-[10%] bottom-[33%] w-[40%] sm:w-[30%] lg:w-[20%] z-40 shadow-2xl border-2 border-[#E63946] animate-hb-side-delayed'>
-            <img draggable="false" className='w-full h-auto' src={assets.main04} alt="Stamp 4" />
-        </div>
-
-        {/* Background Detail (Right Bottom) */}
-        <div className='absolute right-[2%] bottom-[10%] w-1/4 lg:w-1/6 z-0 opacity-40 grayscale rotate-[12deg]'>
-            <img draggable="false" className='w-full h-auto' src={assets.main02} alt="Background" />
+        <div className="max-w-xl mx-auto space-y-8">
+            <p className='text-sm md:text-base text-gray-400 font-light leading-relaxed tracking-wide italic'>
+                Discover rare specimens and historical artifacts curated for the world's most distinguished philatelists.
+            </p>
+            
+            {/* Action Buttons */}
+            <div className='flex flex-col sm:flex-row items-center justify-center gap-6 pt-4'>
+                <button className='bg-[#B8860B] text-black px-12 py-4 text-[10px] font-bold tracking-[0.4em] uppercase hover:bg-white transition-all duration-500 rounded-sm shadow-[0_0_30px_rgba(184,134,11,0.2)]'>
+                    Enter The Vault
+                </button>
+                <button className='text-white border-b border-white/20 pb-2 text-[10px] tracking-[0.4em] uppercase hover:text-[#B8860B] hover:border-[#B8860B] transition-all duration-500'>
+                    View New Arrivals
+                </button>
+            </div>
         </div>
       </div>
 
-      {/* --- Attractive Offers Bottom Right --- */}
-      <div className='absolute bottom-[33vh] right-20 hidden lg:flex flex-col items-center gap-6 z-50'>
-          <p className='text-[16px] text-gray-600 uppercase tracking-[0.1em] text-right w-28'>
-              Get attractive <span className='text-[#E63946] font-bold'>offers</span> for your first purchase.
-          </p>
-          <div className='border-2 border-[#E63946] text-[#E63946] rounded-full p-3 cursor-pointer hover:bg-[#fefcf7] hover:text-white transition-all duration-300 shadow-md'>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
-                  <path d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1z"/>
-              </svg>
-          </div>
+      {/* --- Scattered Artifact Collage --- */}
+      <div className='relative w-full h-[300px] md:h-[400px] mt-20 md:mt-10'>
+        
+        {/* Main Center Stamp - Floating with Gold Shadow */}
+        <div className='absolute left-1/2 top-0 -translate-x-1/2 w-[60%] sm:w-[40%] lg:w-[22%] z-30 transform hover:scale-105 transition-transform duration-1000'>
+            <div className="relative p-2 bg-gradient-to-tr from-[#B8860B]/40 to-white/10 rounded-sm shadow-2xl">
+                <img draggable="false" className='w-full h-auto drop-shadow-[0_15px_35px_rgba(0,0,0,0.8)]' src={assets.main01} alt="Primary Specimen" />
+            </div>
+        </div>
+
+        {/* Secondary Stamp Left */}
+        <div className='absolute left-[5vw] top-[20%] w-[35%] sm:w-[25%] lg:w-[15%] z-20 opacity-40 hover:opacity-100 transition-opacity duration-700 animate-hb-side-delayed'>
+            <img draggable="false" className='w-full h-auto filter grayscale group-hover:grayscale-0' src={assets.main02} alt="Artifact 2" />
+        </div>
+
+        {/* Secondary Stamp Right */}
+        <div className='absolute right-[5vw] top-[10%] w-[35%] sm:w-[25%] lg:w-[15%] z-20 opacity-40 hover:opacity-100 transition-opacity duration-700 animate-hb-side'>
+            <img draggable="false" className='w-full h-auto filter grayscale' src={assets.main03} alt="Artifact 3" />
+        </div>
+      </div>
+
+      {/* --- Scroll Indicator --- */}
+      <div className='absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-30'>
+          <span className='text-[8px] tracking-[0.5em] text-[#B8860B] uppercase font-bold'>Scroll to Explore</span>
+          <div className='w-[1px] h-12 bg-gradient-to-b from-[#B8860B] to-transparent'></div>
       </div>
 
     </div>

@@ -3,7 +3,7 @@ import main02 from './main02.png'
 import main03 from './main03.png'
 import main04 from './main04.png'
 import coin from './coin.jpg'
-
+import loginimf from './login.jpeg'
 
 import logo from './logo.png'
 import hero_img from './hero_img.png'
@@ -47,6 +47,7 @@ export const assets = {
     main02,
     main03,
     main04,
-    coin
+    coin,
+    loginimf
 }
 
