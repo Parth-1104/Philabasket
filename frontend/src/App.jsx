@@ -18,7 +18,7 @@ import Verify from './pages/Verify'
 
 const App = () => {
   return (
-    <div className='px-2 sm:px-[1vw] md:px-[2vw] lg:px-[0vw] bg-[#f8f5ee]'>
+    <div className='px-2 sm:px-[1vw] md:px-[2vw] lg:px-[0vw] bg-[#0a0a0a]'>
       <ToastContainer />
       <Navbar />
       <SearchBar />
