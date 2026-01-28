@@ -118,24 +118,45 @@ const placeOrder = async (req, res) => {
 // ... (Stripe and Razorpay logic updated similarly with updateStock and sendEmail)
 
 // --- FEATURE: Cancel Order with Points Refund ---
-const cancelOrder = async (req, res) => {
+// controllers/orderController.js
+
+ const cancelOrder = async (req, res) => {
     try {
         const { orderId, userId } = req.body;
         const order = await orderModel.findById(orderId);
 
-        if (!order || order.status === 'Shipped' || order.status === 'Delivered') {
-            return res.json({ success: false, message: "Cannot cancel order at this stage" });
+        if (!order) {
+            return res.json({ success: false, message: "Order not found" });
         }
 
-        await orderModel.findByIdAndUpdate(orderId, { status: 'Cancelled' });
-        await updateStock(order.items, "restore");
-        if (order.pointsUsed > 0) await userModel.findByIdAndUpdate(userId, { $inc: { totalRewardPoints: order.pointsUsed } });
+        // --- THE LOGISTIC GUARD ---
+        // Block cancellation if order has progressed to Shipped or beyond
+        const restrictedStatuses = ['Shipped', 'Out for delivery', 'Delivered'];
+        if (restrictedStatuses.includes(order.status)) {
+            return res.json({ 
+                success: false, 
+                message: `Order is already ${order.status.toLowerCase()} and cannot be cancelled.` 
+            });
+        }
 
-        res.json({ success: true, message: "Order Cancelled & Points Refunded" });
+        // 1. Mark status as Cancelled
+        await orderModel.findByIdAndUpdate(orderId, { status: 'Cancelled' });
+
+        // 2. Restore Stock
+        for (const item of order.items) {
+            await productModel.findByIdAndUpdate(item._id, { $inc: { stock: item.quantity } });
+        }
+
+        // 3. Refund Reward Points if they were used
+        if (order.pointsUsed > 0) {
+            await userModel.findByIdAndUpdate(userId, { $inc: { totalRewardPoints: order.pointsUsed } });
+        }
+
+        res.json({ success: true, message: "Order cancelled successfully" });
     } catch (error) {
         res.json({ success: false, message: error.message });
     }
-};
+}
 
 const placeOrderRazorpay = async (req, res) => {
     try {
@@ -188,23 +209,35 @@ const placeOrderStripe = async (req, res) => {
 const updateStatus = async (req, res) => {
     try {
         const { orderId, status, trackingNumber } = req.body;
-        const order = await orderModel.findById(orderId);
-        const updateFields = { status };
+        
+        // If tracking number is added, force status to Shipped if currently placed/packing
+        let finalStatus = status;
+        if (trackingNumber && (status === 'Order Placed' || status === 'Packing')) {
+            finalStatus = 'Shipped';
+        }
+
+        const updateFields = { status: finalStatus };
         if (trackingNumber) updateFields.trackingNumber = trackingNumber;
 
-        if (status === 'Delivered' && order.status !== 'Delivered') {
-            updateFields.payment = true;
-            const earnedPoints = Math.floor(order.amount * 0.10);
-            await userModel.findByIdAndUpdate(order.userId, { $inc: { totalRewardPoints: earnedPoints } });
+        // Logic for reward points on delivery
+        if (finalStatus === 'Delivered') {
+            const order = await orderModel.findById(orderId);
+            if (order.status !== 'Delivered') {
+                updateFields.payment = true;
+                const earnedPoints = Math.floor(order.amount * 0.10);
+                await userModel.findByIdAndUpdate(order.userId, { $inc: { totalRewardPoints: earnedPoints } });
+            }
         }
 
         await orderModel.findByIdAndUpdate(orderId, updateFields);
 
-        if (status === 'Shipped' && trackingNumber) {
+        // Send Shipping Email
+        if (finalStatus === 'Shipped' && trackingNumber) {
+            const order = await orderModel.findById(orderId);
             await sendEmail(order.address.email, "PhilaBasket - Items Shipped", getOrderHtmlTemplate(order.address.firstName, order.items, order.amount, order.currency, trackingNumber));
         }
 
-        res.json({ success: true, message: "Status Updated & Notification Sent" });
+        res.json({ success: true, message: "Status Updated", currentStatus: finalStatus });
     } catch (error) {
         res.json({ success: false, message: error.message });
     }
