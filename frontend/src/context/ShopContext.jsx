@@ -1,107 +1,107 @@
 import { createContext, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import axios from 'axios'
+import axios from 'axios';
 
 export const ShopContext = createContext();
 
 const ShopContextProvider = (props) => {
-
-    const backendUrl = import.meta.env.VITE_BACKEND_URL
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
     const navigate = useNavigate();
 
     const [currency, setCurrency] = useState('INR'); 
     const exchangeRate = 83; 
-    const delivery_fee = currency === 'INR' ? 80 : 1; 
-    
+    const delivery_fee = 10;
     const [search, setSearch] = useState('');
     const [showSearch, setShowSearch] = useState(false);
     const [products, setProducts] = useState([]);
     const [token, setToken] = useState('');
-
-    // --- REWARD POINTS STATE ---
+    const [userData, setUserData] = useState(null);
     const [userPoints, setUserPoints] = useState(0);
+    const [cartItems, setCartItems] = useState({});
 
-    // Load saved currency preference
-    useEffect(() => {
-        const savedCurrency = localStorage.getItem('currency');
-        if (savedCurrency) setCurrency(savedCurrency);
-    }, []);
-
-    const toggleCurrency = (newCurrency) => {
-        setCurrency(newCurrency);
-        localStorage.setItem('currency', newCurrency);
+    // --- CURRENCY LOGIC ---
+    const toggleCurrency = () => {
+        setCurrency(prev => prev === 'INR' ? 'USD' : 'INR');
     };
 
-    // --- FETCH USER POINTS FUNCTION ---
-    const fetchUserPoints = async () => {
-        if (!token) return;
+    const formatPrice = (price) => {
+        if (currency === 'USD') {
+            return (price / exchangeRate).toFixed(2);
+        }
+        return price;
+    };
+
+    // --- DATA FETCHING ---
+    const fetchUserData = async (activeToken) => {
+        const tokenToUse = activeToken || token || localStorage.getItem('token');
+        if (!tokenToUse) return;
+
         try {
-            const response = await axios.get(backendUrl + '/api/user/profile', { headers: { token } });
+            const response = await axios.get(backendUrl + '/api/user/profile', { 
+                headers: { token: tokenToUse } 
+            });
             if (response.data.success) {
+                setUserData(response.data.user);
                 setUserPoints(response.data.user.totalRewardPoints || 0);
             }
         } catch (error) {
-            console.log("Error fetching points:", error);
+            console.error("Archive connection failed:", error);
         }
     }
 
-    const formatPrice = (priceInInr) => {
-        const amount = currency === 'USD' ? (priceInInr / exchangeRate).toFixed(2) : priceInInr;
-        const symbol = currency === 'USD' ? '$' : '₹';
-        return `${symbol}${amount}`;
-    };
-
-    const [cartItems, setCartItems] = useState(() => {
-        const savedCart = localStorage.getItem('stampCart');
+    const getProductsData = async () => {
         try {
-            const parsed = savedCart ? JSON.parse(savedCart) : {};
-            const sanitized = {};
-            for (const key in parsed) {
-                if (Number(parsed[key]) > 0) sanitized[key] = Number(parsed[key]);
+            const response = await axios.get(backendUrl + '/api/product/list');
+            if (response.data.success) {
+                setProducts(response.data.products.reverse());
             }
-            return sanitized;
-        } catch (error) { return {}; }
-    });
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
-    useEffect(() => {
-        localStorage.setItem('stampCart', JSON.stringify(cartItems));
-    }, [cartItems]);
-
+    // --- CART LOGIC ---
     const addToCart = async (itemId) => {
         let cartData = structuredClone(cartItems);
-        cartData[itemId] = (Number(cartData[itemId]) || 0) + 1;
+
+        if (cartData[itemId]) {
+            cartData[itemId] += 1;
+        } else {
+            cartData[itemId] = 1;
+        }
         setCartItems(cartData);
-        toast.success("Added to Collection");
 
         if (token) {
             try {
-                await axios.post(backendUrl + '/api/cart/add', { itemId }, { headers: { token } })
+                await axios.post(backendUrl + '/api/cart/add', { itemId }, { headers: { token } });
             } catch (error) {
-                console.log(error);
                 toast.error(error.message);
             }
         }
     }
 
     const getCartCount = () => {
-        return Object.values(cartItems).reduce((total, qty) => total + Number(qty), 0);
+        let totalCount = 0;
+        for (const items in cartItems) {
+            try {
+                if (cartItems[items] > 0) {
+                    totalCount += cartItems[items];
+                }
+            } catch (error) {}
+        }
+        return totalCount;
     }
 
     const updateQuantity = async (itemId, quantity) => {
-        const qty = Number(quantity);
-        setCartItems(prev => {
-            const newData = { ...prev };
-            if (qty <= 0) delete newData[itemId];
-            else newData[itemId] = qty;
-            return newData;
-        });
+        let cartData = structuredClone(cartItems);
+        cartData[itemId] = quantity;
+        setCartItems(cartData);
 
         if (token) {
             try {
-                await axios.post(backendUrl + '/api/cart/update', { itemId, quantity: qty }, { headers: { token } })
+                await axios.post(backendUrl + '/api/cart/update', { itemId, quantity }, { headers: { token } });
             } catch (error) {
-                console.log(error);
                 toast.error(error.message);
             }
         }
@@ -109,72 +109,51 @@ const ShopContextProvider = (props) => {
 
     const getCartAmount = () => {
         let totalAmount = 0;
-        for (const itemId in cartItems) {
-            const itemInfo = products.find((product) => product._id === itemId);
-            const quantity = Number(cartItems[itemId]);
-            if (itemInfo && quantity > 0) {
-                totalAmount += itemInfo.price * quantity;
-            }
+        for (const items in cartItems) {
+            let itemInfo = products.find((product) => product._id === items);
+            try {
+                if (cartItems[items] > 0) {
+                    totalAmount += itemInfo.price * cartItems[items];
+                }
+            } catch (error) {}
         }
-        return currency === 'USD' ? (totalAmount / exchangeRate) : totalAmount;
-    }
-
-    const getProductsData = async () => {
-        try {
-            const response = await axios.get(backendUrl + '/api/product/list')
-            if (response.data.success) {
-                setProducts(response.data.products.reverse())
-            } else {
-                toast.error(response.data.message)
-            }
-        } catch (error) {
-            console.log(error);
-            toast.error(error.message);
-        }
+        return totalAmount;
     }
 
     const getUserCart = async (userToken) => {
         try {
-            const response = await axios.post(backendUrl + '/api/cart/get', {}, { headers: { token: userToken } })
+            const response = await axios.post(backendUrl + '/api/cart/get', {}, { headers: { token: userToken } });
             if (response.data.success) {
                 setCartItems(response.data.cartData || {});
             }
         } catch (error) { console.log(error); }
     }
 
-    useEffect(() => { getProductsData() }, [])
-
+    // --- STARTUP LOGIC ---
     useEffect(() => {
+        getProductsData();
         const storedToken = localStorage.getItem('token');
-        if (storedToken && !token) {
+        if (storedToken) {
             setToken(storedToken);
+            fetchUserData(storedToken);
             getUserCart(storedToken);
         }
-    }, []) 
-
-    // Fetch points whenever the token changes
-    useEffect(() => {
-        if (token) {
-            fetchUserPoints();
-        }
-    }, [token]);
+    }, []);
 
     const value = {
-        products, currency, toggleCurrency, formatPrice,
-        delivery_fee, search, setSearch, showSearch, setShowSearch,
+        products, currency, toggleCurrency, formatPrice, delivery_fee,
+        search, setSearch, showSearch, setShowSearch,
         cartItems, addToCart, setCartItems,
-        getCartCount, updateQuantity,
-        getCartAmount, navigate, backendUrl,
-        setToken, token,
-        // Exported Reward Points Logic
-        userPoints, setUserPoints, fetchUserPoints 
-    }
+        getCartCount, updateQuantity, getCartAmount, 
+        navigate, backendUrl, setToken, token,
+        userPoints, setUserPoints, userData, fetchUserData 
+    };
 
     return (
         <ShopContext.Provider value={value}>
             {props.children}
         </ShopContext.Provider>
-    )
+    );
 }
 
 export default ShopContextProvider;

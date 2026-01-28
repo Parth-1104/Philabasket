@@ -3,7 +3,8 @@ import { ShopContext } from '../context/ShopContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { GoogleLogin } from '@react-oauth/google';
-import { assets } from '../assets/assets'; // Assuming your image is in assets
+import { assets } from '../assets/assets'; 
+import { useSearchParams } from 'react-router-dom'; // Added for referral tracking
 
 const Login = () => {
   const [currentState, setCurrentState] = useState('Login');
@@ -12,16 +13,25 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
 
+  // Extract referral code from URL (?ref=PHILA-XXXX)
+  const [searchParams] = useSearchParams();
+  const referrerCode = searchParams.get('ref');
+
   const onSubmitHandler = async (event) => {
     event.preventDefault();
     try {
       const endpoint = currentState === 'Sign Up' ? '/api/user/register' : '/api/user/login';
-      const payload = currentState === 'Sign Up' ? { name, email, password } : { email, password };
+      
+      // Inject referrerCode into the payload if signing up
+      const payload = currentState === 'Sign Up' 
+        ? { name, email, password, referrerCode } 
+        : { email, password };
       
       const response = await axios.post(backendUrl + endpoint, payload);
       if (response.data.success) {
         setToken(response.data.token);
         localStorage.setItem('token', response.data.token);
+        if(referrerCode && currentState === 'Sign Up') toast.success("Referral applied successfully!");
       } else {
         toast.error(response.data.message);
       }
@@ -32,8 +42,10 @@ const Login = () => {
 
   const googleSuccess = async (res) => {
     try {
+      // Pass referrerCode to Google Login as well for new users
       const response = await axios.post(backendUrl + '/api/user/google-login', { 
-        idToken: res.credential 
+        idToken: res.credential,
+        referrerCode 
       });
       if (response.data.success) {
         setToken(response.data.token);
@@ -58,7 +70,7 @@ const Login = () => {
         {/* Left Side: Big Image */}
         <div className="hidden md:block w-1/2">
           <img 
-            src={assets.loginimf} // Replace with your image variable name
+            src={assets.loginimf} 
             alt="Login Visual" 
             className="w-full h-full object-cover"
           />
@@ -74,6 +86,10 @@ const Login = () => {
             <p className="text-gray-500 mt-3">
               {currentState === 'Login' ? 'Please enter your credentials to access your account.' : 'Join us today to get the best shopping experience.'}
             </p>
+            {/* Optional: Subtle indicator that they are being referred */}
+            {referrerCode && currentState === 'Sign Up' && (
+              <p className="text-xs text-green-600 font-semibold mt-2">✨ You've been invited! Signup to claim your bonus.</p>
+            )}
           </div>
 
           <form onSubmit={onSubmitHandler} className="flex flex-col gap-5">

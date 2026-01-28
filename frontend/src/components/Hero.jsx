@@ -6,28 +6,24 @@ const Hero = () => {
   const navigate = useNavigate();
   const [particles, setParticles] = useState([]);
 
-  // Function to create the sparkle particle burst effect
   const createSparkle = (e) => {
     const rect = e.currentTarget.getBoundingClientRect();
     
-    // Generate 12 gold particles with random trajectories
     const newParticles = Array.from({ length: 12 }).map((_, i) => ({
       id: Date.now() + i,
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
-      color: i % 2 === 0 ? '#B8860B' : '#FFD700', // Metallic Gold shades
+      color: i % 2 === 0 ? '#B8860B' : '#FFD700', 
       angle: (Math.random() * 360) * (Math.PI / 180),
       velocity: Math.random() * 100 + 50,
     }));
 
     setParticles((prev) => [...prev, ...newParticles]);
 
-    // Clean up particles from state after animation completes (1s)
     setTimeout(() => {
       setParticles((prev) => prev.filter(p => !newParticles.find(np => np.id === p.id)));
     }, 1000);
 
-    // Navigate to /collection after a slight delay to allow the burst to be seen
     setTimeout(() => {
       navigate('/collection');
       window.scrollTo(0, 0);
@@ -35,11 +31,11 @@ const Hero = () => {
   };
 
   return (
-    <div className='w-full min-h-screen bg-[#0a0a0a] overflow-hidden relative select-none flex flex-col justify-center py-20 px-6 md:px-16 lg:px-24'>
+    <div className='w-full min-h-screen bg-[#0a0a0a] overflow-hidden relative select-none flex flex-col justify-center py-10 px-6 md:px-16 lg:px-24'>
       
       {/* --- Ambient Background Layers --- */}
-      {/* Central Gold Radial Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_rgba(184,134,11,0.1)_0%,_transparent_65%)] pointer-events-none"></div>
+      {/* Central Gold Radial Glow - Enhanced with richer amber-gold and bloom */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,_rgba(218,165,32,0.18)_0%,_rgba(184,134,11,0.05)_40%,_transparent_75%)] pointer-events-none filter blur-2xl"></div>
       
       {/* Background Watermark Specimen */}
       <div className='absolute left-[-5%] top-[10%] opacity-[0.03] rotate-[-15deg] pointer-events-none'>
@@ -51,17 +47,17 @@ const Hero = () => {
         
         {/* Top Tagline Ornament */}
         <div className="flex items-center gap-4 mb-6">
-            <div className="h-[1px] w-8 md:w-16 bg-gradient-to-r from-transparent to-[#B8860B]"></div>
-            <p className='text-[10px] md:text-xs tracking-[0.5em] text-[#B8860B] uppercase font-light'>
+            <div className="h-[1px] w-8 md:w-16 bg-gradient-to-r from-transparent to-[#D4AF37]"></div>
+            <p className='text-[10px] md:text-xs tracking-[0.5em] text-[#D4AF37] uppercase font-light drop-shadow-md'>
                 Philately Excellence • MMXXVI
             </p>
-            <div className="h-[1px] w-8 md:w-16 bg-gradient-to-l from-transparent to-[#B8860B]"></div>
+            <div className="h-[1px] w-8 md:w-16 bg-gradient-to-l from-transparent to-[#D4AF37]"></div>
         </div>
 
-        {/* Cinematic Serif Title */}
+        {/* Cinematic Serif Title - Added Metallic Gold Gradient to 'Archives' */}
         <h1 className='font-serif text-5xl sm:text-7xl lg:text-9xl text-white leading-[1] mb-8 tracking-tighter'>
-            The Private <br />
-            <span className="italic font-light text-[#B8860B]/80 ml-8 md:ml-16 leading-none tracking-normal">Archives.</span>
+        The Philatelic  <br />
+            <span className="italic font-light bg-gradient-to-r from-[#B8860B] via-[#FFD700] to-[#8B6B23] bg-clip-text text-transparent ml-8 md:ml-16 leading-none tracking-normal drop-shadow-[0_2px_10px_rgba(184,134,11,0.3)]">Archives.</span>
         </h1>
 
         <div className="max-w-xl mx-auto space-y-8">
@@ -73,7 +69,8 @@ const Hero = () => {
             <div className='flex flex-col sm:flex-row items-center justify-center gap-6 pt-4'>
                 <button 
                     onClick={createSparkle}
-                    className='relative bg-[#B8860B] text-black px-12 py-4 text-[10px] font-bold tracking-[0.4em] uppercase hover:bg-white transition-all duration-500 rounded-sm shadow-[0_0_30px_rgba(184,134,11,0.2)] overflow-visible group'
+                    /* Button Enhanced: Metallic gradient background and intense gold glow shadow */
+                    className='relative bg-gradient-to-r from-[#8B6B23] via-[#D4AF37] to-[#B8860B] text-black px-12 py-4 text-[10px] font-bold tracking-[0.4em] uppercase hover:brightness-110 transition-all duration-500 rounded-sm shadow-[0_0_35px_rgba(212,175,55,0.4)] overflow-visible group'
                 >
                     <span className="relative z-10">Enter The Vault</span>
                     
@@ -90,17 +87,11 @@ const Hero = () => {
                                 '--tw-translate-y': `${Math.sin(p.angle) * p.velocity}px`,
                                 width: '4px',
                                 height: '4px',
+                                boxShadow: `0 0 10px ${p.color}` // Particles now glow
                             }}
                         />
                     ))}
                 </button>
-                
-                {/* <button 
-                    onClick={() => { navigate('/collection'); window.scrollTo(0, 0); }}
-                    className='text-white border-b border-white/20 pb-2 text-[10px] tracking-[0.4em] uppercase hover:text-[#B8860B] hover:border-[#B8860B] transition-all duration-500'
-                >
-                    View New Arrivals
-                </button> */}
             </div>
         </div>
       </div>
@@ -110,7 +101,7 @@ const Hero = () => {
         
         {/* Main Center Stamp with Gold Frame Shadow */}
         <div className='absolute z-30 transform hover:scale-105 transition-transform duration-1000 cursor-pointer w-[60%] sm:w-[40%] lg:w-[22%]'>
-            <div className="relative p-2 bg-gradient-to-tr from-[#B8860B]/40 to-white/10 rounded-sm shadow-2xl">
+            <div className="relative p-2 bg-gradient-to-tr from-[#D4AF37]/50 to-white/10 rounded-sm shadow-[0_20px_50px_rgba(0,0,0,0.5),0_0_20px_rgba(212,175,55,0.2)]">
                 <img draggable="false" className='w-full h-auto drop-shadow-[0_15px_35px_rgba(0,0,0,0.8)]' src={assets.main01} alt="Primary Specimen" />
             </div>
         </div>
@@ -128,8 +119,8 @@ const Hero = () => {
 
       {/* --- Scroll Indicator --- */}
       <div className='absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-4 opacity-30'>
-          <span className='text-[8px] tracking-[0.5em] text-[#B8860B] uppercase font-bold'>Scroll to Explore</span>
-          <div className='w-[1px] h-12 bg-gradient-to-b from-[#B8860B] to-transparent'></div>
+          <span className='text-[8px] tracking-[0.5em] text-[#D4AF37] uppercase font-bold'>Scroll to Explore</span>
+          <div className='w-[1px] h-12 bg-gradient-to-b from-[#D4AF37] to-transparent'></div>
       </div>
 
       {/* Embedded CSS for Particle Animation and Custom Movements */}
