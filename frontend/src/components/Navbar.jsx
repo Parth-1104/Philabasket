@@ -69,7 +69,7 @@ const Navbar = () => {
             {/* LOGO */}
             <Link to='/' className='flex-shrink-0 group'>
                 <div className='flex items-center gap-4'>
-                    <img src={assets.logo} className='w-12 lg:w-14 brightness-0 invert group-hover:scale-105 transition-transform duration-500' alt="PhilaBasket" />
+                    <img src={assets.logo} className='w-12 lg:w-14   group-hover:scale-105 transition-transform duration-500' alt="PhilaBasket" />
                     <div className='hidden sm:flex flex-col'>
                         <h1 className='text-lg lg:text-xl font-serif text-white tracking-[0.1em]'>
                             PHILA<span className='text-[#B8860B] italic'>BASKET</span>

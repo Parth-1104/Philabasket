@@ -81,7 +81,7 @@ const Login = () => {
           
           <div className="mb-10">
             <h2 className="text-4xl font-bold text-gray-900 tracking-tight">
-              {currentState === 'Login' ? 'Welcome Back' : 'Create Account'}
+              {currentState === 'Login' ? 'Welcome' : 'Create Account'}
             </h2>
             <p className="text-gray-500 mt-3">
               {currentState === 'Login' ? 'Please enter your credentials to access your account.' : 'Join us today to get the best shopping experience.'}

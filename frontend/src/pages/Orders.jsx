@@ -1,5 +1,5 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { ShopContext } from '../context/ShopContext'
+import React, { useContext, useEffect, useState } from 'react';
+import { ShopContext } from '../context/ShopContext';
 import Title from '../components/Title';
 import axios from 'axios';
 import { assets } from '../assets/assets';
@@ -7,13 +7,9 @@ import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 
 const Orders = () => {
-  const { backendUrl, token, fetchUserPoints } = useContext(ShopContext);
+  const { backendUrl, token, fetchUserData, currency } = useContext(ShopContext);
   const [orderData, setorderData] = useState([]);
   const [loading, setLoading] = useState(false);
-
-  const getOrderSymbol = (savedCurrency) => {
-    return savedCurrency === 'USD' ? '$' : '₹';
-  }
 
   const loadOrderData = async (isManualRefresh = false) => {
     try {
@@ -24,12 +20,11 @@ const Orders = () => {
       
       if (response.data.success) {
         let allOrdersItem = [];
-        // Use forEach for cleaner iteration and fresh object mapping
         response.data.orders.forEach((order) => {
           order.items.forEach((item) => {
-            const freshItem = {
+            allOrdersItem.push({
               ...item,
-              status: order.status, // Directly sync from parent order
+              status: order.status,
               payment: order.payment,
               paymentMethod: order.paymentMethod,
               date: order.date,
@@ -38,153 +33,139 @@ const Orders = () => {
               trackingNumber: order.trackingNumber,
               orderId: order._id,
               rewardPoints: Math.floor(item.price * 0.10)
-            };
-            allOrdersItem.push(freshItem);
+            });
           });
         });
         setorderData(allOrdersItem.reverse());
         
-        // Only fetch points if an order status might have changed to Delivered
-        await fetchUserPoints(); 
-        
-        if (isManualRefresh) toast.success("Order status synchronized");
+        await fetchUserData(); 
+        if (isManualRefresh) toast.success("Consignment synchronized");
       }
     } catch (error) {
       console.error("Sync Error:", error);
-      if (isManualRefresh) toast.error("Failed to update status");
     } finally {
       setLoading(false);
     }
   }
 
   const cancelOrderHandler = async (orderId) => {
-    if (!window.confirm("Are you sure you want to cancel this order?")) return;
+    if (!window.confirm("Rescind this acquisition request?")) return;
     setLoading(true);
     try {
       const response = await axios.post(backendUrl + '/api/order/cancel', { orderId }, { headers: { token } });
       if (response.data.success) {
-        toast.success("Order cancelled successfully");
-        await loadOrderData(); // Re-sync immediately
-      } else {
-        toast.error(response.data.message);
+        toast.success("Consignment Revoked");
+        await loadOrderData();
       }
     } catch (error) {
-      toast.error("Error cancelling order");
+      toast.error("Process failed.");
     } finally {
       setLoading(false);
     }
   }
 
-  // --- FEATURE: AUTOMATIC POLLING ---
   useEffect(() => {
     if (token) {
       loadOrderData();
-      
-      // Check for admin updates every 30 seconds
-      const interval = setInterval(() => {
-        loadOrderData();
-      }, 30000);
-
-      return () => clearInterval(interval); // Cleanup on unmount
+      const interval = setInterval(() => loadOrderData(), 45000);
+      return () => clearInterval(interval);
     }
   }, [token]);
 
   return (
-    <div className='border-t pt-16 bg-[#FCF9F4] min-h-screen px-4'>
-      <div className='text-2xl mb-8'>
-        <Title text1={'MY'} text2={'ORDERS'} />
+    <div className='bg-[#0a0a0a] min-h-screen pt-20 pb-20 px-6 md:px-16 lg:px-24 text-white select-none animate-fade-in'>
+      
+      <div className='text-3xl mb-12 flex items-center gap-4'>
+        <Title text1={'CONSIGNMENT'} text2={'LEDGER'} />
+        <div className='h-[1px] flex-1 bg-gradient-to-r from-[#B8860B]/40 to-transparent'></div>
       </div>
 
-      <div className='max-w-5xl mx-auto pb-20'>
+      <div className='max-w-6xl mx-auto'>
         {orderData.length === 0 ? (
-          <div className='flex flex-col items-center justify-center py-20 text-center'>
-            <img src={assets.parcel_icon} className='w-20 opacity-20 mb-4 grayscale' alt="" />
-            <h2 className='text-xl font-bold text-gray-400'>No orders found in your archive</h2>
-            <p className='text-gray-500 mb-6'>Start your philatelic journey today.</p>
-            <Link to='/collection' className='bg-black text-white px-8 py-3 rounded-sm text-sm font-bold uppercase hover:opacity-80 transition-all'>Explore Collection</Link>
+          <div className='flex flex-col items-center justify-center py-32 text-center'>
+            <div className='w-24 h-24 border border-white/5 flex items-center justify-center rounded-full mb-8 bg-[#111111]'>
+               <img src={assets.parcel_icon} className='w-10 opacity-20 brightness-0 invert' alt="" />
+            </div>
+            <h2 className='text-xl font-serif text-white/40 tracking-[0.2em] uppercase'>Registry is currently empty</h2>
+            <Link to='/collection' className='mt-8 bg-[#B8860B] text-black px-10 py-4 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-white transition-all'>Initialize Archive</Link>
           </div>
         ) : (
           orderData.map((item, index) => (
-            <div key={index} className='py-6 border-t border-b text-gray-700 flex flex-col md:flex-row md:items-center md:justify-between gap-6 bg-white px-4 mb-2 shadow-sm rounded-sm transition-all'>
+            <div key={index} className='group py-8 border border-white/5 bg-[#111111] flex flex-col md:flex-row md:items-center justify-between gap-8 px-8 mb-4 rounded-sm transition-all duration-500 hover:border-[#B8860B]/30 hover:shadow-[0_0_30px_rgba(184,134,11,0.05)]'>
               
-              <div className='flex items-start gap-6 text-sm flex-1'>
-                <div className='border border-gray-200 p-1 bg-white flex-shrink-0'>
-                  <img draggable="false" className='w-16 sm:w-24 aspect-[3/4] object-contain select-none' src={item.image[0]} alt={item.name} />
+              <div className='flex items-start gap-8 flex-1'>
+                {/* Specimen Preview */}
+                <div className='border border-[#B8860B]/20 p-2 bg-black shadow-xl shrink-0 group-hover:scale-105 transition-transform duration-500'>
+                  <img draggable="false" className='w-20 sm:w-28 aspect-[3/4] object-contain' src={item.image[0]} alt={item.name} />
                 </div>
                 
-                <div className='flex flex-col gap-1 flex-1'>
-                  <p className='sm:text-lg font-bold text-gray-900'>{item.name}</p>
+                <div className='flex flex-col gap-2 flex-1'>
+                  <p className='text-lg sm:text-xl font-serif text-white tracking-tight'>{item.name}</p>
                   
+                  {/* Tracking Sub-Panel */}
                   {item.trackingNumber && item.status !== 'Cancelled' && (
-                    <div className='bg-blue-50 border border-blue-100 p-2 rounded flex items-center justify-between mb-2 animate-pulse'>
-                       <div>
-                         <p className='text-[10px] text-blue-500 font-black uppercase'>India Post Consignment</p>
-                         <p className='text-xs font-mono font-bold text-blue-800'>{item.trackingNumber}</p>
+                    <div className='bg-[#0a0a0a] border border-[#B8860B]/30 p-4 rounded-sm flex items-center justify-between my-2'>
+                       <div className='space-y-1'>
+                         <p className='text-[8px] text-[#B8860B] font-black uppercase tracking-[0.3em]'>Verified Transit Registry</p>
+                         <p className='text-xs font-mono font-bold text-white tracking-widest'>{item.trackingNumber}</p>
                        </div>
-                       <a href={`https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx?p1=${item.trackingNumber}`} target="_blank" rel="noreferrer" className='text-[10px] bg-blue-600 text-white px-3 py-1 rounded font-bold uppercase'>Track Now</a>
+                       <a href={`https://www.indiapost.gov.in/_layouts/15/dop.portal.tracking/trackconsignment.aspx?p1=${item.trackingNumber}`} target="_blank" rel="noreferrer" className='text-[9px] border border-[#B8860B] text-[#B8860B] hover:bg-[#B8860B] hover:text-black px-4 py-2 transition-all font-bold uppercase tracking-widest'>Track Asset</a>
                     </div>
                   )}
 
-                  <div className='flex flex-col gap-1 mt-1'>
-                    <div className='flex items-center gap-3 text-base font-medium'>
-                      <p className='text-gray-600'>{getOrderSymbol(item.savedCurrency)}{item.savedCurrency === 'USD' ? (Number(item.price) / 83).toFixed(2) : item.price}</p>
-                      <p className='text-gray-400'>|</p>
-                      <p className='text-gray-500'>Qty: {item.quantity}</p>
-                    </div>
-
-                    <div className={`flex items-center gap-2 mt-1 py-1 px-2 rounded-sm w-fit border ${item.status === 'Delivered' ? 'bg-green-50 border-green-100' : 'bg-orange-50 border-orange-100'}`}>
-                        <img src={assets.star_icon} className='w-3 h-3' alt="" />
-                        <p className='text-[11px] font-bold uppercase tracking-tight'>
-                            {item.status === 'Delivered' ? (
-                                <span className='text-green-700'>Rewards Credited: +{item.rewardPoints} Pts</span>
-                            ) : item.status === 'Cancelled' ? (
-                                <span className='text-red-600'>Order Cancelled</span>
-                            ) : (
-                                <span className='text-orange-600'>Pending Rewards: +{item.rewardPoints} Pts</span>
-                            )}
+                  <div className='flex flex-wrap items-center gap-4 mt-2'>
+                    <p className='text-[#B8860B] font-bold text-lg tracking-tighter'>
+                      {item.savedCurrency === 'USD' ? '$' : '₹'}
+                      {item.savedCurrency === 'USD' ? (Number(item.price) / 83).toFixed(2) : item.price}
+                    </p>
+                    <span className='text-[10px] text-gray-600 tracking-[0.2em]'>|</span>
+                    <p className='text-[10px] text-gray-400 uppercase tracking-widest font-light'>Quantity: {item.quantity}</p>
+                    
+                    {/* Points Indicator */}
+                    <div className={`flex items-center gap-2 py-1 px-3 border rounded-full ${item.status === 'Delivered' ? 'border-green-900/50 bg-green-950/20' : 'border-[#B8860B]/20 bg-[#B8860B]/5'}`}>
+                        <div className={`w-1 h-1 rounded-full ${item.status === 'Delivered' ? 'bg-green-500' : 'bg-[#B8860B]'}`}></div>
+                        <p className={`text-[9px] font-bold uppercase tracking-widest ${item.status === 'Delivered' ? 'text-green-500' : 'text-[#B8860B]'}`}>
+                            {item.status === 'Delivered' ? `Vault Credit: +${item.rewardPoints} PTS` : `Pending Valuation: +${item.rewardPoints} PTS`}
                         </p>
                     </div>
                   </div>
                   
-                  <div className='text-xs sm:text-sm text-gray-500 mt-2 space-y-1'>
-                    <p>Ordered on: <span className='font-medium text-gray-700'>{new Date(item.date).toDateString()}</span></p>
-                    <p>Method: <span className='font-medium text-gray-700 uppercase'>{item.paymentMethod}</span></p>
+                  <div className='text-[10px] text-gray-500 mt-4 flex gap-6 tracking-[0.2em] uppercase font-light'>
+                    <p>Registry Date: <span className='text-white'>{new Date(item.date).toDateString()}</span></p>
+                    <p>Auth: <span className='text-white'>{item.paymentMethod}</span></p>
                   </div>
                 </div>
               </div>
 
-              <div className='md:w-1/3 flex flex-col items-end gap-3'>
-                <div className='flex items-center gap-2'>
-                  <p className={`min-w-3 h-3 rounded-full ${item.status === 'Delivered' ? 'bg-green-500' : item.status === 'Cancelled' ? 'bg-gray-400' : 'bg-[#E63946]'}`}></p>
-                  <p className='text-sm md:text-base font-medium'>{item.status}</p>
+              {/* Status & Actions Panel */}
+              <div className='md:w-1/4 flex flex-col items-end justify-center gap-6'>
+                <div className='flex items-center gap-3'>
+                  <div className={`w-2 h-2 rounded-full animate-pulse ${item.status === 'Delivered' ? 'bg-green-500' : item.status === 'Cancelled' ? 'bg-white/20' : 'bg-[#B8860B]'}`}></div>
+                  <p className='text-xs font-bold tracking-[0.4em] uppercase text-white'>{item.status}</p>
                 </div>
                 
-                <div className='flex flex-col items-end gap-2'>
-                    {/* --- CANCELLATION BUTTON LOCK --- */}
-                    {/* Only show cancel if status is Placed/Packing AND no tracking number is assigned */}
+                <div className='flex flex-col items-end gap-3 w-full'>
+                    {/* Cancellation Logic */}
                     {(item.status === 'Order Placed' || item.status === 'Packing') && !item.trackingNumber ? (
                         <button 
                             disabled={loading}
                             onClick={() => cancelOrderHandler(item.orderId)}
-                            className='border border-red-300 text-red-600 px-4 py-2 text-xs font-bold rounded-sm hover:bg-red-600 hover:text-white transition-all shadow-sm'
+                            className='w-full md:w-auto border border-red-900/50 text-red-500 px-6 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all rounded-sm'
                         >
-                            Cancel Order
+                            Cancel
                         </button>
-                    ) : (item.status === 'Shipped' || item.status === 'Out for delivery' || item.trackingNumber) && item.status !== 'Cancelled' && item.status !== 'Delivered' ? (
-                        <div className='bg-gray-100 border border-gray-200 px-3 py-1 rounded-sm text-right'>
-                           <p className='text-[10px] text-gray-500 font-black uppercase tracking-tighter'>
-                              In Transit
-                           </p>
-                           <p className='text-[9px] text-gray-400 italic'>Cancellation unavailable</p>
+                    ) : (item.status === 'Shipped' || item.trackingNumber) && item.status !== 'Cancelled' && item.status !== 'Delivered' ? (
+                        <div className='text-right'>
+                           <p className='text-[9px] text-gray-600 italic tracking-widest uppercase'>Locked in Transit</p>
                         </div>
                     ) : null}
 
                     <button 
                         disabled={loading}
                         onClick={() => loadOrderData(true)} 
-                        className='border border-gray-300 px-6 py-2 text-sm font-semibold rounded-full hover:bg-black hover:text-white transition-all duration-300 shadow-sm'
+                        className='w-full md:w-auto bg-white/5 border border-white/10 px-8 py-3 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-[#B8860B] hover:text-black transition-all duration-500 shadow-xl rounded-sm'
                     >
-                        {loading ? 'Syncing...' : 'Track Order'}
+                        {loading ? 'Syncing Archive...' : 'Refresh Status'}
                     </button>
                 </div>
               </div>
@@ -192,6 +173,11 @@ const Orders = () => {
           ))
         )}
       </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .animate-fade-in { animation: fadeIn 1s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      `}} />
     </div>
   )
 }
