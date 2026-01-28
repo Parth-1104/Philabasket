@@ -73,7 +73,7 @@ const Navbar = () => {
                         <h1 className='text-lg lg:text-xl font-serif text-white tracking-[0.1em]'>
                             PHILA<span className='text-[#B8860B] italic'>BASKET</span>
                         </h1>
-                        <p className='text-[8px] text-[#B8860B]/60 font-light uppercase tracking-[0.5em]'>Global Archive</p>
+                        <p className='text-[8px] text-[#B8860B]/60 font-light uppercase tracking-[0.5em]'></p>
                     </div>
                 </div>
             </Link>
@@ -139,55 +139,77 @@ const Navbar = () => {
 
             {/* MOBILE SIDEBAR */}
             {/* MOBILE SIDEBAR - Fixed Overlay */}
-<div className={`fixed top-0 right-0 bottom-0 z-[1000] overflow-hidden bg-[#0a0a0a] transition-all duration-500 ease-in-out ${visible ? 'w-full' : 'w-0'}`}>
-    <div className='flex flex-col h-full text-white'>
+{/* MOBILE SIDEBAR - Fixed Overlay */}
+<div className={`fixed top-0 right-0 bottom-0 z-[1000] overflow-y-auto bg-[#0a0a0a] transition-all duration-500 ease-in-out ${visible ? 'w-full' : 'w-0'}`}>
+    <div className='flex flex-col min-h-full text-white pb-10'>
         
-        {/* Close / Back Header */}
-        <div onClick={() => setVisible(false)} className='flex items-center gap-4 p-6 cursor-pointer border-b border-[#B8860B]/10'>
-            <img className='h-4 rotate-180 brightness-0 invert' src={assets.dropdown_icon} alt="Back" />
-            <p className='text-xs tracking-[0.4em] uppercase text-[#B8860B] font-medium'>Close Archive</p>
+        {/* Header */}
+        <div onClick={() => setVisible(false)} className='flex items-center justify-between p-6 border-b border-[#B8860B]/10 sticky top-0 bg-[#0a0a0a] z-10'>
+            <div className='flex items-center gap-4'>
+                <img className='h-3 rotate-180 brightness-0 invert' src={assets.dropdown_icon} alt="Back" />
+                <p className='text-[10px] tracking-[0.4em] uppercase text-[#B8860B] font-medium'>Close Archive</p>
+            </div>
+            <img src={assets.logo} className='w-8 brightness-0 invert opacity-50' alt="" />
         </div>
 
-        {/* Mobile Navigation Links */}
-        <div className='flex flex-col p-10 gap-10'>
-            <NavLink 
-                onClick={() => setVisible(false)} 
-                className='text-3xl font-serif tracking-widest hover:text-[#B8860B] transition-colors' 
-                to='/'
-            >
-                HOME
-            </NavLink>
+        {/* Main Links */}
+        <div className='flex flex-col p-8 gap-6'>
+            <NavLink onClick={() => setVisible(false)} className='text-2xl font-serif tracking-widest text-[#B8860B]' to='/'>HOME</NavLink>
             
-            {/* You can add simple category links here for mobile */}
-            <NavLink 
-                onClick={() => setVisible(false)} 
-                className='text-3xl font-serif tracking-widest hover:text-[#B8860B] transition-colors' 
-                to='/collection'
-            >
-                COLLECTION
-            </NavLink>
+            <hr className='border-[#B8860B]/10' />
+            
+            {/* CATEGORIES SECTION (Mobile Accordion) */}
+            <p className='text-[10px] tracking-[0.5em] text-gray-500 uppercase mb-2'>Explore Classifications</p>
+            
+            <div className='flex flex-col gap-6'>
+                {Object.entries(CATEGORY_GROUPS).map(([key, group]) => (
+                    <div key={key} className='flex flex-col gap-4'>
+                        <h3 className='text-sm font-serif tracking-[0.2em] text-white border-l-2 border-[#B8860B] pl-4'>
+                            {group.title}
+                        </h3>
+                        
+                        <div className='grid grid-cols-1 gap-y-4 pl-4'>
+                            {Object.entries(group.items).map(([subTitle, items]) => (
+                                <div key={subTitle} className='flex flex-col gap-2'>
+                                    <p className='text-[9px] tracking-[0.2em] text-[#B8860B] font-bold uppercase opacity-70'>
+                                        {subTitle}
+                                    </p>
+                                    <div className='flex flex-wrap gap-x-4 gap-y-2'>
+                                        {items.map((item) => (
+                                            <Link 
+                                                key={item}
+                                                to={`/collection?category=${encodeURIComponent(item)}`}
+                                                onClick={() => setVisible(false)}
+                                                className='text-[11px] tracking-widest text-gray-400 hover:text-white uppercase'
+                                            >
+                                                {item}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
 
-            <NavLink 
-                onClick={() => setVisible(false)} 
-                className='text-3xl font-serif tracking-widest hover:text-[#B8860B] transition-colors' 
-                to='/about'
-            >
-                ABOUT
-            </NavLink>
+            <hr className='border-[#B8860B]/10 mt-4' />
 
-            <NavLink 
-                onClick={() => setVisible(false)} 
-                className='text-3xl font-serif tracking-widest hover:text-[#B8860B] transition-colors' 
-                to='/contact'
-            >
-                CONTACT
-            </NavLink>
+            <NavLink onClick={() => setVisible(false)} className='text-xl font-serif tracking-widest' to='/about'>ABOUT US</NavLink>
+            <NavLink onClick={() => setVisible(false)} className='text-xl font-serif tracking-widest' to='/about'>BLOG</NavLink>
+
+            <NavLink onClick={() => setVisible(false)} className='text-xl font-serif tracking-widest' to='/contact'>CONTACT</NavLink>
         </div>
 
         {/* Mobile Bottom Info */}
-        <div className='mt-auto p-10 border-t border-[#B8860B]/10 bg-[#111111]'>
-            <p className='text-[10px] tracking-[0.3em] text-[#B8860B] uppercase mb-4'>Philatelic Concierge</p>
-            <p className='text-gray-500 text-xs font-light'>MMXXVI Archive Service</p>
+        <div className='mt-auto p-8 border-t border-[#B8860B]/10 bg-[#111111]'>
+            <div className='flex items-center gap-3 mb-4'>
+                <img src={assets.coin} className='w-5 h-5' alt="" />
+                <p className='text-[10px] tracking-[0.3em] text-[#B8860B] uppercase font-bold'>
+                    {token ? `${userPoints} PTS Balance` : 'Join the Archive'}
+                </p>
+            </div>
+            <p className='text-gray-500 text-[9px] tracking-widest uppercase'>MMXXVI Philatelic Concierge Service</p>
         </div>
     </div>
 </div>
