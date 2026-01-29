@@ -4,11 +4,16 @@ import { Link } from 'react-router-dom'
 
 const ProductItem = ({ id, image, name, price, category, linkToFilter = false }) => {
     
-  const { formatPrice } = useContext(ShopContext);
+  const { formatPrice, currency } = useContext(ShopContext);
+  
   const handleDragStart = (e) => e.preventDefault();
   
   // High-end specimen logic
   const isRare = price > 1000; 
+
+  // Safety check to prevent .slice() or .toUpperCase() errors on undefined data
+  const safeId = id ? String(id) : "";
+  const registryNo = safeId ? safeId.slice(-5).toUpperCase() : "XXXXX";
 
   const destination = linkToFilter 
     ? `/collection?category=${encodeURIComponent(category || "")}` 
@@ -21,65 +26,79 @@ const ProductItem = ({ id, image, name, price, category, linkToFilter = false })
         onClick={() => window.scrollTo(0,0)} 
         onDragStart={handleDragStart} 
       >
-          {/* Main Specimen Container: Deep Black/Obsidian */}
-          <div className='relative overflow-hidden bg-[#111111] p-6 transition-all duration-500 group-hover:bg-[#0a0a0a] border border-white/5 group-hover:border-[#B8860B]/30 shadow-2xl'>
+          {/* Main Container: Gallery White & Champagne Gold Accents */}
+          <div className='relative overflow-hidden bg-[#FDFDFD] p-5 transition-all duration-700 group-hover:bg-white border border-black/[0.03] group-hover:border-[#D4AF37]/30 shadow-[0_10px_30px_rgba(0,0,0,0.02)] group-hover:shadow-[0_40px_80px_rgba(0,0,0,0.08)]'>
               
-              {/* Rare Specimen Badge - Gold Accent */}
+              {/* Rare Specimen Registry No - Crimson Accent */}
+              <div className='absolute top-4 left-4 z-20 overflow-hidden'>
+                <p className='text-[8px] tracking-[0.4em] font-black text-black/20 group-hover:text-[#BC002D] uppercase transition-colors duration-500 transform -translate-x-full group-hover:translate-x-0'>
+                   REG. {registryNo}
+                </p>
+              </div>
+
+              {/* Gold Hallmark - Top Right (Pulsing for Rare items) */}
               {isRare && (
-                <div className='absolute top-4 left-4 z-20'>
-                  <span className='text-[8px] tracking-[0.4em] font-bold text-[#B8860B]/60 uppercase border-l border-[#B8860B]/40 pl-2'>
-                    SPECIMEN NO. {id.slice(-4)}
-                  </span>
+                <div className='absolute top-4 right-4 z-20'>
+                  <div className='w-1.5 h-1.5 bg-[#D4AF37] rounded-full shadow-[0_0_8px_#D4AF37] animate-pulse'></div>
                 </div>
               )}
 
-              {/* Image with Spotlit Effect */}
-              <div className='relative aspect-[4/5] flex items-center justify-center overflow-hidden'>
-                  {/* Radial Spotlight: Makes the stamp "pop" from the dark background */}
-                  <div className='absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(255,255,255,0.05)_0%,_transparent_70%)] opacity-100 transition-opacity duration-700'></div>
+              {/* Specimen Mounting Area (The Inner Frame) */}
+              <div className='relative aspect-[4/5] flex items-center justify-center overflow-hidden bg-[#F9F9F9] group-hover:bg-white transition-colors duration-700'>
+                  {/* Soft Internal Glow: Mimics Museum Spotlighting */}
+                  <div className='absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(212,175,55,0.08)_0%,_transparent_75%)] opacity-0 group-hover:opacity-100 transition-opacity duration-1000'></div>
                   
                   <img 
                       draggable="false"
                       onDragStart={handleDragStart}
-                      className='z-10 w-full h-full object-contain p-4 filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] transform group-hover:scale-110 transition-transform duration-[1.5s] ease-out' 
-                      src={image[0]} 
+                      className='z-10 w-full h-full object-contain p-6 filter grayscale-[0.2] group-hover:grayscale-0 drop-shadow-[0_5px_15px_rgba(0,0,0,0.05)] transform group-hover:scale-110 transition-transform duration-[1.8s] ease-out' 
+                      src={image && image[0] ? image[0] : ""} 
                       alt={name} 
                   />
 
-                  {/* Reflection/Glass Glare Effect: Gold-tinted reflection */}
-                  <div className='absolute inset-0 z-20 opacity-0 group-hover:opacity-20 transition-opacity duration-1000 bg-gradient-to-br from-[#B8860B]/20 via-transparent to-transparent pointer-events-none'></div>
+                  {/* Luxury Reflection: Gold Foil Shine Effect */}
+                  <div className='absolute inset-0 z-20 opacity-0 group-hover:opacity-10 transition-opacity duration-1000 bg-gradient-to-tr from-transparent via-[#D4AF37]/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-[2s] pointer-events-none'></div>
               </div>
 
-              {/* Hover Action Line: Gold reveal */}
-              <div className='absolute bottom-0 left-0 w-0 h-[1px] bg-[#B8860B] group-hover:w-full transition-all duration-700 ease-in-out'></div>
+              {/* Signature Red Underline: Mimics a Curator's Ink Stroke */}
+              <div className='absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[1.5px] bg-[#BC002D] group-hover:w-[80%] transition-all duration-700 ease-in-out'></div>
           </div>
           
-          {/* Typography Section: Champagne Gold & White */}
-          <div className='mt-6 space-y-2 px-1'>
-              <div className='flex justify-between items-start gap-2'>
-                <h3 className='text-[12px] uppercase tracking-[0.2em] font-serif text-white/90 leading-tight group-hover:text-[#B8860B] transition-colors duration-500'>
-                    {name}
+          {/* Typography Section: Elegant Gallery Labels */}
+          <div className='mt-8 space-y-3 px-1 text-center'>
+              <div className='flex flex-col items-center gap-1'>
+                <h3 className='text-[13px] uppercase tracking-[0.2em] font-serif text-black leading-tight group-hover:text-[#BC002D] transition-colors duration-500'>
+                    {name || "Untitled Specimen"}
                 </h3>
+                <div className='w-4 h-[1px] bg-black/10 group-hover:bg-[#D4AF37]/50 transition-all'></div>
               </div>
               
-              <div className='flex justify-between items-end pt-1'>
-                <p className='text-[9px] tracking-[0.3em] font-light text-gray-500 uppercase italic'>
+              <div className='flex flex-col items-center gap-2'>
+                <p className='text-[9px] tracking-[0.4em] font-bold text-black/30 uppercase italic'>
                    {category} Archive
                 </p>
-                <p className='text-[13px] font-medium text-[#B8860B] tabular-nums tracking-widest'>
-                    {formatPrice(price)}
-                </p>
+                
+                {/* --- DYNAMIC CURRENCY SYNC --- */}
+                <div className='flex items-center justify-center gap-1'>
+                    <span className='text-[14px] font-serif text-[#D4AF37]'>
+                        {currency === 'USD' ? '$' : '₹'}
+                    </span>
+                    <p className='text-[14px] font-medium text-[#D4AF37] tabular-nums tracking-[0.1em]'>
+                        {/* We use String() to avoid the .replace() crash on numbers */}
+                        {String(formatPrice(price)).replace(/[₹$]/g, '')}
+                    </p>
+                </div>
               </div>
           </div>
 
-          {/* Luxury Reveal Hint: Sliding Gold Text */}
-          <div className='mt-4 overflow-hidden h-0 group-hover:h-6 transition-all duration-500'>
-              <p className='text-[9px] tracking-[0.5em] uppercase text-center font-bold text-white/40 group-hover:text-[#B8860B] opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-700'>
-                  {linkToFilter ? 'Full Collection' : 'Inspect Details'}
-              </p>
+          {/* Luxury Action Call: Elegant Fade-in */}
+          <div className='mt-4 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-700 text-center'>
+              <span className='text-[8px] tracking-[0.6em] uppercase font-black text-[#BC002D] border-b border-[#BC002D]/20 pb-1'>
+                  {linkToFilter ? 'View Ledger' : 'View Specimen'}
+              </span>
           </div>
       </Link>
   )
 }
 
-export default ProductItem
+export default ProductItem;

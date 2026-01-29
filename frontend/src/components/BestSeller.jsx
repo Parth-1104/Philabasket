@@ -8,70 +8,80 @@ const BestSeller = () => {
     const [bestSeller, setBestSeller] = useState([]);
 
     useEffect(() => {
-        // Filter products based on the bestseller boolean
         const bestProduct = products.filter((item) => (item.bestseller));
         setBestSeller(bestProduct.slice(0, 5));
     }, [products]);
 
     return (
-        <div className='bg-[#0a0a0a] py-32 px-6 md:px-16 lg:px-24 border-t border-[#B8860B]/10'>
+        <div className='bg-[#FDFDFD] py-24 md:py-32 px-6 md:px-16 lg:px-24 border-t border-black/[0.03] select-none'>
             
-            {/* --- Royal Header Section --- */}
-            <div className='flex flex-col items-center text-center mb-24'>
-                <div className="flex items-center gap-4 mb-4">
-                    <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-[#B8860B]"></div>
-                    <span className="text-[10px] md:text-xs tracking-[0.5em] text-[#B8860B] uppercase font-light">
+            {/* --- Curatorial Header --- */}
+            <div className='flex flex-col items-center text-center mb-20 md:mb-24'>
+                <div className="flex items-center gap-6 mb-6">
+                    <div className="h-[1px] w-8 md:w-12 bg-black/10"></div>
+                    <span className="text-[10px] tracking-[0.6em] text-[#BC002D] uppercase font-bold">
                         The Masterpiece Gallery
                     </span>
-                    <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-[#B8860B]"></div>
+                    <div className="h-[1px] w-8 md:w-12 bg-black/10"></div>
                 </div>
 
-                <h2 className="text-5xl md:text-7xl font-serif text-white tracking-tight leading-tight">
-                    Most <span className="italic font-light text-[#B8860B]/80">Coveted</span>
+                <h2 className="text-5xl md:text-8xl font-serif text-black tracking-tighter leading-none mb-8">
+                    Most <span className="italic font-light text-black/20">Coveted.</span>
                 </h2>
 
-                <div className="mt-8 max-w-2xl relative">
-                    <p className='text-sm md:text-base text-gray-400 font-light leading-relaxed tracking-wide'>
-                        A curated selection of our most sought-after philatelic treasures. 
-                        Rare classic issues and popular thematic releases that define the PhilaBasket legacy.
+                <div className="max-w-xl mx-auto">
+                    <p className='text-xs md:text-sm text-gray-400 font-light leading-relaxed tracking-widest uppercase'>
+                        A curated selection of the most sought-after philatelic treasures defining the <span className='text-black font-medium'>PhilaBasket Legacy</span>.
                     </p>
-                    <div className="h-[1px] w-24 bg-[#B8860B] mx-auto mt-8 opacity-30"></div>
                 </div>
             </div>
 
-            {/* --- High-Contrast Product Grid --- */}
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-x-8 gap-y-16'>
+            {/* --- Mobile: Horizontal Scroll | Desktop: 5-Column Grid --- */}
+            <div className='flex overflow-x-auto pb-10 gap-8 snap-x snap-mandatory hide-scrollbar lg:grid lg:grid-cols-5 lg:gap-x-10 lg:overflow-visible lg:pb-0'>
                 {
                     bestSeller.map((item, index) => (
                         <div 
                             key={index} 
-                            className="group relative transition-all duration-700 hover:scale-[1.03]"
+                            className="min-w-[75vw] sm:min-w-[40vw] lg:min-w-0 snap-center group relative transition-all duration-700"
                         >
-                            {/* Decorative Rank Number (Luxury Detail) */}
-                            <span className="absolute -top-6 -left-2 text-4xl font-serif text-white/5 group-hover:text-[#B8860B]/10 transition-colors duration-500 pointer-events-none">
-                                0{index + 1}
-                            </span>
+                            {/* Archival Rank Indicator (Elegantly subtle) */}
+                            <div className="absolute -top-4 left-0 z-20 flex items-center gap-2">
+                                <span className="text-[10px] font-black text-[#D4AF37] tracking-widest uppercase">
+                                    N° 0{index + 1}
+                                 Marquis
+                                </span>
+                            </div>
                             
-                            <ProductItem 
-                                id={item._id} 
-                                name={item.name} 
-                                image={item.image} 
-                                price={item.price} 
-                                category={item.category[0]}
-                            />
+                            {/* Product Item Wrapper */}
+                            <div className='pt-4'>
+                                <ProductItem 
+                                    id={item._id} 
+                                    name={item.name} 
+                                    image={item.image} 
+                                    price={item.price} 
+                                    category={item.category[0]}
+                                />
+                            </div>
+
+                            {/* Red Status Accent - Appears on Hover */}
+                            <div className='absolute top-1/2 -right-2 transform -translate-y-1/2 w-[1px] h-0 bg-[#BC002D] group-hover:h-24 transition-all duration-700 hidden lg:block'></div>
                         </div>
                     ))
                 }
             </div>
 
-            {/* --- Bottom Accent --- */}
-            <div className="mt-32 flex justify-center">
-                <div className="flex items-center gap-6 opacity-40">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#B8860B]"></div>
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#B8860B]"></div>
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#B8860B]"></div>
-                </div>
+            {/* --- Bottom Hallmark --- */}
+            <div className="mt-20 md:mt-32 flex flex-col items-center gap-6">
+                <div className='h-12 w-[1px] bg-gradient-to-b from-black/20 to-transparent'></div>
+                <p className='text-[8px] tracking-[0.8em] text-black/20 uppercase font-black'>
+                    Verified Philatelic Provenance
+                </p>
             </div>
+
+            <style dangerouslySetInnerHTML={{ __html: `
+                .hide-scrollbar::-webkit-scrollbar { display: none; }
+                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+            `}} />
         </div>
     )
 }

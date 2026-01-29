@@ -5,7 +5,11 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     referralCode: { type: String, unique: true },
+    // Add these to your existing userSchema
+resetPasswordToken: String,
+resetPasswordExpires: Date,
     totalRewardPoints: { type: Number, default: 0 },
+    wishlistData: { type: Array, default: [] },
     cartData: { type: Object, default: {} }
 }, { minimize: false })
 

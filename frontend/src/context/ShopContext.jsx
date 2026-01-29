@@ -19,6 +19,47 @@ const ShopContextProvider = (props) => {
     const [userData, setUserData] = useState(null);
     const [userPoints, setUserPoints] = useState(0);
     const [cartItems, setCartItems] = useState({});
+    const [wishlist, setWishlist] = useState([]);
+
+    // --- WISHLIST LOGIC ---
+    const toggleWishlist = async (itemId) => {
+        if (!token) {
+            toast.error("Please login to save specimens");
+            return;
+        }
+    
+        // Determine action for toast message
+        const isRemoving = wishlist.includes(itemId);
+    
+        try {
+            const response = await axios.post(backendUrl + '/api/user/wishlist-toggle', { itemId }, { headers: { token } });
+            
+            if (response.data.success) {
+                setWishlist(response.data.wishlist);
+                
+                // Dynamic Toast Notification
+                if (isRemoving) {
+                    toast.info("Specimen removed from Wishlist");
+                } else {
+                    toast.success("Specimen added to Wishlist");
+                }
+            }
+        } catch (error) {
+            toast.error("Archive connection failed");
+            console.error(error);
+        }
+    };
+    
+    const getWishlistData = async (userToken) => {
+        try {
+            const response = await axios.post(backendUrl + '/api/user/wishlist-get', {}, { headers: { token: userToken } });
+            if (response.data.success) {
+                setWishlist(response.data.wishlist);
+            }
+        } catch (error) { 
+            console.error("Wishlist sync failed:", error); 
+        }
+    };
 
     // --- CURRENCY LOGIC ---
     const toggleCurrency = () => {
@@ -137,6 +178,7 @@ const ShopContextProvider = (props) => {
             setToken(storedToken);
             fetchUserData(storedToken);
             getUserCart(storedToken);
+            getWishlistData(storedToken); // NEW: Syncs saved specimens on load
         }
     }, []);
 
@@ -146,7 +188,8 @@ const ShopContextProvider = (props) => {
         cartItems, addToCart, setCartItems,
         getCartCount, updateQuantity, getCartAmount, 
         navigate, backendUrl, setToken, token,
-        userPoints, setUserPoints, userData, fetchUserData 
+        userPoints, setUserPoints, userData, fetchUserData,
+        toggleWishlist, wishlist, getWishlistData // NEW: Exposed for global use
     };
 
     return (

@@ -51,3 +51,35 @@ export const assets = {
     loginimf
 }
 
+
+
+export const ALL_CATEGORIES = [
+    "AgriCulture Stamp", "Airmail", "Americas", "Ancillaries", "Animal & WildLife", 
+    "Army", "Army Postal Cover APC", "Asia", "Autograph Cover", "Aviation Stamps", 
+    "Bank", "Bird Stamps", "Block of Four", "Block of Four with Traffic light", 
+    "Booklet", "BOPP", "Bridge Stamps", "Brochure Blank", "Brochure with MS", 
+    "Brochure with stamp", "Buddha / Buddhism", "Building Stamps", "Butterfly & Insects", 
+    "Carried Cover", "Cars", "Catalogue", "Children's Day Series", "Christianity", 
+    "Christmas", "Cinema on Stamps", "Classic Items", "Coffee", "Color Cancellation", 
+    "Commemorative", "Commemorative Coin", "Commemorative Year", "Country", "Covid 19", 
+    "Cricket", "Cultural Theme", "Currency Stamps", "Dance Stamps", "Definitive", 
+    "Definitive Block", "Definitive Number Strip", "Definitive Sheet", "Definitive Stamp", 
+    "Educational Institute", "Environment", "Error", "Europe", "Exhibition Special", 
+    "Face Value", "Fauna and Flora", "Festival", "First Day Cover", "First Day Cover Blank", 
+    "First Day Cover Commercial Used", "First Day Cover with Miniature Sheet", 
+    "First Flight/ AirMail", "Flag", "Food on Stamps", "FootBall", "Foreign First Day Covers", 
+    "Foreign Miniature Sheets", "Foreign Stamps", "Fort / Castle/ Palace", "Fragrance Stamps", 
+    "Freedom", "Freedom Fighter", "Full Sheet", "Gandhi Stamps", "GI Tag", "Greeting Card", 
+    "Greetings", "Hinduism", "Historical", "Historical Place", "Indian Theme", "Jainism", 
+    "Joint Issue", "Judiciary System", "Kumbh", "Light House", "Literature", 
+    "Locomotive / Trains", "Marine / Fish", "Medical / Health", "Meghdoot", 
+    "Miniature Sheets", "Musical Instrument", "My Stamp", "News Paper", 
+    "Odd Shape / Unusual", "Olympic", "Organizations", "Personality", 
+    "Place Cancellation", "Post Office", "Postal Stationery", "Postcard / Maxim Card", 
+    "PPC", "Presentation Pack", "Ramayana", "Rare", "Red Cross", "River / Canal", 
+    "RSS Rashtriya Swayamsevak Sangh", "Scout", "SheetLet", "Ships", "Sikhism", 
+    "Single Stamp", "Single Stamp with Traffic light", "Social Message", "Space", 
+    "Special Cancellation", "Special Cover", "Sports Stamps", "Stamp on Stamp", 
+    "Technology", "Temple", "Tiger", "Transport", "United Nations UN", "Women Power", 
+    "WWF", "Year", "Year Pack", "Yoga"
+  ];

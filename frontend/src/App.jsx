@@ -16,6 +16,8 @@ import Referral from './pages/Referral'
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Verify from './pages/Verify'
+import Wishlist from './pages/Wishlist'
+import ResetPassword from './pages/ResetPassword'
 
 const App = () => {
   return (
@@ -33,8 +35,12 @@ const App = () => {
         <Route path='/referral' element={<Referral />} />
         <Route path='/login' element={<Login />} />
         <Route path='/place-order' element={<PlaceOrder />} />
+        <Route path='/wishlist' element={<Wishlist />} />
+
         <Route path='/orders' element={<Orders />} />
         <Route path='/verify' element={<Verify />} />
+        <Route path='/reset-password/:token' element={<ResetPassword/>} />
+
       </Routes>
       <Footer />
     </div>

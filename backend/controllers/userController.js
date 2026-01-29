@@ -1,8 +1,104 @@
+import 'dotenv/config'
 import validator from "validator";
 import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken'
 import userModel from "../models/userModel.js";
 import { OAuth2Client } from 'google-auth-library';
+
+import crypto from 'crypto';
+import nodemailer from 'nodemailer';
+
+// --- PHASE 1: REQUEST RECOVERY ---
+ const forgotPassword = async (req, res) => {
+    try {
+        console.log("DEBUG: FRONTEND_URL is:", process.env.FRONTEND_URL);
+        const { email } = req.body;
+        const user = await userModel.findOne({ email });
+
+        if (!user) {
+            return res.json({ success: false, message: "Registry email not found." });
+        }
+
+        // Generate a random 20-character archival token
+        const resetToken = crypto.randomBytes(20).toString('hex');
+        
+        // Token valid for 1 hour
+        user.resetPasswordToken = resetToken;
+        user.resetPasswordExpires = Date.now() + 3600000; 
+
+        await user.save();
+
+        // Setup Email Transport (using Nodemailer)
+        const transporter = nodemailer.createTransport({
+            service: 'gmail', // or your preferred service
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS
+            }
+        });
+
+        const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+
+        const mailOptions = {
+            to: user.email,
+            from: 'PhilaBasket Registry <noreply@philabasket.com>',
+            subject: 'Archive Access Recovery Protocol',
+            text: `You are receiving this because a recovery protocol was initiated for your collector account.\n\n
+            Please click on the following link to rescind your old credentials:\n
+            ${resetUrl}\n\n
+            If you did not request this, please ignore this transmission.`
+        };
+
+        await transporter.sendMail(mailOptions);
+        res.json({ success: true, message: "Recovery link dispatched." });
+
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+}
+
+
+const resetPassword = async (req, res) => {
+    try {
+        const { token, newPassword } = req.body;
+
+        // Find user with valid token that hasn't expired
+        const user = await userModel.findOne({
+            resetPasswordToken: token,
+            resetPasswordExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.json({ success: false, message: "Token is invalid or has expired." });
+        }
+
+        // Hash the new password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+        // Update user record and clear tokens
+        user.password = hashedPassword;
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+
+        await user.save();
+
+        res.json({ success: true, message: "Credentials updated successfully." });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+
+
+
+
+
+
+
+
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -148,4 +244,4 @@ const getUserProfile = async (req, res) => {
     }
 }
 
-export { googleLogin, loginUser, registerUser, adminLogin, getUserProfile }
+export { googleLogin, loginUser, registerUser, adminLogin, getUserProfile,forgotPassword,resetPassword }

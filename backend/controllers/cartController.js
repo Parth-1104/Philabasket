@@ -1,14 +1,18 @@
 import userModel from "../models/userModel.js"
 
-// add products to user cart (Stamp Logic: No Sizes)
+// add products to user cart
 const addToCart = async (req, res) => {
     try {
         const { userId, itemId } = req.body
-
         const userData = await userModel.findById(userId)
-        let cartData = await userData.cartData || {}; // Ensure cartData exists
+        
+        // --- FIX: Check if user exists ---
+        if (!userData) {
+            return res.json({ success: false, message: "User not found" })
+        }
 
-        // If stamp is already in cart, increment quantity, otherwise set to 1
+        let cartData = userData.cartData || {}; 
+
         if (cartData[itemId]) {
             cartData[itemId] += 1
         } else {
@@ -16,7 +20,6 @@ const addToCart = async (req, res) => {
         }
 
         await userModel.findByIdAndUpdate(userId, { cartData })
-
         res.json({ success: true, message: "Added To Collection" })
 
     } catch (error) {
@@ -29,11 +32,13 @@ const addToCart = async (req, res) => {
 const updateCart = async (req, res) => {
     try {
         const { userId, itemId, quantity } = req.body
-
         const userData = await userModel.findById(userId)
-        let cartData = await userData.cartData || {};
 
-        // Directly set the new quantity for the specific stamp
+        if (!userData) {
+            return res.json({ success: false, message: "User not found" })
+        }
+
+        let cartData = userData.cartData || {};
         cartData[itemId] = quantity
 
         await userModel.findByIdAndUpdate(userId, { cartData })
@@ -49,10 +54,14 @@ const updateCart = async (req, res) => {
 const getUserCart = async (req, res) => {
     try {
         const { userId } = req.body
-        
         const userData = await userModel.findById(userId)
-        let cartData = await userData.cartData || {};
+        
+        // --- FIX: Prevent reading 'cartData' of null ---
+        if (!userData) {
+            return res.json({ success: false, message: "User session invalid or user not found" })
+        }
 
+        let cartData = userData.cartData || {};
         res.json({ success: true, cartData })
 
     } catch (error) {

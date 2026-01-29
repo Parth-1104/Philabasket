@@ -7,6 +7,7 @@
 /* --- 1. GLOBAL UI SETTINGS --- */
 * {
     font-family: Outfit;
+    box-sizing: border-box;
 }
 .diplomata-sc-regular {
   font-family: "Diplomata SC", serif;
@@ -75,11 +76,17 @@
 }
 
 
+
+
 /* Hide global scrollbars for a clean look */
 ::-webkit-scrollbar {
   width: 0px;
   display: none; 
 }
+html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
 
 /* Prevent text selection and image dragging site-wide */
 body {
@@ -87,6 +94,8 @@ body {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  position: relative;
+  width: 100%;
 }
 
 /* Re-enable selection for inputs so users can still type */
