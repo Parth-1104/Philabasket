@@ -14,7 +14,6 @@ const Dashboard = ({ token }) => {
 
     const INR_SYMBOL = "₹";
 
-    // Formats directly to Indian numbering system
     const formatINR = (val) => new Intl.NumberFormat('en-IN', {
         maximumFractionDigits: 0
     }).format(val || 0);
@@ -43,13 +42,37 @@ const Dashboard = ({ token }) => {
 
     useEffect(() => { if (token) fetchData(); }, [token, fetchData]);
 
-    // KPI Calculation: Using raw 'amount' directly as it's already in INR
+    // --- LOGIC: Verified Philatelist Sync ---
+    // Links the top buyers from analytics to their raw ledger entries using userId
+    const topPhilatelistsVerified = useMemo(() => {
+        if (!analytics?.topBuyers || !analytics?.recentOrders) return [];
+        return analytics.topBuyers.map(buyer => {
+            const sum = analytics.recentOrders
+                .filter(order => {
+                    // Normalize the userId to a string for accurate comparison
+                    const orderUserId = order.userId?._id || order.userId;
+                    return orderUserId === buyer._id && order.status === 'Delivered';
+                })
+                .reduce((acc, order) => acc + (order.amount || 0), 0);
+            return { ...buyer, verifiedSpent: sum };
+        }).sort((a, b) => b.verifiedSpent - a.verifiedSpent);
+    }, [analytics]);
+    // Filter by userId to see every transaction contributing to the total in audit popup
+    const buyerOrders = useMemo(() => {
+        if (!selectedBuyer || !analytics?.recentOrders) return [];
+        return analytics.recentOrders.filter(order => {
+            const orderUserId = order.userId?._id || order.userId;
+            return orderUserId === selectedBuyer._id;
+        });
+    }, [selectedBuyer, analytics]);
+
+    const buyerTotalReal = useMemo(() => {
+        return buyerOrders.reduce((acc, order) => acc + (order.amount || 0), 0);
+    }, [buyerOrders]);
+
     const calculatedKPIs = useMemo(() => {
         if (!analytics?.recentOrders) return { grossRevenue: 0, avgOrderValue: 0, orderCount: 0 };
-        
         const deliveredOrders = analytics.recentOrders.filter(order => order.status === 'Delivered');
-        
-        // No conversion applied: sum the raw integer stored in the DB
         const totalRevenue = deliveredOrders.reduce((acc, order) => acc + (order.amount || 0), 0);
         const count = deliveredOrders.length;
 
@@ -60,56 +83,79 @@ const Dashboard = ({ token }) => {
         };
     }, [analytics]);
 
+    const historicalSalesTrend = useMemo(() => {
+        if (!stats?.salesTrend) return [];
+        
+        return stats.salesTrend.map(item => ({
+            ...item,
+            // Formats "2026-01-31" into "31 Jan" for the chart axis
+            displayDate: new Date(item.date).toLocaleDateString('en-IN', {
+                day: 'numeric',
+                month: 'short'
+            })
+        }));
+    }, [stats]);
+
     if (loading) return <LoadingSpinner />;
 
     return (
         <div className="flex flex-col gap-8 pb-20 max-w-7xl mx-auto px-4 sm:px-0">
             
+            {/* KPI ROW: Featuring Top Specimen */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard 
-                    title="Gross Revenue (INR)" 
-                    value={`${INR_SYMBOL}${formatINR(calculatedKPIs.grossRevenue)}`} 
-                    sub="Delivered Orders Only" 
-                />
-                <StatCard 
-                    title="Avg Order (Delivered)" 
-                    value={`${INR_SYMBOL}${formatINR(calculatedKPIs.avgOrderValue)}`} 
-                    sub="Direct Stored Value" 
-                />
-                <StatCard 
-                    title="Total Success" 
-                    value={calculatedKPIs.orderCount} 
-                    sub="Fulfilled Transactions" 
-                />
-                <StatCard 
-                    title="Points System" 
-                    value={`${(stats?.totalSystemPoints || 0).toLocaleString()} Pts`} 
-                    sub="Customer Rewards" 
-                />
+                <StatCard title="Gross Revenue (INR)" value={`${INR_SYMBOL}${formatINR(calculatedKPIs.grossRevenue)}`} sub="Direct Ledger Sum" />
+                <StatCard title="Top Specimen" value={stats?.topProduct?.name || "N/A"} sub={`${stats?.topProduct?.qty || 0} Units Sold`} />
+                <StatCard title="Total Success" value={calculatedKPIs.orderCount} sub="Fulfilled Transactions" />
+                <StatCard title="Points System" value={`${(stats?.totalSystemPoints || 0).toLocaleString()} Pts`} sub="Customer Rewards" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* --- REVENUE TREND --- */}
+                {/* Revenue Trend Chart remains same */}
                 <div className="lg:col-span-2 bg-white p-6 border rounded-xl shadow-sm">
                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-8 text-gray-400">Revenue Trend (₹)</h3>
                     <div className="h-80">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={stats?.salesTrend || []}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f3f3" />
-                                <XAxis dataKey="date" fontSize={10} axisLine={false} tickLine={false} />
-                                <YAxis fontSize={10} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${formatINR(v)}`} />
-                                <Tooltip content={<CustomTooltip currency={INR_SYMBOL} formatINR={formatINR} />} />
-                                <Area type="monotone" dataKey="sales" stroke="#000" strokeWidth={2} fillOpacity={0.05} fill="#000" />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
+                    <ResponsiveContainer width="100%" height="100%">
+        <AreaChart data={historicalSalesTrend}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f3f3" />
+            <XAxis 
+    dataKey="displayDate" 
+    fontSize={10} 
+    axisLine={false} 
+    tickLine={false} 
+/>
+            <YAxis 
+                fontSize={10} 
+                axisLine={false} 
+                tickLine={false} 
+                tickFormatter={(v) => `${INR_SYMBOL}${formatINR(v)}`} 
+            />
+            <Tooltip 
+                content={
+                    <CustomTooltip 
+                        currency={INR_SYMBOL} 
+                        formatINR={formatINR} 
+                    />
+                } 
+            />
+            <Area 
+                type="monotone" 
+                dataKey="sales" 
+                stroke="#BC002D" 
+                strokeWidth={2} 
+                fillOpacity={0.05} 
+                fill="#BC002D" 
+            />
+        </AreaChart>
+    </ResponsiveContainer>
+</div>
+
                 </div>
 
-                {/* --- TOP PHILATELISTS (Referral Tracking + Direct INR Amount) --- */}
+                {/* TOP PHILATELISTS: Using corrected Verified Sum */}
                 <div className="bg-white p-6 border rounded-xl shadow-sm overflow-hidden">
                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-6 text-gray-400">Top Philatelists</h3>
                     <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                        {analytics?.topBuyers?.map((buyer) => (
+                        {topPhilatelistsVerified.map((buyer) => (
                             <div 
                                 key={buyer._id} 
                                 onClick={() => setSelectedBuyer(buyer)} 
@@ -117,14 +163,10 @@ const Dashboard = ({ token }) => {
                             >
                                 <div className="flex flex-col gap-1">
                                     <p className="text-xs font-bold text-gray-800">{buyer.name}</p>
-                                    {/* Cap Indicator: 3 successful referrals per collector */}
                                     <div className="flex items-center gap-1.5">
                                         <div className="flex gap-0.5">
                                             {[...Array(3)].map((_, i) => (
-                                                <div 
-                                                    key={i} 
-                                                    className={`w-1.5 h-1.5 rounded-full ${i < (buyer.referralCount || 0) ? 'bg-[#BC002D]' : 'bg-gray-200'}`}
-                                                />
+                                                <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < (buyer.referralCount || 0) ? 'bg-[#BC002D]' : 'bg-gray-200'}`} />
                                             ))}
                                         </div>
                                         <span className={`text-[8px] font-black uppercase tracking-tighter ${buyer.referralCount >= 3 ? 'text-[#BC002D]' : 'text-gray-400'}`}>
@@ -132,15 +174,14 @@ const Dashboard = ({ token }) => {
                                         </span>
                                     </div>
                                 </div>
-                                {/* Directly using buyer.totalSpent from the database pre-aggregation */}
-                                <p className="text-sm font-black text-gray-900">{INR_SYMBOL}{formatINR(buyer.totalSpent)}</p>
+                                <p className="text-sm font-black text-gray-900">{INR_SYMBOL}{formatINR(buyer.verifiedSpent)}</p>
                             </div>
                         ))}
                     </div>
                 </div>
             </div>
 
-            {/* --- REVENUE LEDGER --- */}
+            {/* REVENUE LEDGER remains same */}
             <div className="bg-white border rounded-xl shadow-sm overflow-hidden">
                 <div className="p-6 border-b bg-white">
                     <h3 className="text-xs font-black uppercase tracking-[0.2em]">Revenue Ledger</h3>
@@ -152,7 +193,6 @@ const Dashboard = ({ token }) => {
                                 <th className="px-6 py-4">Transaction ID</th>
                                 <th className="px-6 py-4">Collector</th>
                                 <th className="px-6 py-4">Status</th>
-                                <th className="px-6 py-4">Currency Tag</th>
                                 <th className="px-6 py-4 text-right">Revenue (Stored INR)</th>
                             </tr>
                         </thead>
@@ -161,12 +201,9 @@ const Dashboard = ({ token }) => {
                                 <tr key={order._id?.$oid || order._id} className="hover:bg-gray-50/50 transition-colors">
                                     <td className="px-6 py-4 font-mono text-blue-600 font-bold uppercase">#{ (order._id?.$oid || order._id || "").slice(-8) }</td>
                                     <td className="px-6 py-4 font-bold text-gray-900">{order.address?.firstName} {order.address?.lastName}</td>
-                                    <td className="px-6 py-4">
-                                        <span className={`text-[9px] px-2 py-1 rounded-md font-black uppercase tracking-tighter ${order.status === 'Delivered' ? 'bg-green-50 text-green-600' : 'bg-blue-50 text-blue-600'}`}>
-                                            {order.status}
-                                        </span>
+                                    <td className="px-6 py-4 text-[9px] font-black uppercase tracking-tighter">
+                                        <span className={order.status === 'Delivered' ? 'text-green-600' : 'text-blue-600'}>{order.status}</span>
                                     </td>
-                                    <td className="px-6 py-4 uppercase font-bold text-gray-500 text-[10px]">{order.currency || 'INR'}</td>
                                     <td className="px-6 py-4 text-right font-black text-gray-900">{INR_SYMBOL}{formatINR(order.amount)}</td>
                                 </tr>
                             ))}
@@ -174,22 +211,52 @@ const Dashboard = ({ token }) => {
                     </table>
                 </div>
             </div>
+
+            {/* AUDIT POPUP: Now strictly filtered by buyerOrders */}
+            {selectedBuyer && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[500] p-4">
+                    <div className="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-200">
+                        <div className="p-6 bg-gray-900 text-white flex justify-between items-center">
+                            <div>
+                                <h2 className="text-xl font-black tracking-tight uppercase">{selectedBuyer.name}</h2>
+                                <p className="text-[10px] text-gray-400 uppercase tracking-[0.2em] font-bold">Registry Audit Report</p>
+                            </div>
+                            <button onClick={() => setSelectedBuyer(null)} className="text-gray-400 hover:text-white text-3xl">×</button>
+                        </div>
+                        
+                        <div className="p-8 bg-gray-50/50 border-b flex justify-between items-center">
+                            <div className="space-y-1">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Aggregate Stored Value</p>
+                                <p className="text-3xl font-black text-gray-900">{INR_SYMBOL}{formatINR(buyerTotalReal)}</p>
+                            </div>
+                            <div className="text-right space-y-1">
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Registry Status</p>
+                                <p className="text-sm font-black text-blue-600 uppercase">{selectedBuyer.referralCount}/3 Invites Used</p>
+                            </div>
+                        </div>
+
+                        <div className="p-8 max-h-[400px] overflow-y-auto">
+                            <h3 className="text-[10px] font-black uppercase text-gray-400 mb-4 tracking-[0.15em]">Direct Ledger Matches</h3>
+                            <div className="space-y-3">
+                                {buyerOrders.map(order => (
+                                    <div key={order._id} className="flex justify-between items-center p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
+                                        <div>
+                                            <p className="text-[10px] font-bold text-gray-900 uppercase">Order #{ (order._id?.$oid || order._id).slice(-6).toUpperCase() }</p>
+                                            <p className="text-[9px] text-gray-400 mt-1">{new Date(order.date).toLocaleDateString('en-IN')}</p>
+                                        </div>
+                                        <p className="text-sm font-black text-gray-900">{INR_SYMBOL}{formatINR(order.amount)}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
 
-// ... (StatCard, CustomTooltip, LoadingSpinner helpers remain the same)
-
-
-
 // --- HELPERS ---
-const DetailItem = ({ label, value }) => (
-    <div>
-        <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest mb-1.5">{label}</p>
-        <p className="text-xs font-bold text-gray-800 leading-tight border-l-2 border-gray-200 pl-3">{value}</p>
-    </div>
-);
-
 const StatCard = ({ title, value, sub }) => (
     <div className="p-6 bg-white border border-gray-100 rounded-xl shadow-sm">
         <p className="text-[9px] font-black uppercase text-gray-400 tracking-[0.2em] mb-3">{title}</p>

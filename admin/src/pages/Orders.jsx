@@ -13,6 +13,57 @@ const Orders = ({ token }) => {
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [activeOrder, setActiveOrder] = useState(null);
   const [tempTracking, setTempTracking] = useState("");
+  // --- FEATURE: CSV EXPORT ENGINE ---
+  const downloadCSV = (data, filename) => {
+    if (data.length === 0) {
+      toast.error("No data found for this period");
+      return;
+    }
+
+    // Define CSV Headers
+    const headers = ["Order_ID", "Date", "Customer", "Email", "Phone", "Items", "Amount_INR", "Status", "Tracking"];
+    
+    // Map rows
+    const rows = data.map(order => [
+      `#${String(order._id).slice(-8)}`,
+      new Date(order.date).toLocaleDateString('en-IN'),
+      `${order.address.firstName} ${order.address.lastName}`,
+      order.userId?.email || order.address.email,
+      order.address.phone,
+      order.items.map(i => `${i.name}(x${i.quantity})`).join(' | '),
+      order.amount,
+      order.status,
+      order.trackingNumber || "N/A"
+    ]);
+
+    // Construct CSV String
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute("href", url);
+    link.setAttribute("download", `${filename}_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportTodaysOrders = () => {
+    const today = new Date().toDateString();
+    const filtered = orders.filter(o => new Date(o.date).toDateString() === today);
+    downloadCSV(filtered, "PhilaBasket_Todays_Ledger");
+  };
+
+  const exportAllStatus = () => {
+    downloadCSV(orders, "PhilaBasket_Full_Registry");
+  };
+
+  const exportDeliveredOnly = () => {
+    const filtered = orders.filter(o => o.status === "Delivered");
+    downloadCSV(filtered, "PhilaBasket_Delivered_Archive");
+  };
 
   const fetchAllOrders = useCallback(async () => {
     try {
@@ -68,13 +119,32 @@ const Orders = ({ token }) => {
     <div className='p-6 bg-gray-50 min-h-screen font-sans'>
       
       {/* HEADER COMMAND BAR */}
-      <div className='max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 mb-8 bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
-        <div>
-          <h3 className='text-2xl font-black text-gray-900 uppercase tracking-tighter'>Packing Station</h3>
-          <p className='text-[10px] text-gray-400 font-bold uppercase mt-1'>Archive Logistics Management</p>
+      {/* HEADER COMMAND BAR */}
+      <div className='max-w-7xl mx-auto flex flex-col gap-6 mb-8'>
+        <div className='flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+          <div>
+            <h3 className='text-2xl font-black text-gray-900 uppercase tracking-tighter'>Packing Station</h3>
+            <p className='text-[10px] text-gray-400 font-bold uppercase mt-1'>Archive Logistics Management</p>
+          </div>
+          <div className='flex gap-2'>
+              <button onClick={() => fetchAllOrders()} className='px-6 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase shadow-lg shadow-blue-100 transition-all active:scale-95'>Sync Ledger</button>
+          </div>
         </div>
-        <div className='flex gap-2'>
-            <button onClick={() => fetchAllOrders()} className='px-4 py-2 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase shadow-lg shadow-blue-100 uppercase'>Sync Ledger</button>
+
+        {/* EXPORT CONTROLS */}
+        <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
+            <button onClick={exportTodaysOrders} className='flex items-center justify-center gap-3 bg-white border border-gray-100 p-4 rounded-2xl hover:bg-amber-50 transition-all group'>
+                <div className='w-2 h-2 bg-amber-400 rounded-full animate-pulse'></div>
+                <span className='text-[10px] font-black uppercase tracking-widest text-gray-700'>Download Todays CSV</span>
+            </button>
+            <button onClick={exportAllStatus} className='flex items-center justify-center gap-3 bg-white border border-gray-100 p-4 rounded-2xl hover:bg-blue-50 transition-all group'>
+                <div className='w-2 h-2 bg-blue-400 rounded-full'></div>
+                <span className='text-[10px] font-black uppercase tracking-widest text-gray-700'>Global Status CSV</span>
+            </button>
+            <button onClick={exportDeliveredOnly} className='flex items-center justify-center gap-3 bg-white border border-gray-100 p-4 rounded-2xl hover:bg-green-50 transition-all group'>
+                <div className='w-2 h-2 bg-green-400 rounded-full'></div>
+                <span className='text-[10px] font-black uppercase tracking-widest text-gray-700'>Delivered Archive CSV</span>
+            </button>
         </div>
       </div>
 
