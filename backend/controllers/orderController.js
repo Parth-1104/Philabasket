@@ -296,7 +296,7 @@ const getDetailedAnalytics = async (req, res) => {
         const USD_TO_INR = 83;
         const filter = { $or: [{ payment: true }, { status: "Delivered" }] };
 
-        const recentOrders = await orderModel.find(filter).sort({ date: -1 }).limit(10).lean();
+        const recentOrders = await orderModel.find(filter).sort({ date: -1 }).limit(10).populate('userId', 'email totalRewardPoints referralCount referralCode').lean();
 
         const topBuyers = await orderModel.aggregate([
             { $match: filter },
@@ -348,6 +348,7 @@ const getAdminDashboardStats = async (req, res) => {
         
         const USD_TO_INR = 83;
         const totalSystemPoints = users.reduce((acc, user) => acc + (user.totalRewardPoints || 0), 0);
+        const totalReferrals = users.reduce((acc, user) => acc + (user.referralCount || 0), 0);
 
         // --- UPDATED REVENUE LOGIC ---
         // Only sum the amount if status is 'Delivered'
@@ -396,6 +397,7 @@ const getAdminDashboardStats = async (req, res) => {
                 totalRevenue, 
                 orderCount, 
                 totalUsers: users.length,
+                totalReferrals,
                 totalSystemPoints,
                 avgOrderValue, 
                 salesTrend: salesTrend.map(s => ({ 
@@ -412,10 +414,14 @@ const getAdminDashboardStats = async (req, res) => {
 
 const allOrders = async (req, res) => {
     try {
-        // Use .lean() for faster read-only performance in analytics
-        const orders = await orderModel.find({}).lean(); 
+        // We MUST populate 'userId' to get email, points, and referral stats
+        const orders = await orderModel.find({})
+            .populate('userId', 'name email totalRewardPoints referralCount referralCode wishlistData')
+            .lean(); 
+        
         res.json({ success: true, orders });
     } catch (error) {
+        console.error("Registry Sync Error:", error);
         res.json({ success: false, message: error.message });
     }
 }

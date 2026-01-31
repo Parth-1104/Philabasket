@@ -14,7 +14,7 @@ const SearchBar = () => {
     // Configure Fuse.js for "Big Brand" fuzzy matching
     const fuse = new Fuse(products, {
         keys: ['name', 'category', 'country', 'year'],
-        threshold: 0.3, // 0.0 is perfect match, 1.0 matches everything. 0.3 is the "Sweet Spot".
+        threshold: 0.4, // 0.0 is perfect match, 1.0 matches everything. 0.3 is the "Sweet Spot".
         distance: 100
     });
 
