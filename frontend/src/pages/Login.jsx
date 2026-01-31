@@ -7,7 +7,6 @@ import { assets } from '../assets/assets';
 import { useSearchParams } from 'react-router-dom';
 
 const Login = () => {
-  // States: 'Login', 'Sign Up', 'Reset Password'
   const [currentState, setCurrentState] = useState('Login');
   const { token, setToken, navigate, backendUrl } = useContext(ShopContext);
   const [name, setName] = useState('');
@@ -30,7 +29,6 @@ const Login = () => {
         endpoint = '/api/user/login';
         payload = { email, password };
       } else {
-        // --- RECOVERY LOGIC ---
         endpoint = '/api/user/forgot-password';
         payload = { email };
       }
@@ -53,7 +51,7 @@ const Login = () => {
     }
   };
 
-  // Google Login preserved...
+  // --- GOOGLE AUTH RESTORED ---
   const googleSuccess = async (res) => {
     try {
       const response = await axios.post(backendUrl + '/api/user/google-login', { 
@@ -63,11 +61,12 @@ const Login = () => {
       if (response.data.success) {
         setToken(response.data.token);
         localStorage.setItem('token', response.data.token);
+        toast.success("Identity Verified via Google Registry");
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
-      toast.error("Authentication Failed");
+      toast.error("Google Authentication Failed");
     }
   };
 
@@ -88,10 +87,6 @@ const Login = () => {
             className="w-full h-full object-cover grayscale-[0.2] hover:scale-110 transition-transform duration-[3s]"
           />
           <div className="absolute inset-0 bg-[#BC002D]/10 mix-blend-multiply"></div>
-          {/* <div className="absolute bottom-10 left-10 text-white z-10">
-            <p className="text-[10px] tracking-[0.6em] uppercase font-black mb-2">Established MMXXVI</p>
-            <h3 className="text-3xl font-serif italic">Accessing the Sovereign Archive.</h3>
-          </div> */}
         </div>
 
         {/* Right Side: Registry Form */}
@@ -107,36 +102,19 @@ const Login = () => {
             <h2 className="text-5xl font-serif text-black tracking-tighter">
               {currentState === 'Login' ? 'Sign In' : currentState === 'Sign Up' ? 'Create Account' : 'Recover Access'}
             </h2>
-            <p className='text-gray-400 text-[10px] uppercase tracking-widest mt-4 font-bold'>
-              {currentState === 'Reset Password' ? 'Enter your email to rescind lost credentials.' : 'Official Collector Registry Portal.'}
-            </p>
           </div>
 
           <form onSubmit={onSubmitHandler} className="flex flex-col gap-6">
             {currentState === 'Sign Up' && (
               <div className="flex flex-col gap-2">
                 <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
-                <input 
-                  onChange={(e) => setName(e.target.value)} 
-                  value={name} 
-                  type="text" 
-                  className="w-full px-5 py-4 rounded-sm bg-[#F9F9F9] border border-black/5 focus:bg-white focus:border-[#BC002D]/30 outline-none transition-all text-sm" 
-                  placeholder="Collector Name" 
-                  required 
-                />
+                <input onChange={(e) => setName(e.target.value)} value={name} type="text" className="w-full px-5 py-4 rounded-sm bg-[#F9F9F9] border border-black/5 focus:bg-white focus:border-[#BC002D]/30 outline-none transition-all text-sm" placeholder="Collector Name" required />
               </div>
             )}
 
             <div className="flex flex-col gap-2">
               <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Registry Email</label>
-              <input 
-                onChange={(e) => setEmail(e.target.value)} 
-                value={email} 
-                type="email" 
-                className="w-full px-5 py-4 rounded-sm bg-[#F9F9F9] border border-black/5 focus:bg-white focus:border-[#BC002D]/30 outline-none transition-all text-sm" 
-                placeholder="collector@archive.com" 
-                required 
-              />
+              <input onChange={(e) => setEmail(e.target.value)} value={email} type="email" className="w-full px-5 py-4 rounded-sm bg-[#F9F9F9] border border-black/5 focus:bg-white focus:border-[#BC002D]/30 outline-none transition-all text-sm" placeholder="collector@archive.com" required />
             </div>
 
             {currentState !== 'Reset Password' && (
@@ -144,61 +122,48 @@ const Login = () => {
                 <div className="flex justify-between items-center px-1">
                   <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Access Key</label>
                   {currentState === 'Login' && (
-                    <span 
-                      onClick={() => setCurrentState('Reset Password')}
-                      className="text-[9px] text-[#BC002D] hover:underline cursor-pointer transition-colors uppercase font-bold tracking-widest"
-                    >
-                      Forgot password?
-                    </span>
+                    <span onClick={() => setCurrentState('Reset Password')} className="text-[9px] text-[#BC002D] hover:underline cursor-pointer transition-colors uppercase font-bold tracking-widest">Forgot password?</span>
                   )}
                 </div>
-                <input 
-                  onChange={(e) => setPassword(e.target.value)} 
-                  value={password} 
-                  type="password" 
-                  className="w-full px-5 py-4 rounded-sm bg-[#F9F9F9] border border-black/5 focus:bg-white focus:border-[#BC002D]/30 outline-none transition-all text-sm" 
-                  placeholder="••••••••" 
-                  required 
-                />
+                <input onChange={(e) => setPassword(e.target.value)} value={password} type="password" className="w-full px-5 py-4 rounded-sm bg-[#F9F9F9] border border-black/5 focus:bg-white focus:border-[#BC002D]/30 outline-none transition-all text-sm" placeholder="••••••••" required />
               </div>
             )}
 
             <button className="bg-black text-white w-full py-5 rounded-sm font-black text-[11px] uppercase tracking-[0.4em] mt-4 hover:bg-[#BC002D] transition-all shadow-xl active:scale-[0.98]">
               {currentState === 'Login' ? 'Initialize Access' : currentState === 'Sign Up' ? 'Register Specimen' : 'Request Link'}
             </button>
+
+            {/* --- GOOGLE LOGIN UI --- */}
+            {currentState !== 'Reset Password' && (
+              <div className="flex flex-col items-center gap-6 mt-2">
+                <div className="flex items-center w-full gap-4">
+                  <div className="h-[1px] bg-black/5 flex-1"></div>
+                  <span className="text-[8px] font-black text-gray-300 uppercase tracking-[0.3em]">Institutional Single Sign-On</span>
+                  <div className="h-[1px] bg-black/5 flex-1"></div>
+                </div>
+                
+                <div className="w-full flex justify-center scale-110">
+                  <GoogleLogin 
+                    onSuccess={googleSuccess} 
+                    onError={() => toast.error("Authentication Server Error")}
+                    useOneTap
+                    shape="square"
+                    theme="outline"
+                  />
+                </div>
+              </div>
+            )}
           </form>
 
-          {/* Form Footer / State Toggles */}
-          <div className="mt-12 text-center flex flex-col gap-4">
-            {currentState === 'Reset Password' ? (
+          {/* Form Footer */}
+          <div className="mt-12 text-center">
+            {currentState === 'Login' ? (
               <p className="text-[10px] text-gray-400 uppercase tracking-widest">
-                Remembered your key?{' '}
-                <span 
-                  onClick={() => setCurrentState('Login')} 
-                  className="text-black font-black cursor-pointer hover:text-[#BC002D] transition-all"
-                >
-                  Return to Sign In
-                </span>
-              </p>
-            ) : currentState === 'Login' ? (
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest">
-                New Collector?{' '}
-                <span 
-                  onClick={() => setCurrentState('Sign Up')} 
-                  className="text-black font-black cursor-pointer hover:text-[#BC002D] transition-all"
-                >
-                  Create Registry Entry
-                </span>
+                New Collector? <span onClick={() => setCurrentState('Sign Up')} className="text-black font-black cursor-pointer hover:text-[#BC002D] transition-all">Create Registry Entry</span>
               </p>
             ) : (
               <p className="text-[10px] text-gray-400 uppercase tracking-widest">
-                Existing Member?{' '}
-                <span 
-                  onClick={() => setCurrentState('Login')} 
-                  className="text-black font-black cursor-pointer hover:text-[#BC002D] transition-all"
-                >
-                  Return to Archive
-                </span>
+                Existing Member? <span onClick={() => setCurrentState('Login')} className="text-black font-black cursor-pointer hover:text-[#BC002D] transition-all">Return to Archive</span>
               </p>
             )}
           </div>

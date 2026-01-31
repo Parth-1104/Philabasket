@@ -182,47 +182,107 @@ const Navbar = () => {
             </div>
 
             {/* --- MOBILE NAVIGATION DRAWER --- */}
-            <div className={`fixed inset-0 z-[2000] transition-all duration-500 ${visible ? 'visible' : 'invisible'}`}>
-                <div onClick={() => setVisible(false)} className={`absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}></div>
-                <div className={`absolute top-0 right-0 bottom-0 bg-white shadow-[-20px_0_60px_rgba(0,0,0,0.15)] transition-all duration-700 ease-in-out ${visible ? 'w-full sm:w-[450px]' : 'w-0'}`}>
-                    <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[25vw] font-serif text-black/[0.03] pointer-events-none select-none uppercase italic'>Archive</div>
-                    <div className='flex flex-col h-full text-black relative z-10 overflow-hidden'>
-                        <div className='flex items-center justify-between p-8 border-b border-black/5 bg-white'>
-                            <div onClick={() => setVisible(false)} className='flex items-center gap-4 cursor-pointer group'>
-                                <div className='w-10 h-10 flex items-center justify-center rounded-full border border-black/10 group-hover:border-[#BC002D] transition-all'>
-                                    <img className='h-3 rotate-180 brightness-0' src={assets.dropdown_icon} alt="Back" />
-                                </div>
-                                <p className='text-[10px] tracking-[0.4em] uppercase font-black'>Return</p>
-                            </div>
-                            <img src={assets.logo} className='w-12' alt="Logo" />
+            {/* --- MOBILE NAVIGATION DRAWER --- */}
+<div className={`fixed inset-0 z-[5000] transition-all duration-500 ${visible ? 'visible' : 'invisible'}`}>
+    
+    {/* 1. Backdrop Overlay: Heavy blur to isolate the Hero section */}
+    <div 
+        onClick={() => setVisible(false)} 
+        className={`absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity duration-500 ${visible ? 'opacity-100' : 'opacity-0'}`}
+    ></div>
+
+    {/* 2. Side Panel: Slide-in logic with solid background */}
+    <div className={`absolute top-0 right-0 h-full w-[85%] sm:w-[450px] bg-white shadow-[-30px_0_60px_rgba(0,0,0,0.3)] transition-transform duration-500 ease-in-out ${visible ? 'translate-x-0' : 'translate-x-full'}`}>
+        
+        {/* Decorative Background Text */}
+        <div className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[20vw] font-serif text-black/[0.02] pointer-events-none select-none uppercase italic'>Archive</div>
+        
+        <div className='flex flex-col h-full text-black relative z-10 bg-white'>
+            
+            {/* Header Section */}
+            <div className='flex items-center justify-between p-8 border-b border-black/5 bg-white'>
+                <div onClick={() => setVisible(false)} className='flex items-center gap-4 cursor-pointer group'>
+                    <div className='w-10 h-10 flex items-center justify-center rounded-full border border-black/10 group-hover:border-[#BC002D] transition-all'>
+                        <img className='h-3 rotate-180 brightness-0' src={assets.dropdown_icon} alt="Back" />
+                    </div>
+                    <p className='text-[10px] tracking-[0.4em] uppercase font-black'>Return</p>
+                </div>
+                <img src={assets.logo} className='w-12' alt="Logo" />
+            </div>
+
+            {/* Links Content - Added bg-white to ensure no bleed-through */}
+            <div className='flex flex-col p-12 items-start flex-1 gap-10  bg-white'>
+                
+                {/* Main Catalogue Portals */}
+                <div className='space-y-6 w-full'>
+                    <p className='text-[9px] tracking-[0.6em] text-[#BC002D] uppercase font-black mb-6'>Catalogue Portals</p>
+                    <NavLink onClick={() => setVisible(false)} className='block text-5xl font-serif tracking-tighter text-black hover:text-[#BC002D] transition-colors uppercase' to='/'>Home</NavLink>
+                    <NavLink onClick={() => setVisible(false)} className='block text-5xl font-serif tracking-tighter text-black hover:text-[#BC002D] transition-colors uppercase' to='/collection'>Gallery</NavLink>
+                    <NavLink onClick={() => setVisible(false)} className='block text-5xl font-serif tracking-tighter text-black hover:text-[#BC002D] transition-colors uppercase' to='/about'>Archive</NavLink>
+                </div>
+
+                <div className='h-[1px] w-full bg-black/5 my-2'></div>
+
+                {/* NEW: Personal Vault (Orders & Wishlist) with specialized background */}
+                <div className='space-y-6 w-full'>
+                    <p className='text-[9px] tracking-[0.6em] text-gray-400 uppercase font-black mb-6'>Personal Vault</p>
+                    
+                    <div className='flex flex-col gap-4'>
+                        {/* My Orders Link */}
+                        <div 
+                            onClick={() => { navigate('/orders'); setVisible(false); }}
+                            className='flex items-center justify-between p-5 bg-[#F9F9F9] border border-black/5 rounded-sm active:bg-[#BC002D]/5 transition-all'
+                        >
+                            <span className='text-sm font-bold tracking-[0.2em] uppercase'>Registry Orders</span>
+                            <img className='h-3 rotate-270 brightness-0 opacity-30' src={assets.dropdown_icon} alt="" />
                         </div>
-                        <div className='flex flex-col p-12 items-start justify-center flex-1 gap-10'>
-                            <div className='space-y-6'>
-                                <p className='text-[9px] tracking-[0.6em] text-[#D4AF37] uppercase font-black mb-4'>Catalogue</p>
-                                <NavLink onClick={() => setVisible(false)} className='block text-5xl font-serif tracking-tighter text-black hover:text-[#BC002D] transition-colors' to='/'>HOME</NavLink>
-                                <NavLink onClick={() => setVisible(false)} className='block text-5xl font-serif tracking-tighter text-black hover:text-[#BC002D] transition-colors' to='/collection'>GALLERY</NavLink>
-                                <NavLink onClick={() => setVisible(false)} className='block text-5xl font-serif tracking-tighter text-black hover:text-[#BC002D] transition-colors' to='/about'>ARCHIVE</NavLink>
+
+                        {/* Wishlist Link with Count */}
+                        <div 
+                            onClick={() => { navigate('/wishlist'); setVisible(false); }}
+                            className='flex items-center justify-between p-5 bg-[#F9F9F9] border border-black/5 rounded-sm active:bg-[#BC002D]/5 transition-all'
+                        >
+                            <div className='flex items-center gap-3'>
+                                <span className='text-sm font-bold tracking-[0.2em] uppercase'>Wishlist</span>
+                                <span className='bg-[#BC002D]/10 text-[#BC002D] px-2 py-0.5 rounded-sm text-[10px] font-black'>
+                                    {wishlist.length}
+                                </span>
                             </div>
-                            <div className='h-[1px] w-full bg-black/5 my-4'></div>
-                            <div className='w-full'>
-                                <p className='text-[9px] tracking-[0.6em] text-[#D4AF37] uppercase font-black mb-8'>Collector Status</p>
-                                {token ? (
-                                    <div className='space-y-8'>
-                                        <div className='flex flex-col gap-2'>
-                                            <p className='text-sm font-bold tracking-[0.2em] uppercase'>{userPoints} PTS IN VAULT</p>
-                                            <p onClick={() => { navigate('/orders'); setVisible(false); }} className='text-black/40 text-[10px] uppercase tracking-widest cursor-pointer hover:text-black italic'>Track Acquisitions →</p>
-                                        </div>
-                                        <button onClick={()=>{setVisible(false); logout();}} className='w-full bg-[#BC002D] text-white py-5 text-[11px] tracking-[0.5em] font-black uppercase shadow-2xl shadow-[#BC002D]/20 active:scale-95 transition-transform'>Sign Out</button>
-                                    </div>
-                                ) : (
-                                    <button onClick={() => { navigate('/login'); setVisible(false); }} className='w-full bg-black text-white py-5 text-[11px] tracking-[0.5em] font-black uppercase shadow-2xl active:scale-95 transition-transform'>Initialize Access</button>
-                                )}
-                            </div>
+                            <img className='h-4 brightness-0 opacity-30' src={assets.star_icon} alt="" />
                         </div>
-                        <div className='p-10 text-center border-t border-black/5'><p className='text-[9px] tracking-[0.8em] text-black/20 uppercase font-black'>PhilaBasket Sovereign • MMXXVI</p></div>
                     </div>
                 </div>
+
+                <div className='h-[1px] w-full bg-black/5 my-2'></div>
+
+                {/* Identity & Status */}
+                <div className='w-full'>
+                    <p className='text-[9px] tracking-[0.6em] text-gray-400 uppercase font-black mb-8'>Identity Status</p>
+                    {token ? (
+                        <div className='space-y-8'>
+                            <div className='flex flex-col gap-2 bg-[#F9F9F9] p-5 border-l-2 border-[#D4AF37]'>
+                                <p className='text-[9px] text-black/30 uppercase tracking-widest mb-1'>Credit Valuation</p>
+                                <p className='text-black font-bold text-lg tracking-tight'>
+                                    {currency === 'INR' ? `₹${(userPoints * 0.1).toFixed(2)}` : `$${(userPoints * 0.0012).toFixed(2)}`}
+                                </p>
+                                <p className='text-[8px] text-[#D4AF37] font-black uppercase tracking-widest mt-1'>{userPoints} PTS IN VAULT</p>
+                            </div>
+                            
+                            <button onClick={()=>{setVisible(false); logout();}} className='w-full bg-[#BC002D] text-white py-5 text-[11px] tracking-[0.5em] font-black uppercase shadow-2xl active:scale-95 transition-transform'>Terminate Session</button>
+                        </div>
+                    ) : (
+                        <button onClick={() => { navigate('/login'); setVisible(false); }} className='w-full bg-black text-white py-5 text-[11px] tracking-[0.5em] font-black uppercase shadow-2xl active:scale-95 transition-transform'>Initialize Access</button>
+                    )}
+                </div>
             </div>
+
+            {/* Footer */}
+            <div className='p-10 text-center border-t border-black/5 bg-white'>
+                <p className='text-[9px] tracking-[0.8em] text-black/20 uppercase font-black italic'>PhilaBasket Sovereign • MMXXVI</p>
+            </div>
+        </div>
+    </div>
+</div>
         </div>
     );
 };
