@@ -4,14 +4,117 @@ import bcrypt from "bcrypt"
 import jwt from 'jsonwebtoken'
 import userModel from "../models/userModel.js";
 import { OAuth2Client } from 'google-auth-library';
-
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
 
-// --- PHASE 1: REQUEST RECOVERY ---
- const forgotPassword = async (req, res) => {
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+const createToken = (id) => {
+    return jwt.sign({ id }, process.env.JWT_SECRET)
+}
+
+// --- HELPER: DUAL-REWARD & LOOPHOLE PROTECTION ---
+// --- HELPER: DUAL-REWARD WITH 3-PERSON CAP ---
+// --- HELPER: DUAL-REWARD WITH 3-PERSON CAP & IP PROTECTION ---
+const rewardReferrer = async (referrerCode, newUser, ipAddress) => {
     try {
-        console.log("DEBUG: FRONTEND_URL is:", process.env.FRONTEND_URL);
+        if (!referrerCode || !newUser) return false;
+
+        // 1. Find the inviter
+        const referrer = await userModel.findOne({ referralCode: referrerCode });
+        if (!referrer) return false;
+
+        // 2. Self-Referral Protection
+        if (referrer._id.toString() === newUser._id.toString()) return false;
+
+        // 3. CAP PROTECTION: Limit to 3 referrals
+        if (referrer.referralCount >= 3) return false;
+
+        // 4. IP Protection: Prevent same person creating multiple accounts
+        const duplicateIP = await userModel.findOne({ 
+            signupIP: ipAddress, 
+            _id: { $ne: newUser._id } 
+        });
+        if (duplicateIP) return false;
+
+        // 5. Apply Rewards
+        referrer.totalRewardPoints = (referrer.totalRewardPoints || 0) + 50;
+        referrer.referralCount = (referrer.referralCount || 0) + 1;
+        
+        newUser.totalRewardPoints = (newUser.totalRewardPoints || 0) + 25;
+        newUser.signupIP = ipAddress;
+
+        await referrer.save();
+        await newUser.save();
+        return true;
+    } catch (error) {
+        console.error("Referral Error:", error);
+        return false;
+    }
+}
+
+// --- UPDATED GOOGLE LOGIN ---
+const googleLogin = async (req, res) => {
+    try {
+        const { idToken, referrerCode } = req.body;
+        const ticket = await client.verifyIdToken({
+            idToken,
+            audience: process.env.GOOGLE_CLIENT_ID
+        });
+
+        const { name, email, picture } = ticket.getPayload();
+        let user = await userModel.findOne({ email });
+
+        if (!user) {
+            user = await userModel.create({
+                name, email, image: picture,
+                password: Date.now() + Math.random().toString(),
+                totalRewardPoints: 0, referralCount: 0
+            });
+
+            if (referrerCode) {
+                await rewardReferrer(referrerCode, user, req.ip || req.headers['x-forwarded-for']);
+            }
+        }
+        const token = createToken(user._id);
+        res.json({ success: true, token });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// --- UPDATED REGISTRATION ---
+const registerUser = async (req, res) => {
+    try {
+        const { name, email, password, referrerCode } = req.body;
+        if (await userModel.findOne({ email })) {
+            return res.json({ success: false, message: "User already exists" });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const newUser = new userModel({
+            name, email, password: hashedPassword,
+            totalRewardPoints: 0, referralCount: 0
+        });
+
+        const user = await newUser.save();
+
+        if (referrerCode) {
+            await rewardReferrer(referrerCode, user, req.ip || req.headers['x-forwarded-for']);
+        }
+
+        const token = createToken(user._id);
+        res.json({ success: true, token });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// --- PASSWORD RECOVERY ---
+const forgotPassword = async (req, res) => {
+    try {
         const { email } = req.body;
         const user = await userModel.findOne({ email });
 
@@ -19,18 +122,14 @@ import nodemailer from 'nodemailer';
             return res.json({ success: false, message: "Registry email not found." });
         }
 
-        // Generate a random 20-character archival token
         const resetToken = crypto.randomBytes(20).toString('hex');
-        
-        // Token valid for 1 hour
         user.resetPasswordToken = resetToken;
-        user.resetPasswordExpires = Date.now() + 3600000; 
+        user.resetPasswordExpires = Date.now() + 3600000; // 1 Hour
 
         await user.save();
 
-        // Setup Email Transport (using Nodemailer)
         const transporter = nodemailer.createTransport({
-            service: 'gmail', // or your preferred service
+            service: 'gmail',
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS
@@ -43,10 +142,7 @@ import nodemailer from 'nodemailer';
             to: user.email,
             from: 'PhilaBasket Registry <noreply@philabasket.com>',
             subject: 'Archive Access Recovery Protocol',
-            text: `You are receiving this because a recovery protocol was initiated for your collector account.\n\n
-            Please click on the following link to rescind your old credentials:\n
-            ${resetUrl}\n\n
-            If you did not request this, please ignore this transmission.`
+            text: `A recovery protocol was initiated for your account.\n\nPlease click here to reset your credentials:\n${resetUrl}`
         };
 
         await transporter.sendMail(mailOptions);
@@ -57,102 +153,33 @@ import nodemailer from 'nodemailer';
     }
 }
 
-
 const resetPassword = async (req, res) => {
     try {
         const { token, newPassword } = req.body;
 
-        // Find user with valid token that hasn't expired
         const user = await userModel.findOne({
             resetPasswordToken: token,
             resetPasswordExpires: { $gt: Date.now() }
         });
 
         if (!user) {
-            return res.json({ success: false, message: "Token is invalid or has expired." });
+            return res.json({ success: false, message: "Token is invalid or expired." });
         }
 
-        // Hash the new password
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(newPassword, salt);
-
-        // Update user record and clear tokens
-        user.password = hashedPassword;
+        user.password = await bcrypt.hash(newPassword, salt);
         user.resetPasswordToken = undefined;
         user.resetPasswordExpires = undefined;
 
         await user.save();
-
         res.json({ success: true, message: "Credentials updated successfully." });
 
     } catch (error) {
-        console.log(error);
         res.json({ success: false, message: error.message });
     }
 }
 
-
-
-
-
-
-
-
-
-
-const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-
-const createToken = (id) => {
-    return jwt.sign({ id }, process.env.JWT_SECRET)
-}
-
-// Helper function to reward the referrer
-const rewardReferrer = async (referrerCode) => {
-    if (referrerCode) {
-        const referrer = await userModel.findOne({ referralCode: referrerCode });
-        if (referrer) {
-            // Reward: 500 PTS (Matches your 10 PTS = ₹1 logic)
-            referrer.totalRewardPoints += 500;
-            await referrer.save();
-            return true;
-        }
-    }
-    return false;
-}
-
-const googleLogin = async (req, res) => {
-    try {
-        const { idToken, referrerCode } = req.body; // Catch referrerCode from Google Login
-        
-        const ticket = await client.verifyIdToken({
-            idToken,
-            audience: process.env.GOOGLE_CLIENT_ID
-        });
-
-        const { name, email, picture } = ticket.getPayload();
-        let user = await userModel.findOne({ email });
-
-        if (!user) {
-            user = await userModel.create({
-                name,
-                email,
-                password: Date.now() + Math.random().toString(),
-                image: picture
-            });
-
-            // Reward the referrer if this is a brand new account
-            await rewardReferrer(referrerCode);
-        }
-
-        const token = createToken(user._id);
-        res.json({ success: true, token });
-
-    } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message });
-    }
-}
-
+// --- STANDARD LOGIN ---
 const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -171,50 +198,11 @@ const loginUser = async (req, res) => {
             res.json({ success: false, message: 'Invalid credentials' })
         }
     } catch (error) {
-        console.log(error);
         res.json({ success: false, message: error.message })
     }
 }
 
-const registerUser = async (req, res) => {
-    try {
-        const { name, email, password, referrerCode } = req.body; // Catch referrerCode
-
-        const exists = await userModel.findOne({ email });
-        if (exists) {
-            return res.json({ success: false, message: "User already exists" })
-        }
-
-        if (!validator.isEmail(email)) {
-            return res.json({ success: false, message: "Please enter a valid email" })
-        }
-        if (password.length < 8) {
-            return res.json({ success: false, message: "Please enter a strong password" })
-        }
-
-        const salt = await bcrypt.genSalt(10)
-        const hashedPassword = await bcrypt.hash(password, salt)
-
-        const newUser = new userModel({
-            name,
-            email,
-            password: hashedPassword
-        })
-
-        const user = await newUser.save();
-
-        // Process the referral reward
-        await rewardReferrer(referrerCode);
-
-        const token = createToken(user._id)
-        res.json({ success: true, token })
-
-    } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message })
-    }
-}
-
+// --- ADMIN & PROFILE ---
 const adminLogin = async (req, res) => {
     try {
         const {email,password} = req.body
@@ -225,7 +213,6 @@ const adminLogin = async (req, res) => {
             res.json({success:false,message:"Invalid credentials"})
         }
     } catch (error) {
-        console.log(error);
         res.json({ success: false, message: error.message })
     }
 }
@@ -239,9 +226,16 @@ const getUserProfile = async (req, res) => {
         }
         res.json({ success: true, user });
     } catch (error) {
-        console.log(error);
         res.json({ success: false, message: error.message });
     }
 }
 
-export { googleLogin, loginUser, registerUser, adminLogin, getUserProfile,forgotPassword,resetPassword }
+export { 
+    googleLogin, 
+    loginUser, 
+    registerUser, 
+    adminLogin, 
+    getUserProfile, 
+    forgotPassword, 
+    resetPassword 
+}

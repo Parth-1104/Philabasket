@@ -5,13 +5,18 @@ const userSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     referralCode: { type: String, unique: true },
-    // Add these to your existing userSchema
-resetPasswordToken: String,
-resetPasswordExpires: Date,
+    // Password Recovery Fields
+    resetPasswordToken: String,
+    resetPasswordExpires: Date,
+    // Rewards System
     totalRewardPoints: { type: Number, default: 0 },
+    // Loophole & Cap Protection
+    referralCount: { type: Number, default: 0 }, 
+    signupIP: { type: String }, 
+    // User Data
     wishlistData: { type: Array, default: [] },
     cartData: { type: Object, default: {} }
-}, { minimize: false })
+}, { minimize: false, timestamps: true }) // Added timestamps for better audit trails
 
 userSchema.pre('save', function (next) {
     if (!this.referralCode) {
@@ -20,6 +25,6 @@ userSchema.pre('save', function (next) {
     next();
 });
 
-const userModel = mongoose.models.user || mongoose.model('user',userSchema);
+const userModel = mongoose.models.user || mongoose.model('user', userSchema);
 
-export default userModel
+export default userModel;
