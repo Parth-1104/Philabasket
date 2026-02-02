@@ -101,7 +101,7 @@ const Navbar = () => {
                 {/* REWARD MODULE */}
                 <div className='relative group'>
                     <div className='hidden md:flex items-center gap-3  text-[#f1f6b6] px-5 py-2.5 rounded-full cursor-pointer bg-[#bd002d] transition-all duration-500 shadow-xl '>
-                        <img className='w-7 h-7' src={token ? assets.mem : assets.member} alt="Rewards" />
+                        <img className='w-9 h-9' src={token ? assets.mem : assets.member} alt="Rewards" />
                         <span className='text-[10px] font-bold tracking-widest uppercase'>
                             {token ? `${userPoints} PTS` : 'Rewards'}
                         </span>
@@ -268,10 +268,10 @@ const Navbar = () => {
                                 <p className='text-[8px] text-[#D4AF37] font-black uppercase tracking-widest mt-1'>{userPoints} PTS IN VAULT</p>
                             </div>
                             
-                            <button onClick={()=>{setVisible(false); logout();}} className='w-full bg-[#BC002D] text-white py-5 text-[11px] tracking-[0.5em] font-black uppercase shadow-2xl active:scale-95 transition-transform'>Terminate Session</button>
+                            <button onClick={()=>{setVisible(false); logout();}} className='w-full bg-[#BC002D] text-white py-5 text-[11px] tracking-[0.5em] font-black uppercase shadow-2xl active:scale-95 transition-transform'>Logout</button>
                         </div>
                     ) : (
-                        <button onClick={() => { navigate('/login'); setVisible(false); }} className='w-full bg-black text-white py-5 text-[11px] tracking-[0.5em] font-black uppercase shadow-2xl active:scale-95 transition-transform'>Initialize Access</button>
+                        <button onClick={() => { navigate('/login'); setVisible(false); }} className='w-full bg-black text-white py-5 text-[11px] tracking-[0.5em] font-black uppercase shadow-2xl active:scale-95 transition-transform'>Login</button>
                     )}
                 </div>
             </div>

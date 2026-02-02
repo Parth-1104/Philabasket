@@ -130,7 +130,7 @@ const Login = () => {
             )}
 
             <button className="bg-black text-white w-full py-5 rounded-sm font-black text-[11px] uppercase tracking-[0.4em] mt-4 hover:bg-[#BC002D] transition-all shadow-xl active:scale-[0.98]">
-              {currentState === 'Login' ? 'Initialize Access' : currentState === 'Sign Up' ? 'Register Specimen' : 'Request Link'}
+              {currentState === 'Login' ? 'Signin' : currentState === 'Sign Up' ? 'Register Specimen' : 'Request Link'}
             </button>
 
             {/* --- GOOGLE LOGIN UI --- */}
