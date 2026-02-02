@@ -63,7 +63,7 @@ const Navbar = () => {
     );
 
     return (
-        <div className='flex items-center justify-between py-6 px-[6%] sticky top-0 z-[100] bg-white/80 backdrop-blur-md border-b border-black/5'>
+        <div className='flex items-center justify-between py-6 px-[6%] sticky top-0 z-[100] bg-[#fffefe] backdrop-blur-md border-b border-black/5'>
             
             {/* LOGO SECTION */}
             <Link to='/' className='flex-shrink-0 group'>
@@ -100,10 +100,10 @@ const Navbar = () => {
                 
                 {/* REWARD MODULE */}
                 <div className='relative group'>
-                    <div className='hidden md:flex items-center gap-3 bg-black text-white px-5 py-2.5 rounded-full cursor-pointer hover:bg-[#BC002D] transition-all duration-500 shadow-xl shadow-black/10'>
-                        <img className='w-5 h-5' src={token ? assets.coin : assets.quality_icon} alt="Points" />
+                    <div className='hidden md:flex items-center gap-3  text-[#f1f6b6] px-5 py-2.5 rounded-full cursor-pointer bg-[#bd002d] transition-all duration-500 shadow-xl '>
+                        <img className='w-7 h-7' src={token ? assets.mem : assets.member} alt="Rewards" />
                         <span className='text-[10px] font-bold tracking-widest uppercase'>
-                            {token ? `${userPoints} PTS` : 'Join'}
+                            {token ? `${userPoints} PTS` : 'Rewards'}
                         </span>
                     </div>
 
@@ -111,7 +111,7 @@ const Navbar = () => {
                     <div className='absolute right-0 top-full pt-5 hidden group-hover:block z-[120]'>
                         <div className='w-80 bg-white border border-black/5 p-8 shadow-[0_30px_60px_rgba(0,0,0,0.12)]'>
                             <h4 className='text-black font-serif text-base mb-6 border-b border-black/5 pb-3'>
-                                {token ? 'Portfolio Value' : 'Membership'}
+                                {token ? 'Portfolio Value' : 'Collector’s Registry'}
                             </h4>
                             
                             {token ? (
@@ -129,13 +129,13 @@ const Navbar = () => {
                                         className='p-4 border border-black/5 bg-white hover:bg-[#BC002D]/5 transition-all cursor-pointer group/ref'
                                     >
                                         <p className='text-[#BC002D] text-[9px] font-black uppercase tracking-[0.3em] mb-2'>Refer a Collector</p>
-                                        <p className='text-black/40 text-[9px] leading-relaxed uppercase tracking-wider'>Earn 500 PTS for every invitation.</p>
+                                        <p className='text-black/40 text-[9px] leading-relaxed uppercase tracking-wider'>Earn 50 PTS for every invitation.</p>
                                     </div>
                                 </div>
                             ) : (
                                 <div className='space-y-4 text-center'>
-                                    <p className='text-black/40 text-[10px] uppercase leading-relaxed tracking-widest'>Access exclusive specimens and 10% acquisition credits.</p>
-                                    <button onClick={() => { navigate('/login'); setVisible(false); }} className='w-full bg-black text-white py-3 text-[9px] font-bold uppercase tracking-[0.4em] hover:bg-[#BC002D] transition-all'>Initialize</button>
+                                    <p className='text-black/40 text-[10px] uppercase leading-relaxed tracking-widest'>Earn 10% acquisition credits on every specimen. Convert credits to currency or grow your archive through our referral network.</p>
+                                    <button onClick={() => { navigate('/login'); setVisible(false); }} className='w-full bg-black text-white py-3 text-[9px] font-bold uppercase tracking-[0.4em] hover:bg-[#BC002D] transition-all'>Login</button>
                                 </div>
                             )}
                         </div>
@@ -151,7 +151,7 @@ const Navbar = () => {
                             <div className='group-hover:block hidden absolute right-0 pt-5 w-48'>
                                 <div className='bg-white border border-black/5 p-5 shadow-2xl'>
                                     <p onClick={()=>navigate('/orders')} className='text-[10px] text-black/60 cursor-pointer hover:text-[#BC002D] mb-4 uppercase tracking-widest'>Orders</p>
-                                    <p onClick={() => navigate('/wishlist')} className='text-[10px] text-gray-400 cursor-pointer hover:text-white mb-3 uppercase tracking-widest flex justify-between items-center'>
+                                    <p onClick={() => navigate('/wishlist')} className='text-[10px] text-black/60 cursor-pointer hover:text-[#BC002D] mb-3 uppercase tracking-widest flex justify-between items-center'>
                 Wishlist 
                 <span className='text-[8px] bg-[#B8860B]/20 px-1 rounded text-[#B8860B]'>{wishlist.length}</span>
             </p>

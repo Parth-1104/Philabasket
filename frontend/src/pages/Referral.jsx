@@ -6,8 +6,10 @@ const Referral = () => {
     const { token, userData, navigate } = useContext(ShopContext);
     const [copied, setCopied] = useState(false);
 
-    const referralCode = userData?.referralCode;
-    const referralLink = `${window.location.origin}/login?ref=${referralCode}`;
+    // Add a fallback to prevent "undefined" links in deployment
+const referralCode = userData?.referralCode || "LOADING";
+// Ensure we are using the absolute base path to the login route
+const referralLink = `${window.location.protocol}//${window.location.host}/login?ref=${referralCode}`;
 
     const copyToClipboard = () => {
         if (!referralCode) return;

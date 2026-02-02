@@ -4,6 +4,13 @@ import main03 from './main03.png'
 import main04 from './main04.png'
 import coin from './coin.jpg'
 import loginimf from './login.jpeg'
+import gandhiji from './gandhiji.jpg'
+import vidhan from './vidhan.jpeg'
+import pandit from './panditnehru.jpeg'
+import baldin from './baldin.jpeg'
+import bal from './bal.jpg'
+import bal69 from './bal69.jpeg'
+import wide from './wide.jpg'
 
 import logo from './logo.png'
 import hero_img from './hero_img.png'
@@ -23,6 +30,10 @@ import contact_img from './contact_img.png'
 import razorpay_logo from './razorpay_logo.png'
 import stripe_logo from './stripe_logo.png'
 import cross_icon from './cross_icon.png'
+
+import thapper from './thapper.jpg'
+import mem from './mem.png'
+import member from './membership.png'
 
 export const assets = {
     logo,
@@ -48,7 +59,14 @@ export const assets = {
     main03,
     main04,
     coin,
-    loginimf
+    loginimf,
+    gandhiji,
+    vidhan,
+    pandit,
+    baldin,
+    bal,
+    bal69,
+    wide,thapper,mem,member
 }
 
 

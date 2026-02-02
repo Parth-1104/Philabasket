@@ -3,121 +3,101 @@ import { assets } from '../assets/assets';
 
 const NewHero = ({ scrollHandler }) => {
   return (
-    <div className="w-full min-h-screen  lg:h-[100vh] bg-[#FDFCFB] border-b-8 border-[#BC002D] py-10 lg:py-0 overflow-hidden relative select-none flex flex-col items-center justify-center font-sans">
+    <div className="relative w-full min-h-screen bg-white overflow-hidden flex flex-col lg:flex-row items-center font-sans">
       
-      {/* --- LAYER 0: ARCHIVAL GRID & MAP --- */}
-      <div className="absolute inset-0 opacity-5 pointer-events-none">
-        <div className="absolute inset-0" style={{
-          backgroundImage: `radial-gradient(circle, #000 1px, transparent 1px)`,
-          backgroundSize: '40px 40px'
-        }}></div>
-      </div>
-
-      {/* --- LAYER 1: BRAND COLOR STRIPES --- */}
-      <div className="absolute top-0 right-0 w-1/3 h-full bg-[#BC002D]/5 -skew-x-12 transform origin-top pointer-events-none"></div>
-
-      {/* --- LAYER 2: TOP BADGES (Registry Style) --- */}
-      <div className="absolute top-12 left-10 z-50 hidden lg:block">
-        <div className="bg-[#BC002D] text-white px-4 py-1 font-black text-[10px] tracking-[0.3em] shadow-xl transform -rotate-2">
-          OFFICIAL REGISTRY / 2026
-        </div>
-      </div>
-
-      {/* --- LAYER 3: CENTRAL TYPOGRAPHY --- */}
-      <div className="relative z-40 text-center flex flex-col items-center gap-2 px-4">
+      {/* --- LEFT CONTENT AREA --- */}
+      <div className="relative z-20 w-full lg:w-1/2 px-10 lg:px-24 flex flex-col items-start text-left">
         
-        {/* Archival Status Badge */}
-        <div className="inline-flex items-center gap-3 bg-white border-2 border-black px-5 py-2 mb-6 shadow-[4px_4px_0px_0px_rgba(188,0,45,1)]">
-          <div className="w-2 h-2 bg-[#BC002D] rounded-full animate-pulse"></div>
-          <span className="text-[10px]  font-black uppercase tracking-widest text-black">
-            PhilaBasket Digital Archive
-          </span>
-        </div>
-
-        {/* The Title: High-Contrast & Bold */}
-        <div className="relative">
-          <h1 className="text-6xl sm:text-9xl lg:text-[13rem] font-black text-[#1A1A1A] tracking-tighter leading-none">
-            PHILA<span className="text-[#BC002D]">B</span>ASKET
-          </h1>
-          <div className="absolute -top-6 -right-12 hidden lg:block">
-            <div className="w-24 h-24 rounded-full border-2 border-dashed border-[#BC002D] flex items-center justify-center rotate-12 opacity-40">
-                <span className="text-[8px] font-bold text-[#BC002D]">POSTAGE PAID</span>
+        {/* Top Logo / Stamp Icon */}
+        <div className="mb-12">
+          <div className="w-16 h-16 border-2 border-amber-500 rounded-full flex items-center justify-center">
+            <div className="w-12 h-12 border border-amber-400 rounded-full flex items-center justify-center text-amber-600 font-serif font-bold italic">
+              PB
             </div>
           </div>
         </div>
 
-        <h2 className="text-2xl sm:text-4xl lg:text-6xl font-black text-[#BC002D] tracking-tighter uppercase mt-[-10px]">
-          The World of Philately
-        </h2>
+        {/* Headlines */}
+        <h1 className="text-5xl  lg:text-7xl font-bold text-gray-900 leading-tight w-full">
+          It’s Not Just Paper, <br />
+          <span className="text-[#a07b17]">It’s A Piece Of History</span>
+        </h1>
 
-        {/* Call to Action: The Wax Seal Button */}
+        <p className="mt-8 text-gray-500 max-w-md text-lg leading-relaxed">
+          Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Curate your legacy, one stamp at a time.
+        </p>
+
+        {/* CTA Button */}
         <button 
           onClick={scrollHandler}
-          className="group relative mt-12 flex items-center justify-center transition-transform hover:scale-105"
+          className="mt-10 px-10 py-4 bg-green-700 hover:bg-green-800 text-white font-bold rounded-full transition-all transform hover:scale-105 shadow-lg tracking-widest uppercase text-sm"
         >
-          <div className="w-28 h-28 sm:w-36 sm:h-36 bg-[#BC002D] rounded-full flex flex-col items-center justify-center text-white shadow-[0_10px_30px_rgba(188,0,45,0.4)] relative z-10 border-4 border-white">
-            <span className="font-black text-sm sm:text-lg tracking-tighter">BUY NOW</span>
-            <div className="w-10 h-[2px] bg-white/40 mt-1"></div>
-            <span className="text-[8px] font-bold mt-1 opacity-80 uppercase">Enter Shop</span>
-          </div>
-          {/* Pulsing Aura */}
-          <div className="absolute inset-0 bg-[#BC002D] rounded-full blur-2xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+          Learn More
         </button>
-      </div>
 
-      {/* --- LAYER 4: THE DYNAMIC STAMP COLLAGE --- */}
-      <div className="absolute inset-0 z-20 pointer-events-none lg:pointer-events-auto">
-        
-        {/* Featured Stamp Card 1 (Red Accent) */}
-        <div className="absolute top-[10%] right-[10%] w-48 h-60 lg:w-72 lg:h-96 bg-white p-4 shadow-2xl rotate-6 hover:rotate-0 transition-all duration-500 group border-b-8 border-[#BC002D]">
-          <PerforatedEdge />
-          <div className="w-full h-full bg-gray-100 overflow-hidden relative">
-            <img src={assets.main01} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" alt="Stamp 1" />
-            <div className="absolute top-4 right-4 bg-[#BC002D] text-white text-[10px] font-black px-3 py-1">PREMIUM</div>
-          </div>
-        </div>
-
-        {/* Featured Stamp Card 2 (Teal Accent) */}
-        <div className="absolute bottom-[5%] left-[5%] w-40 h-52 lg:w-64 lg:h-80 bg-white p-4 shadow-2xl -rotate-12 hover:rotate-0 transition-all duration-500 group border-b-8 border-[#2A9D8F]">
-          <PerforatedEdge />
-          <div className="w-full h-full bg-gray-100 overflow-hidden">
-            <img src={assets.main02} className="w-full h-full object-cover" alt="Stamp 2" />
-          </div>
-        </div>
-
-        {/* Small Floating Details */}
-        <div className="absolute top-[40%] left-[8%] hidden lg:block animate-float">
-            <div className="w-20 h-20 rounded-full border-4 border-[#BC002D] flex items-center justify-center opacity-30">
-                <span className="text-[10px] font-black text-[#BC002D]">AIRMAIL</span>
-            </div>
+        {/* Social Icons (Bottom Left) */}
+        <div className="mt-16 flex gap-4 opacity-70">
+          <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs">f</div>
+          <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs">𝕏</div>
+          <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-xs">in</div>
         </div>
       </div>
 
-      <style jsx>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(-20px) rotate(5deg); }
-        }
-        .animate-float { animation: float 5s ease-in-out infinite; }
-      `}</style>
+      
+{/* --- RIGHT GRAPHIC AREA --- */}
+{/* --- RIGHT GRAPHIC AREA --- */}
+<div className="relative w-full  top-[10vh] lg:w-1/2 h-[500px] ml-[20vw] lg:h-screen flex items-center justify-center lg:mt-5 mt-10">
+  
+  {/* Curved Background Shape - Adjusted for better curve flow */}
+  <div className="absolute right-[10vw] top-1/2 -translate-y-1/2 lg:top-[55%] h-[80%] lg:h-[90%] w-[160%] lg:w-[120%] bg-[#bd002d] rounded-l-[100px] lg:rounded-l-[600px] transform translate-x-1/2 lg:translate-x-[40%] transition-all duration-700"></div>
+
+  {/* Aligned Stamp Grid with subtle offsets for a "hand-placed" feel */}
+  <div className="relative z-30 grid grid-cols-2 gap-4 lg:gap-6 p-4 w-full max-w-[380px] lg:max-w-[500px]">
+    
+    {/* Top Left: Gandhiji - Pulled slightly down */}
+    <div className="bg-white p-1.5 shadow-xl self-end justify-self-end w-fit transform -rotate-1 lg:mt-8">
+      <img src={assets.gandhiji} alt="Gandhi" className="w-24 lg:w-36 border border-gray-100 block" />
+    </div>
+
+    {/* Top Right: Pandit - Tilted slightly */}
+    <div className="bg-white p-1.5 shadow-xl self-end w-fit transform rotate-2">
+      <img src={assets.pandit} alt="Pandit" className="w-24 lg:w-36 border border-gray-100 block" />
+    </div>
+
+    {/* Center Wide Stamp: Spans 2 Columns - Added more padding for impact */}
+    <div className="col-span-2 bg-white p-2 shadow-2xl mx-auto w-full transform hover:scale-[1.02] transition-transform duration-300">
+      <img 
+        src={assets.wide} 
+        alt="Featured Stamp" 
+        className="w-full h-auto block object-cover border border-gray-100" 
+      />
+    </div>
+
+    {/* Bottom Left: Vidhan - Pushed left slightly */}
+    <div className=" relative left-[6vw] bottom-[-4vh] bg-white p-1.5 shadow-xl justify-self-end w-fit transform  lg:-translate-x-4">
+      <img src={assets.vidhan} alt="Vidhan" className="w-24 lg:w-36 border border-gray-100 block" />
+    </div>
+
+    <div className="relative right-[20vw] bottom-[-2vh] bg-white p-1.5 shadow-xl justify-self-end w-fit transform rotate-1 lg:-translate-x-4 h-fit">
+      <img src={assets.bal69} alt="Vidhan" className="w-24 lg:w-36 border border-gray-100 block" />
+    </div>
+    <div className="relative right-[15vw] bottom-[55vh] bg-white p-1.5 shadow-xl justify-self-end w-fit transform  lg:-translate-x-4 h-fit">
+      <img src={assets.bal} alt="Vidhan" className="w-24 lg:w-36 border border-gray-100 block" />
+    </div>
+
+    {/* Bottom Right: Baldin - Dark frame for contrast */}
+    <div className="relative right-[-5vw] bottom-[30vh] bg-[#bd002d] p-1.5 shadow-xl w-fit transform  h-fit">
+      <img src={assets.baldin} alt="Baldin" className="w-24 lg:w-36 h-fit border border-gray-100 block object-contain" />
+    </div>
+
+  </div>
+</div>
+
+      {/* Floating Navigation (Top Right) */}
+
+
     </div>
   );
 };
-
-// Helper for Perforated Edge Effect
-const PerforatedEdge = () => (
-  <>
-    <div className="absolute -top-2 left-0 right-0 flex justify-around px-2">
-      {[...Array(10)].map((_, i) => (
-        <div key={i} className="w-2 h-2 bg-[#FDFCFB] rounded-full shadow-inner"></div>
-      ))}
-    </div>
-    <div className="absolute -bottom-2 left-0 right-0 flex justify-around px-2">
-      {[...Array(10)].map((_, i) => (
-        <div key={i} className="w-2 h-2 bg-[#FDFCFB] rounded-full shadow-inner"></div>
-      ))}
-    </div>
-  </>
-);
 
 export default NewHero;

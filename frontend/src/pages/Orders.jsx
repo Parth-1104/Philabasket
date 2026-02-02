@@ -7,10 +7,11 @@ import { toast } from 'react-toastify';
 import { Link } from 'react-router-dom';
 
 const Orders = () => {
-  const { backendUrl, token, fetchUserData, currency } = useContext(ShopContext);
+  const { backendUrl, token, fetchUserData } = useContext(ShopContext);
   const [orderData, setorderData] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // --- FEATURE: Registry Synchronization Engine ---
   const loadOrderData = async (isManualRefresh = false) => {
     try {
       if (!token) return null;
@@ -21,8 +22,14 @@ const Orders = () => {
       if (response.data.success) {
         let allOrdersItem = [];
         response.data.orders.forEach((order) => {
-          // Calculate reward points based on the TOTAL order amount (10%)
+          // 1. Reward Points: Always 10% of the stored base INR amount
           const orderTotalPoints = Math.floor(order.amount * 0.10);
+
+          // 2. Currency UI Logic: Reverse the backend conversion for USD orders
+          // The database stores "amount": 116260 for USD checkouts. We divide by 83 to show $1400.72.
+          const displayAmount = order.currency === 'USD' 
+            ? (order.amount / 83).toFixed(2) 
+            : order.amount;
 
           order.items.forEach((item) => {
             allOrdersItem.push({
@@ -31,12 +38,10 @@ const Orders = () => {
               payment: order.payment,
               paymentMethod: order.paymentMethod,
               date: order.date,
-              savedCurrency: order.currency,
-              // Display the total amount paid for the whole order
-              totalPaidAmount: order.amount, 
+              savedCurrency: order.currency, // e.g., "USD"
+              totalPaidAmount: displayAmount, // e.g., 1400.72
               trackingNumber: order.trackingNumber,
               orderId: order._id,
-              // Corrected point calculation
               rewardPoints: orderTotalPoints 
             });
           });
@@ -118,24 +123,24 @@ const Orders = () => {
                     </div>
                   )}
 
-<div className='flex flex-wrap items-center gap-4 mt-2'>
-  {/* Displays the total paid for the entire order consignment */}
-  <p className='text-[#BC002D] font-black text-lg tracking-tighter'>
-    <span className='text-[10px] uppercase tracking-widest mr-2 opacity-50'>Total Paid:</span>
-    {item.savedCurrency === 'USD' ? '$' : '₹'}
-    {item.totalPaidAmount}
-  </p>
-  <span className='text-[10px] text-gray-200 tracking-[0.2em]'>|</span>
-  <p className='text-[10px] text-gray-400 uppercase tracking-widest font-black'>Specimens: {item.quantity}</p>
-  
-  {/* Corrected Points Indicator using verified order.amount logic */}
-  <div className={`flex items-center gap-2 py-1 px-3 border rounded-sm ${item.status === 'Delivered' ? 'border-green-100 bg-green-50' : 'border-[#BC002D]/10 bg-[#BC002D]/5'}`}>
-      <div className={`w-1.5 h-1.5 rounded-full ${item.status === 'Delivered' ? 'bg-green-600' : 'bg-[#BC002D]'}`}></div>
-      <p className={`text-[9px] font-black uppercase tracking-widest ${item.status === 'Delivered' ? 'text-green-600' : 'text-[#BC002D]'}`}>
-          {item.status === 'Delivered' ? `Vault Credit: +${item.rewardPoints} PTS` : `Pending Valuation: +${item.rewardPoints} PTS`}
-      </p>
-  </div>
-</div>
+                  <div className='flex flex-wrap items-center gap-4 mt-2'>
+                    {/* FIXED: Displays correctly converted price with appropriate symbol */}
+                    <p className='text-[#BC002D] font-black text-lg tracking-tighter'>
+                      <span className='text-[10px] uppercase tracking-widest mr-2 opacity-50'>Total Paid:</span>
+                      {item.savedCurrency === 'USD' ? '$' : '₹'}
+                      {item.totalPaidAmount}
+                    </p>
+                    <span className='text-[10px] text-gray-200 tracking-[0.2em]'>|</span>
+                    <p className='text-[10px] text-gray-400 uppercase tracking-widest font-black'>Specimens: {item.quantity}</p>
+                    
+                    {/* FIXED: Points logic now reflects 10% of total INR amount */}
+                    <div className={`flex items-center gap-2 py-1 px-3 border rounded-sm ${item.status === 'Delivered' ? 'border-green-100 bg-green-50' : 'border-[#BC002D]/10 bg-[#BC002D]/5'}`}>
+                        <div className={`w-1.5 h-1.5 rounded-full ${item.status === 'Delivered' ? 'bg-green-600' : 'bg-[#BC002D]'}`}></div>
+                        <p className={`text-[9px] font-black uppercase tracking-widest ${item.status === 'Delivered' ? 'text-green-600' : 'text-[#BC002D]'}`}>
+                            {item.status === 'Delivered' ? `Vault Credit: +${item.rewardPoints} PTS` : `Pending Valuation: +${item.rewardPoints} PTS`}
+                        </p>
+                    </div>
+                  </div>
                   
                   <div className='text-[10px] text-gray-400 mt-4 flex gap-6 tracking-[0.2em] uppercase font-bold'>
                     <p>Registry Date: <span className='text-black'>{new Date(item.date).toDateString()}</span></p>

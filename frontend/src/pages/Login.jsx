@@ -134,25 +134,30 @@ const Login = () => {
             </button>
 
             {/* --- GOOGLE LOGIN UI --- */}
-            {currentState !== 'Reset Password' && (
-              <div className="flex flex-col items-center gap-6 mt-2">
-                <div className="flex items-center w-full gap-4">
-                  <div className="h-[1px] bg-black/5 flex-1"></div>
-                  <span className="text-[8px] font-black text-gray-300 uppercase tracking-[0.3em]">Institutional Single Sign-On</span>
-                  <div className="h-[1px] bg-black/5 flex-1"></div>
-                </div>
-                
-                <div className="w-full flex justify-center scale-110">
-                  <GoogleLogin 
-                    onSuccess={googleSuccess} 
-                    onError={() => toast.error("Authentication Server Error")}
-                    useOneTap
-                    shape="square"
-                    theme="outline"
-                  />
-                </div>
-              </div>
-            )}
+            {/* --- GOOGLE LOGIN/SIGNUP UI --- */}
+{currentState !== 'Reset Password' && (
+  <div className="flex flex-col items-center gap-6 mt-2">
+    <div className="flex items-center w-full gap-4">
+      <div className="h-[1px] bg-black/5 flex-1"></div>
+      <span className="text-[8px] font-black text-gray-300 uppercase tracking-[0.3em]">
+        {currentState === 'Sign Up' ? 'Registry Single Sign-On' : 'Institutional Single Sign-On'}
+      </span>
+      <div className="h-[1px] bg-black/5 flex-1"></div>
+    </div>
+    
+    <div className="w-full flex justify-center scale-110">
+      <GoogleLogin 
+        onSuccess={googleSuccess} 
+        onError={() => toast.error("Authentication Server Error")}
+        useOneTap
+        shape="square"
+        theme="outline"
+        // This line dynamically changes the button text
+        text={currentState === 'Sign Up' ? 'signup_with' : 'signin_with'}
+      />
+    </div>
+  </div>
+)}
           </form>
 
           {/* Form Footer */}
