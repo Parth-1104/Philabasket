@@ -17,7 +17,10 @@ connectCloudinary()
 
 // middlewares
 app.use(express.json())
-app.use(cors())
+app.use(cors({
+    origin: ['https://philabasket-frontend.vercel.app', 'http://localhost:5173'],
+    credentials: true
+}))
 
 // api endpoints
 app.use('/api/user',userRouter)
@@ -28,5 +31,7 @@ app.use('/api/order',orderRouter)
 app.get('/',(req,res)=>{
     res.send("API Working")
 })
+
+export default app;
 
 app.listen(port, ()=> console.log('Server started on PORT : '+ port))
