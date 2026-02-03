@@ -28,6 +28,7 @@
     "pusher-js": "^8.4.0",
     "razorpay": "^2.9.4",
     "recharts": "^3.6.0",
+    "streamifier": "^0.1.1",
     "stripe": "^16.8.0",
     "twilio": "^5.12.0",
     "validator": "^13.12.0"

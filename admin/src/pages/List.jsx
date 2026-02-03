@@ -40,6 +40,7 @@ const List = ({ token }) => {
   const [editFormData, setEditFormData] = useState({});
   const [catSearch, setCatSearch] = useState("");
   const [selectedItems, setSelectedItems] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const fetchList = async () => {
     try {
@@ -91,8 +92,14 @@ const List = ({ token }) => {
 
   const startEdit = (item) => {
     setEditingId(item._id);
-    setEditFormData({ ...item, stock: item.stock || 0 }); // Initialize stock
+    setEditFormData({ ...item, stock: item.stock || 0, newImageFile: null }); 
     setCatSearch("");
+  };
+
+  const onImageChange = (e) => {
+    if (e.target.files[0]) {
+      setEditFormData({ ...editFormData, newImageFile: e.target.files[0] });
+    }
   };
 
   const toggleCategory = (cat) => {
@@ -105,21 +112,39 @@ const List = ({ token }) => {
 
   const saveEdit = async (id) => {
     try {
-      const response = await axios.post(backendUrl + '/api/product/update', { ...editFormData, id }, { headers: { token } });
-      if (response.data.success) {
-        toast.success("Updated!");
+      setLoading(true);
+      
+      // 1. Update text details
+      const textResponse = await axios.post(backendUrl + '/api/product/update', { ...editFormData, id }, { headers: { token } });
+      
+      // 2. Update image if a new file was selected
+      if (editFormData.newImageFile && textResponse.data.success) {
+        const imgData = new FormData();
+        imgData.append("id", id);
+        imgData.append("image1", editFormData.newImageFile); // Send buffer to Vercel
+
+        const imgResponse = await axios.post(backendUrl + '/api/product/update-images', imgData, { headers: { token } });
+        if (!imgResponse.data.success) {
+          toast.error("Image update failed");
+        }
+      }
+
+      if (textResponse.data.success) {
+        toast.success("Inventory Synchronized!");
         setEditingId(null);
         fetchList();
       }
     } catch (error) {
-      toast.error("Save failed");
+      const msg = error.response?.data?.message || "Cloud sync failed";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className='max-w-7xl mx-auto p-4 lg:p-6 bg-gray-50 min-h-screen'>
       
-      {/* --- Header Section --- */}
       <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4'>
         <div>
           <h2 className='text-2xl font-bold text-gray-900 uppercase tracking-tighter'>Inventory Console</h2>
@@ -136,10 +161,7 @@ const List = ({ token }) => {
         )}
       </div>
 
-      {/* --- Responsive Grid --- */}
       <div className='grid grid-cols-1 gap-4'>
-        
-        {/* Bulk Control Header */}
         <div className='hidden md:grid grid-cols-[50px_80px_1fr_180px_100px_120px_150px] items-center px-6 py-3 bg-white rounded-xl shadow-sm border border-gray-100 mb-2'>
           <input type="checkbox" checked={selectedItems.length === list.length} onChange={toggleAll} className='w-4 h-4 accent-black' />
           <span className='text-[10px] font-bold text-gray-400 uppercase'>Visual</span>
@@ -152,31 +174,41 @@ const List = ({ token }) => {
 
         {list.map((item) => {
           const isOutOfStock = item.stock <= 0;
-          const isLowStock = item.stock > 0 && item.stock <= 5; // Alert threshold
           return (
             <div key={item._id} className={`group relative grid grid-cols-1 md:grid-cols-[50px_80px_1fr_180px_100px_120px_150px] items-center gap-4 p-4 md:px-6 bg-white rounded-2xl border transition-all duration-300 ${selectedItems.includes(item._id) ? 'border-blue-500 bg-blue-50/30' : 'border-gray-100 hover:shadow-xl hover:-translate-y-0.5'} ${isOutOfStock ? 'opacity-80 bg-red-50/10' : ''}`}>
               
-              {/* Checkbox */}
               <div className='absolute top-4 left-4 md:relative md:top-0 md:left-0'>
                 <input type="checkbox" checked={selectedItems.includes(item._id)} onChange={() => toggleSelect(item._id)} className='w-4 h-4 accent-blue-600 cursor-pointer' />
               </div>
 
-              {/* Thumbnail with Out of Stock Overlay */}
+              {/* Thumbnail / Edit Image Toggle */}
               <div className='flex justify-center md:justify-start relative'>
-                <div className={`w-16 h-20 bg-gray-50 rounded-lg border border-gray-100 p-1 overflow-hidden shadow-inner ${isOutOfStock ? 'grayscale opacity-50' : ''}`}>
-                  <img src={item.image[0]} className='w-full h-full object-contain' alt="" />
-                </div>
-                {isOutOfStock && (
-                  <div className='absolute -top-1 -right-1 bg-red-600 text-white text-[7px] px-1.5 py-0.5 rounded-full font-black uppercase animate-pulse shadow-md'>
-                    Sold Out
+                {editingId === item._id ? (
+                  <label htmlFor="update-image" className='cursor-pointer relative group/img'>
+                    <div className='w-16 h-20 bg-gray-50 rounded-lg border-2 border-dashed border-blue-400 p-1 overflow-hidden shadow-inner'>
+                      <img 
+                        src={editFormData.newImageFile ? URL.createObjectURL(editFormData.newImageFile) : item.image[0]} 
+                        className='w-full h-full object-contain' 
+                        alt="" 
+                      />
+                      <div className='absolute inset-0 bg-blue-600/40 opacity-0 group-hover/img:opacity-100 flex items-center justify-center transition-opacity'>
+                        <span className='text-[8px] text-white font-black uppercase'>Change</span>
+                      </div>
+                    </div>
+                    <input type="file" id="update-image" hidden onChange={onImageChange} accept="image/*" />
+                  </label>
+                ) : (
+                  <div className={`w-16 h-20 bg-gray-50 rounded-lg border border-gray-100 p-1 overflow-hidden shadow-inner ${isOutOfStock ? 'grayscale opacity-50' : ''}`}>
+                    <img src={item.image[0]} className='w-full h-full object-contain' alt="" />
+                    {isOutOfStock && (
+                      <div className='absolute -top-1 -right-1 bg-red-600 text-white text-[7px] px-1.5 py-0.5 rounded-full font-black uppercase animate-pulse shadow-md'>Sold Out</div>
+                    )}
                   </div>
                 )}
               </div>
 
-              {/* Content / Edit Mode */}
               {editingId === item._id ? (
                 <div className='col-span-1 md:col-span-4 grid grid-cols-1 md:grid-cols-4 gap-4'>
-                  {/* Text Details */}
                   <div className='space-y-2'>
                     <input className='w-full text-xs p-2 border rounded-lg focus:ring-2 ring-blue-500 outline-none' value={editFormData.name} onChange={(e)=>setEditFormData({...editFormData, name: e.target.value})} />
                     <div className='flex gap-2'>
@@ -185,7 +217,6 @@ const List = ({ token }) => {
                     </div>
                   </div>
 
-                  {/* Categories Search */}
                   <div className='relative'>
                     <input type="text" placeholder="Search categories..." className='w-full text-[10px] p-2 border rounded-t-lg mb-0' value={catSearch} onChange={(e) => setCatSearch(e.target.value)} />
                     <div className='h-24 overflow-y-auto border border-t-0 rounded-b-lg bg-white p-1'>
@@ -197,18 +228,11 @@ const List = ({ token }) => {
                     </div>
                   </div>
 
-                  {/* Stock Level Edit */}
                   <div className='flex flex-col justify-center'>
                     <label className='text-[8px] font-bold text-gray-400 uppercase ml-1 mb-1'>Inventory Qty</label>
-                    <input 
-                      className={`w-full text-xs p-2 border rounded-lg font-black focus:ring-2 ring-blue-500 outline-none ${editFormData.stock <= 0 ? 'text-red-600' : 'text-green-600'}`} 
-                      type="number" 
-                      value={editFormData.stock} 
-                      onChange={(e)=>setEditFormData({...editFormData, stock: Number(e.target.value)})} 
-                    />
+                    <input className={`w-full text-xs p-2 border rounded-lg font-black outline-none ${editFormData.stock <= 0 ? 'text-red-600' : 'text-green-600'}`} type="number" value={editFormData.stock} onChange={(e)=>setEditFormData({...editFormData, stock: Number(e.target.value)})} />
                   </div>
 
-                  {/* Price Edit */}
                   <div className='flex flex-col justify-center'>
                     <label className='text-[8px] font-bold text-gray-400 uppercase ml-1 mb-1'>Price ({currency})</label>
                     <input className='w-full text-xs p-2 border rounded-lg font-black text-blue-700 outline-none' type="number" value={editFormData.price} onChange={(e)=>setEditFormData({...editFormData, price: e.target.value})} />
@@ -232,7 +256,6 @@ const List = ({ token }) => {
                     {item.category.length > 3 && <span className='text-[8px] text-gray-400 font-bold'>+{item.category.length - 3}</span>}
                   </div>
 
-                  {/* Static Stock View */}
                   <div className='text-center'>
                     <span className={`text-[10px] font-black px-2 py-1 rounded-md tracking-tighter ${isOutOfStock ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-green-100 text-green-700'}`}>
                       {isOutOfStock ? 'OUT OF STOCK' : `${item.stock} LEFT`}
@@ -245,11 +268,12 @@ const List = ({ token }) => {
                 </>
               )}
 
-              {/* Action Buttons */}
               <div className='flex flex-row md:flex-col gap-2 justify-center'>
                 {editingId === item._id ? (
                   <>
-                    <button onClick={() => saveEdit(item._id)} className='flex-1 bg-green-600 text-white text-[10px] py-2 rounded-xl font-bold uppercase shadow-sm hover:bg-green-700 transition-colors'>Save</button>
+                    <button disabled={loading} onClick={() => saveEdit(item._id)} className='flex-1 bg-green-600 text-white text-[10px] py-2 rounded-xl font-bold uppercase shadow-sm hover:bg-green-700 disabled:opacity-50 transition-colors'>
+                      {loading ? 'Syncing...' : 'Save'}
+                    </button>
                     <button onClick={() => setEditingId(null)} className='flex-1 bg-gray-100 text-gray-500 text-[10px] py-2 rounded-xl font-bold uppercase hover:bg-gray-200 transition-colors'>Cancel</button>
                   </>
                 ) : (
@@ -259,7 +283,6 @@ const List = ({ token }) => {
                   </>
                 )}
               </div>
-
             </div>
           );
         })}

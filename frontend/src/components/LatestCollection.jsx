@@ -37,7 +37,7 @@ const LatestCollection = () => {
                             <span className="text-[10px] tracking-[0.6em] text-[#BC002D] uppercase font-black">Featured Specimens</span>
                         </div>
                         <h2 className="text-6xl md:text-8xl font-bold text-gray-900 tracking-tighter leading-none">
-                            NEW <span className="text-[#bd002d]">ARCHIVES.</span>
+                            NEW <span className="text-[#bd002d]">Arrivals.</span>
                         </h2>
                     </div>
                 </div>
@@ -73,7 +73,7 @@ const LatestCollection = () => {
                                 </div>
                                 
                                 {/* Background Ghost Text */}
-                                <span className='absolute -bottom-4 -right-4 text-white/5 text-8xl font-black italic select-none pointer-events-none'>PB</span>
+
                             </div>
                             
                             {/* Analytics Mini-Card */}

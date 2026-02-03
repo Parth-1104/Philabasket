@@ -1,17 +1,11 @@
 import multer from "multer";
-import path from "path";
 
-const storage = multer.diskStorage({
-    // Specify where to store files temporarily
-    destination: function (req, file, callback) {
-        callback(null, 'uploads/') 
-    },
-    filename: function (req, file, callback) {
-        // Adding a timestamp ensures unique filenames even if two users upload 'stamp.jpg'
-        callback(null, Date.now() + path.extname(file.originalname))
-    }
-})
+// Use memoryStorage instead of diskStorage for Vercel/Serverless compatibility
+const storage = multer.memoryStorage();
 
-const upload = multer({ storage })
+const upload = multer({ 
+    storage,
+    limits: { fileSize: 10 * 1024 * 1024 } // Optional: 10MB limit
+});
 
-export default upload
+export default upload;
