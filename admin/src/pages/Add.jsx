@@ -91,7 +91,8 @@ const Add = ({ token }) => {
         toast.error(response.data.message)
       }
     } catch (error) {
-      toast.error(error.message)
+      const message = error.response?.data?.message || "Server unreachable. Please check your connection.";
+        toast.error(`Upload Failed: ${message}`);
     }
   }
 
@@ -99,6 +100,10 @@ const Add = ({ token }) => {
   const onCsvUploadHandler = async(e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (file.type !== "text/csv" && !file.name.endsWith('.csv')) {
+      return toast.error("Invalid file type. Please upload a .csv file.");
+  }
 
     const formData = new FormData();
     formData.append("file", file);
@@ -115,7 +120,10 @@ const Add = ({ token }) => {
             toast.error(response.data.message);
         }
     } catch (error) {
-        toast.error("Upload failed: " + error.message);
+      const reason = error.response?.data?.message || error.message;
+      toast.error(`Bulk Upload Failed: ${reason}`);
+    }finally {
+      setLoading(false);
     }
   }
 

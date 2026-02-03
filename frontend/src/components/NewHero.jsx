@@ -3,7 +3,7 @@ import { assets } from '../assets/assets';
 
 const NewHero = ({ scrollHandler }) => {
   return (
-    <div className="relative w-full min-h-screen bg-white overflow-hidden flex flex-col lg:flex-row items-center font-sans">
+    <div className="relative w-full max-h-[50vh] pt-[10vh] bg-white overflow-hidden flex flex-col lg:flex-row items-center font-sans">
       
       {/* --- LEFT CONTENT AREA --- */}
       <div className="relative z-20 w-full lg:w-1/2 px-10 lg:px-24 flex flex-col items-start text-left">
@@ -46,7 +46,7 @@ const NewHero = ({ scrollHandler }) => {
       
 {/* --- RIGHT GRAPHIC AREA --- */}
 {/* --- RIGHT GRAPHIC AREA --- */}
-<div className="relative w-full  top-[10vh] lg:w-1/2 h-[500px] ml-[20vw] lg:h-screen flex items-center justify-center lg:mt-5 mt-10">
+<div className="relative w-full p-[20vh]  top-[10vh] lg:w-1/2 h-[500px] ml-[20vw] lg:h-screen flex items-center justify-center lg:mt-5 mt-10">
   
   {/* Curved Background Shape - Adjusted for better curve flow */}
   <div className="absolute right-[10vw] top-1/2 -translate-y-1/2 lg:top-[55%] h-[80%] lg:h-[90%] w-[160%] lg:w-[120%] bg-[#bd002d] rounded-l-[100px] lg:rounded-l-[600px] transform translate-x-1/2 lg:translate-x-[40%] transition-all duration-700"></div>
@@ -74,14 +74,14 @@ const NewHero = ({ scrollHandler }) => {
     </div>
 
     {/* Bottom Left: Vidhan - Pushed left slightly */}
-    <div className=" relative left-[6vw] bottom-[-4vh] bg-white p-1.5 shadow-xl justify-self-end w-fit transform  lg:-translate-x-4">
+    <div className=" relative left-[19vw] bottom-[25vh] bg-white p-1.5 shadow-xl justify-self-end w-fit transform  lg:-translate-x-4">
       <img src={assets.vidhan} alt="Vidhan" className="w-24 lg:w-36 border border-gray-100 block" />
     </div>
 
-    <div className="relative right-[20vw] bottom-[-2vh] bg-white p-1.5 shadow-xl justify-self-end w-fit transform rotate-1 lg:-translate-x-4 h-fit">
+    <div className="relative right-[18vw] bottom-[11vh] bg-white p-1.5 shadow-xl justify-self-end w-fit transform rotate-1 lg:-translate-x-4 h-fit">
       <img src={assets.bal69} alt="Vidhan" className="w-24 lg:w-36 border border-gray-100 block" />
     </div>
-    <div className="relative right-[15vw] bottom-[55vh] bg-white p-1.5 shadow-xl justify-self-end w-fit transform  lg:-translate-x-4 h-fit">
+    <div className="relative right-[9vw] bottom-[55vh] bg-white p-1.5 shadow-xl justify-self-end w-fit transform  lg:-translate-x-4 h-fit">
       <img src={assets.bal} alt="Vidhan" className="w-24 lg:w-36 border border-gray-100 block" />
     </div>
 
