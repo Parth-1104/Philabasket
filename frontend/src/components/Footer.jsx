@@ -1,69 +1,73 @@
 import React from 'react'
 import { assets } from '../assets/assets'
+import { Link } from 'react-router-dom'
 
 const Footer = () => {
   return (
-    <footer className="bg-[#FCF9F4] pt-24 pb-12 px-6 md:px-16 lg:px-24 border-t border-black/5 select-none">
-      <div className="max-w-7xl mx-auto">
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 lg:gap-12">
+    <footer className="relative bg-white pt-32 pb-16 px-6 md:px-16 lg:px-24 overflow-hidden border-t border-black/[0.03] select-none">
+      
+      {/* --- NEWHERO CURVED ACCENT (Bottom Right) --- */}
+      <div className="absolute -right-[15vw] -bottom-[10vh] h-[60vh] w-[50vw] bg-[#BC002D] rounded-tl-[600px] pointer-events-none opacity-100 transition-all duration-700"></div>
+
+      <div className="max-w-7xl mx-auto relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 lg:gap-24">
           
-          {/* Brand Identity & Philosophy */}
-          <div className="flex flex-col gap-8">
-            <div className="flex items-center">
-              <img 
-                draggable="false" 
+          {/* Brand Identity */}
+          <div className="flex flex-col gap-10">
+            <div className="flex flex-col gap-4">
+               <img 
                 src={assets.logo} 
-                className="w-40 grayscale hover:grayscale-0 transition-all duration-500 cursor-pointer opacity-80" 
+                className="w-14 lg:w-16 transition-all duration-500 hover:rotate-[360deg]" 
                 alt="PhilaBasket" 
               />
+              <h2 className='text-2xl font-bold text-gray-900 tracking-tighter'>
+                PHILA<span className='text-[#BC002D] italic'>BASKET.</span>
+              </h2>
             </div>
-            <p className="text-gray-400 text-xs leading-relaxed tracking-widest font-bold uppercase max-w-xs">
-              Empowering global collectors to discover and preserve the world's most distinguished philatelic specimens since MMXXVI.
+            
+            <p className="text-gray-400 text-[10px] leading-relaxed tracking-[0.2em] font-black uppercase max-w-xs">
+              Sovereign Registry for international philatelic specimens. Empowering global collectors since <span className='text-black'>MMXXVI.</span>
             </p>
-            {/* Crimson Red Socials */}
-            <div className="flex gap-6">
-              {[
-                { icon: assets.twitter_icon, name: 'X' },
-                { icon: assets.instagram_icon, name: 'Instagram' },
-                { icon: assets.linkedin_icon, name: 'LinkedIn' }
-              ].map((social, index) => (
-                <img 
-                  key={index}
-                  src={social.icon} 
-                  className="w-4 h-4 opacity-30 hover:opacity-100 hover:scale-110 transition-all cursor-pointer grayscale brightness-0" 
-                  alt={social.name} 
-                />
+
+            {/* Social Channels */}
+            <div className="flex gap-8">
+              {['Twitter', 'Instagram', 'LinkedIn'].map((name) => (
+                <span key={name} className="text-[9px] font-black tracking-widest text-gray-300 hover:text-[#BC002D] cursor-pointer transition-all uppercase">
+                  {name}
+                </span>
               ))}
             </div>
           </div>
 
-          {/* Navigation Suites */}
+          {/* Navigation Columns */}
           {[
             {
-              title: 'The Collection',
-              links: ['Rare Stamps', 'New Arrivals', 'Auction House', 'Collector Kits']
+              title: 'Registry Index',
+              links: [{label: 'Gallery', path: '/collection'}, {label: 'New Arrivals', path: '/collection'}, {label: 'Rare Archive', path: '/collection'}, {label: 'Bestsellers', path: '/collection'}]
             },
             {
-              title: 'Resources',
-              links: ['Philately Blog', 'Stamp Guide', 'Support', 'Verification']
+              title: 'Curator Support',
+              links: [{label: 'Authentication', path: '/about'}, {label: 'Shipping Policy', path: '/about'}, {label: 'Vault Access', path: '/contact'}, {label: 'FAQs', path: '/contact'}]
             },
             {
-              title: 'The Company',
-              links: ['Our Story', 'Careers', 'Contact', 'Partners']
+              title: 'The Archive',
+              links: [{label: 'Our Heritage', path: '/about'}, {label: 'Collector Network', path: '/about'}, {label: 'Contact', path: '/contact'}, {label: 'Legal', path: '/about'}]
             }
           ].map((column, idx) => (
             <div key={idx} className="lg:ml-auto">
-              <h4 className="text-[#BC002D] font-serif text-[10px] uppercase tracking-[0.4em] mb-8 font-black">
+              <h4 className="text-[#BC002D] text-[10px] uppercase tracking-[0.5em] mb-10 font-black">
                 {column.title}
               </h4>
-              <ul className="flex flex-col gap-5 text-gray-400 text-[11px] font-black tracking-[0.2em] uppercase">
+              <ul className="flex flex-col gap-5">
                 {column.links.map((link, lIdx) => (
-                  <li 
-                    key={lIdx} 
-                    className="hover:text-black hover:translate-x-1 transition-all duration-300 cursor-pointer w-fit"
-                  >
-                    {link}
+                  <li key={lIdx}>
+                    <Link 
+                      to={link.path}
+                      onClick={() => window.scrollTo(0, 0)}
+                      className="text-gray-400 hover:text-black text-[10px] font-black tracking-[0.2em] uppercase transition-all duration-300 block w-fit hover:translate-x-1"
+                    >
+                      {link.label}
+                    </Link>
                   </li>
                 ))}
               </ul>
@@ -71,25 +75,28 @@ const Footer = () => {
           ))}
         </div>
 
-        {/* Separator - Crimson Fade */}
-        <div className="w-full h-[1px] bg-gradient-to-r from-transparent via-[#BC002D]/10 to-transparent my-20"></div>
+        {/* Dynamic Separator */}
+        <div className="w-full h-[1px] bg-black/[0.05] mt-32 mb-12"></div>
 
-        {/* Legal & Copyright */}
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex flex-col items-center md:items-start gap-2">
-            <p className="text-[#BC002D] text-[10px] tracking-[0.3em] font-black uppercase">
-              PhilaBasket Global Archive
-            </p>
-            <p className="text-gray-400 text-[9px] tracking-[0.4em] font-black">
-              © 2026 ALL RIGHTS RESERVED.
+        {/* Bottom Bar: Legal & Identity */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-12">
+          <div className="flex flex-col items-center md:items-start gap-3">
+            <div className='flex items-center gap-3'>
+               <div className='w-2 h-2 bg-[#BC002D] rounded-full animate-pulse'></div>
+               <p className="text-gray-900 text-[10px] tracking-[0.4em] font-black uppercase">
+                 Verified Global Archive
+               </p>
+            </div>
+            <p className="text-gray-300 text-[9px] tracking-[0.4em] font-black uppercase">
+              © 2026 PHILABASKET SOVEREIGN. ALL RIGHTS RESERVED.
             </p>
           </div>
           
           <div className="flex gap-10">
-            {['Privacy Policy', 'Terms of Service', 'Cookie Settings'].map((legal, index) => (
+            {['Privacy', 'Terms', 'Security'].map((legal) => (
               <span 
-                key={index}
-                className="text-[9px] font-black text-gray-300 hover:text-[#BC002D] cursor-pointer tracking-[0.3em] uppercase transition-colors"
+                key={legal}
+                className="text-[9px] font-black text-white md:text-gray-300 hover:text-white transition-colors cursor-pointer tracking-[0.4em] uppercase"
               >
                 {legal}
               </span>

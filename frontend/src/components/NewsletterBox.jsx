@@ -1,57 +1,78 @@
-import React from 'react'
+import React, { useState } from 'react'
+import axios from 'axios'
+import { toast } from 'react-toastify'
 
 const NewsletterBox = () => {
+  // Use the environment variable or fallback to your local port
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
-    const onSubmitHandler = (event) => {
-        event.preventDefault();
+  const onSubmitHandler = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+
+    try {
+        // We pass { email } which is the state variable
+        const response = await axios.post(backendUrl + '/api/newsletter/subscribe', { email });
+        
+        if (response.data.success) {
+            toast.success(response.data.message);
+            setEmail(""); // Reset field on success
+        } else {
+            toast.error(response.data.message);
+        }
+    } catch (error) {
+        toast.error("Registry connection failed");
+        console.error("Newsletter Error:", error);
+    } finally {
+        setLoading(false);
     }
+};
 
   return (
-    <div className='bg-[#0a0a0a] py-32 px-6 border-t border-[#B8860B]/10 relative overflow-hidden'>
+    <div className='bg-white py-32 px-6 relative overflow-hidden border-t border-black/[0.03]'>
       
-      {/* Background Decorative Element */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[15vw] font-serif text-white opacity-[0.02] pointer-events-none whitespace-nowrap">
-        PHILABASKET
-      </div>
+      {/* NewHero Curved Accent */}
+      <div className="absolute -right-[15vw] top-1/2 -translate-y-1/2 h-[80%] w-[40%] bg-[#bd002d]/5 rounded-l-[600px] pointer-events-none"></div>
 
       <div className='relative z-10 text-center'>
-        {/* Ornament */}
         <div className="flex items-center justify-center gap-4 mb-6">
-            <div className="h-[1px] w-8 bg-[#B8860B]/30"></div>
-            <span className="text-[10px] tracking-[0.4em] text-[#B8860B] uppercase font-light">Exclusive Invitations</span>
-            <div className="h-[1px] w-8 bg-[#B8860B]/30"></div>
+            <div className="h-[1.5px] w-10 bg-[#BC002D]"></div>
+            <span className="text-[10px] tracking-[0.5em] text-[#BC002D] uppercase font-black">Registry Intel</span>
+            <div className="h-[1.5px] w-10 bg-[#BC002D]"></div>
         </div>
 
-        <h2 className='text-4xl md:text-6xl font-serif text-white mb-6'>
-          Join the <span className='italic text-[#B8860B]'>Inner Circle</span>
+        <h2 className='text-5xl md:text-7xl font-bold text-gray-900 mb-6 tracking-tighter'>
+          JOIN THE <span className='text-[#BC002D]'>INNER CIRCLE.</span>
         </h2>
         
-        <p className='text-gray-500 max-w-lg mx-auto text-sm md:text-base font-light tracking-wide leading-relaxed'>
-          Be the first to receive intelligence on rare acquisitions, private auctions, and the art of philatelic preservation.
+        <p className='text-gray-400 max-w-lg mx-auto text-xs md:text-sm font-bold uppercase tracking-widest leading-relaxed mb-12'>
+          Receive priority intelligence on <span className='text-black'>rare acquisitions</span> and private philatelic ledger updates.
         </p>
 
-        <form onSubmit={onSubmitHandler} className='max-w-xl mx-auto mt-12 flex flex-col sm:flex-row items-center gap-0 group'>
-          <div className='relative w-full'>
+        <form onSubmit={onSubmitHandler} className='max-w-2xl mx-auto flex flex-col sm:flex-row items-stretch gap-0 shadow-2xl'>
             <input 
-              className='w-full bg-[#111111] border border-white/10 border-r-0 px-6 py-5 text-white outline-none focus:border-[#B8860B]/50 transition-all duration-500 placeholder:text-gray-600 font-light tracking-wider' 
+              // --- CRITICAL FIX: LINKING STATE TO INPUT ---
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              // --------------------------------------------
+              className='w-full bg-[#f8f8f8] border border-gray-100 px-8 py-6 text-black outline-none focus:bg-white focus:border-[#BC002D]/30 transition-all duration-500 placeholder:text-gray-300 text-xs font-bold uppercase tracking-widest' 
               type="email" 
-              placeholder='your.excellence@example.com' 
+              placeholder='ENTER REGISTRY EMAIL' 
               required
             />
-            {/* Animated Bottom Border */}
-            <div className='absolute bottom-0 left-0 h-[1px] bg-[#B8860B] w-0 group-hover:w-full transition-all duration-700'></div>
-          </div>
-          
           <button 
+            disabled={loading}
             type='submit' 
-            className='w-full sm:w-auto bg-[#B8860B] hover:bg-[#D4AF37] text-black text-[11px] font-bold tracking-[0.3em] px-12 py-5 transition-all duration-500 whitespace-nowrap'
+            className='bg-[#BC002D] hover:bg-black text-white text-[10px] font-black tracking-[0.4em] px-12 py-6 transition-all duration-500 whitespace-nowrap uppercase disabled:bg-gray-400 disabled:cursor-not-allowed'
           >
-            REQUEST ACCESS
+            {loading ? "Syncing..." : "Request Access"}
           </button>
         </form>
 
-        <p className='mt-8 text-[10px] text-gray-600 uppercase tracking-[0.2em] font-medium'>
-          Privacy is our highest priority.
+        <p className='mt-10 text-[9px] text-gray-300 uppercase tracking-[0.6em] font-black'>
+          Sovereign Data Protection Guaranteed
         </p>
       </div>
     </div>

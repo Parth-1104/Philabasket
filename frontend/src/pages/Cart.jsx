@@ -4,6 +4,7 @@ import Title from '../components/Title';
 import { assets } from '../assets/assets';
 import CartTotal from '../components/CartTotal';
 import { Link } from 'react-router-dom';
+import { Heart } from 'lucide-react';
 
 const Cart = () => {
   const { products, cartItems, updateQuantity, navigate, formatPrice, toggleWishlist } = useContext(ShopContext);
@@ -111,12 +112,12 @@ const Cart = () => {
                   
                   <div className='flex items-center justify-end gap-6'>
                     <button onClick={() => { toggleWishlist(item._id); updateQuantity(item._id, 0); }} className='group/wish flex flex-col items-center gap-1 transition-all'>
-                      <img className='w-4 sm:w-5 opacity-20 group-hover/wish:opacity-100 group-hover/wish:scale-110 transition-all duration-300 brightness-0' src={assets.star_icon} alt="Wishlist" />
-                      <span className='hidden lg:block text-[8px] font-black uppercase text-gray-300 group-hover/wish:text-[#BC002D] tracking-widest'>Transfer</span>
+                    <Heart/>
+                      <span className='hidden lg:block text-[8px] font-black uppercase text-gray-300 group-hover/wish:text-[#BC002D] tracking-widest'>Move to Wishlist</span>
                     </button>
                     <button onClick={() => updateQuantity(item._id, 0)} className='group/bin flex flex-col items-center gap-1 transition-all'>
                       <img className='w-4 sm:w-5 opacity-20 group-hover/bin:opacity-100 group-hover/bin:rotate-12 transition-all duration-300 brightness-0' src={assets.bin_icon} alt="Remove" />
-                      <span className='hidden lg:block text-[8px] font-black uppercase text-gray-300 group-hover/bin:text-[#BC002D] tracking-widest'>Purge</span>
+                      <span className='hidden lg:block text-[8px] font-black uppercase text-gray-300 group-hover/bin:text-[#BC002D] tracking-widest'>Remove</span>
                     </button>
                   </div>
                 </div>

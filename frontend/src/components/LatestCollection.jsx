@@ -83,16 +83,22 @@ const LatestCollection = () => {
 
                                 {/* SCROLLABLE AREA */}
                                 <div className='flex flex-row lg:flex-col gap-3 lg:gap-4 overflow-x-auto lg:overflow-visible hide-scrollbar relative z-10 pb-2 lg:pb-0'>
-                                    {ALL_CATEGORIES.slice(0, 30).map((cat) => (
-                                        <button 
-                                            key={cat}
-                                            onClick={() => navigate('/collection')}
-                                            className='whitespace-nowrap lg:whitespace-normal bg-white/10 lg:bg-transparent border border-white/10 lg:border-none px-4 py-2 lg:p-0 rounded-full lg:rounded-none text-white/70 hover:text-white text-[10px] lg:text-xs font-bold tracking-widest uppercase text-left transition-all flex items-center gap-3 group/item'
-                                        >
-                                            <span className='hidden lg:block w-0 h-[1px] bg-amber-400 group-hover/item:w-4 transition-all'></span>
-                                            {cat}
-                                        </button>
-                                    ))}
+                              
+
+{ALL_CATEGORIES.slice(0, 30).map((cat) => (
+    <button 
+        key={cat}
+        // Updated: Navigates to collection with the category as a URL parameter
+        onClick={() => {
+            navigate(`/collection?category=${encodeURIComponent(cat)}`);
+            window.scrollTo(0, 0);
+        }}
+        className='whitespace-nowrap lg:whitespace-normal bg-white/10 lg:bg-transparent border border-white/10 lg:border-none px-4 py-2 lg:p-0 rounded-full lg:rounded-none text-white/70 hover:text-white text-[10px] lg:text-xs font-bold tracking-widest uppercase text-left transition-all flex items-center gap-3 group/item'
+    >
+        <span className='hidden lg:block w-0 h-[1px] bg-amber-400 group-hover/item:w-4 transition-all'></span>
+        {cat}
+    </button>
+))}
                                     
                                     <Link 
                                         to='/collection'

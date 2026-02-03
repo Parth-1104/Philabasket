@@ -164,6 +164,33 @@ const updateProductImages = async (req, res) => {
     }
 };
 
+// Dedicated single image upload for Mailer/Blogs
+const uploadSingleImage = async (req, res) => {
+    try {
+        // Multer.fields() puts files in req.files['fieldName'] as an array
+        const imageFile = req.files && req.files.image1 && req.files.image1[0];
+
+        if (!imageFile) {
+            return res.json({ success: false, message: "Missing required parameter: image1" });
+        }
+
+        // Since you're using memoryStorage (Vercel compatible), you upload the buffer
+        const result = await cloudinary.uploader.upload_stream(
+            { resource_type: 'image', folder: 'mail_banners',transformation: [
+                { width: 1200, height: 400, crop: "fill", gravity: "center" }
+            ] },
+            (error, result) => {
+                if (error) return res.json({ success: false, message: error.message });
+                res.json({ success: true, imageUrl: result.secure_url });
+            }
+        ).end(imageFile.buffer);
+
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+}
+
+
 const listProducts = async (req, res) => {
     try {
         const products = await productModel.find({});
@@ -218,5 +245,5 @@ const updateProduct = async (req, res) => {
 
 export { 
     listProducts, addProduct, removeProduct, singleProduct, 
-    bulkAddStamps, updateProductImages, updateProduct, removeBulkProducts 
+    bulkAddStamps, updateProductImages, updateProduct, removeBulkProducts ,uploadSingleImage
 };

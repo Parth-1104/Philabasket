@@ -9,6 +9,11 @@ import Login from './components/Login'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Dashboard from './components/Dashboard'
+import AddBlog from './pages/AddBlog'
+import ListBlog from './pages/ListBlog'
+import EditBlog from './pages/EditBlog'
+import CustomerMail from './pages/CustomMail'
+import NewsletterDispatch from './pages/NewsletterDispatch'
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL
 export const currency = '$'
@@ -37,6 +42,17 @@ const App = () => {
                 <Route path='/list' element={<List token={token} />} />
                 <Route path='/orders' element={<Orders token={token} />} />
                 <Route path='/dashboard' element={<Dashboard token={token} />} />
+                <Route path='/blog' element={<AddBlog token={token}/>} />
+                <Route path='/list-blog' element={<ListBlog token={token}/>} />
+                <Route path='/edit-blog/:id' element={<EditBlog token={token}  />} />
+                <Route path='/mail' element={<CustomerMail token={token}  />} />
+                <Route path='/news' element={<NewsletterDispatch token={token}  />} />
+
+
+
+
+
+
               </Routes>
             </div>
           </div>

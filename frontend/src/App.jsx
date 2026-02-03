@@ -18,6 +18,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import Verify from './pages/Verify'
 import Wishlist from './pages/Wishlist'
 import ResetPassword from './pages/ResetPassword'
+import ArchiveBlogs from './pages/ArchieveBlogs'
+import BlogContent from './pages/BlogContent'
 
 const App = () => {
   return (
@@ -40,7 +42,8 @@ const App = () => {
         <Route path='/orders' element={<Orders />} />
         <Route path='/verify' element={<Verify />} />
         <Route path='/reset-password/:token' element={<ResetPassword/>} />
-
+        <Route path='/blogs' element={<ArchiveBlogs />} />
+        <Route path='/blog/:blogId' element={<BlogContent />} />
       </Routes>
       <Footer />
     </div>

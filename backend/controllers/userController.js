@@ -229,6 +229,23 @@ const getUserProfile = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 }
+// Function to get all registered users
+const listUsers = async (req, res) => {
+    try {
+        // We select email specifically. 
+        // Ensure your userModel actually uses the field name 'email'
+        const users = await userModel.find({}).select('name email');
+        
+        console.log(`Found ${users.length} registrants`); // Check your server terminal
+        res.json({ success: true, users });
+    } catch (error) {
+        console.error(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// Export it along with your login/register functions
+
 
 export { 
     googleLogin, 
@@ -237,5 +254,6 @@ export {
     adminLogin, 
     getUserProfile, 
     forgotPassword, 
-    resetPassword 
+    resetPassword ,
+    listUsers
 }

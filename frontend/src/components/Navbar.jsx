@@ -89,6 +89,8 @@ const Navbar = () => {
                 <MegaMenu menuData={CATEGORY_GROUPS.regions} />
                 <MegaMenu menuData={CATEGORY_GROUPS.gifting} />
                 <MegaMenu menuData={CATEGORY_GROUPS.Foreign_Stamps} />
+                <NavLink to='/blogs' className='group flex items-center gap-1.5'><p className='text-[10px] font-black tracking-[0.4em] text-gray-900 uppercase'>Blogs</p></NavLink>
+
 
 
             </nav>
@@ -236,7 +238,7 @@ const Navbar = () => {
                         <div className='flex-1 overflow-y-auto p-10 space-y-10'>
                             <div className='flex flex-col gap-6'>
                                 <p className='text-[8px] font-black text-[#BC002D] uppercase tracking-[0.6em]'>Registry Map</p>
-                                {['Home', 'Collection', 'Orders'].map((item, idx) => (
+                                {['Home', 'Collection', 'Orders','Blogs'].map((item, idx) => (
                                     <NavLink key={idx} onClick={() => setVisible(false)} to={item === 'Home' ? '/' : `/${item.toLowerCase()}`} className='text-4xl font-bold tracking-tighter text-gray-900 flex items-center justify-between group'>
                                         {item} <ChevronRight size={20} className='text-gray-200 group-active:text-[#BC002D]' />
                                     </NavLink>
@@ -263,7 +265,7 @@ const Navbar = () => {
                                         {token ? (currency === 'INR' ? `₹${(userPoints * 0.1).toFixed(2)}` : `$${(userPoints * 0.0012).toFixed(2)}`) : "GUEST"}
                                     </p>
                                     <div className='flex items-center gap-1 bg-white/20 px-2 py-1 rounded-sm'>
-                                        <img src={assets.co} alt="" srcset="" />
+                                        <img src={assets.co} alt=""  />
                                         <span className='text-[8px] font-black uppercase'>{token ? `${userPoints} PTS` : "0 PTS"}</span>
                                     </div>
                                 </div>

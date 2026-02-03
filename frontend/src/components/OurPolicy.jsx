@@ -1,84 +1,68 @@
 import React from 'react'
-import { assets } from '../assets/assets'
+import { ShieldCheck, Truck, Headphones } from 'lucide-react'
 
 const OurPolicy = () => {
   return (
-    <div className='bg-[#FBFBFB] py-32 border-y border-black/[0.03] select-none'>
-      <div className='max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-20 md:gap-12 text-center'>
+    <div className='bg-white py-20 border-y border-black/[0.03] select-none overflow-hidden relative'>
+      
+      {/* Subtle Background Mark */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[10vw] font-black text-black/[0.01] tracking-[0.5em] pointer-events-none uppercase">
+        Sovereign
+      </div>
+
+      <div className='max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10'>
         
-        {/* Policy Item 1: Authenticity / Provenance */}
-        <div className='group flex flex-col items-center'>
-          <div className='relative mb-10 w-20 h-20 flex items-center justify-center'>
-            {/* Elegant Outer Ring */}
-            <div className='absolute inset-0 border border-black/5 rounded-full group-hover:border-[#D4AF37]/40 group-hover:scale-110 transition-all duration-1000'></div>
-            
-            <img 
-              draggable="false" 
-              src={assets.quality_icon} 
-              className='w-8 brightness-0 opacity-40 group-hover:opacity-100 transition-opacity duration-700' 
-              alt="Authenticity" 
-            />
-            
-            {/* Small Crimson Seal Dot */}
-            <div className='absolute top-0 right-0 w-2 h-2 bg-[#BC002D] rounded-full group-hover:animate-ping'></div>
+        {/* Policy Item 1: Authenticity */}
+        <div className='group flex flex-col items-center text-center'>
+          <div className='mb-6 w-16 h-16 flex items-center justify-center relative'>
+            <div className='absolute inset-0 bg-[#BC002D]/5 rounded-xl rotate-45 group-hover:rotate-90 transition-transform duration-700'></div>
+            <ShieldCheck size={28} strokeWidth={1.5} className='text-[#BC002D] relative z-10' />
           </div>
 
-          <h4 className='text-black font-serif text-sm tracking-[0.4em] uppercase mb-4'>
-            Verified <span className='italic font-light'>Provenance</span>
+          <h4 className='text-gray-900 font-black text-[10px] tracking-[0.3em] uppercase mb-3'>
+            Verified <span className='text-[#BC002D]'>Provenance</span>
           </h4>
-          <p className='text-gray-400 text-[10px] md:text-xs font-medium uppercase tracking-[0.2em] leading-relaxed max-w-[240px]'>
-            Every specimen undergoes rigorous appraisal with a lifetime guarantee of authenticity.
+          <p className='text-gray-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-[200px]'>
+            Lifetime guarantee of <br/> authenticity on all specimens.
           </p>
         </div>
 
-        {/* Policy Item 2: Insured Transit */}
-        <div className='group flex flex-col items-center'>
-          <div className='relative mb-10 w-20 h-20 flex items-center justify-center'>
-            <div className='absolute inset-0 border border-black/5 rounded-full group-hover:border-[#D4AF37]/40 group-hover:scale-110 transition-all duration-1000'></div>
-            
-            <img 
-              draggable="false" 
-              src={assets.exchange_icon} 
-              className='w-8 brightness-0 opacity-40 group-hover:opacity-100 transition-opacity duration-700' 
-              alt="Insurance" 
-            />
+        {/* Policy Item 2: Logistics */}
+        <div className='group flex flex-col items-center text-center'>
+          <div className='mb-6 w-16 h-16 flex items-center justify-center relative'>
+            <div className='absolute inset-0 bg-[#BC002D]/5 rounded-xl rotate-45 group-hover:rotate-90 transition-transform duration-700'></div>
+            <Truck size={28} strokeWidth={1.5} className='text-[#BC002D] relative z-10' />
           </div>
 
-          <h4 className='text-black font-serif text-sm tracking-[0.4em] uppercase mb-4'>
-            Sovereign <span className='italic font-light'>Protection</span>
+          <h4 className='text-gray-900 font-black text-[10px] tracking-[0.3em] uppercase mb-3'>
+            Insured <span className='text-[#BC002D]'>Logistics</span>
           </h4>
-          <p className='text-gray-400 text-[10px] md:text-xs font-medium uppercase tracking-[0.2em] leading-relaxed max-w-[240px]'>
-            Fully insured white-glove shipping to over 140 countries via secure global corridors.
+          <p className='text-gray-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-[200px]'>
+            White-glove transit to <br/> over 140 global corridors.
           </p>
         </div>
 
-        {/* Policy Item 3: Expert Concierge */}
-        <div className='group flex flex-col items-center'>
-          <div className='relative mb-10 w-20 h-20 flex items-center justify-center'>
-            <div className='absolute inset-0 border border-black/5 rounded-full group-hover:border-[#D4AF37]/40 group-hover:scale-110 transition-all duration-1000'></div>
-            
-            <img 
-              draggable="false" 
-              src={assets.support_img} 
-              className='w-8 brightness-0 opacity-40 group-hover:opacity-100 transition-opacity duration-700' 
-              alt="Concierge" 
-            />
+        {/* Policy Item 3: Support */}
+        <div className='group flex flex-col items-center text-center'>
+          <div className='mb-6 w-16 h-16 flex items-center justify-center relative'>
+            <div className='absolute inset-0 bg-[#BC002D]/5 rounded-xl rotate-45 group-hover:rotate-90 transition-transform duration-700'></div>
+            <Headphones size={28} strokeWidth={1.5} className='text-[#BC002D] relative z-10' />
           </div>
 
-          <h4 className='text-black font-serif text-sm tracking-[0.4em] uppercase mb-4'>
-            Expert <span className='italic font-light'>Curators</span>
+          <h4 className='text-gray-900 font-black text-[10px] tracking-[0.3em] uppercase mb-3'>
+            Expert <span className='text-[#BC002D]'>Curators</span>
           </h4>
-          <p className='text-gray-400 text-[10px] md:text-xs font-medium uppercase tracking-[0.2em] leading-relaxed max-w-[240px]'>
-            Direct access to dedicated philatelists for portfolio guidance and acquisition advice.
+          <p className='text-gray-400 text-[10px] font-bold uppercase tracking-widest leading-relaxed max-w-[200px]'>
+            Direct access to dedicated <br/> philatelic guidance.
           </p>
         </div>
 
       </div>
 
-      {/* Luxury Detail: Centered Emblem or Motto */}
-      <div className='mt-24 flex flex-col items-center opacity-20'>
-          <div className='h-12 w-[1px] bg-gradient-to-b from-black to-transparent mb-6'></div>
-          <p className='text-[8px] tracking-[0.8em] text-black uppercase font-black'>A Legacy Built on Trust • MMXXVI</p>
+      {/* Decorative Branding */}
+      <div className='mt-16 flex flex-col items-center opacity-30'>
+          <div className='h-[1px] w-12 bg-[#BC002D] mb-4'></div>
+          <p className='text-[7px] tracking-[1em] text-black uppercase font-black'>Registry Protocols • MMXXVI</p>
       </div>
     </div>
   )

@@ -8,6 +8,10 @@ import userRouter from './routes/userRoute.js'
 import productRouter from './routes/productRoute.js'
 import cartRouter from './routes/cartRoute.js'
 import orderRouter from './routes/orderRoute.js'
+import newsletterRouter from './routes/newsletterRoute.js'
+import blogRouter from './routes/blogRouter.js';
+
+import mailRouter from './routes/mailRoute.js';
 
 // App Config
 const app = express()
@@ -27,6 +31,17 @@ app.use('/api/user',userRouter)
 app.use('/api/product',productRouter)
 app.use('/api/cart',cartRouter)
 app.use('/api/order',orderRouter)
+app.use('/api/newsletter', newsletterRouter);
+// Inside server.js
+
+
+// ... other middlewares
+app.use('/api/blog', blogRouter);
+
+
+// ... other imports and app initialization
+
+app.use('/api/mail', mailRouter);
 
 app.get('/',(req,res)=>{
     res.send("API Working")
