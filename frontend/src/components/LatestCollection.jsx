@@ -5,10 +5,36 @@ import { Link, useNavigate } from 'react-router-dom';
 
 const ALL_CATEGORIES = [
   "AgriCulture Stamp", "Airmail", "Americas", "Ancillaries", "Animal & WildLife", 
-  "Army", "Army Postal Cover APC", "Asia", "Autograph Cover", "Aviation Stamps", 
-  "Bank", "Bird Stamps", "Block of Four", "Ramayana", "Rare", "Yoga"
-  // ... rest of categories
+    "Army", "Army Postal Cover APC", "Asia", "Autograph Cover", "Aviation Stamps", 
+    "Bank", "Bird Stamps", "Block of Four", "Block of Four with Traffic light", 
+    "Booklet", "BOPP", "Bridge Stamps", "Brochure Blank", "Brochure with MS", 
+    "Brochure with stamp", "Buddha / Buddhism", "Building Stamps", "Butterfly & Insects", 
+    "Carried Cover", "Cars", "Catalogue", "Children's Day Series", "Christianity", 
+    "Christmas", "Cinema on Stamps", "Classic Items", "Coffee", "Color Cancellation", 
+    "Commemorative", "Commemorative Coin", "Commemorative Year", "Country", "Covid 19", 
+    "Cricket", "Cultural Theme", "Currency Stamps", "Dance Stamps", "Definitive", 
+    "Definitive Block", "Definitive Number Strip", "Definitive Sheet", "Definitive Stamp", 
+    "Educational Institute", "Environment", "Error", "Europe", "Exhibition Special", 
+    "Face Value", "Fauna and Flora", "Festival", "First Day Cover", "First Day Cover Blank", 
+    "First Day Cover Commercial Used", "First Day Cover with Miniature Sheet", 
+    "First Flight/ AirMail", "Flag", "Food on Stamps", "FootBall", "Foreign First Day Covers", 
+    "Foreign Miniature Sheets", "Foreign Stamps", "Fort / Castle/ Palace", "Fragrance Stamps", 
+    "Freedom", "Freedom Fighter", "Full Sheet", "Gandhi Stamps", "GI Tag", "Greeting Card", 
+    "Greetings", "Hinduism", "Historical", "Historical Place", "Indian Theme", "Jainism", 
+    "Joint Issue", "Judiciary System", "Kumbh", "Light House", "Literature", 
+    "Locomotive / Trains", "Marine / Fish", "Medical / Health", "Meghdoot", 
+    "Miniature Sheets", "Musical Instrument", "My Stamp", "News Paper", 
+    "Odd Shape / Unusual", "Olympic", "Organizations", "Personality", 
+    "Place Cancellation", "Post Office", "Postal Stationery", "Postcard / Maxim Card", 
+    "PPC", "Presentation Pack", "Ramayana", "Rare", "Red Cross", "River / Canal", 
+    "RSS Rashtriya Swayamsevak Sangh", "Scout", "SheetLet", "Ships", "Sikhism", 
+    "Single Stamp", "Single Stamp with Traffic light", "Social Message", "Space", 
+    "Special Cancellation", "Special Cover", "Sports Stamps", "Stamp on Stamp", 
+    "Technology", "Temple", "Tiger", "Transport", "United Nations UN", "Women Power", 
+    "WWF", "Year", "Year Pack", "Yoga"
 ];
+
+
 
 const LatestCollection = () => {
     const { products } = useContext(ShopContext);
@@ -16,11 +42,11 @@ const LatestCollection = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        setLatestProducts(products.slice(0, 6)); // Adjusted to 6 for bento layout balance
+        setLatestProducts(products.slice(0, 6)); 
     }, [products]);
 
     return (
-        <div className='bg-white py-24 md:py-32 overflow-hidden select-none relative'>
+        <div className='bg-white py-12 md:py-32 overflow-hidden select-none relative'>
             
             {/* --- Hero-style Curve Accent --- */}
             <div className="absolute -left-[10vw] top-[10%] h-[80%] w-[35%] bg-[#bd002d]/5 rounded-r-[600px] pointer-events-none"></div>
@@ -28,7 +54,7 @@ const LatestCollection = () => {
             <div className='px-6 md:px-16 lg:px-24 relative z-10'>
                 
                 {/* --- Header Section --- */}
-                <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-8">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-8">
                     <div className="max-w-2xl">
                         <div className="flex items-center gap-4 mb-4">
                             <div className="w-10 h-10 border border-[#BC002D] rounded-full flex items-center justify-center">
@@ -36,7 +62,7 @@ const LatestCollection = () => {
                             </div>
                             <span className="text-[10px] tracking-[0.6em] text-[#BC002D] uppercase font-black">Featured Specimens</span>
                         </div>
-                        <h2 className="text-6xl md:text-8xl font-bold text-gray-900 tracking-tighter leading-none">
+                        <h2 className="text-5xl md:text-8xl font-bold text-gray-900 tracking-tighter leading-none">
                             NEW <span className="text-[#bd002d]">Arrivals.</span>
                         </h2>
                     </div>
@@ -44,54 +70,56 @@ const LatestCollection = () => {
 
                 <div className='flex flex-col lg:flex-row gap-12'>
                     
-                    {/* --- CATEGORY SIDEBAR --- */}
+                    {/* --- CATEGORY NAVIGATION (Optimized for Mobile & Desktop) --- */}
                     <div className='w-full lg:w-1/4'>
-                        <div className='sticky top-32 space-y-8'>
-                            <div className='bg-[#bd002d] p-8 rounded-[40px] shadow-2xl shadow-[#bd002d]/20 relative overflow-hidden group transition-all hover:scale-[1.02]'>
-                                <h3 className='text-white font-black text-xs tracking-[0.3em] uppercase mb-6 relative z-10'>Registry Categories</h3>
+                        {/* Mobile: Horizontal Pill Scroll | Desktop: Vertical Box */}
+                        <div className='lg:sticky lg:top-32'>
+                            <div className='bg-[#bd002d] p-6 lg:p-8 rounded-[30px] lg:rounded-[40px] shadow-2xl shadow-[#bd002d]/20 relative overflow-hidden'>
                                 
-                                <div className='flex flex-col gap-4 relative z-10'>
-                                    {ALL_CATEGORIES.slice(0, 10).map((cat) => (
+                                <div className='flex items-center justify-between mb-4 lg:mb-6 relative z-10'>
+                                    <h3 className='text-white font-black text-[9px] lg:text-xs tracking-[0.3em] uppercase'>Categories</h3>
+                                    <Link to='/collection' className='text-amber-400 text-[8px] lg:hidden font-black uppercase'>View All</Link>
+                                </div>
+
+                                {/* SCROLLABLE AREA */}
+                                <div className='flex flex-row lg:flex-col gap-3 lg:gap-4 overflow-x-auto lg:overflow-visible hide-scrollbar relative z-10 pb-2 lg:pb-0'>
+                                    {ALL_CATEGORIES.slice(0, 30).map((cat) => (
                                         <button 
                                             key={cat}
                                             onClick={() => navigate('/collection')}
-                                            className='text-white/70 hover:text-white text-xs font-bold tracking-widest uppercase text-left transition-colors flex items-center gap-3 group/item'
+                                            className='whitespace-nowrap lg:whitespace-normal bg-white/10 lg:bg-transparent border border-white/10 lg:border-none px-4 py-2 lg:p-0 rounded-full lg:rounded-none text-white/70 hover:text-white text-[10px] lg:text-xs font-bold tracking-widest uppercase text-left transition-all flex items-center gap-3 group/item'
                                         >
-                                            <span className='w-0 h-[1px] bg-amber-400 group-hover/item:w-4 transition-all'></span>
+                                            <span className='hidden lg:block w-0 h-[1px] bg-amber-400 group-hover/item:w-4 transition-all'></span>
                                             {cat}
                                         </button>
                                     ))}
                                     
-                                    {/* View All Categories Trigger */}
                                     <Link 
                                         to='/collection'
-                                        className='mt-6 py-4 border-t border-white/10 flex items-center justify-between group/more'
+                                        className='hidden lg:flex mt-6 py-4 border-t border-white/10 items-center justify-between group/more'
                                     >
                                         <span className='text-amber-400 text-[10px] font-black uppercase tracking-[0.2em]'>Explore All Categories</span>
                                         <span className='text-white group-hover/more:translate-x-2 transition-transform'>→</span>
                                     </Link>
                                 </div>
-                                
-                                {/* Background Ghost Text */}
-
                             </div>
                             
-                            {/* Analytics Mini-Card */}
-                            <div className='p-8 border border-gray-100 rounded-[40px] bg-gray-50/50 hidden lg:block'>
+                            {/* Inventory Counter - Hidden on mobile for brevity */}
+                            <div className='hidden lg:block p-8 border border-gray-100 rounded-[40px] bg-gray-50/50 mt-8'>
                                 <p className='text-[10px] font-black text-[#bd002d] uppercase tracking-widest mb-2'>Total Inventory</p>
-                                <p className='text-3xl font-bold text-gray-900 tracking-tighter'>12,480+ <span className='text-sm text-gray-400 font-normal tracking-normal'>Items</span></p>
+                                <p className='text-3xl font-bold text-gray-900 tracking-tighter'>1,00,480+ <span className='text-sm text-gray-400 font-normal tracking-normal'>Items</span></p>
                             </div>
                         </div>
                     </div>
 
                     {/* --- MAIN PRODUCT GRID --- */}
                     <div className='w-full lg:w-3/4'>
-                        <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16'>
+                        <div className='flex overflow-x-auto lg:grid lg:grid-cols-3 gap-x-6 md:gap-x-8 gap-y-16 pb-10 lg:pb-0 snap-x snap-mandatory hide-scrollbar'>
                             {latestProducts.map((item, index) => (
-                                <div key={index} className="flex flex-col group cursor-pointer">
-                                    <div className="relative aspect-[3/4] bg-white border border-gray-100 p-3 shadow-sm transition-all duration-500 group-hover:-translate-y-3 group-hover:shadow-2xl overflow-hidden">
-                                        <div className="absolute top-0 right-0 bg-[#bd002d] text-white text-[8px] font-black px-4 py-1.5 transform rotate-45 translate-x-4 -translate-y-1 z-20">CERTIFIED</div>
-                                        <div className="w-full h-full bg-[#f8f8f8] flex items-center justify-center p-4 relative">
+                                <div key={index} className="min-w-[85vw] sm:min-w-[45vw] lg:min-w-0 snap-center flex flex-col group cursor-pointer">
+                                    <div className="relative aspect-[3/4] bg-white border border-gray-100 p-3 shadow-sm transition-all duration-500 group-hover:-translate-y-3 group-hover:shadow-2xl overflow-hidden rounded-br-[40px] md:rounded-br-[60px]">
+                                        <div className="absolute top-0 right-0 bg-[#bd002d] text-white text-[7px] md:text-[8px] font-black px-4 py-1.5 transform rotate-45 translate-x-4 -translate-y-1 z-20">CERTIFIED</div>
+                                        <div className="w-full h-full bg-[#f8f8f8] flex items-center justify-center p-4 relative rounded-br-[30px] md:rounded-br-[40px]">
                                             <ProductItem 
                                                 id={item._id} 
                                                 image={item.image} 
@@ -102,32 +130,32 @@ const LatestCollection = () => {
                                             />
                                         </div>
                                     </div>
-                                    <div className="mt-6 space-y-1">
-                                        <p className="text-[10px] font-black tracking-widest uppercase text-[#bd002d]/60">{item.year || '2026'} Specimen</p>
-                                        <h3 className="text-gray-900 font-bold text-base truncate group-hover:text-[#bd002d] transition-colors">{item.name}</h3>
+                                    <div className="mt-6 space-y-1 px-2">
+                                        <p className="text-[9px] md:text-[10px] font-black tracking-widest uppercase text-[#bd002d]/60">{item.year || '2026'} Specimen</p>
+                                        <h3 className="text-gray-900 font-bold text-sm md:text-base truncate group-hover:text-[#bd002d] transition-colors">{item.name}</h3>
                                     </div>
                                 </div>
                             ))}
-                        </div>
-
-                        {/* Mobile View All Button */}
-                        <div className='mt-12 lg:hidden text-center'>
-                             <button onClick={() => navigate('/collection')} className='w-full py-5 bg-[#bd002d] text-white text-[10px] font-black uppercase tracking-[0.4em] rounded-full'>Initialize Full Collection</button>
                         </div>
                     </div>
                 </div>
 
                 {/* --- Footer Invitation --- */}
-                <div className='mt-32 rounded-[100px] overflow-hidden bg-[#bd002d] py-24 px-10 relative flex flex-col items-center shadow-2xl'>
-                    <span className="absolute inset-0 flex items-center justify-center text-white/5 text-[20vw] font-bold pointer-events-none select-none italic">ARCHIVES</span>
+                <div className='rounded-[40px] md:rounded-[100px] overflow-hidden mt-16 lg:mt-[20vh] bg-[#bd002d] py-8 lg:mt-[10vh]  px-10 relative flex flex-col items-center shadow-2xl'>
+                    <span className="absolute inset-0 flex items-center justify-center text-white/5 text-[30vw] md:text-[20vw] font-bold pointer-events-none select-none italic">ARCHIVES</span>
                     <div className="relative z-10 text-center">
-                        <h3 className="text-white text-4xl md:text-6xl font-bold mb-8 tracking-tighter leading-none">
+                        <h3 className="text-white text-3xl md:text-6xl font-bold mb-8 tracking-tighter leading-none">
                             Secure Rare <br className='hidden md:block'/> <span className="italic text-amber-400">Acquisitions.</span>
                         </h3>
                         <Link to='/collection' onClick={() => window.scrollTo(0, 0)} className='inline-block px-12 py-5 bg-white text-gray-900 text-[10px] font-black uppercase tracking-[0.5em] rounded-full hover:bg-amber-400 transition-all duration-500 hover:scale-110 shadow-xl'>Enter the Collection</Link>
                     </div>
                 </div>
             </div>
+
+            <style dangerouslySetInnerHTML={{ __html: `
+                .hide-scrollbar::-webkit-scrollbar { display: none; }
+                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+            `}} />
         </div>
     );
 };

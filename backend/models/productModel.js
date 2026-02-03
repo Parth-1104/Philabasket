@@ -16,7 +16,7 @@ const productSchema = new mongoose.Schema({
     }, 
     country: { type: String, required: true },
     stock: { type: Number, required: true, default: 1 }, // Usually low for rare stamps
-    
+    soldCount: { type: Number, default: 0 },
     bestseller: { type: Boolean, default: false },
     date: { type: Number, required: true },
     rewardPoints: { type: Number, default: 0 },

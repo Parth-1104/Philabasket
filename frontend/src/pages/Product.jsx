@@ -3,14 +3,14 @@ import { useParams } from 'react-router-dom'
 import { ShopContext } from '../context/ShopContext';
 import { assets } from '../assets/assets';
 import RelatedProducts from '../components/RelatedProducts';
-
+import { Heart } from 'lucide-react';
 const Product = () => {
   const { productId } = useParams();
   const { products, addToCart, formatPrice, currency, navigate } = useContext(ShopContext);
   const [productData, setProductData] = useState(false);
   const [image, setImage] = useState('');
   const [showPopup, setShowPopup] = useState(false);
-  const { wishlist, toggleWishlist } = useContext(ShopContext); // State for the cool popup
+  const { wishlist, toggleWishlist } = useContext(ShopContext);
 
   const fetchProductData = async () => {
     const item = products.find((item) => item._id === productId);
@@ -24,14 +24,12 @@ const Product = () => {
     fetchProductData();
   }, [productId, products]);
 
-  // Handle Add to Collection with Popup
   const handleAddToCart = () => {
     addToCart(productData._id);
     setShowPopup(true);
-    setTimeout(() => setShowPopup(false), 3000); // Auto-hide after 3 seconds
+    setTimeout(() => setShowPopup(false), 3000);
   }
 
-  // Handle Immediate Acquisition (Buy Now)
   const handleBuyNow = () => {
     addToCart(productData._id);
     navigate('/cart');
@@ -44,7 +42,6 @@ const Product = () => {
   return productData ? (
     <div className='bg-white min-h-screen pt-24 pb-20 px-6 md:px-16 lg:px-24 text-black select-none animate-fade-in relative'>
       
-      {/* --- ACQUISITION SUCCESS POPUP --- */}
       {showPopup && (
         <div className='fixed top-10 left-1/2 -translate-x-1/2 z-[1000] animate-bounce-in'>
           <div className='bg-black text-white px-8 py-4 flex items-center gap-4 shadow-2xl border border-[#D4AF37]/50 rounded-sm backdrop-blur-md bg-opacity-90'>
@@ -56,7 +53,6 @@ const Product = () => {
       )}
 
       <div className='flex gap-16 flex-col lg:flex-row'>
-        {/*---------- Product Images Gallery remains the same ------------- */}
         <div className='flex-1 flex flex-col-reverse gap-6 lg:flex-row'>
           <div className='flex lg:flex-col overflow-x-auto lg:overflow-y-auto justify-between lg:justify-normal lg:w-[12%] w-full hide-scrollbar'>
               {productData.image.map((item, index) => (
@@ -76,9 +72,7 @@ const Product = () => {
           </div>
         </div>
 
-        {/* -------- Stamp Info / The Appraisal ---------- */}
         <div className='flex-1 lg:max-w-[550px]'>
-          {/* Header Info remains the same */}
           <div className='flex items-center gap-4 mb-8'>
             <span className='bg-[#BC002D]/5 text-[#BC002D] text-[9px] font-black tracking-[0.4em] px-4 py-2 border border-[#BC002D]/10 uppercase'>{productData.country}</span>
             <span className='text-gray-400 text-[9px] font-bold tracking-[0.4em] uppercase border-l border-black/10 pl-4'>{productData.year} Archive</span>
@@ -86,12 +80,45 @@ const Product = () => {
 
           <h1 className='font-serif text-4xl md:text-6xl text-black tracking-tight leading-tight mb-4'>{productData.name}</h1>
           
-          <div className='flex items-center gap-2 mb-10'>
+          <div className='flex items-center gap-2 mb-8'>
               {[...Array(5)].map((_, i) => (
                 <div key={i} className={`w-1 h-1 rounded-full ${i < 4 ? 'bg-[#BC002D]' : 'bg-black/10'}`}></div>
               ))}
               <p className='pl-3 text-[9px] tracking-[0.5em] text-gray-400 uppercase font-black'>Verified Heritage Asset</p>
           </div>
+
+          {/* --- NEW: TECHNICAL APPRAISAL SECTION --- */}
+          <div className='mb-10 grid grid-cols-2 gap-y-4 gap-x-12 border-y border-black/5 py-8'>
+              <div className='flex flex-col gap-1'>
+                  <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest'>Condition</p>
+                  <p className='text-xs font-bold uppercase tracking-wider text-black'>{productData.condition}</p>
+              </div>
+              <div className='flex flex-col gap-1'>
+                  <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest'>Origin</p>
+                  <p className='text-xs font-bold uppercase tracking-wider text-black'>{productData.country}</p>
+              </div>
+              <div className='flex flex-col gap-1'>
+                  <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest'>Issue Year</p>
+                  <p className='text-xs font-bold uppercase tracking-wider text-black'>{productData.year}</p>
+              </div>
+              <div className='flex flex-col gap-1'>
+                  <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest'>Registry Stock</p>
+                  <p className={`text-xs font-bold uppercase tracking-wider ${productData.stock < 5 ? 'text-[#BC002D]' : 'text-black'}`}>
+                    {productData.stock > 0 ? `${productData.stock} Specimens Available` : 'Exhausted'}
+                  </p>
+              </div>
+          </div>
+          <div className='mb-10'>
+    <div className='flex items-center gap-2 mb-4'>
+        <div className='h-[1px] w-4 bg-[#BC002D]'></div>
+        <p className='text-[9px] font-black text-[#BC002D] uppercase tracking-[0.3em]'>Historical Significance</p>
+    </div>
+    
+    {/* Description styling: High contrast, slightly larger, and high-impact */}
+    <p className='text-sm md:text-base font-bold text-gray-900 leading-relaxed tracking-tight'>
+        {productData.description}
+    </p>
+</div>
 
           <div className='flex items-end gap-2 mb-10'>
             <span className='text-3xl font-serif text-[#D4AF37] leading-none mb-1'>{currency === 'USD' ? '$' : '₹'}</span>
@@ -100,7 +127,6 @@ const Product = () => {
             </p>
           </div>
 
-          {/* Sovereign Reward Panel remains same */}
           <div className='mb-12 p-6 border border-black/5 bg-[#FBFBFB] relative group overflow-hidden'>
             <div className='absolute left-0 top-0 h-full w-[2px] bg-[#BC002D]'></div>
             <div className='flex items-center gap-5'>
@@ -115,76 +141,52 @@ const Product = () => {
             </div>
           </div>
           
-          {/* --- ACQUISITION BUTTONS --- */}
-          {/* --- ACQUISITION BUTTONS --- */}
-<div className='mb-16 flex flex-col sm:flex-row gap-4 items-stretch'>
-  {productData.stock > 0 ? (
-    <>
-      <button 
-        onClick={handleAddToCart} 
-        className='group relative flex-[3] bg-black text-white px-10 py-6 text-[11px] font-black tracking-[0.5em] uppercase overflow-hidden rounded-sm'
-      >
-        <span className="absolute inset-0 w-0 bg-[#BC002D] transition-all duration-500 group-hover:w-full"></span>
-        <span className="relative z-10">Add to Collection</span>
-      </button>
-
-      <button 
-        onClick={handleBuyNow} 
-        className='flex-[3] border-2 border-black text-black px-10 py-6 text-[11px] font-black tracking-[0.5em] uppercase hover:bg-black hover:text-white transition-all duration-500 rounded-sm'
-      >
-        Purchase Acquisition
-      </button>
-
-      {/* --- REFINED WISHLIST TOGGLE --- */}
-      <button 
+          <div className='mb-16 flex flex-col sm:flex-row gap-4 items-stretch'>
+            {productData.stock > 0 ? (
+              <>
+                <button onClick={handleAddToCart} className='group relative flex-[3] bg-black text-white px-10 py-6 text-[11px] font-black tracking-[0.5em] uppercase overflow-hidden rounded-sm'>
+                  <span className="absolute inset-0 w-0 bg-[#BC002D] transition-all duration-500 group-hover:w-full"></span>
+                  <span className="relative z-10">Add to Collection</span>
+                </button>
+                <button onClick={handleBuyNow} className='flex-[3] border-2 border-black text-black px-10 py-6 text-[11px] font-black tracking-[0.5em] uppercase hover:bg-black hover:text-white transition-all duration-500 rounded-sm'>
+                  Purchase Acquisition
+                </button>
+                <button 
   onClick={() => toggleWishlist(productData._id)}
-  className={`flex-1 flex items-center justify-center p-6 border transition-all duration-300 ${
+  className={`flex-1 flex items-center justify-center p-6 border transition-all duration-500 rounded-sm ${
     wishlist.includes(productData._id) 
-    ? 'bg-red-50 border-red-200' 
+    ? 'bg-[#BC002D]/5 border-[#BC002D]/20' 
     : 'border-black/5 hover:bg-gray-50'
   }`}
-  title="Archive for Later"
+  title="Archive Specimen"
 >
-  <img 
-    /* Ensure you use a heart or star icon here, not the cart icon */
-    src={assets.heart_icon || assets.star_icon} 
-    className={`w-5 transition-all duration-500 ${
+  <Heart 
+    size={22} 
+    /* Logic: If in wishlist, fill with Red and remove stroke. 
+       If not, show as a light gray outline.
+    */
+    className={`transition-all duration-500 transform ${
       wishlist.includes(productData._id) 
-      ? 'brightness-100 scale-125' 
-      : 'opacity-20 grayscale'
-    }`} 
-    style={{ 
-        /* Fallback filter to turn the icon red if you don't have a red icon file */
-        filter: wishlist.includes(productData._id) ? 'invert(15%) sepia(95%) saturate(6932%) hue-rotate(347deg) brightness(95%) contrast(101%)' : 'none' 
-    }}
-    alt="Wishlist" 
+      ? 'fill-[#BC002D] text-[#BC002D] scale-110' 
+      : 'text-gray-300 hover:text-black'
+    }`}
+    strokeWidth={wishlist.includes(productData._id) ? 1 : 2}
   />
 </button>
-    </>
-  ) : (
-    <button disabled className='w-full border border-black/5 text-gray-300 px-16 py-6 text-[11px] font-black tracking-[0.5em] uppercase cursor-not-allowed'>Specimen Exhausted</button>
-  )}
-</div>
+              </>
+            ) : (
+              <button disabled className='w-full border border-black/5 text-gray-300 px-16 py-6 text-[11px] font-black tracking-[0.5em] uppercase cursor-not-allowed'>Specimen Exhausted</button>
+            )}
+          </div>
 
-          {/* Archival Policies remain same */}
           <div className='grid grid-cols-1 md:grid-cols-3 gap-6 pt-12 border-t border-black/5'>
-              <div className='flex flex-col gap-2'>
-                  <p className='text-[9px] font-black tracking-[0.3em] uppercase text-black'>Authenticity</p>
-                  <p className='text-[10px] text-gray-400 font-medium leading-relaxed uppercase tracking-widest'>Certified Registry Provenance</p>
-              </div>
-              <div className='flex flex-col gap-2'>
-                  <p className='text-[9px] font-black tracking-[0.3em] uppercase text-black'>Logistics</p>
-                  <p className='text-[10px] text-gray-400 font-medium leading-relaxed uppercase tracking-widest'>White-Glove Insured Transit</p>
-              </div>
-              <div className='flex flex-col gap-2'>
-                  <p className='text-[9px] font-black tracking-[0.3em] uppercase text-black'>Vault Return</p>
-                  <p className='text-[10px] text-gray-400 font-medium leading-relaxed uppercase tracking-widest'>14-Day Reflection Period</p>
-              </div>
+              <div className='flex flex-col gap-2'><p className='text-[9px] font-black tracking-[0.3em] uppercase text-black'>Authenticity</p><p className='text-[10px] text-gray-400 font-medium leading-relaxed uppercase tracking-widest'>Certified Registry Provenance</p></div>
+              <div className='flex flex-col gap-2'><p className='text-[9px] font-black tracking-[0.3em] uppercase text-black'>Logistics</p><p className='text-[10px] text-gray-400 font-medium leading-relaxed uppercase tracking-widest'>White-Glove Insured Transit</p></div>
+              <div className='flex flex-col gap-2'><p className='text-[9px] font-black tracking-[0.3em] uppercase text-black'>Vault Return</p><p className='text-[10px] text-gray-400 font-medium leading-relaxed uppercase tracking-widest'>14-Day Reflection Period</p></div>
           </div>
         </div>
       </div>
       
-      {/* Related Products Footer remains same */}
       <div className='mt-32 border-t border-black/5 pt-20'>
          <div className='mb-12 text-center'>
             <p className='text-[10px] tracking-[0.6em] text-[#BC002D] uppercase font-black mb-2'>Historical Parallel</p>
@@ -193,18 +195,9 @@ const Product = () => {
          <RelatedProducts category={productData.category[0]} />
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes bounce-in {
-          0% { transform: translate(-50%, -20px); opacity: 0; }
-          50% { transform: translate(-50%, 10px); }
-          100% { transform: translate(-50%, 0); opacity: 1; }
-        }
-        .animate-bounce-in { animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards; }
-      `}} />
+      <style dangerouslySetInnerHTML={{ __html: `.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } @keyframes bounce-in { 0% { transform: translate(-50%, -20px); opacity: 0; } 50% { transform: translate(-50%, 10px); } 100% { transform: translate(-50%, 0); opacity: 1; } } .animate-bounce-in { animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards; }`}} />
     </div>
   ) : <div className='min-h-screen bg-white'></div>
 }
 
-export default Product
+export default Product;

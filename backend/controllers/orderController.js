@@ -63,6 +63,16 @@ const placeOrder = async (req, res) => {
     } catch (error) { res.json({ success: false, message: error.message }); }
 };
 
+const updateSoldCount = async (items) => {
+    for (const item of items) {
+        // Increment soldCount by the quantity purchased
+        await productModel.findByIdAndUpdate(item._id || item.productId, { 
+            $inc: { soldCount: item.quantity } 
+        });
+    }
+};
+
+
 const cancelOrder = async (req, res) => {
     try {
         const { orderId, userId } = req.body;
@@ -80,25 +90,48 @@ const cancelOrder = async (req, res) => {
 const updateStatus = async (req, res) => {
     try {
         const { orderId, status, trackingNumber } = req.body;
+        
+        // 1. Fetch the current state of the order from the DB first
+        const currentOrder = await orderModel.findById(orderId);
+        if (!currentOrder) {
+            return res.json({ success: false, message: "Order not found" });
+        }
+
         let finalStatus = (trackingNumber && (status === 'Order Placed' || status === 'Packing')) ? 'Shipped' : status;
         const updateFields = { status: finalStatus };
         if (trackingNumber) updateFields.trackingNumber = trackingNumber;
 
-        if (finalStatus === 'Delivered') {
-            const order = await orderModel.findById(orderId);
-            if (order.status !== 'Delivered') {
-                updateFields.payment = true;
-                const earnedPoints = Math.floor(order.amount * 0.10);
-                await userModel.findByIdAndUpdate(order.userId, { $inc: { totalRewardPoints: earnedPoints } });
-            }
+        // 2. STRICTURE: Only award points if status is changing TO Delivered for the FIRST time
+        if (finalStatus === 'Delivered' && currentOrder.status !== 'Delivered') {
+            updateFields.payment = true;
+
+            // Award points (10% of amount)
+            const earnedPoints = Math.floor(currentOrder.amount * 0.10);
+            await userModel.findByIdAndUpdate(currentOrder.userId, { 
+                $inc: { totalRewardPoints: earnedPoints } 
+            });
+
+            // Update soldCount for ranking
+            await updateSoldCount(currentOrder.items);
+            
+            console.log(`Points awarded to ${currentOrder.userId}: ${earnedPoints}`);
+        } 
+        // 3. Optional: Prevent re-delivery if already delivered
+        else if (finalStatus === 'Delivered' && currentOrder.status === 'Delivered') {
+            return res.json({ success: false, message: "Order already marked as Delivered. Points not re-awarded." });
         }
+
         await orderModel.findByIdAndUpdate(orderId, updateFields);
+        
+        // Handle Email logic for shipping...
         if (finalStatus === 'Shipped' && trackingNumber) {
-            const order = await orderModel.findById(orderId);
-            await sendEmail(order.address.email, "Items Shipped", getOrderHtmlTemplate(order.address.firstName, order.items, order.amount, order.currency, trackingNumber));
+            await sendEmail(currentOrder.address.email, "Items Shipped", getOrderHtmlTemplate(currentOrder.address.firstName, currentOrder.items, currentOrder.amount, currentOrder.currency, trackingNumber));
         }
+
         res.json({ success: true, currentStatus: finalStatus });
-    } catch (error) { res.json({ success: false, message: error.message }); }
+    } catch (error) { 
+        res.json({ success: false, message: error.message }); 
+    }
 };
 
 // --- ANALYTICS ---

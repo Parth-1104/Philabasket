@@ -73,7 +73,7 @@ const Add = ({ token }) => {
       formData.append("country", country)
       formData.append("condition", condition)
       formData.append("stock", stock)
-      formData.append("bestseller", bestseller)
+      formData.append("bestseller", false)
 
       image1 && formData.append("image1", image1)
       image2 && formData.append("image2", image2)
@@ -224,10 +224,10 @@ const Add = ({ token }) => {
             </div>
           </div>
 
-          <div className='flex gap-2 mt-2 items-center'>
+          {/* <div className='flex gap-2 mt-2 items-center'>
             <input onChange={() => setBestseller(prev => !prev)} checked={bestseller} type="checkbox" id='bestseller' className='w-4 h-4' />
             <label className='cursor-pointer font-medium' htmlFor="bestseller">Mark as Featured / Bestseller</label>
-          </div>
+          </div> */}
 
           <button type="submit" className='w-44 py-3 mt-4 bg-black text-white font-bold hover:bg-gray-800 transition-colors'>ADD STAMP</button>
         </form>

@@ -151,29 +151,38 @@ const Orders = ({ token }) => {
       {/* ORDERS LIST */}
       <div className='max-w-7xl mx-auto space-y-4'>
         {sortedOrders.map((order) => (
-          <div key={order._id} className={`grid grid-cols-1 md:grid-cols-[0.5fr_2.5fr_1fr_1fr_1fr_1.5fr] gap-6 items-center p-6 bg-white border rounded-2xl border-gray-100 hover:border-blue-200 transition-all shadow-sm`}>
-            <img className='w-12 opacity-30 grayscale' src={assets.parcel_icon} alt="" />
-            
-            <div className='cursor-pointer' onClick={() => { setActiveOrder(order); setShowAddressModal(true); }}>
-              <p className='font-black text-gray-900 text-sm mb-1 line-clamp-1'>{order.items.map(i => i.name).join(', ')}</p>
-              <p className='text-[10px] font-bold text-red-600 uppercase'>{order.address.firstName} {order.address.lastName} • <span className='text-gray-400 font-normal'>{order.address.city}</span></p>
-            </div>
-
-            <div className='text-center'>
-              <p className='text-[10px] font-black text-gray-400 uppercase mb-1'>Order Date</p>
-              <p className='text-[11px] font-bold text-gray-900'>{new Date(order.date).toLocaleDateString('en-IN')}</p>
-            </div>
-
-            <div className='text-center'>
-              <p className='text-[10px] font-black text-gray-400 uppercase mb-1'>Revenue</p>
-              <p className='text-sm font-black text-gray-900'>₹{order.amount.toFixed(2)}</p>
-            </div>
-
-            <div className='text-center'>
-                <span className={`text-[9px] px-3 py-1 rounded-full font-black uppercase tracking-tighter ${order.status === 'Order Placed' ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-gray-100 text-gray-600'}`}>
-                    {order.status}
-                </span>
-            </div>
+          <div key={order._id} className={`grid grid-cols-1 md:grid-cols-[0.5fr_2fr_0.8fr_0.8fr_1fr_1fr_1.5fr] gap-6 items-center p-6 bg-white border rounded-2xl border-gray-100 hover:border-blue-200 transition-all shadow-sm`}>
+          <img className='w-12 opacity-30 grayscale' src={assets.parcel_icon} alt="" />
+          
+          <div className='cursor-pointer' onClick={() => { setActiveOrder(order); setShowAddressModal(true); }}>
+            <p className='font-black text-gray-900 text-sm mb-1 line-clamp-1'>{order.items.map(i => i.name).join(', ')}</p>
+            <p className='text-[10px] font-bold text-red-600 uppercase'>{order.address.firstName} {order.address.lastName} • <span className='text-gray-400 font-normal'>{order.address.city}</span></p>
+          </div>
+        
+          {/* NEW: QUANTITY COLUMN */}
+          <div className='text-center'>
+            <p className='text-[10px] font-black text-gray-400 uppercase mb-1'>Items</p>
+            <p className='text-[11px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg inline-block'>
+                {/* Summing quantities of all items in the order */}
+                {order.items.reduce((acc, item) => acc + item.quantity, 0)} Units
+            </p>
+          </div>
+        
+          <div className='text-center'>
+            <p className='text-[10px] font-black text-gray-400 uppercase mb-1'>Order Date</p>
+            <p className='text-[11px] font-bold text-gray-900'>{new Date(order.date).toLocaleDateString('en-IN')}</p>
+          </div>
+        
+          <div className='text-center'>
+            <p className='text-[10px] font-black text-gray-400 uppercase mb-1'>Revenue</p>
+            <p className='text-sm font-black text-gray-900'>₹{order.amount.toFixed(2)}</p>
+          </div>
+        
+          <div className='text-center'>
+              <span className={`text-[9px] px-3 py-1 rounded-full font-black uppercase tracking-tighter ${order.status === 'Order Placed' ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-gray-100 text-gray-600'}`}>
+                  {order.status}
+              </span>
+          </div>
 
             <div className='flex items-center gap-3 justify-end'>
                 <select 
@@ -206,95 +215,117 @@ const Orders = ({ token }) => {
 
       {/* --- COLLECTOR DOSSIER POPUP (Full User Data Sync) --- */}
       {showAddressModal && activeOrder && (
-          <div className='fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4'>
-              <div className='bg-white w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-200'>
-                  
-                  {/* Header: Identity pulled from the populated userId object */}
-                  <div className='p-8 bg-gray-900 text-white flex justify-between items-start'>
-                      <div>
-                          <p className='text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] mb-2'>Collector Dossier</p>
-                          <h4 className='text-3xl font-black italic uppercase'>
-                            {activeOrder.userId?.name || activeOrder.address.firstName}
-                          </h4>
-                          {/* Registered Email ID */}
-                          <p className='text-[11px] font-bold text-blue-200 mt-2 lowercase opacity-80'>
-                            {activeOrder.userId?.email || "Registry Email Missing"}
-                          </p>
-                      </div>
-                      <button onClick={() => setShowAddressModal(false)} className='text-3xl font-light hover:text-red-500 transition-colors'>×</button>
-                  </div>
+    <div className='fixed inset-0 bg-black/60 backdrop-blur-md z-[100] flex items-center justify-center p-4'>
+        <div className='bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-200 flex flex-col max-h-[90vh]'>
+            
+            {/* Header: Identity */}
+            <div className='p-8 bg-gray-900 text-white flex justify-between items-start shrink-0'>
+                <div>
+                    <p className='text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] mb-2'>Collector Dossier</p>
+                    <h4 className='text-3xl font-black italic uppercase'>
+                        {activeOrder.userId?.name || activeOrder.address.firstName}
+                    </h4>
+                    <p className='text-[11px] font-bold text-blue-200 mt-2 lowercase opacity-80'>
+                        {activeOrder.userId?.email || "Registry Email Missing"}
+                    </p>
+                </div>
+                <button onClick={() => setShowAddressModal(false)} className='text-3xl font-light hover:text-red-500 transition-colors'>×</button>
+            </div>
 
-                  <div className='p-10 grid grid-cols-1 md:grid-cols-2 gap-12'>
-                      {/* Left Column: Logistics */}
-                      <div className='space-y-8'>
-                          <div className='grid grid-cols-2 gap-6'>
-                              <div>
+            <div className='overflow-y-auto p-8 lg:p-10'>
+                {/* TOP SECTION: Manifest (The Items to Pack) */}
+                <div className='mb-10'>
+                    <div className='flex items-center gap-3 mb-6'>
+                        <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Consignment Manifest</p>
+                        <div className='h-[1px] flex-1 bg-gray-100'></div>
+                        <span className='bg-blue-600 text-white text-[9px] px-3 py-1 rounded-full font-black uppercase'>
+                            {activeOrder.items.reduce((acc, i) => acc + i.quantity, 0)} Total Units
+                        </span>
+                    </div>
+
+                    <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                        {activeOrder.items.map((item, index) => (
+                            <div key={index} className='flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-2xl group hover:border-blue-200 transition-all'>
+                                <div className='flex items-center gap-4'>
+                                    <div className='w-12 h-14 bg-white rounded-lg border border-gray-200 p-1 flex items-center justify-center shadow-sm'>
+                                        <img src={item.image[0]} className='max-w-full max-h-full object-contain' alt="" />
+                                    </div>
+                                    <div>
+                                        <p className='text-xs font-black text-gray-900 line-clamp-1'>{item.name}</p>
+                                        <p className='text-[9px] font-bold text-gray-400 uppercase'>{item.category?.[0] || 'Specimen'}</p>
+                                    </div>
+                                </div>
+                                <div className='text-right'>
+                                    <p className='text-[10px] font-black text-gray-400 uppercase mb-1'>Quantity</p>
+                                    <p className='text-xl font-black text-blue-600 tracking-tighter'>×{item.quantity}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                <div className='grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-gray-100 pt-10'>
+                    {/* Left Column: Logistics */}
+                    <div className='space-y-8'>
+                        <div className='grid grid-cols-2 gap-6'>
+                            <div>
                                 <p className='text-[9px] font-black text-gray-400 uppercase mb-1'>Registry Contact</p>
                                 <p className='font-bold text-sm'>{activeOrder.address.phone}</p>
-                              </div>
-                              <div>
+                            </div>
+                            <div>
                                 <p className='text-[9px] font-black text-gray-400 uppercase mb-1'>Payment Method</p>
                                 <p className='font-bold text-sm uppercase text-green-600'>{activeOrder.paymentMethod}</p>
-                              </div>
-                          </div>
+                            </div>
+                        </div>
 
-                          <div className='bg-gray-50 p-6 rounded-2xl border border-gray-100'>
-                              <p className='text-[9px] font-black text-gray-400 uppercase mb-3'>Shipping Destination</p>
-                              <p className='text-[13px] font-medium leading-relaxed font-mono text-gray-700'>
-                                  {activeOrder.address.firstName}<br/>
-                                  {activeOrder.address.lastName}<br/>
-                                  {activeOrder.address.email}<br/>
-                                  {activeOrder.address.street},<br/>
-                                  {activeOrder.address.city}, {activeOrder.address.state}<br/>
-                                  <span className='font-black text-blue-600'>{activeOrder.address.zipcode} • {activeOrder.address.country}</span>
-                              </p>
-                              <button onClick={() => copyAddress(activeOrder.address)} className='mt-4 w-full bg-black text-white py-3 rounded-xl text-[10px] font-black uppercase hover:opacity-80 transition-all'>Copy for India Post</button>
-                          </div>
-                      </div>
+                        <div className='bg-gray-50 p-6 rounded-2xl border border-gray-100'>
+                            <p className='text-[9px] font-black text-gray-400 uppercase mb-3'>Shipping Destination</p>
+                            <p className='text-[13px] font-medium leading-relaxed font-mono text-gray-700'>
+                                {activeOrder.address.firstName} {activeOrder.address.lastName}<br/>
+                                {activeOrder.address.email}<br/>
+                                {activeOrder.address.street},<br/>
+                                {activeOrder.address.city}, {activeOrder.address.state}<br/>
+                                <span className='font-black text-blue-600'>{activeOrder.address.zipcode} • {activeOrder.address.country}</span>
+                            </p>
+                            <button onClick={() => copyAddress(activeOrder.address)} className='mt-4 w-full bg-black text-white py-3 rounded-xl text-[10px] font-black uppercase hover:opacity-80 transition-all active:scale-95'>Copy for India Post</button>
+                        </div>
+                    </div>
 
-                      {/* Right Column: Registry Analytics & Membership Details */}
-                      <div className='space-y-8'>
-                          <div className='grid grid-cols-2 gap-4'>
-                              <div className='bg-blue-50 p-4 rounded-xl border border-blue-100'>
-                                  <p className='text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1'>Archive Points</p>
-                                  {/* Displays collector's current points */}
-                                  <p className='text-xl font-black text-blue-700'>{activeOrder.userId?.totalRewardPoints || 0} PTS</p>
-                              </div>
-                              <div className='bg-red-50 p-4 rounded-xl border border-red-100'>
-                                  <p className='text-[8px] font-black text-red-400 uppercase tracking-widest mb-1'>Invites (Cap)</p>
-                                  {/* Displays collector's referral count */}
-                                  <p className='text-xl font-black text-red-700'>{activeOrder.userId?.referralCount || 0} / 3</p>
-                              </div>
-                          </div>
+                    {/* Right Column: Registry Analytics */}
+                    <div className='space-y-8'>
+                        <div className='grid grid-cols-2 gap-4'>
+                            <div className='bg-blue-50 p-4 rounded-xl border border-blue-100'>
+                                <p className='text-[8px] font-black text-blue-400 uppercase tracking-widest mb-1'>Archive Points</p>
+                                <p className='text-xl font-black text-blue-700'>{activeOrder.userId?.totalRewardPoints || 0} PTS</p>
+                            </div>
+                            <div className='bg-red-50 p-4 rounded-xl border border-red-100'>
+                                <p className='text-[8px] font-black text-red-400 uppercase tracking-widest mb-1'>Invites (Cap)</p>
+                                <p className='text-xl font-black text-red-700'>{activeOrder.userId?.referralCount || 0} / 3</p>
+                            </div>
+                        </div>
 
-                          <div className='space-y-4 pt-4 border-t border-gray-100'>
-                              <div className='flex justify-between border-b border-gray-50 pb-2'>
-                                  <p className='text-[9px] font-black text-gray-400 uppercase'>Member ID</p>
-                                  <p className='text-[10px] font-mono font-bold uppercase'>
-                                      {/* THE CRITICAL FIX: Safe conversion to string before slice */}
-                                      {activeOrder.userId?._id 
-                                          ? String(activeOrder.userId._id).slice(-12) 
-                                          : String(activeOrder.userId || "").slice(-12)}
-                                  </p>
-                              </div>
-                              <div className='flex justify-between'>
-                                  <p className='text-[9px] font-black text-gray-400 uppercase'>Registry Date</p>
-                                  <p className='text-[10px] font-bold'>{new Date(activeOrder.date).toLocaleString('en-IN')}</p>
-                              </div>
-                              <div className='flex justify-between'>
-                                  <p className='text-[9px] font-black text-gray-400 uppercase'>Referral Code</p>
-                                  <p className='text-[10px] font-mono font-bold text-gray-900'>{activeOrder.userId?.referralCode || "NONE"}</p>
-                              </div>
-                              <div className='flex justify-between'>
-                                  <p className='text-[9px] font-black text-gray-400 uppercase'>Consignment ID</p>
-                                  <p className='text-[10px] font-mono font-bold text-blue-600'>{activeOrder.trackingNumber || "PENDING"}</p>
-                              </div>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-          </div>
-      )}
+                        <div className='space-y-4 pt-4 border-t border-gray-100'>
+                            <div className='flex justify-between border-b border-gray-50 pb-2'>
+                                <p className='text-[9px] font-black text-gray-400 uppercase'>Member ID</p>
+                                <p className='text-[10px] font-mono font-bold uppercase'>
+                                    {activeOrder.userId?._id ? String(activeOrder.userId._id).slice(-12) : "GUEST_USER"}
+                                </p>
+                            </div>
+                            <div className='flex justify-between'>
+                                <p className='text-[9px] font-black text-gray-400 uppercase'>Registry Date</p>
+                                <p className='text-[10px] font-bold'>{new Date(activeOrder.date).toLocaleString('en-IN')}</p>
+                            </div>
+                            <div className='flex justify-between'>
+                                <p className='text-[9px] font-black text-gray-400 uppercase'>Consignment ID</p>
+                                <p className='text-[10px] font-mono font-bold text-blue-600'>{activeOrder.trackingNumber || "PENDING"}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+)}
 
       {/* --- TRACKING ID MODAL --- */}
       {showTrackingModal && (

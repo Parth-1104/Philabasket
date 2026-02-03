@@ -1,8 +1,10 @@
+
 import React, { useContext, useEffect, useState, useMemo } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import { assets } from '../assets/assets';
 import ProductItem from '../components/ProductItem';
 import { useSearchParams } from 'react-router-dom';
+import { Filter, X, ArrowUpDown, Search as SearchIcon } from 'lucide-react';
 
 const ALL_CATEGORIES = [
   "AgriCulture Stamp", "Airmail", "Americas", "Ancillaries", "Animal & WildLife", 
@@ -34,6 +36,10 @@ const ALL_CATEGORIES = [
   "Technology", "Temple", "Tiger", "Transport", "United Nations UN", "Women Power", 
   "WWF", "Year", "Year Pack", "Yoga"
 ];
+
+
+
+// ... (ALL_CATEGORIES array remains same)
 
 const Collection = () => {
   const { products, search, showSearch } = useContext(ShopContext);
@@ -81,127 +87,148 @@ const Collection = () => {
   }, [filterSearch]);
 
   return (
-    <div className='bg-white min-h-screen pt-24 pb-20 px-6 md:px-16 lg:px-24 select-none animate-fade-in'>
+    <div className='bg-white min-h-screen pt-24 pb-20 px-6 md:px-16 lg:px-24 select-none relative animate-fade-in'>
       
-      {/* --- RESTRUCTURED HEADER: Mobile Responsive Two-Row --- */}
-      <div className='flex flex-col mb-12 border-b border-black/5 pb-8 gap-8'>
-        <div className='flex justify-between items-end w-full'>
-            <div className='max-w-xl'>
-                <div className='flex items-center gap-3 mb-2'>
-                    <span className='h-[1px] w-8 bg-[#BC002D]'></span>
-                    <p className='text-[10px] tracking-[0.6em] text-[#BC002D] uppercase font-bold'>The Archives</p>
-                </div>
-                <h2 className='text-4xl md:text-7xl font-serif text-black tracking-tighter leading-none'>
-                    Masterpiece <span className='italic font-light text-black/20'>Registry.</span>
-                </h2>
-            </div>
-            <p className='hidden md:block text-[10px] tracking-[0.3em] text-black/30 font-bold uppercase'>
-                {filterProducts.length} Specimens Located
-            </p>
-        </div>
-        
-        {/* Row 2: Actions Bar */}
-        <div className='flex flex-wrap items-center justify-between gap-4'>
-            <button 
-                onClick={() => setShowFilter(true)}
-                className='lg:hidden flex-1 flex items-center justify-center gap-3 px-6 py-4 border border-black/10 text-black text-[10px] font-bold tracking-[0.3em] uppercase rounded-sm active:bg-black active:text-white transition-all'
-            >
-                <img src={assets.menu_icon} className='w-3 brightness-0 opacity-40' alt="" />
-                Categories
-            </button>
-            
-            <div className='relative flex-1 lg:flex-none min-w-[160px]'>
-                <select 
-                    onChange={(e)=>setSortType(e.target.value)} 
-                    className='appearance-none w-full bg-transparent border border-black/10 text-black text-[10px] font-bold tracking-[0.2em] uppercase px-6 py-4 pr-12 outline-none cursor-pointer focus:border-[#BC002D]'
-                >
-                    <option value="relevant">SORT: RELEVANT</option>
-                    <option value="low-high">VALUATION: LOW TO HIGH</option>
-                    <option value="high-low">VALUATION: HIGH TO LOW</option>
-                </select>
-                <div className='absolute right-5 top-1/2 -translate-y-1/2 pointer-events-none'>
-                    <img src={assets.dropdown_icon} className='w-2.5 opacity-30 brightness-0' alt="" />
-                </div>
-            </div>
-        </div>
+      {/* --- DECORATIVE BACKGROUND ARC --- */}
+      <div className="absolute -right-[10vw] top-0 h-[60vh] w-[40vw] bg-[#BC002D]/5 rounded-bl-[600px] pointer-events-none"></div>
+
+      {/* --- HEADER: Archive Status --- */}
+      <div className='relative z-10 flex flex-col md:flex-row justify-between items-end mb-16 gap-8'>
+          <div className='max-w-2xl'>
+              <div className='flex items-center gap-4 mb-4'>
+                  <span className='h-[1.5px] w-12 bg-[#BC002D]'></span>
+                  <p className='text-[10px] tracking-[0.6em] text-[#BC002D] uppercase font-black'>Registry Database</p>
+              </div>
+              <h2 className='text-6xl md:text-8xl font-bold text-gray-900 tracking-tighter leading-none'>
+                  THE <span className='text-[#BC002D]'>GALLERY.</span>
+              </h2>
+              <p className='mt-6 text-gray-400 text-xs font-bold uppercase tracking-[0.2em] leading-relaxed'>
+                  Currently indexing <span className='text-black'>{filterProducts.length} certified specimens</span> for international acquisition.
+              </p>
+          </div>
+
+          {/* Desktop Sort */}
+          <div className='hidden lg:flex items-center gap-4 bg-gray-50 p-2 rounded-full border border-gray-100'>
+              <div className='pl-4 text-[9px] font-black uppercase tracking-widest text-gray-400'>Order By:</div>
+              <select 
+                  onChange={(e)=>setSortType(e.target.value)} 
+                  className='bg-white border-none text-[10px] font-black tracking-widest uppercase px-6 py-3 rounded-full outline-none cursor-pointer focus:ring-2 focus:ring-[#BC002D]/20 transition-all'
+              >
+                  <option value="relevant">Relevance</option>
+                  <option value="low-high">Value: Low-High</option>
+                  <option value="high-low">Value: High-Low</option>
+              </select>
+          </div>
       </div>
 
-      <div className='flex flex-col lg:flex-row gap-16 relative'>
+      <div className='flex flex-col lg:flex-row gap-12 relative z-10'>
         
-        {/* --- SIDEBAR: Catalogue Index --- */}
+        {/* --- SIDEBAR: The Vault Index --- */}
         <aside className={`
-            fixed inset-0 z-[2000] lg:relative lg:z-0 lg:inset-auto
-            lg:w-72 lg:block lg:sticky lg:top-32 lg:h-[calc(100vh-160px)]
-            transition-all duration-700 ease-in-out
-            ${showFilter ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto'}
-        `}>
-          {/* Backdrop Blur for Mobile */}
-          <div onClick={() => setShowFilter(false)} className='absolute inset-0 bg-black/40 backdrop-blur-sm lg:hidden'></div>
+    fixed inset-0 z-[2000] lg:relative lg:z-0 lg:inset-auto
+    lg:w-80 lg:block lg:sticky lg:top-32 lg:h-[calc(100vh-180px)]
+    transition-all duration-700
+    ${showFilter ? 'opacity-100' : 'opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto'}
+`}>
+  {/* Mobile Backdrop with Blur */}
+  <div onClick={() => setShowFilter(false)} className='absolute inset-0 bg-black/80 backdrop-blur-sm lg:hidden'></div>
 
-          <div className={`
-            absolute top-0 right-0 h-full w-[85%] bg-white p-10 flex flex-col transition-transform duration-500
-            lg:relative lg:w-full lg:p-0 lg:translate-x-0 lg:bg-transparent
-            ${showFilter ? 'translate-x-0 shadow-[-30px_0_60px_rgba(0,0,0,0.1)]' : 'translate-x-full lg:translate-x-0'}
-          `}>
-            
-            <div className='flex justify-between items-center mb-10'>
-              <h3 className='text-black font-serif text-xl tracking-tight uppercase'>Index</h3>
-              <button onClick={() => setShowFilter(false)} className='lg:hidden text-black text-2xl font-light'>✕</button>
-            </div>
+  <div className={`
+    absolute top-0 right-0 h-full w-[85%] bg-[#BC002D] p-10 flex flex-col transition-transform duration-500
+    lg:relative lg:w-full lg:p-8 lg:translate-x-0 lg:bg-[#BC002D] lg:rounded-br-[80px] lg:shadow-[0_20px_50px_rgba(188,0,45,0.3)]
+    ${showFilter ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+  `}>
+    
+    {/* Header with Gold Accents */}
+    <div className='flex justify-between items-center mb-8'>
+      <div className='flex flex-col'>
+        <h3 className='text-white font-black text-xs tracking-[0.3em] uppercase'>Registry Index</h3>
+        <div className='h-[2px] w-8 bg-white/30 mt-2'></div>
+      </div>
+      <button onClick={() => setShowFilter(false)} className='lg:hidden text-white/60 hover:text-white'><X size={24}/></button>
+    </div>
 
-            <div className='relative mb-10 group'>
-                <input 
-                  type="text" 
-                  placeholder="Filter Classifications..." 
-                  className='w-full bg-transparent border-b border-black/10 text-black text-xs py-4 outline-none focus:border-[#BC002D] transition-all placeholder:text-gray-300 font-light'
-                  onChange={(e) => setFilterSearch(e.target.value)}
-                />
-                <div className='absolute bottom-0 left-0 w-0 h-[1.5px] bg-[#BC002D] group-focus-within:w-full transition-all duration-500'></div>
-            </div>
+    {/* Filter Search: High Contrast Dark Mode Style */}
+    <div className='relative mb-8'>
+        <SearchIcon size={14} className='absolute left-5 top-1/2 -translate-y-1/2 text-white/50' />
+        <input 
+          type="text" 
+          placeholder="SEARCH CATEGORIES..." 
+          className='w-full bg-black/20 border border-white/10 rounded-full px-12 py-4 text-[10px] font-black tracking-widest text-white outline-none focus:border-white/40 focus:bg-black/40 transition-all placeholder:text-white/30'
+          onChange={(e) => setFilterSearch(e.target.value)}
+        />
+    </div>
 
-            <div className='flex-1 overflow-y-auto pr-4 custom-scrollbar space-y-6'>
-              {filteredCategoryList.map((item) => (
-                <div 
-                  key={item} 
-                  onClick={() => toggleCategory(item)}
-                  className={`group flex items-center justify-between cursor-pointer transition-all duration-300`}
-                >
-                  <span className={`text-[10px] tracking-[0.3em] uppercase transition-colors duration-500 ${category.includes(item) ? 'text-[#BC002D] font-black' : 'text-gray-400 group-hover:text-black font-medium'}`}>
-                      {item}
-                  </span>
-                  <div className={`w-1.5 h-1.5 rounded-full transition-all duration-700 ${category.includes(item) ? 'bg-[#BC002D] scale-125' : 'bg-transparent border border-black/10 group-hover:border-[#BC002D]'}`}></div>
-                </div>
-              ))}
-            </div>
+    {/* Scrollable List with Amber/White Highlights */}
+    <div className='flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3'>
+      {filteredCategoryList.map((item) => (
+        <button 
+          key={item} 
+          onClick={() => toggleCategory(item)}
+          className={`w-full group flex items-center justify-between p-4 rounded-xl transition-all duration-500 border ${
+            category.includes(item) 
+            ? 'bg-white border-white shadow-xl shadow-black/10' 
+            : 'bg-black/5 border-transparent hover:border-white/20 hover:bg-black/10'
+          }`}
+        >
+          <span className={`text-[9px] tracking-[0.2em] uppercase font-black transition-colors duration-300 ${
+            category.includes(item) ? 'text-[#BC002D]' : 'text-white/70 group-hover:text-white'
+          }`}>
+              {item}
+          </span>
+          
+          {category.includes(item) ? (
+            <div className='w-1.5 h-1.5 bg-[#BC002D] rounded-full shadow-[0_0_8px_rgba(188,0,45,0.4)]'></div>
+          ) : (
+            <div className='w-1 h-1 bg-white/10 rounded-full group-hover:bg-white/40 transition-all'></div>
+          )}
+        </button>
+      ))}
+    </div>
 
-            <button 
-                onClick={() => setShowFilter(false)}
-                className='lg:hidden mt-10 w-full bg-black text-white py-5 text-[11px] font-black tracking-[0.5em] uppercase shadow-2xl active:scale-95'
-            >
-                Reveal {filterProducts.length} Results
-            </button>
-          </div>
-        </aside>
+    {/* Mobile Action Footer */}
+    <div className='lg:hidden mt-10 pt-6 border-t border-white/10'>
+        <p className='text-[8px] font-black text-white/40 uppercase tracking-[0.5em] text-center mb-4'>Verified Registry Sync</p>
+    </div>
+  </div>
+  
+  {/* Custom Scrollbar Styling for Red Theme */}
+  <style dangerouslySetInnerHTML={{ __html: `
+    .custom-scrollbar::-webkit-scrollbar { width: 3px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.5); }
+  `}} />
+</aside>
 
         {/* --- MAIN DISPLAY --- */}
         <main className='flex-1'>
           
-          {/* Active Filtering Chips (Scrollable on Mobile) */}
+          {/* Mobile Actions Bar */}
+          <div className='lg:hidden flex gap-4 mb-8'>
+            <button onClick={() => setShowFilter(true)} className='flex-1 bg-black text-white p-5 rounded-xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest'>
+               <Filter size={14} /> Filter Index
+            </button>
+            <div className='flex-1 bg-gray-100 p-5 rounded-xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-gray-900'>
+               <ArrowUpDown size={14} /> {sortType === 'relevant' ? 'Relevant' : 'Price'}
+            </div>
+          </div>
+
+          {/* Active Chips */}
           {category.length > 0 && (
-            <div className='flex overflow-x-auto pb-4 mb-10 gap-3 no-scrollbar scroll-smooth'>
-              <p className='flex-shrink-0 text-[9px] font-black tracking-[0.4em] text-black/20 uppercase py-2 mr-2'>Active Selections:</p>
+            <div className='flex flex-wrap gap-3 mb-12'>
               {category.map(cat => (
-                <div key={cat} className='flex-shrink-0 flex items-center gap-3 border border-black/10 bg-[#F9F9F9] text-black px-5 py-2 rounded-sm text-[9px] font-black tracking-widest uppercase'>
+                <div key={cat} className='flex items-center gap-3 bg-black text-white px-5 py-2.5 rounded-full text-[9px] font-black tracking-widest uppercase animate-in zoom-in duration-300'>
                   {cat}
-                  <span onClick={() => toggleCategory(cat)} className='cursor-pointer text-gray-300 hover:text-[#BC002D] transition-colors'>✕</span>
+                  <X size={12} onClick={() => toggleCategory(cat)} className='cursor-pointer text-[#BC002D] hover:text-white transition-colors' />
                 </div>
               ))}
-              <button onClick={() => setCategory([])} className='flex-shrink-0 text-[9px] font-black tracking-[0.4em] uppercase text-[#BC002D] hover:underline underline-offset-8 px-4'>Reset Archives</button>
+              <button onClick={() => setCategory([])} className='text-[9px] font-black tracking-widest uppercase text-[#BC002D] border-b-2 border-[#BC002D]/20 hover:border-[#BC002D] transition-all ml-2'>Reset All</button>
             </div>
           )}
 
-          {/* Grid: 2 columns on mobile, 4 on desktop */}
-          <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-12 md:gap-x-12 md:gap-y-24'>
+          {/* Result Grid */}
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-16'>
             {filterProducts.map((item, index) => (
               <ProductItem 
                 key={item._id || index} 
@@ -214,28 +241,27 @@ const Collection = () => {
             ))}
           </div>
 
+          {/* Empty State */}
           {filterProducts.length === 0 && (
-            <div className='flex flex-col items-center justify-center py-48 text-center'>
-                <div className='w-20 h-20 border border-black/5 flex items-center justify-center rounded-full mb-8 opacity-20'>
-                    <img src={assets.search_icon} className='w-6 brightness-0' alt="" />
+            <div className='flex flex-col items-center justify-center py-40 bg-gray-50 rounded-[40px] md:rounded-br-[120px] border border-dashed border-gray-200'>
+                <div className='w-20 h-20 bg-white shadow-xl flex items-center justify-center rounded-full mb-8'>
+                    <SearchIcon size={30} className='text-[#BC002D] opacity-20' />
                 </div>
-                <h3 className='font-serif text-2xl text-black mb-4'>Specimen Not Found</h3>
-                <p className='text-gray-400 text-xs tracking-widest uppercase mb-10'>The archive contains no records matching this criteria.</p>
-                <button onClick={() => setCategory([])} className='bg-black text-white px-12 py-4 text-[10px] font-black tracking-[0.5em] uppercase hover:bg-[#BC002D] transition-all'>Reset Archives</button>
+                <h3 className='text-2xl font-black text-gray-900 mb-2 uppercase tracking-tighter'>Specimen Not Found</h3>
+                <p className='text-gray-400 text-xs tracking-widest uppercase mb-10'>No registry records match your current criteria.</p>
+                <button onClick={() => setCategory([])} className='bg-black text-white px-12 py-5 text-[10px] font-black uppercase tracking-[0.5em] rounded-full hover:bg-[#BC002D] transition-all shadow-xl'>Clear Index</button>
             </div>
           )}
         </main>
       </div>
       
       <style dangerouslySetInnerHTML={{ __html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 1.5px; }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #0000001a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #f3f4f6; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #BC002D; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .animate-fade-in { animation: fadeIn 1s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.8s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
       `}} />
     </div>
   )

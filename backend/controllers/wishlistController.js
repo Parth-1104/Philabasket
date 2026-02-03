@@ -5,19 +5,25 @@ import userModel from "../models/userModel.js";
 export const toggleWishlist = async (req, res) => {
     try {
         const { userId, itemId } = req.body;
+        
+        // 1. Fetch current user to check state
         const user = await userModel.findById(userId);
-        let wishlist = user.wishlistData || [];
+        const exists = user.wishlistData?.includes(itemId);
 
-        if (wishlist.includes(itemId)) {
-            wishlist = wishlist.filter(id => id !== itemId);
-        } else {
-            wishlist.push(itemId);
-        }
+        // 2. Use $pull or $addToSet for atomic, faster updates
+        const updateAction = exists 
+            ? { $pull: { wishlistData: itemId } } 
+            : { $addToSet: { wishlistData: itemId } };
 
-        await userModel.findByIdAndUpdate(userId, { wishlistData: wishlist });
-        res.json({ success: true, message: "Wishlist Updated", wishlist });
+        const updatedUser = await userModel.findByIdAndUpdate(
+            userId, 
+            updateAction, 
+            { new: true } 
+        );
+
+        res.json({ success: true, wishlist: updatedUser.wishlistData });
     } catch (error) {
-        res.json({ success: false, message: error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 

@@ -14,6 +14,7 @@ const PlaceOrder = () => {
         getCartAmount, delivery_fee, products, currency, 
         userData, fetchUserData, formatPrice 
     } = useContext(ShopContext);
+    const [loading, setLoading] = useState(false);
     
     const [userPoints, setUserPoints] = useState(0); 
     const [usePoints, setUsePoints] = useState(false); 
@@ -73,41 +74,52 @@ const PlaceOrder = () => {
     }, [cartItems, userPoints, usePoints, delivery_fee, getCartAmount, currency, formatPrice]);
 
     const onSubmitHandler = async (event) => {
-        event.preventDefault()
+        event.preventDefault();
+    
+        // 1. Logical Block: If already processing, exit immediately
+        if (loading) return; 
+    
         if (!formData.city) return toast.error("Please verify Pincode first.");
-
+    
         try {
-            let orderItems = []
+            setLoading(true); // 2. Freeze the process
+    
+            let orderItems = [];
             for (const itemId in cartItems) {
                 if (cartItems[itemId] > 0) {
-                    const itemInfo = structuredClone(products.find(product => product._id === itemId))
+                    const itemInfo = structuredClone(products.find(product => product._id === itemId));
                     if (itemInfo) {
-                        itemInfo.quantity = cartItems[itemId]
-                        orderItems.push(itemInfo)
+                        itemInfo.quantity = cartItems[itemId];
+                        orderItems.push(itemInfo);
                     }
                 }
             }
-
+    
             let orderData = {
                 address: formData,
                 items: orderItems,
-                amount: rawFinalAmount, // Send raw INR to backend
+                amount: rawFinalAmount,
                 currency: currency,
                 usePoints: usePoints,
                 pointsUsed: Math.round(pointsToDeduct)
-            }
-
-            const response = await axios.post(backendUrl + '/api/order/place', orderData, { headers: { token } })
-
+            };
+    
+            const response = await axios.post(backendUrl + '/api/order/place', orderData, { headers: { token } });
+    
             if (response.data.success) {
                 setCartItems({});
                 setShowSuccess(true);
+                // We don't set loading to false here because we are navigating away
                 setTimeout(() => { navigate('/orders'); }, 4000);
             } else {
-                toast.error(response.data.message)
+                toast.error(response.data.message);
+                setLoading(false); // 3. Re-enable if the server returns an error
             }
-        } catch (error) { toast.error("Registry connection failed."); }
-    }
+        } catch (error) {
+            toast.error("Registry connection failed.");
+            setLoading(false); // 4. Re-enable if the network fails
+        }
+    };
 
     const currencySymbol = currency === 'USD' ? '$' : '₹';
 
@@ -203,9 +215,23 @@ const PlaceOrder = () => {
                                 </div>
                             ))}
                         </div>
-                        <button type='submit' className='w-full bg-black text-white py-5 text-[11px] font-black tracking-[0.5em] uppercase mt-12 hover:bg-[#BC002D] transition-all shadow-xl shadow-black/10 active:scale-95'>
-                            Complete Acquisition
-                        </button>
+                        <button 
+    type='submit' 
+    disabled={loading} // Physically prevents clicking
+    className={`w-full py-4 rounded-sm text-[10px] font-black uppercase tracking-[0.4em] transition-all duration-500 ${
+        loading 
+        ? 'bg-gray-400 cursor-not-allowed opacity-70' 
+        : 'bg-black text-white hover:bg-[#BC002D]'
+    }`}
+>
+    {loading ? (
+        <span className="flex items-center justify-center gap-2">
+            <span className="animate-spin">↻</span> Synchronizing Ledger...
+        </span>
+    ) : (
+        'Secure Acquisition'
+    )}
+</button>
                     </div>
                 </div>
             </form>

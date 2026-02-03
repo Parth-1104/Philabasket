@@ -28,23 +28,27 @@ const ShopContextProvider = (props) => {
             return;
         }
     
-        // Determine action for toast message
-        const isRemoving = wishlist.includes(itemId);
+        // 1. OPTIMISTIC UPDATE: Change the UI state instantly
+        const wasInWishlist = wishlist.includes(itemId);
+        const updatedWishlist = wasInWishlist 
+            ? wishlist.filter(id => id !== itemId) 
+            : [...wishlist, itemId];
+        
+        setWishlist(updatedWishlist);
     
         try {
+            // 2. BACKGROUND SYNC: No 'await' for the response to avoid UI blocking
             const response = await axios.post(backendUrl + '/api/user/wishlist-toggle', { itemId }, { headers: { token } });
             
-            if (response.data.success) {
-                setWishlist(response.data.wishlist);
-                
-                // Dynamic Toast Notification
-                if (isRemoving) {
-                    toast.info("Specimen removed from Wishlist");
-                } else {
-                    toast.success("Specimen added to Wishlist");
-                }
+            if (!response.data.success) {
+                // Rollback state if the server says no
+                setWishlist(wishlist); 
+                toast.error("Registry sync failed");
             }
+            // Success toasts removed for "Zero Wastage" experience
         } catch (error) {
+            // Rollback state if network fails
+            setWishlist(wishlist);
             toast.error("Archive connection failed");
             console.error(error);
         }
