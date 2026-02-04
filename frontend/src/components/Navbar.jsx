@@ -59,7 +59,7 @@ const Navbar = () => {
     );
 
     return (
-        <div className='flex items-center justify-between py-5 px-[6%] sticky top-0 z-[100] bg-white border-b border-black/[0.05] lg:p-[34px]'>
+        <div className='flex items-center justify-between py-5 px-[6%] sticky top-0 z-[100] bg-white  lg:p-[34px]'>
             
             {/* LOGO */}
             <Link to='/' className='flex-shrink-0 group'>

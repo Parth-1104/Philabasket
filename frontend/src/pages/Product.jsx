@@ -60,7 +60,7 @@ const Product = () => {
                     alt="Thumbnail" />
               ))}
           </div>
-          <div className='w-full lg:w-[88%] relative group bg-[#F9F9F9] flex items-center justify-center border border-black/5 p-8 min-h-[350px] md:min-h-[450px]'>
+          <div className='w-full lg:w-[53%] relative group bg-[#F9F9F9] flex items-center justify-center border border-black/5 p-8 min-h-[350px] md:min-h-[450px]'>
               {productData.price > 1000 && (
                 <div className='absolute top-4 left-4 z-20 flex items-center gap-2 bg-white/90 px-2 py-1 border border-[#D4AF37]/30'>
                    <div className='w-1 h-1 bg-[#D4AF37] rounded-full animate-pulse'></div>
@@ -72,7 +72,7 @@ const Product = () => {
         </div>
 
         {/* INFO SECTION - Streamlined */}
-        <div className='flex-1 lg:max-w-[480px]'>
+        <div className='flex-1 lg:max-w-[680px]'>
           <div className='flex items-center gap-3 mb-4'>
             <span className='text-[#BC002D] text-[8px] font-black tracking-[0.3em] px-3 py-1 bg-[#BC002D]/5 uppercase'>{productData.country}</span>
             <span className='text-gray-400 text-[8px] font-bold tracking-[0.3em] uppercase'>{productData.year} Archive</span>
@@ -138,7 +138,7 @@ const Product = () => {
           <div className='mb-10 flex flex-col sm:flex-row gap-3'>
             {productData.stock > 0 ? (
               <>
-              <button onClick={() => toggleWishlist(productData._id)} className='flex-1 flex items-center justify-center border border-black/5 py-5 hover:bg-gray-50'>
+              <button onClick={() => toggleWishlist(productData._id)} className='flex-1 flex items-center justify-center border border-black/5 py-2 hover:bg-gray-50'>
                   <Heart size={18} className={wishlist.includes(productData._id) ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-300'} />
                 </button>
                 <button onClick={handleAddToCart} className='flex-[2] bg-black text-white py-4 text-[10px] font-black tracking-[0.4em] uppercase hover:bg-[#BC002D] transition-colors rounded-sm'>
