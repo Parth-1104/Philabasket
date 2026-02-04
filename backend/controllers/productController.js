@@ -178,7 +178,7 @@ const bulkAddProducts = async (req, res) => {
             .on('end', async () => {
                 try {
                     if (stamps.length === 0) {
-                        return res.json({ success: false, message: "No valid data to upload", errors: skippedRows });
+                        return res.json({ success: false, message: "All the csv contains duplicated data  ", errors: skippedRows });
                     }
 
                     // --- THE FIX: SYNC DISCOVERED CATEGORIES TO DATABASE ---
