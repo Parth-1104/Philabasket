@@ -60,7 +60,7 @@ const BestSeller = () => {
                 </div>
 
                 {/* --- Ranked Grid --- */}
-                <div className='flex overflow-x-auto pb-10 gap-8 snap-x snap-mandatory hide-scrollbar lg:grid lg:grid-cols-5 lg:gap-x-10 lg:overflow-visible lg:pb-0'>
+                <div className='flex overflow-x-auto pb-10 p-12 gap-8 snap-x snap-mandatory mobile-scrollbar lg:grid lg:grid-cols-5 lg:gap-x-10 lg:overflow-visible lg:pb-0'>
                     {
                         bestSeller.map((item, index) => (
                             <div 
@@ -128,9 +128,32 @@ const BestSeller = () => {
             
 
             <style dangerouslySetInnerHTML={{ __html: `
-                .hide-scrollbar::-webkit-scrollbar { display: none; }
-                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-            `}} />
+    /* Hide default scrollbar for category list */
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Custom thin red scrollbar for mobile product grid */
+    @media (max-width: 1023px) {
+        .mobile-scrollbar::-webkit-scrollbar {
+            display: block;
+            height: 3px; /* Very thin line */
+        }
+        .mobile-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            margin: 0 10vw; /* Inset the line from screen edges */
+            border-radius: 10px;
+        }
+        .mobile-scrollbar::-webkit-scrollbar-thumb {
+            background: #bd002d; /* PhilaBasket Red */
+            border-radius: 10px;
+        }
+    }
+    
+    /* Keep desktop grid clean */
+    @media (min-width: 1024px) {
+        .mobile-scrollbar::-webkit-scrollbar { display: none; }
+    }
+`}} />
         </div>
     )
 }

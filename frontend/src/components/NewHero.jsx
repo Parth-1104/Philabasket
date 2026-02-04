@@ -16,7 +16,7 @@ const NewHero = ({ scrollHandler }) => {
 
         {/* Scaled Paragraph: hidden on very small phones to keep it clean, or text-[10px] */}
         <p className="mt-2 lg:mt-6 text-gray-600 max-w-[180px] lg:max-w-md text-[9px] lg:text-lg leading-relaxed font-medium">
-          Curate your legacy, one stamp at a time.
+        Acquire the Unwritten Chapters of History.
         </p>
 
         <button 

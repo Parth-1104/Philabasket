@@ -120,7 +120,7 @@ const LatestCollection = () => {
 
                     {/* --- MAIN PRODUCT GRID --- */}
                     <div className='w-full lg:w-3/4'>
-                        <div className='flex overflow-x-auto lg:grid lg:grid-cols-3 gap-x-6 md:gap-x-8 gap-y-16 pb-10 lg:pb-0 snap-x snap-mandatory hide-scrollbar'>
+                        <div className='flex overflow-x-auto lg:grid lg:grid-cols-3 gap-x-6 md:gap-x-8 gap-y-16 pb-10 lg:pb-0 snap-x snap-mandatory mobile-scrollbar'>
                             {latestProducts.map((item, index) => (
                                 <div key={index} className="min-w-[85vw] sm:min-w-[45vw] lg:min-w-0 snap-center flex flex-col group cursor-pointer">
                                     <div className="relative aspect-[3/4] bg-white border border-gray-100 p-3 shadow-sm transition-all duration-500 group-hover:-translate-y-3 group-hover:shadow-2xl overflow-hidden rounded-br-[40px] md:rounded-br-[60px]">
@@ -143,6 +143,9 @@ const LatestCollection = () => {
                                 </div>
                             ))}
                         </div>
+                        <p className='lg:hidden text-[8px] font-black uppercase tracking-[0.4em] text-gray-300 text-center mt-4 animate-pulse'>
+       Scroll for more specimens
+    </p>
                     </div>
                 </div>
 
@@ -159,9 +162,32 @@ const LatestCollection = () => {
             </div>
 
             <style dangerouslySetInnerHTML={{ __html: `
-                .hide-scrollbar::-webkit-scrollbar { display: none; }
-                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-            `}} />
+    /* Hide default scrollbar for category list */
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Custom thin red scrollbar for mobile product grid */
+    @media (max-width: 1023px) {
+        .mobile-scrollbar::-webkit-scrollbar {
+            display: block;
+            height: 3px; /* Very thin line */
+        }
+        .mobile-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            margin: 0 10vw; /* Inset the line from screen edges */
+            border-radius: 10px;
+        }
+        .mobile-scrollbar::-webkit-scrollbar-thumb {
+            background: #bd002d; /* PhilaBasket Red */
+            border-radius: 10px;
+        }
+    }
+    
+    /* Keep desktop grid clean */
+    @media (min-width: 1024px) {
+        .mobile-scrollbar::-webkit-scrollbar { display: none; }
+    }
+`}} />
         </div>
     );
 };
