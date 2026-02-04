@@ -10,7 +10,7 @@ const Footer = () => {
       <div className="absolute -right-[15vw] -bottom-[10vh] h-[60vh] w-[50vw] bg-[#BC002D] rounded-tl-[600px] pointer-events-none opacity-100 transition-all duration-700"></div>
 
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 lg:gap-24">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-16 lg:gap-24">
           
           {/* Brand Identity */}
           <div className="flex flex-col gap-10">
@@ -32,7 +32,7 @@ const Footer = () => {
             {/* Social Channels */}
             <div className="flex gap-8">
               {['Twitter', 'Instagram', 'LinkedIn'].map((name) => (
-                <span key={name} className="text-[9px] font-black tracking-widest text-gray-300 hover:text-[#BC002D] cursor-pointer transition-all uppercase">
+                <span key={name} className="text-[9px] font-black tracking-widest text-gray-900 hover:text-[#BC002D] cursor-pointer transition-all uppercase">
                   {name}
                 </span>
               ))}
@@ -64,7 +64,7 @@ const Footer = () => {
                     <Link 
                       to={link.path}
                       onClick={() => window.scrollTo(0, 0)}
-                      className="text-gray-400 hover:text-black text-[10px] font-black tracking-[0.2em] uppercase transition-all duration-300 block w-fit hover:translate-x-1"
+                      className="text-gray-900 hover:text-black text-[10px] font-black tracking-[0.2em] uppercase transition-all duration-300 block w-fit hover:translate-x-1"
                     >
                       {link.label}
                     </Link>
@@ -96,7 +96,7 @@ const Footer = () => {
             {['Privacy', 'Terms', 'Security'].map((legal) => (
               <span 
                 key={legal}
-                className="text-[9px] font-black text-white md:text-gray-300 hover:text-white transition-colors cursor-pointer tracking-[0.4em] uppercase"
+                className="text-[9px] font-black text-black md:text-gray-900 hover:text-white transition-colors cursor-pointer tracking-[0.4em] uppercase"
               >
                 {legal}
               </span>

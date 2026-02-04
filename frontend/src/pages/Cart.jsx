@@ -103,14 +103,14 @@ const Cart = () => {
                                         className={`flex items-center gap-2 text-[8px] font-black uppercase tracking-widest transition-all ${wishlist.includes(item._id) ? 'text-[#BC002D]' : 'text-gray-400 hover:text-[#BC002D]'}`}
                                     >
                                         <Heart size={14} className={wishlist.includes(item._id) ? 'fill-[#BC002D]' : ''} />
-                                        <span className='hidden sm:inline'>Registry</span>
+                                        <span className='hidden sm:inline'>Move to Wishlist</span>
                                     </button>
                                     <button 
                                         onClick={() => updateQuantity(item._id, 0)}
                                         className='flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-gray-400 hover:text-black transition-all'
                                     >
                                         <Trash2 size={14} />
-                                        <span className='hidden sm:inline'>Purge</span>
+                                        <span className='hidden sm:inline'>Remove </span>
                                     </button>
                                 </div>
                             </div>
@@ -125,13 +125,13 @@ const Cart = () => {
               <div className='p-8 bg-[#FBFBFB] border-t-2 border-[#BC002D] shadow-sm sticky top-32'>
                 <div className='flex items-center gap-3 mb-8'>
                     <ShieldCheck size={18} className='text-[#BC002D]' />
-                    <p className='text-[10px] font-black uppercase tracking-[0.3em]'>Security Verified</p>
+                    <p className='text-[10px] font-black uppercase tracking-[0.3em]'>Proceed to Pay</p>
                 </div>
 
                 <CartTotal />
                 
                 <button onClick={() => navigate('/place-order')} className='w-full mt-10 bg-black text-white text-[10px] py-5 uppercase tracking-[0.5em] font-black hover:bg-[#BC002D] transition-all rounded-sm shadow-xl active:scale-95'>
-                    Secure Acquisition
+                    Proceed To pat
                 </button>
                 
                 <div className='mt-8 pt-6 border-t border-black/5 flex flex-col gap-3'>

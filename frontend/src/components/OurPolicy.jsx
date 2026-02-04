@@ -10,7 +10,7 @@ const OurPolicy = () => {
         Sovereign
       </div>
 
-      <div className='max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12 relative z-10'>
+      <div className='max-w-7xl mx-auto px-6 grid grid-cols-3 md:grid-cols-3 gap-12 relative z-10'>
         
         {/* Policy Item 1: Authenticity */}
         <div className='group flex flex-col items-center text-center'>

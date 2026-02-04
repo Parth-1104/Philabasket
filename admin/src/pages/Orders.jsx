@@ -3,7 +3,7 @@ import axios from 'axios';
 import { backendUrl } from '../App'; 
 import { toast } from 'react-toastify';
 import { assets } from '../assets/assets';
-import { Bell, RefreshCw, X, PackageCheck, AlertCircle } from 'lucide-react';
+import { Bell, RefreshCw, X, PackageCheck, AlertCircle, Truck } from 'lucide-react';
 
 const Orders = ({ token }) => {
   const [orders, setOrders] = useState([]);
@@ -11,7 +11,7 @@ const Orders = ({ token }) => {
   
   // Notification States
   const [newOrderAlert, setNewOrderAlert] = useState(null);
-  const prevOrdersRef = useRef([]); // Stores previous fetch for comparison
+  const prevOrdersRef = useRef([]); 
 
   // Modal States
   const [showTrackingModal, setShowTrackingModal] = useState(false);
@@ -19,7 +19,7 @@ const Orders = ({ token }) => {
   const [activeOrder, setActiveOrder] = useState(null);
   const [tempTracking, setTempTracking] = useState("");
 
-  // --- FEATURE: CSV EXPORT ENGINE ---
+  // --- CSV EXPORT ENGINE ---
   const downloadCSV = (data, filename) => {
     if (data.length === 0) {
       toast.error("No data found for this period");
@@ -55,9 +55,7 @@ const Orders = ({ token }) => {
       if (response.data.success) {
         const incomingOrders = response.data.orders;
 
-        // --- REAL-TIME CHANGE DETECTION LOGIC ---
         if (prevOrdersRef.current.length > 0 && !isManual) {
-          // 1. Detect Status Changes (Cancellations etc)
           incomingOrders.forEach(newOrder => {
             const oldOrder = prevOrdersRef.current.find(o => o._id === newOrder._id);
             if (oldOrder && oldOrder.status !== newOrder.status) {
@@ -70,7 +68,6 @@ const Orders = ({ token }) => {
             }
           });
 
-          // 2. Detect New Orders
           if (incomingOrders.length > prevOrdersRef.current.length) {
             setNewOrderAlert({
               type: "NEW",
@@ -88,7 +85,6 @@ const Orders = ({ token }) => {
     }
   }, [token, backendUrl]);
 
-  // Initial fetch and 15-second background sync
   useEffect(() => { 
     if (token) {
       fetchAllOrders(true);
@@ -103,6 +99,12 @@ const Orders = ({ token }) => {
   }, [orders]);
 
   const updateOrder = async (orderId, status, trackingNumber) => {
+    // --- ADDED: CONFIRMATION RESTRICTION ---
+    if (status !== "Shipped" && !window.confirm(`Are you sure you want to change status to ${status}?`)) {
+        fetchAllOrders(true); // Reset the select box
+        return;
+    }
+
     setLoading(true);
     try {
       const response = await axios.post(backendUrl + '/api/order/status', 
@@ -185,7 +187,7 @@ const Orders = ({ token }) => {
       {/* ORDERS LIST */}
       <div className='max-w-7xl mx-auto space-y-4'>
         {sortedOrders.map((order) => (
-          <div key={order._id} className={`grid grid-cols-1 md:grid-cols-[0.5fr_2fr_0.8fr_0.8fr_1fr_1fr_1.5fr] gap-6 items-center p-6 bg-white border rounded-2xl border-gray-100 hover:border-blue-200 transition-all shadow-sm`}>
+          <div key={order._id} className={`grid grid-cols-1 md:grid-cols-[0.5fr_1.8fr_0.7fr_0.8fr_0.9fr_1.2fr_1.5fr] gap-6 items-center p-6 bg-white border rounded-2xl border-gray-100 hover:border-blue-200 transition-all shadow-sm`}>
             <img className='w-12 opacity-30 grayscale' src={assets.parcel_icon} alt="" />
             <div className='cursor-pointer' onClick={() => { setActiveOrder(order); setShowAddressModal(true); }}>
               <p className='font-black text-gray-900 text-sm mb-1 line-clamp-1'>{order.items.map(i => i.name).join(', ')}</p>
@@ -203,32 +205,44 @@ const Orders = ({ token }) => {
               <p className='text-[10px] font-black text-gray-400 uppercase mb-1'>Revenue</p>
               <p className='text-sm font-black text-gray-900'>₹{order.amount.toFixed(2)}</p>
             </div>
+            
+            {/* --- SHOW TRACKING ID DIRECTLY --- */}
             <div className='text-center'>
-                <span className={`text-[9px] px-3 py-1 rounded-full font-black uppercase tracking-tighter ${order.status === 'Cancelled' ? 'bg-red-600 text-white' : order.status === 'Order Placed' ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-gray-100 text-gray-600'}`}>
-                    {order.status}
-                </span>
+              <p className='text-[10px] font-black text-gray-400 uppercase mb-1'>Tracking ID</p>
+              {order.trackingNumber ? (
+                  <div className='flex items-center justify-center gap-1 text-blue-600'>
+                      <Truck size={12}/>
+                      <p className='text-[10px] font-mono font-bold'>{order.trackingNumber}</p>
+                  </div>
+              ) : (
+                  <p className='text-[10px] font-bold text-gray-300 uppercase'>Pending</p>
+              )}
             </div>
+
             <div className='flex items-center gap-3 justify-end'>
-                <select 
-                    onChange={(e) => {
-                      if (e.target.value === "Shipped") {
-                        setActiveOrder(order);
-                        setTempTracking(order.trackingNumber || "");
-                        setShowTrackingModal(true);
-                      } else {
-                        updateOrder(order._id, e.target.value, order.trackingNumber);
-                      }
-                    }} 
-                    value={order.status} 
-                    className='p-2 text-[10px] font-bold border border-gray-200 rounded-lg bg-gray-50 outline-none uppercase cursor-pointer'
-                >
-                    <option value="Order Placed">Order Placed</option>
-                    <option value="Packing">Packing</option>
-                    <option value="Shipped">Shipped</option>
-                    <option value="Out for delivery">Out for delivery</option>
-                    <option value="Delivered">Delivered</option>
-                    <option value="Cancelled">Cancelled</option>
-                </select>
+                <div className='flex flex-col gap-1'>
+                    <span className={`text-[8px] text-center font-black uppercase ${order.status === 'Cancelled' ? 'text-red-600' : 'text-gray-400'}`}>Current: {order.status}</span>
+                    <select 
+                        onChange={(e) => {
+                        if (e.target.value === "Shipped") {
+                            setActiveOrder(order);
+                            setTempTracking(order.trackingNumber || "");
+                            setShowTrackingModal(true);
+                        } else {
+                            updateOrder(order._id, e.target.value, order.trackingNumber);
+                        }
+                        }} 
+                        value={order.status} 
+                        className='p-2 text-[10px] font-bold border border-gray-200 rounded-lg bg-gray-50 outline-none uppercase cursor-pointer'
+                    >
+                        <option value="Order Placed">Order Placed</option>
+                        <option value="Packing">Packing</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Out for delivery">Out for delivery</option>
+                        <option value="Delivered">Delivered</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
                 <button onClick={() => { setActiveOrder(order); setShowAddressModal(true); }} className='w-8 h-8 flex items-center justify-center bg-gray-100 rounded-full hover:bg-gray-200 transition-all'>
                     <span className='text-xs font-black'>i</span>
                 </button>

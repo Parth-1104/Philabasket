@@ -19,7 +19,7 @@ const CartTotal = () => {
             <div className='flex flex-col gap-3 mt-4 text-sm'>
                 {/* --- Subtotal Section --- */}
                 <div className='flex justify-between'>
-                    <p className='text-gray-400 font-black uppercase tracking-widest text-[9px]'>Registry Subtotal</p>
+                    <p className='text-gray-400 font-black uppercase tracking-widest text-[9px]'> Subtotal</p>
                     <p className='font-black text-black'>
                         {currencySymbol} {formatPrice(subtotal)}
                     </p>
@@ -29,7 +29,7 @@ const CartTotal = () => {
 
                 {/* --- Shipping Section --- */}
                 <div className='flex justify-between'>
-                    <p className='text-gray-400 font-black uppercase tracking-widest text-[9px]'>Transit Insurance</p>
+                    <p className='text-gray-400 font-black uppercase tracking-widest text-[9px]'>Delivery Fee</p>
                     <p className='font-black text-black'>
                         {currencySymbol} {formatPrice(delivery_fee)}
                     </p>

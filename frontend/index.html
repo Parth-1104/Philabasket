@@ -2,13 +2,37 @@
 <html lang="en" class="scroll-smooth">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PhilaBasket</title>
+    
+    <title>PhilaBasket | The World of Philately</title>
+    <meta name="description" content="Secure acquisition and archival of rare philatelic specimens.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic@0;1&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <style>
+      /* Prevent FOUC (Flash of Unstyled Content) */
+      body {
+        margin: 0;
+        background-color: #ffffff; /* Matches your white-label theme */
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+
+      /* Custom selection color to match Crimson Theme */
+      ::selection {
+        background: #BC002D;
+        color: white;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    
     <script type="module" src="/src/main.jsx"></script>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"> </script>
+    
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   </body>
 </html>
