@@ -5,6 +5,8 @@ import Stripe from 'stripe';
 import razorpay from 'razorpay';
 import { sendEmail } from "../config/email.js";
 import twilio from 'twilio';
+import 'dotenv/config';
+
 
 // --- CONFIGURATION ---
 const deliveryCharge = 10;

@@ -8,7 +8,7 @@ import {
   Heart, 
   ShoppingBag, 
   Menu, 
-  X, 
+  X, Package,
   ChevronRight, 
   LogOut, 
   Trophy,
@@ -171,12 +171,32 @@ const Navbar = () => {
                     <div className='group relative hidden md:block'>
                         <User onClick={() => token ? null : navigate('/login')} size={18} className='cursor-pointer text-gray-400 hover:text-black transition-colors' />
                         {token && (
-                            <div className='group-hover:block hidden absolute right-0 pt-5 w-48'>
-                                <div className='bg-white border-t-2 border-[#BC002D] p-5 shadow-2xl'>
-                                    <p onClick={()=>navigate('/orders')} className='text-[9px] font-black text-gray-400 cursor-pointer hover:text-[#BC002D] mb-4 uppercase tracking-[0.2em]'>MY ORDERS</p>
-                                    <p onClick={logout} className='text-[9px] text-[#BC002D] cursor-pointer font-black uppercase tracking-[0.2em] flex items-center gap-2'><LogOut size={12}/> Sign Out</p>
-                                </div>
-                            </div>
+                           <div className='group-hover:block hidden absolute right-0 pt-5 w-48'>
+                           <div className='bg-white border-t-2 border-[#BC002D] p-5 shadow-2xl'>
+                               {/* Added flex, items-center, and the Package icon to match the Sign Out style */}
+                               <p 
+    onClick={() => navigate('/profile')} 
+    className='text-[9px] font-black text-gray-400 cursor-pointer hover:text-[#BC002D] mb-4 uppercase tracking-[0.2em] flex items-center gap-2'
+>
+    <User size={12} /> Account Profile
+</p>
+                               
+                               
+                               <p 
+                                   onClick={() => navigate('/orders')} 
+                                   className='text-[9px] font-black text-gray-400 cursor-pointer hover:text-[#BC002D] mb-4 uppercase tracking-[0.2em] flex items-center gap-2'
+                               >
+                                   <Package size={12} /> MY ORDERS
+                               </p>
+                               
+                               <p 
+                                   onClick={logout} 
+                                   className='text-[9px] text-[#BC002D] cursor-pointer font-black uppercase tracking-[0.2em] flex items-center gap-2'
+                               >
+                                   <LogOut size={12} /> Sign Out
+                               </p>
+                           </div>
+                       </div>
                         )}
                     </div>
 
@@ -212,26 +232,54 @@ const Navbar = () => {
                             </div>
 
                             {/* MOBILE QUICK ACTION HUB */}
-                            <div className='flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-black/5'>
-                                <div onClick={() => {setShowSearch(true); navigate('/collection'); setVisible(false);}} className='flex flex-col items-center gap-1 flex-1 border-r border-black/5'>
-                                    <Search size={18} className='text-[#BC002D]' />
-                                    <span className='text-[8px] font-black uppercase tracking-tighter text-gray-400'>Search</span>
-                                </div>
-                                <div onClick={() => {navigate('/wishlist'); setVisible(false);}} className='flex flex-col items-center gap-1 flex-1 border-r border-black/5'>
-                                    <div className='relative'>
-                                        <Heart size={18} className={wishlist.length > 0 ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-400'} />
-                                        {wishlist.length > 0 && <span className='absolute -top-1 -right-1 bg-black text-white text-[6px] w-3 h-3 rounded-full flex items-center justify-center'>{wishlist.length}</span>}
-                                    </div>
-                                    <span className='text-[8px] font-black uppercase tracking-tighter text-gray-400'>Wishlist</span>
-                                </div>
-                                <div onClick={() => {navigate('/cart'); setVisible(false);}} className='flex flex-col items-center gap-1 flex-1'>
-                                    <div className='relative'>
-                                        <ShoppingBag size={18} className='text-black' />
-                                        <span className='absolute -top-1 -right-1 bg-[#BC002D] text-white text-[6px] w-3 h-3 rounded-full flex items-center justify-center'>{getCartCount()}</span>
-                                    </div>
-                                    <span className='text-[8px] font-black uppercase tracking-tighter text-gray-400'>Cart</span>
-                                </div>
-                            </div>
+                            
+
+{/* ... inside your component */}
+<div className='flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-black/5'>
+    <div onClick={() => {setShowSearch(true); navigate('/collection'); setVisible(false);}} className='flex flex-col items-center gap-1 flex-1 border-r border-black/5 cursor-pointer group'>
+        <Search size={18} className='text-[#BC002D]' />
+        <span className='text-[8px] font-black uppercase tracking-tighter text-gray-400'>Search</span>
+    </div>
+    
+    <div onClick={() => {navigate('/wishlist'); setVisible(false);}} className='flex flex-col items-center gap-1 flex-1 border-r border-black/5 cursor-pointer group'>
+        <div className='relative'>
+            <Heart size={18} className={wishlist.length > 0 ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-400'} />
+            {wishlist.length > 0 && <span className='absolute -top-1 -right-1 bg-black text-white text-[6px] w-3 h-3 rounded-full flex items-center justify-center'>{wishlist.length}</span>}
+        </div>
+        <span className='text-[8px] font-black uppercase tracking-tighter text-gray-400'>Wishlist</span>
+    </div>
+
+    {/* New Profile Section */}
+    
+    <div onClick={() => {navigate('/cart'); setVisible(false);}} className='flex flex-col items-center gap-1 flex-1 cursor-pointer group border-r border-black/5'>
+        <div className='relative'>
+            <ShoppingBag size={18} className='text-black group-hover:text-[#BC002D] transition-colors' />
+            <span className='absolute -top-1 -right-1 bg-[#BC002D] text-white text-[6px] w-3 h-3 rounded-full flex items-center justify-center'>{getCartCount()}</span>
+        </div>
+        <span className='text-[8px] font-black uppercase tracking-tighter text-gray-400'>Cart</span>
+    </div>
+
+
+    <div 
+    onClick={() => {
+        // Check if token exists to verify login status
+        if (token) {
+            navigate('/profile'); 
+        } else {
+            navigate('/login');
+            toast.info("Please login to access your Archive.");
+        }
+        setVisible(false);
+    }} 
+    className='flex flex-col items-center gap-1 flex-1 border-r border-black/5 cursor-pointer group'
+>
+    <User size={18} className='text-gray-400 group-hover:text-[#BC002D] transition-colors' />
+    <span className='text-[8px] font-black uppercase tracking-tighter text-gray-400'>
+        {token ? 'Profile' : 'Login'}
+    </span>
+</div>
+
+</div>
                         </div>
 
                         {/* Navigation Body */}
@@ -277,7 +325,7 @@ const Navbar = () => {
                             {token ? (
                                 <button onClick={()=>{logout(); setVisible(false)}} className='w-full py-5 bg-gray-900 text-white text-[11px] font-black uppercase tracking-[0.4em] rounded-xl flex items-center justify-center gap-2'><LogOut size={14}/> Logout</button>
                             ) : (
-                                <button onClick={()=>{navigate('/login'); setVisible(false)}} className='w-full py-5 bg-[#BC002D] text-white text-[11px] font-black uppercase tracking-[0.4em] rounded-xl shadow-lg'>Initialize Identity</button>
+                                <button onClick={()=>{navigate('/login'); setVisible(false)}} className='w-full py-5 bg-[#BC002D] text-white text-[11px] font-black uppercase tracking-[0.4em] rounded-xl shadow-lg'>Login</button>
                             )}
                         </div>
                     </div>

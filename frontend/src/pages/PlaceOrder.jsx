@@ -14,8 +14,8 @@ const PlaceOrder = () => {
         getCartAmount, delivery_fee, products, currency, 
         userData, fetchUserData, formatPrice 
     } = useContext(ShopContext);
-    const [loading, setLoading] = useState(false);
     
+    const [loading, setLoading] = useState(false);
     const [userPoints, setUserPoints] = useState(0); 
     const [usePoints, setUsePoints] = useState(false); 
     const [isVerifying, setIsVerifying] = useState(false);
@@ -25,6 +25,44 @@ const PlaceOrder = () => {
         firstName: '', lastName: '', email: '', street: '',
         city: '', state: '', zipcode: '', country: 'India', phone: ''
     })
+
+    // --- AUTO-FILL SAVED ADDRESS ---
+    useEffect(() => {
+        if (!token) {
+            navigate('/login');
+        } else if (userData) {
+            setUserPoints(userData.totalRewardPoints || 0);
+            
+            // If the user has a saved registry address, pre-fill the form
+            if (userData.defaultAddress && userData.defaultAddress.street) {
+                const adr = userData.defaultAddress;
+                const [firstName, ...lastNameParts] = userData.name.split(' ');
+                
+                setFormData({
+                    firstName: firstName || '',
+                    lastName: lastNameParts.join(' ') || '',
+                    email: userData.email || '',
+                    street: adr.street || '',
+                    city: adr.city || '',
+                    state: adr.state || '',
+                    zipcode: adr.zipCode || '',
+                    country: 'India',
+                    phone: adr.phone || ''
+                });
+            } else {
+                // Pre-fill at least the name and email if no address is found
+                const [firstName, ...lastNameParts] = (userData.name || '').split(' ');
+                setFormData(prev => ({
+                    ...prev,
+                    firstName: firstName || '',
+                    lastName: lastNameParts.join(' ') || '',
+                    email: userData.email || ''
+                }));
+            }
+        } else {
+            fetchUserData();
+        }
+    }, [token, userData]);
 
     const handlePincodeChange = async (e) => {
         const pin = e.target.value;
@@ -44,23 +82,14 @@ const PlaceOrder = () => {
         }
     };
 
-    useEffect(() => {
-        if (!token) navigate('/login');
-        else if (userData) setUserPoints(userData.totalRewardPoints || 0);
-        else fetchUserData();
-    }, [token, userData]);
-
     const onChangeHandler = (event) => {
         const { name, value } = event.target;
         setFormData(data => ({ ...data, [name]: value }))
     }
 
-    // --- CURRENCY SYNCED CALCULATIONS ---
     const { displayDiscount, displayFinal, pointsToDeduct, rawFinalAmount } = useMemo(() => {
         const cartAmount = getCartAmount();
         const totalOrderCost = cartAmount + delivery_fee;
-        
-        // Reward Points Logic (10 pts = 1 INR)
         const maxPotentialDiscount = usePoints ? Math.floor(userPoints / 10) : 0;
         const actualDiscount = Math.min(maxPotentialDiscount, totalOrderCost);
         const payableINR = totalOrderCost - actualDiscount;
@@ -75,15 +104,28 @@ const PlaceOrder = () => {
 
     const onSubmitHandler = async (event) => {
         event.preventDefault();
-    
-        // 1. Logical Block: If already processing, exit immediately
         if (loading) return; 
-    
         if (!formData.city) return toast.error("Please verify Pincode first.");
     
         try {
-            setLoading(true); // 2. Freeze the process
+            setLoading(true);
     
+            // --- AUTO-SAVE ADDRESS TO REGISTRY ---
+            // If the user didn't have a saved address, or if it has changed, update the profile
+            const currentAddress = {
+                street: formData.street,
+                city: formData.city,
+                state: formData.state,
+                zipCode: formData.zipcode,
+                phone: formData.phone
+            };
+
+            // Silently synchronize address to the registry during order placement
+            await axios.post(backendUrl + '/api/user/update-address', 
+                { address: currentAddress, name: `${formData.firstName} ${formData.lastName}` }, 
+                { headers: { token } }
+            );
+
             let orderItems = [];
             for (const itemId in cartItems) {
                 if (cartItems[itemId] > 0) {
@@ -109,15 +151,15 @@ const PlaceOrder = () => {
             if (response.data.success) {
                 setCartItems({});
                 setShowSuccess(true);
-                // We don't set loading to false here because we are navigating away
+                fetchUserData(); // Refresh global data to show updated address in profile
                 setTimeout(() => { navigate('/orders'); }, 4000);
             } else {
                 toast.error(response.data.message);
-                setLoading(false); // 3. Re-enable if the server returns an error
+                setLoading(false);
             }
         } catch (error) {
             toast.error("Registry connection failed.");
-            setLoading(false); // 4. Re-enable if the network fails
+            setLoading(false);
         }
     };
 
@@ -125,7 +167,6 @@ const PlaceOrder = () => {
 
     return (
         <div className='relative'>
-            {/* --- LUXURY SUCCESS OVERLAY --- */}
             {showSuccess && (
                 <div className='fixed inset-0 z-[200] bg-white flex flex-col items-center justify-center animate-fade-in'>
                     <div className='relative'>
@@ -150,7 +191,6 @@ const PlaceOrder = () => {
 
             <form onSubmit={onSubmitHandler} className={`bg-[#FCF9F4] min-h-screen text-black flex flex-col lg:flex-row justify-between gap-12 pt-24 pb-20 px-6 md:px-16 lg:px-24 select-none transition-all duration-1000 ${showSuccess ? 'blur-2xl opacity-0 scale-95' : 'opacity-100'}`}>
                 
-                {/* --- Left Side: Delivery Information --- */}
                 <div className='flex flex-col gap-6 w-full lg:max-w-[550px]'>
                     <div className='mb-8'>
                         <Title text1={'SHIPPING'} text2={'REGISTRY'} />
@@ -177,7 +217,6 @@ const PlaceOrder = () => {
                     <input required onChange={onChangeHandler} name='phone' value={formData.phone} className='bg-white border border-black/5 rounded-sm py-4 px-5 w-full text-sm outline-none focus:border-[#BC002D]/30 transition-all shadow-sm' type="number" placeholder='Contact Number' />
                 </div>
 
-                {/* --- Right Side: Summary & Points --- */}
                 <div className='lg:w-[450px]'>
                     <div className='bg-white border border-black/5 p-8 rounded-sm shadow-xl'>
                         <CartTotal />
@@ -216,22 +255,22 @@ const PlaceOrder = () => {
                             ))}
                         </div>
                         <button 
-    type='submit' 
-    disabled={loading} // Physically prevents clicking
-    className={`w-full py-4 rounded-sm text-[10px] font-black uppercase tracking-[0.4em] transition-all duration-500 ${
-        loading 
-        ? 'bg-gray-400 cursor-not-allowed opacity-70' 
-        : 'bg-black text-white hover:bg-[#BC002D]'
-    }`}
->
-    {loading ? (
-        <span className="flex items-center justify-center gap-2">
-            <span className="animate-spin">↻</span> Synchronizing Ledger...
-        </span>
-    ) : (
-        'Secure Acquisition'
-    )}
-</button>
+                            type='submit' 
+                            disabled={loading}
+                            className={`w-full py-4 rounded-sm text-[10px] font-black uppercase tracking-[0.4em] transition-all duration-500 ${
+                                loading 
+                                ? 'bg-gray-400 cursor-not-allowed opacity-70' 
+                                : 'bg-black text-white hover:bg-[#BC002D]'
+                            }`}
+                        >
+                            {loading ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <span className="animate-spin">↻</span> Synchronizing Ledger...
+                                </span>
+                            ) : (
+                                'Secure Acquisition'
+                            )}
+                        </button>
                     </div>
                 </div>
             </form>

@@ -217,6 +217,39 @@ const adminLogin = async (req, res) => {
     }
 }
 
+ // Function to update user default address
+const updateAddress = async (req, res) => {
+    try {
+        const { userId, address ,name} = req.body;
+
+        // Find the user and update the defaultAddress field
+        const updatedUser = await userModel.findByIdAndUpdate(
+            userId, 
+            { 
+                defaultAddress: address,
+                name: name // Sync name change
+            },
+            { new: true } // returns the updated document
+        );
+
+        if (!updatedUser) {
+            return res.json({ success: false, message: "User not found" });
+        }
+
+        res.json({ 
+            success: true, 
+            message: "Address updated in the registry.",
+            address: updatedUser.defaultAddress 
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// Remember to add updateAddress to your exports at the bottom of the file
+
 const getUserProfile = async (req, res) => {
     try {
         const { userId } = req.body; 
@@ -255,5 +288,5 @@ export {
     getUserProfile, 
     forgotPassword, 
     resetPassword ,
-    listUsers
+    listUsers,updateAddress
 }

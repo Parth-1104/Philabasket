@@ -20,6 +20,7 @@ import Wishlist from './pages/Wishlist'
 import ResetPassword from './pages/ResetPassword'
 import ArchiveBlogs from './pages/ArchieveBlogs'
 import BlogContent from './pages/BlogContent'
+import Profile from './pages/Profile'
 
 const App = () => {
   return (
@@ -38,12 +39,14 @@ const App = () => {
         <Route path='/login' element={<Login />} />
         <Route path='/place-order' element={<PlaceOrder />} />
         <Route path='/wishlist' element={<Wishlist />} />
+        <Route path='/profile' element={<Profile />} />
 
         <Route path='/orders' element={<Orders />} />
         <Route path='/verify' element={<Verify />} />
         <Route path='/reset-password/:token' element={<ResetPassword/>} />
         <Route path='/blogs' element={<ArchiveBlogs />} />
         <Route path='/blog/:blogId' element={<BlogContent />} />
+
       </Routes>
       <Footer />
     </div>

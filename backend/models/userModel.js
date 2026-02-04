@@ -13,6 +13,14 @@ const userSchema = new mongoose.Schema({
     // Loophole & Cap Protection
     referralCount: { type: Number, default: 0 }, 
     signupIP: { type: String }, 
+
+    defaultAddress: {
+        street: { type: String, default: "" },
+        city: { type: String, default: "" },
+        state: { type: String, default: "" },
+        zipCode: { type: String, default: "" },
+        phone: { type: String, default: "" }
+    },
     // User Data
     wishlistData: { type: Array, default: [] },
     cartData: { type: Object, default: {} }
