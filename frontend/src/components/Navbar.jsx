@@ -45,7 +45,7 @@ const Navbar = () => {
     };
 
     const MegaMenu = ({ menuData }) => (
-        <div className='group relative flex flex-col items-center gap-1 cursor-pointer'>
+        <div className='group relative flex flex-col items-center gap-1 cursor-pointer '>
             <div className='flex items-center gap-1.5 px-2 transition-all duration-500'>
                 {/* <span className='text-[7px] font-black text-[#BC002D] mb-1'>{menuData.id}</span> */}
                 <p className='text-[10px] font-black tracking-[0.4em] uppercase text-gray-900/60 group-hover:text-black transition-colors'>{menuData.title}</p>
@@ -68,11 +68,11 @@ const Navbar = () => {
     );
 
     return (
-        <div className='flex items-center justify-between py-5 px-[6%] sticky top-0 z-[100] bg-white border-b border-black/[0.05]'>
+        <div className='flex items-center justify-between py-5 px-[6%] sticky top-0 z-[100] bg-white border-b border-black/[0.05] lg:p-[34px]'>
             
             {/* LOGO */}
             <Link to='/' className='flex-shrink-0 group'>
-                <div className='flex items-center gap-4'>
+                <div className='flex items-center gap-4 mr-5'>
                     <img src={assets.logo} className='w-10 lg:w-12 group-hover:rotate-[360deg] transition-transform duration-1000' alt="PhilaBasket" />
                     <div className='hidden lg:flex flex-col'>
                         <h1 className='text-xl font-bold text-gray-900 tracking-tighter leading-none'>PHILA<span className='text-[#BC002D] italic'>BASKET</span></h1>
@@ -82,7 +82,7 @@ const Navbar = () => {
             </Link>
 
             {/* DESKTOP NAV */}
-            <nav className='hidden xl:flex items-center gap-10'>
+            <nav className='hidden xl:flex items-center gap-10 mr-5'>
                 {/* <NavLink to='/' className='group flex items-center gap-1.5'><p className='text-[10px] font-black tracking-[0.4em] text-gray-900 uppercase'>Home</p></NavLink> */}
                 <MegaMenu menuData={CATEGORY_GROUPS.philatelic} />
                 <MegaMenu menuData={CATEGORY_GROUPS.thematic} />
@@ -100,61 +100,25 @@ const Navbar = () => {
                 
                 {/* REWARDS (Desktop) */}
                 {/* REWARDS (Desktop) */}
-<div className='relative group hidden md:block'>
-    <div className='flex items-center gap-2 bg-[#BC002D] text-white px-4 py-2 rounded-sm cursor-pointer shadow-lg shadow-[#BC002D]/10 active:scale-95 transition-all'>
-        <img src={assets.mem} alt="" className='w-10 h-10' />
-        <span className='text-[9px] font-black tracking-widest uppercase'>
-            {token ? `${userPoints} PTS` : 'Rewards'}
-        </span>
-    </div>
-
-    {/* --- REWARD & REFERRAL DROPDOWN --- */}
-    <div className='absolute right-0 top-full pt-4 hidden group-hover:block z-[120] animate-in fade-in slide-in-from-top-2 duration-300'>
-        <div className='w-80 bg-white border-t-2 border-[#BC002D] p-8 shadow-2xl'>
-            <h4 className='text-gray-900 font-bold text-xs uppercase tracking-widest mb-6 border-b border-gray-100 pb-3'>
-                {token ? 'Portfolio Valuation' : 'Collector’s Registry'}
-            </h4>
-            
-            {token ? (
-                <div className='space-y-6'>
-                    {/* Points to Currency Conversion Logic */}
-                    <div className='bg-gray-50 p-5 rounded-sm border-l-4 border-[#BC002D]'>
-                        <p className='text-[8px] text-gray-400 uppercase font-black tracking-widest mb-1'>Available Acquisition Credit</p>
-                        <p className='text-xl font-black text-gray-900'>
-                            {currency === 'INR' ? `₹${(userPoints * 0.1).toFixed(2)}` : `$${(userPoints * 0.0012).toFixed(2)}`}
-                        </p>
-                        <p className='text-[7px] text-[#BC002D] font-bold mt-1 uppercase tracking-tighter'>
-                            Archived Balance: {userPoints} PTS
-                        </p>
-                    </div>
-
-                    {/* Referral Link Logic */}
-                    <div 
-                        onClick={() => { navigate('/referral'); setVisible(false); }} 
-                        className='p-4 border border-dashed border-gray-200 hover:border-[#BC002D] hover:bg-[#BC002D]/5 transition-all cursor-pointer group/ref'
-                    >
-                        <div className='flex justify-between items-center mb-1'>
-                            <p className='text-[#BC002D] text-[9px] font-black uppercase tracking-[0.2em]'>Refer a Collector</p>
-                            <ChevronRight size={12} className='text-[#BC002D] group-hover/ref:translate-x-1 transition-transform' />
-                        </div>
-                        <p className='text-gray-400 text-[9px] leading-relaxed uppercase tracking-wider font-medium'>
-                            Earn <span className='text-black font-bold'>50 PTS</span> for every verified invitation.
-                        </p>
-                    </div>
-                </div>
-            ) : (
-                <div className='text-center space-y-4'>
-                    <p className='text-gray-400 text-[9px] uppercase leading-relaxed tracking-[0.15em]'>
-                        Enroll to earn <span className='text-black'>10% acquisition credits</span> on every specimen. Grow your archive through our referral network.
-                    </p>
-                    <button 
-                        onClick={() => { navigate('/login'); setVisible(false); }} 
-                        className='w-full bg-black text-white py-3 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-[#BC002D] transition-all'
-                    >
-                        Login
-                    </button>
-                </div>
-            )}
+                <div className='relative group hidden md:block'>
+    {/* Added min-w-max to prevent shrinking and items-center to keep things balanced */}
+    <div className='flex items-center gap-3 bg-[#BC002D] text-white px-4 py-2 min-w-max h-12 rounded-sm cursor-pointer shadow-lg shadow-[#BC002D]/10 active:scale-95 transition-all'>
+        
+        {/* Added flex-shrink-0 so the image never squashes */}
+        <img 
+            src={assets.mem} 
+            alt="Rewards" 
+            className='w-8 h-8 object-contain flex-shrink-0' 
+        />
+        
+        {/* Container for text to ensure it stays on one line */}
+        <div className='flex flex-col items-start leading-none'>
+            <span className='text-[8px] font-black tracking-[0.2em] uppercase opacity-80'>
+                Archive Vault
+            </span>
+            <span className='text-[11px] font-black tracking-widest uppercase mt-0.5'>
+                {token ? `${userPoints} PTS` : 'Join Rewards'}
+            </span>
         </div>
     </div>
 </div>
@@ -235,50 +199,48 @@ const Navbar = () => {
                             
 
 {/* ... inside your component */}
-<div className='flex items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-black/5'>
-    <div onClick={() => {setShowSearch(true); navigate('/collection'); setVisible(false);}} className='flex flex-col items-center gap-1 flex-1 border-r border-black/5 cursor-pointer group'>
+{/* MOBILE QUICK ACTION HUB - Fixed for Zoom/Overflow */}
+{/* MOBILE QUICK ACTION HUB - Zoom-Safe Implementation */}
+<div className='flex items-center bg-white p-3 rounded-xl shadow-sm border border-black/5 overflow-x-auto hide-scrollbar w-full'>
+    {/* 1. Search */}
+    <div onClick={() => {setShowSearch(true); navigate('/collection'); setVisible(false);}} 
+         className='flex flex-col items-center gap-1 min-w-[64px] flex-1 border-r border-black/5 cursor-pointer'>
         <Search size={18} className='text-[#BC002D]' />
         <span className='text-[8px] font-black uppercase tracking-tighter text-gray-400'>Search</span>
     </div>
     
-    <div onClick={() => {navigate('/wishlist'); setVisible(false);}} className='flex flex-col items-center gap-1 flex-1 border-r border-black/5 cursor-pointer group'>
+    {/* 2. Wishlist */}
+    <div onClick={() => {navigate('/wishlist'); setVisible(false);}} 
+         className='flex flex-col items-center gap-1 min-w-[64px] flex-1 border-r border-black/5 cursor-pointer'>
         <div className='relative'>
             <Heart size={18} className={wishlist.length > 0 ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-400'} />
-            {wishlist.length > 0 && <span className='absolute -top-1 -right-1 bg-black text-white text-[6px] w-3 h-3 rounded-full flex items-center justify-center'>{wishlist.length}</span>}
+            {wishlist.length > 0 && <span className='absolute -top-1 -right-1 bg-black text-white text-[6px] w-3 h-3 rounded-full flex items-center justify-center font-black'>{wishlist.length}</span>}
         </div>
         <span className='text-[8px] font-black uppercase tracking-tighter text-gray-400'>Wishlist</span>
     </div>
 
-    {/* New Profile Section */}
-    
-    <div onClick={() => {navigate('/cart'); setVisible(false);}} className='flex flex-col items-center gap-1 flex-1 cursor-pointer group border-r border-black/5'>
+    {/* 3. Cart - Now protected by min-width */}
+    <div onClick={() => {navigate('/cart'); setVisible(false);}} 
+         className='flex flex-col items-center gap-1 min-w-[64px] flex-1 border-r border-black/5 cursor-pointer'>
         <div className='relative'>
-            <ShoppingBag size={18} className='text-black group-hover:text-[#BC002D] transition-colors' />
-            <span className='absolute -top-1 -right-1 bg-[#BC002D] text-white text-[6px] w-3 h-3 rounded-full flex items-center justify-center'>{getCartCount()}</span>
+            <ShoppingBag size={18} className='text-black' />
+            <span className='absolute -top-1 -right-1 bg-[#BC002D] text-white text-[6px] w-3 h-3 rounded-full flex items-center justify-center font-black'>{getCartCount()}</span>
         </div>
         <span className='text-[8px] font-black uppercase tracking-tighter text-gray-400'>Cart</span>
     </div>
 
-
-    <div 
-    onClick={() => {
-        // Check if token exists to verify login status
-        if (token) {
-            navigate('/profile'); 
-        } else {
-            navigate('/login');
-            toast.info("Please login to access your Archive.");
-        }
+    {/* 4. Profile/Login */}
+    <div onClick={() => {
+        if (token) navigate('/profile'); 
+        else { navigate('/login'); }
         setVisible(false);
     }} 
-    className='flex flex-col items-center gap-1 flex-1 border-r border-black/5 cursor-pointer group'
->
-    <User size={18} className='text-gray-400 group-hover:text-[#BC002D] transition-colors' />
-    <span className='text-[8px] font-black uppercase tracking-tighter text-gray-400'>
-        {token ? 'Profile' : 'Login'}
-    </span>
-</div>
-
+    className='flex flex-col items-center gap-1 min-w-[64px] flex-1 cursor-pointer group'>
+        <User size={18} className='text-gray-400 group-hover:text-[#BC002D] transition-colors' />
+        <span className='text-[8px] font-black uppercase tracking-tighter text-gray-400'>
+            {token ? 'Profile' : 'Login'}
+        </span>
+    </div>
 </div>
                         </div>
 
