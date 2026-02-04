@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState,useEffect } from 'react'
 import { assets } from '../assets/assets'
 import axios from 'axios'
 import { backendUrl } from '../App'
@@ -15,6 +15,7 @@ const Add = ({ token }) => {
   const [image2, setImage2] = useState(false)
   const [image3, setImage3] = useState(false)
   const [image4, setImage4] = useState(false)
+
   
   // NEW: Sync via Registry Name
   const [imageName, setImageName] = useState(""); 
@@ -22,42 +23,65 @@ const Add = ({ token }) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
+  const [marketPrice, setMarketPrice] = useState("");
   const [categories, setCategories] = useState([]);
   const [year, setYear] = useState("");
   const [country, setCountry] = useState("");
   const [condition, setCondition] = useState("Mint");
   const [stock, setStock] = useState(1);
+  // Inside your Add component
+const [categoryOptions, setCategoryOptions] = useState([]);
 
-  const categoryOptions = [
-    "AgriCulture Stamp", "Airmail", "Americas", "Ancillaries", "Animal & WildLife", 
-    "Army", "Army Postal Cover APC", "Asia", "Autograph Cover", "Aviation Stamps", 
-    "Bank", "Bird Stamps", "Block of Four", "Block of Four with Traffic light", 
-    "Booklet", "BOPP", "Bridge Stamps", "Brochure Blank", "Brochure with MS", 
-    "Brochure with stamp", "Buddha / Buddhism", "Building Stamps", "Butterfly & Insects", 
-    "Carried Cover", "Cars", "Catalogue", "Children's Day Series", "Christianity", 
-    "Christmas", "Cinema on Stamps", "Classic Items", "Coffee", "Color Cancellation", 
-    "Commemorative", "Commemorative Coin", "Commemorative Year", "Country", "Covid 19", 
-    "Cricket", "Cultural Theme", "Currency Stamps", "Dance Stamps", "Definitive", 
-    "Definitive Block", "Definitive Number Strip", "Definitive Sheet", "Definitive Stamp", 
-    "Educational Institute", "Environment", "Error", "Europe", "Exhibition Special", 
-    "Face Value", "Fauna and Flora", "Festival", "First Day Cover", "First Day Cover Blank", 
-    "First Day Cover Commercial Used", "First Day Cover with Miniature Sheet", 
-    "First Flight/ AirMail", "Flag", "Food on Stamps", "FootBall", "Foreign First Day Covers", 
-    "Foreign Miniature Sheets", "Foreign Stamps", "Fort / Castle/ Palace", "Fragrance Stamps", 
-    "Freedom", "Freedom Fighter", "Full Sheet", "Gandhi Stamps", "GI Tag", "Greeting Card", 
-    "Greetings", "Hinduism", "Historical", "Historical Place", "Indian Theme", "Jainism", 
-    "Joint Issue", "Judiciary System", "Kumbh", "Light House", "Literature", 
-    "Locomotive / Trains", "Marine / Fish", "Medical / Health", "Meghdoot", 
-    "Miniature Sheets", "Musical Instrument", "My Stamp", "News Paper", 
-    "Odd Shape / Unusual", "Olympic", "Organizations", "Personality", 
-    "Place Cancellation", "Post Office", "Postal Stationery", "Postcard / Maxim Card", 
-    "PPC", "Presentation Pack", "Ramayana", "Rare", "Red Cross", "River / Canal", 
-    "RSS Rashtriya Swayamsevak Sangh", "Scout", "SheetLet", "Ships", "Sikhism", 
-    "Single Stamp", "Single Stamp with Traffic light", "Social Message", "Space", 
-    "Special Cancellation", "Special Cover", "Sports Stamps", "Stamp on Stamp", 
-    "Technology", "Temple", "Tiger", "Transport", "United Nations UN", "Women Power", 
-    "WWF", "Year", "Year Pack", "Yoga"
-  ];
+const fetchCategories = async () => {
+    try {
+        const response = await axios.get(backendUrl + '/api/category/list');
+        if (response.data.success) {
+            // Extract the names from the category objects
+            const names = response.data.categories.map(cat => cat.name);
+            setCategoryOptions(names);
+        } else {
+            toast.error(response.data.message);
+        }
+    } catch (error) {
+        console.error(error);
+        toast.error("Registry Sync Failed: Could not load categories");
+    }
+};
+
+useEffect(() => {
+    fetchCategories();
+}, []);
+
+  // const categoryOptions = [
+  //   "AgriCulture Stamp", "Airmail", "Americas", "Ancillaries", "Animal & WildLife", 
+  //   "Army", "Army Postal Cover APC", "Asia", "Autograph Cover", "Aviation Stamps", 
+  //   "Bank", "Bird Stamps", "Block of Four", "Block of Four with Traffic light", 
+  //   "Booklet", "BOPP", "Bridge Stamps", "Brochure Blank", "Brochure with MS", 
+  //   "Brochure with stamp", "Buddha / Buddhism", "Building Stamps", "Butterfly & Insects", 
+  //   "Carried Cover", "Cars", "Catalogue", "Children's Day Series", "Christianity", 
+  //   "Christmas", "Cinema on Stamps", "Classic Items", "Coffee", "Color Cancellation", 
+  //   "Commemorative", "Commemorative Coin", "Commemorative Year", "Country", "Covid 19", 
+  //   "Cricket", "Cultural Theme", "Currency Stamps", "Dance Stamps", "Definitive", 
+  //   "Definitive Block", "Definitive Number Strip", "Definitive Sheet", "Definitive Stamp", 
+  //   "Educational Institute", "Environment", "Error", "Europe", "Exhibition Special", 
+  //   "Face Value", "Fauna and Flora", "Festival", "First Day Cover", "First Day Cover Blank", 
+  //   "First Day Cover Commercial Used", "First Day Cover with Miniature Sheet", 
+  //   "First Flight/ AirMail", "Flag", "Food on Stamps", "FootBall", "Foreign First Day Covers", 
+  //   "Foreign Miniature Sheets", "Foreign Stamps", "Fort / Castle/ Palace", "Fragrance Stamps", 
+  //   "Freedom", "Freedom Fighter", "Full Sheet", "Gandhi Stamps", "GI Tag", "Greeting Card", 
+  //   "Greetings", "Hinduism", "Historical", "Historical Place", "Indian Theme", "Jainism", 
+  //   "Joint Issue", "Judiciary System", "Kumbh", "Light House", "Literature", 
+  //   "Locomotive / Trains", "Marine / Fish", "Medical / Health", "Meghdoot", 
+  //   "Miniature Sheets", "Musical Instrument", "My Stamp", "News Paper", 
+  //   "Odd Shape / Unusual", "Olympic", "Organizations", "Personality", 
+  //   "Place Cancellation", "Post Office", "Postal Stationery", "Postcard / Maxim Card", 
+  //   "PPC", "Presentation Pack", "Ramayana", "Rare", "Red Cross", "River / Canal", 
+  //   "RSS Rashtriya Swayamsevak Sangh", "Scout", "SheetLet", "Ships", "Sikhism", 
+  //   "Single Stamp", "Single Stamp with Traffic light", "Social Message", "Space", 
+  //   "Special Cancellation", "Special Cover", "Sports Stamps", "Stamp on Stamp", 
+  //   "Technology", "Temple", "Tiger", "Transport", "United Nations UN", "Women Power", 
+  //   "WWF", "Year", "Year Pack", "Yoga"
+  // ];
 
   const toggleCategory = (cat) => {
     setCategories(prev => prev.includes(cat) ? prev.filter(item => item !== cat) : [...prev, cat]);
@@ -69,32 +93,38 @@ const Add = ({ token }) => {
     setLoading(true);
 
     try {
-      const formData = new FormData()
-      formData.append("name", name)
-      formData.append("description", description)
-      formData.append("price", price)
-      formData.append("category", JSON.stringify(categories))
-      formData.append("year", year)
-      formData.append("country", country)
-      formData.append("condition", condition)
-      formData.append("stock", stock)
+      const formData = new FormData();
+      formData.append("name", name);
+      formData.append("description", description);
+      formData.append("price", price);
+      formData.append("marketPrice", marketPrice); // Added Market Price
+      formData.append("category", JSON.stringify(categories));
+      formData.append("year", year);
+      formData.append("country", country);
+      formData.append("condition", condition);
+      formData.append("stock", stock);
       
-      // NEW: Send the registry name if no local file is uploaded
-      if (imageName) formData.append("imageName", imageName);
+      // CRITICAL: Ensure this matches the backend controller's expected field
+      if (imageName) {
+        formData.append("imageName", imageName.trim());
+      }
 
-      image1 && formData.append("image1", image1)
-      image2 && formData.append("image2", image2)
-      image3 && formData.append("image3", image3)
-      image4 && formData.append("image4", image4)
+      // Local file uploads
+      if (image1) formData.append("image1", image1);
+      if (image2) formData.append("image2", image2);
+      if (image3) formData.append("image3", image3);
+      if (image4) formData.append("image4", image4);
 
-      const response = await axios.post(backendUrl + "/api/product/add", formData, { headers: { token } })
+      const response = await axios.post(backendUrl + "/api/product/add", formData, { headers: { token } });
 
       if (response.data.success) {
-        toast.success(response.data.message)
-        setName(''); setDescription(''); setPrice(''); setYear(''); setCountry(''); setCategories([]);
-        setImageName(''); setImage1(false); setImage2(false); setImage3(false); setImage4(false);
+        toast.success(response.data.message);
+        // Resetting state
+        setName(''); setDescription(''); setPrice(''); setMarketPrice(''); setYear(''); 
+        setCountry(''); setCategories([]); setImageName('');
+        setImage1(false); setImage2(false); setImage3(false); setImage4(false);
       } else {
-        toast.error(response.data.message)
+        toast.error(response.data.message);
       }
     } catch (error) {
       toast.error("Upload failed. Verify your registry connection.");
@@ -216,6 +246,10 @@ const Add = ({ token }) => {
               <p className='mb-3 text-[10px] font-black uppercase tracking-widest text-gray-400'>Price (Valuation)</p>
               <input onChange={(e) => setPrice(e.target.value)} value={price} className='w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold outline-none' type="Number" placeholder='500' required />
             </div>
+            <div>
+      <p className='mb-3 text-[10px] font-black uppercase tracking-widest text-gray-400'>Market Price (MSRP)</p>
+      <input onChange={(e) => setMarketPrice(e.target.value)} value={marketPrice} className='w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold outline-none' type="Number" placeholder='750' />
+    </div>
             <div>
               <p className='mb-3 text-[10px] font-black uppercase tracking-widest text-gray-400'>Stock</p>
               <input onChange={(e) => setStock(e.target.value)} value={stock} className='w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold outline-none' type="number" placeholder='1' />

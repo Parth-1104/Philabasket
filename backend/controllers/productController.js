@@ -5,6 +5,7 @@ import streamifier from 'streamifier';
 import { Readable } from 'stream';
 
 import mediaModel from '../models/mediaModel.js';
+import categoryModel from "../models/categoryModel.js";
 
 // Logic to register an asset in the Media Registry
 
@@ -88,7 +89,10 @@ const uploadToCloudinary = (fileBuffer) => {
 // controllers/productController.js
 
 
- const bulkAddProducts = async (req, res) => {
+// controllers/productController.js
+ // Ensure you import your new model
+
+const bulkAddProducts = async (req, res) => {
     try {
         if (!req.file) {
             return res.json({ success: false, message: "Please upload a CSV file" });
@@ -96,26 +100,26 @@ const uploadToCloudinary = (fileBuffer) => {
 
         const stamps = [];
         const skippedRows = [];
-        
-        // 1. Fetch data in bulk rather than per-row to reduce DB round-trips
+        const usedImageNames = [];
+        const discoveredCategories = new Set(); 
+
+        // 1. Fetch data once for fast lookup
         const [existingStamps, allMedia] = await Promise.all([
             productModel.find({}, 'name'),
             mediaModel.find({}, 'originalName imageUrl')
         ]);
 
         const existingNames = new Set(existingStamps.map(s => s.name.toLowerCase().trim()));
-        
-        // Convert Media Registry into a Map for O(1) instant lookup
         const mediaMap = new Map(allMedia.map(m => [m.originalName.trim(), m.imageUrl]));
 
         const stream = Readable.from(req.file.buffer);
 
-        // 2. Process the stream
         stream.pipe(csv())
             .on('data', (row) => {
                 try {
-                    // --- VALIDATION ---
-                    if (!row.name || !row.price || !row.imageName) {
+                    const csvImageName = row.imageName?.trim();
+
+                    if (!row.name || !row.price || !csvImageName) {
                         skippedRows.push({ row: row.name || "Unknown", reason: "Missing fields" });
                         return;
                     }
@@ -126,33 +130,46 @@ const uploadToCloudinary = (fileBuffer) => {
                         return;
                     }
 
-                    // --- OPTIMIZED MATCHING ---
-                    // Instant lookup from our Map instead of a DB query per row
-                    const imageUrl = mediaMap.get(row.imageName.trim());
+                    const imageUrl = mediaMap.get(csvImageName);
+                    if (!imageUrl) {
+                        skippedRows.push({ row: nameTrimmed, reason: `Image ${csvImageName} not found in Media Registry` });
+                        return;
+                    }
 
-                    // --- PARSING ---
+                    // --- PARSING & CATEGORY DISCOVERY ---
                     let parsedCategory = [];
                     if (row.category) {
                         const cleaned = row.category.trim();
-                        parsedCategory = (cleaned.startsWith('[') && cleaned.endsWith(']')) 
-                            ? JSON.parse(cleaned) 
-                            : cleaned.split(',').map(c => c.trim());
+                        // Handle both [cat1,cat2] and raw cat1,cat2
+                        const rawContent = (cleaned.startsWith('[') && cleaned.endsWith(']')) 
+                            ? cleaned.substring(1, cleaned.length - 1) 
+                            : cleaned;
+
+                        parsedCategory = rawContent
+                            .split(',')
+                            .map(c => c.trim().replace(/^["']|["']$/g, ''))
+                            .filter(c => c !== "");
+                        
+                        // Add to discovery Set for DB synchronization
+                        parsedCategory.forEach(cat => discoveredCategories.add(cat));
                     }
 
                     stamps.push({
                         name: nameTrimmed,
                         description: row.description || "",
                         price: Number(row.price),
+                        marketPrice: Number(row.marketPrice) || 0,
                         category: parsedCategory,
                         year: Number(row.year) || 2026,
                         country: row.country?.trim() || "India",
                         condition: row.condition || "Mint",
                         stock: Number(row.stock) || 1,
                         bestseller: String(row.bestseller).toLowerCase() === 'true',
-                        image: imageUrl ? [imageUrl] : [], 
+                        image: [imageUrl],
                         date: Date.now()
                     });
 
+                    usedImageNames.push(csvImageName);
                     existingNames.add(nameTrimmed.toLowerCase());
                 } catch (err) {
                     skippedRows.push({ row: row.name || "Unknown", reason: "Format Error" });
@@ -164,11 +181,27 @@ const uploadToCloudinary = (fileBuffer) => {
                         return res.json({ success: false, message: "No valid data to upload", errors: skippedRows });
                     }
 
-                    // 3. Use bulkWrite or insertMany with ordered:false for maximum speed
+                    // --- THE FIX: SYNC DISCOVERED CATEGORIES TO DATABASE ---
+                    const categoryArray = Array.from(discoveredCategories);
+                    if (categoryArray.length > 0) {
+                        // Find which categories already exist in the DB
+                        const existingCatsInDB = await categoryModel.find({ name: { $in: categoryArray } });
+                        const existingCatNames = new Set(existingCatsInDB.map(c => c.name));
+
+                        // Filter out duplicates and prepare new ones
+                        const newCategoriesToInsert = categoryArray
+                            .filter(name => !existingCatNames.has(name))
+                            .map(name => ({ name }));
+
+                        if (newCategoriesToInsert.length > 0) {
+                            await categoryModel.insertMany(newCategoriesToInsert, { ordered: false });
+                        }
+                    }
+
+                    // Perform bulk product insert
                     await productModel.insertMany(stamps, { ordered: false });
 
-                    // 4. Update Media Registry: Mark images as 'Assigned'
-                    const usedImageNames = stamps.map(s => s.imageName); 
+                    // Mark images as Assigned
                     await mediaModel.updateMany(
                         { originalName: { $in: usedImageNames } },
                         { $set: { isAssigned: true } }
@@ -176,11 +209,11 @@ const uploadToCloudinary = (fileBuffer) => {
 
                     res.json({ 
                         success: true, 
-                        message: `Archive Updated: ${stamps.length} stamps registered.`,
+                        message: `Archive Synchronized. ${stamps.length} stamps and ${discoveredCategories.size} categories verified.`,
                         skippedCount: skippedRows.length 
                     });
                 } catch (dbErr) {
-                    res.json({ success: false, message: "Database Write Error" });
+                    res.json({ success: false, message: "Database Write Error: " + dbErr.message });
                 }
             });
 
@@ -271,11 +304,18 @@ const bulkAddStamps = async (req, res) => {
     }
 };
 
-// --- FEATURE: Add Product with Image Buffers ---
+
+// --- FEATURE: Add Product with Image Buffers or Media Registry Sync ---
 const addProduct = async (req, res) => {
     try {
-        const { name, description, price, category, year, condition, country, stock, bestseller } = req.body;
+        const { 
+            name, description, price, marketPrice, category, 
+            year, condition, country, stock, bestseller, imageName 
+        } = req.body;
 
+        let imagesUrl = [];
+
+        // 1. Handle Local File Uploads via Multer
         const imageFiles = [
             req.files?.image1?.[0], 
             req.files?.image2?.[0], 
@@ -283,15 +323,24 @@ const addProduct = async (req, res) => {
             req.files?.image4?.[0]
         ].filter(item => item !== undefined);
 
-        // Upload using memory buffers
-        const imagesUrl = await Promise.all(
-            imageFiles.map((item) => uploadToCloudinary(item.buffer))
-        );
+        if (imageFiles.length > 0) {
+            imagesUrl = await Promise.all(
+                imageFiles.map((item) => uploadToCloudinary(item.buffer))
+            );
+        } 
+        // 2. OR Sync from Media Registry if imageName is provided and no files uploaded
+        else if (imageName) {
+            const mediaRecord = await mediaModel.findOne({ originalName: imageName.trim() });
+            if (mediaRecord) {
+                imagesUrl = [mediaRecord.imageUrl];
+            }
+        }
 
         const productData = {
             name,
             description,
             price: Number(price),
+            marketPrice: Number(marketPrice) || 0, // NEW: Added Market Price
             category: Array.isArray(category) ? category : JSON.parse(category),
             year: Number(year),
             condition,
@@ -304,7 +353,7 @@ const addProduct = async (req, res) => {
 
         const product = new productModel(productData);
         await product.save();
-        res.json({ success: true, message: "Product Added" });
+        res.json({ success: true, message: "Product Added to Archive" });
 
     } catch (error) {
         res.json({ success: false, message: error.message });

@@ -22,7 +22,7 @@ const ArchiveBlogs = () => {
     }, [backendUrl]);
 
     return (
-        <div className='pt-32 pb-24 px-[6%] bg-white min-h-screen relative overflow-hidden'>
+        <div className='pt-12 pb-24 px-[6%] bg-white min-h-screen relative overflow-hidden'>
             <div className="absolute -right-[10vw] top-0 h-[50vh] w-[40vw] bg-[#BC002D]/5 rounded-bl-[500px] pointer-events-none"></div>
 
             <div className='mb-24 relative z-10'>
@@ -30,9 +30,9 @@ const ArchiveBlogs = () => {
                     <span className='h-[1.5px] w-12 bg-[#BC002D]'></span>
                     <p className='text-[10px] font-black text-[#BC002D] tracking-[0.5em] uppercase'>Intel Briefings</p>
                 </div>
-                <h1 className='text-6xl md:text-9xl font-bold tracking-tighter text-gray-900 leading-none'>
-                    THE <br />
-                    <span className='text-[#BC002D] italic font-light'>ARCHIVE.</span>
+                <h1 className='text-6xl md:text-6xl font-bold tracking-tighter text-gray-900 leading-none'>
+
+                    <span className='text-[#BC002D] italic font-light'>BLOGS.</span>
                 </h1>
             </div>
 

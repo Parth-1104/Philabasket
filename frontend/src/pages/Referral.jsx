@@ -55,7 +55,7 @@ const referralLink = `${window.location.protocol}//${window.location.host}/login
                     Expand the <span className='italic font-light text-[#BC002D]'>Lineage.</span>
                 </h2>
                 <p className='text-gray-400 max-w-2xl mx-auto text-xs font-bold uppercase tracking-[0.2em] leading-relaxed'>
-                    Invite distinguished collectors to the archive. Earn 500 PTS per verified acquisition.
+                    Invite distinguished collectors to the archive. Earn 50 PTS per verified acquisition.
                 </p>
             </div>
 

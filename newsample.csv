@@ -1,5 +1,3 @@
-name,price,description,year,country,category,stock,imageName
-"1840 Penny Black",500,"The world's first adhesive postage stamp featuring Queen Victoria.",1840,"Great Britain","Classic Items, Rare",5,main01.png
-"Mahatma Gandhi 1948",1200,"Rare service overprint issued for the first anniversary of Independence.",1948,India,"Gandhi Stamps, Rare",2,main02.png
-"Lunar New Year 2024",25,"Special commemorative issue for the Year of the Dragon.",2024,China,"Festival, Animal & WildLife",50,main03.png
-"Aviation History",45,"Historical specimens featuring early postal aircraft.",1975,USA,"Aviation Stamps, Historical",10,main04.png
+name,price,marketPrice,description,year,country,category,stock,imageName
+father saab Black Specimen,500,750,The world's first adhesive postage stamp.,1840,UK,"[Classic Items,Rare,Postal]",5,main04.png
+gandhijike Service 10R,1200,1800,Extremely rare 1948 service overprint.,1948,India,"[Gandhi Stamps,Rare,India]",2,main03.png

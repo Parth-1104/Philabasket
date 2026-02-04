@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from 'react'
 import { ShopContext } from '../context/ShopContext'
 import ProductItem from './ProductItem';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const BestSeller = () => {
     const { products } = useContext(ShopContext);
@@ -9,16 +9,16 @@ const BestSeller = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Sort by soldCount (highest first) and take top 6 to match LatestCollection grid
+        // Taking top 4 best sellers
         const sortedProducts = [...products]
             .sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0))
-            .slice(0, 6);
+            .slice(0, 4);
         
         setBestSeller(sortedProducts);
     }, [products]);
 
     return (
-        <div className='bg-white py-12 md:py-32  lg:mt-[-14vh] overflow-hidden select-none relative border-t border-black/[0.03]'>
+        <div className='bg-white py-22 md:py-32 lg:mt-[-14vh] overflow-hidden select-none relative border-t border-black/[0.03]'>
             
             {/* --- Decorative Hero-Curve Accent --- */}
             <div className="absolute -right-[15vw] top-[20%] h-[70%] w-[45%] bg-[#bd002d]/5 rounded-l-[600px] pointer-events-none"></div>
@@ -26,7 +26,7 @@ const BestSeller = () => {
             <div className='px-6 md:px-16 lg:px-24 relative z-10'>
                 
                 {/* --- Curatorial Header --- */}
-                <div className='flex flex-col md:flex-row justify-between items-end mb-20 gap-8'>
+                <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8'>
                     <div className="max-w-2xl">
                         <div className="flex items-center gap-4 mb-4">
                             <span className="h-[1px] w-12 bg-[#BC002D]"></span>
@@ -34,7 +34,7 @@ const BestSeller = () => {
                                 Acquisition Rank
                             </span>
                         </div>
-                        <h2 className="text-6xl md:text-8xl font-bold text-gray-900 tracking-tighter leading-none">
+                        <h2 className="text-5xl md:text-8xl font-bold text-gray-900 tracking-tighter leading-none">
                             TOP <br />
                             <span className="text-[#bd002d]">SELLING.</span>
                         </h2>
@@ -47,64 +47,54 @@ const BestSeller = () => {
                     </div>
                 </div>
 
-                {/* --- Ranked Grid: SYNCED SIZING --- */}
-                {/* Changed to lg:grid-cols-3 and increased gap to match LatestCollection */}
-                <div className='flex overflow-x-auto pb-10 gap-8 snap-x snap-mandatory mobile-scrollbar lg:grid lg:grid-cols-4 lg:gap-x-12 lg:gap-y-20 lg:overflow-visible lg:pb-0'>
+                {/* --- Ranked Grid: SYNCED SIZING WITH LATEST --- */}
+                {/* Fixed gap and min-w to allow 2-column feel on mobile */}
+                <div className='flex overflow-x-auto gap-4 md:gap-x-12 snap-x snap-mandatory mobile-scrollbar lg:grid lg:grid-cols-4 lg:gap-y-20 lg:overflow-visible pb-10 lg:pb-0'>
                     {
                         bestSeller.map((item, index) => (
                             <div 
                                 key={index} 
-                                className="min-w-[85vw] sm:min-w-[45vw] lg:min-w-0 snap-center group relative transition-all duration-700"
+                                /* SYNCED: min-w-[48%] matches the compact New Arrivals look */
+                                className="min-w-[48%] sm:min-w-[45vw] lg:min-w-0 snap-center group relative transition-all duration-700"
                             >
-                                {/* Visual Rank Badge */}
-                                <div className="absolute -top-6 -left-2 z-20">
-                                    <div className="bg-[#bd002d] text-white w-14 h-14 rounded-full flex flex-col items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-500">
-                                        <span className="text-[8px] font-black leading-none opacity-60">RANK</span>
-                                        <span className="text-xl font-black leading-none">0{index + 1}</span>
+                                {/* Visual Rank Badge - Adjusted for compact size */}
+                                <div className="absolute -top-4 -left-2 z-20">
+                                    <div className="bg-[#bd002d] text-white w-10 h-10 md:w-14 md:h-14 rounded-full flex flex-col items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-500">
+                                        <span className="text-[6px] md:text-[8px] font-black leading-none opacity-60">RANK</span>
+                                        <span className="text-sm md:text-xl font-black leading-none">0{index + 1}</span>
                                     </div>
                                 </div>
                                 
-                                {/* Card: Sizing synced with LatestCollection */}
-                                <div className='pt-6'>
-                                    <div className="relative aspect-[3/4] bg-white border border-gray-100 p-3 shadow-sm transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl group-hover:border-[#bd002d]/20 overflow-hidden rounded-br-[40px] md:rounded-br-[60px]">
+                                {/* Card: Fully Synced with LatestCollection logic */}
+                                <div className='pt-4 md:pt-6'>
+                                    <div className="relative aspect-[3/4] bg-white border border-gray-100 p-2 md:p-3 shadow-sm transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl group-hover:border-[#bd002d]/20 overflow-hidden rounded-br-[30px] md:rounded-br-[60px]">
                                         
                                         <div className="absolute top-2 right-2 flex items-center gap-1 opacity-40 group-hover:opacity-100 transition-opacity">
-                                            <div className="w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-pulse"></div>
-                                            <span className="text-[8px] font-black text-gray-400 uppercase tracking-tighter">High Demand</span>
+                                            <div className="w-1 h-1 bg-[#D4AF37] rounded-full animate-pulse"></div>
+                                            <span className="text-[7px] font-black text-gray-400 uppercase tracking-tighter">High Demand</span>
                                         </div>
 
-                                        <div className="w-full h-full bg-[#f8f8f8] flex items-center justify-center p-4 rounded-br-[30px] md:rounded-br-[40px]">
+                                        <div className="w-full h-full bg-[#f8f8f8] flex items-center justify-center p-2 md:p-4 rounded-br-[20px] md:rounded-br-[40px]">
                                             <ProductItem 
                                                 id={item._id} 
                                                 name={item.name} 
                                                 image={item.image} 
                                                 price={item.price} 
+                                                marketPrice={item.marketPrice}
                                                 category={item.category[0]}
                                                 linkToFilter={false}
                                             />
                                         </div>
                                     </div>
                                 </div>
-
-                                {/* Info Section: Synced Typography */}
-                                {/* <div className="mt-8 space-y-2 px-2">
-                                    <div className="flex justify-between items-center text-[10px] font-black tracking-widest uppercase text-[#bd002d]/60">
-                                        <span>{item.country || 'Registry'}</span>
-                                        <span>{item.year || '2026'}</span>
-                                    </div>
-                                    <h3 className="text-gray-900 font-bold text-base md:text-lg truncate group-hover:text-[#bd002d] transition-colors">
-                                        {item.name}
-                                    </h3>
-                                    <div className="h-[1.5px] w-0 group-hover:w-full bg-[#bd002d] transition-all duration-700"></div>
-                                </div> */}
                             </div>
                         ))
                     }
                 </div>
 
                 {/* --- Bottom Hallmark --- */}
-                <div className="mt-20 md:mt-32 flex flex-col items-center gap-6">
-                    <div className='h-16 w-[1px] bg-gradient-to-b from-[#bd002d] to-transparent'></div>
+                <div className="mt-16 md:mt-32 flex flex-col items-center gap-6">
+                    <div className='h-12 md:h-16 w-[1px] bg-gradient-to-b from-[#bd002d] to-transparent'></div>
                     <p className='text-[8px] tracking-[0.8em] text-black/20 uppercase font-black'>
                         Verified Philatelic Provenance
                     </p>

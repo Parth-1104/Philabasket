@@ -2,13 +2,14 @@ import React, { useContext } from 'react'
 import { ShopContext } from '../context/ShopContext'
 import { Link } from 'react-router-dom'
 
-const ProductItem = ({ id, image, name, price, category, linkToFilter = false }) => {
+// Added marketPrice to the props destructured here
+const ProductItem = ({ id, image, name, price, marketPrice, category, linkToFilter = false }) => {
     
   const { formatPrice, currency } = useContext(ShopContext);
   
   const handleDragStart = (e) => e.preventDefault();
   
-  // Rarity check for high-value items
+  // Rarity pulse trigger based on valuation or specific high price
   const isRare = price > 1000; 
 
   const safeId = id ? String(id) : "";
@@ -26,17 +27,8 @@ const ProductItem = ({ id, image, name, price, category, linkToFilter = false })
         onDragStart={handleDragStart} 
       >
           {/* Main Container: Crimson Accents & NewHero Curve */}
-          <div className='relative overflow-hidden bg-white p-2 lg:p-1 transition-all duration-700 border border-black/[0.05] group-hover:border-[#BC002D]/30 rounded-br-[60px] group-hover:rounded-br-[80px] shadow-sm group-hover:shadow-2xl'>
+          <div className='relative overflow-hidden bg-white p-2 lg:p-1.5 transition-all duration-700 border border-black/[0.05] group-hover:border-[#BC002D]/30 rounded-br-[40px] group-hover:rounded-br-[60px] shadow-sm group-hover:shadow-2xl'>
               
-              {/* Vertical Registry Tag - NewHero Style */}
-              <div className='absolute top-0 right-6 z-20'>
-                {/* <div className='bg-black text-white px-2 py-4 flex flex-col items-center gap-2 group-hover:bg-[#BC002D] transition-colors duration-500'>
-                  <span className='[writing-mode:vertical-lr] text-[7px] font-black tracking-[0.3em] uppercase'>
-                    REG. {registryNo}
-                  </span>
-                </div> */}
-              </div>
-
               {/* Rarity Pulse - Crimson */}
               {isRare && (
                 <div className='absolute top-4 left-4 z-20 flex items-center gap-2'>
@@ -46,13 +38,12 @@ const ProductItem = ({ id, image, name, price, category, linkToFilter = false })
               )}
 
               {/* Inner Specimen Frame */}
-              <div className='relative aspect-[4/5] flex items-center justify-center overflow-hidden bg-[#F8F8F8] group-hover:bg-white transition-colors duration-700 rounded-br-[40px]'>
-                  {/* Crimson Spotlight Glow */}
+              <div className='relative aspect-[4/5] flex items-center justify-center overflow-hidden bg-[#F8F8F8] group-hover:bg-white transition-colors duration-700 rounded-br-[30px]'>
                   <div className='absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(188,0,45,0.05)_0%,_transparent_80%)] opacity-0 group-hover:opacity-100 transition-opacity duration-1000'></div>
                   
                   <img 
                       draggable="false"
-                      className='z-10 w-full h-full object-contain p-8 filter grayscale-[0.3] group-hover:grayscale-3 drop-shadow-[0_10px_20px_rgba(0,0,0,0.08)] transform group-hover:scale-110 transition-transform duration-[1.5s] ease-out' 
+                      className='z-10 w-fit h-fit object-contain p-8 filter grayscale-[0.3] group-hover:grayscale-0 drop-shadow-[0_10px_20px_rgba(0,0,0,0.08)] transform group-hover:scale-105 transition-transform duration-[1.5s] ease-out' 
                       src={image && image[0] ? image[0] : ""} 
                       alt={name} 
                   />
@@ -68,10 +59,10 @@ const ProductItem = ({ id, image, name, price, category, linkToFilter = false })
           </div>
           
           {/* Typography: Sharp & Categorical */}
-          <div className='mt-6 px-1'>
-              <div className='flex justify-between items-start gap-4'>
-                <div className='flex flex-col gap-1'>
-                  <h3 className='text-[12px] font-black uppercase tracking-[0.1em] text-gray-900 group-hover:text-[#BC002D] transition-colors'>
+          <div className='mt-5 px-1'>
+              <div className='flex justify-between items-start gap-2'>
+                <div className='flex flex-col gap-0.5'>
+                  <h3 className='text-[11px] lg:text-[12px] font-black uppercase tracking-[0.05em] text-gray-900 group-hover:text-[#BC002D] transition-colors line-clamp-1'>
                       {name || "Untitled Specimen"}
                   </h3>
                   <p className='text-[9px] font-bold text-gray-400 uppercase tracking-widest'>
@@ -79,21 +70,29 @@ const ProductItem = ({ id, image, name, price, category, linkToFilter = false })
                   </p>
                 </div>
                 
-                {/* Currency Display */}
-                <div className='text-right'>
-                  <p className='text-[14px] font-black text-gray-900 tabular-nums'>
-                    <span className='text-[10px] mr-0.5 text-[#BC002D]'>{currency === 'USD' ? '$' : '₹'}</span>
-                    {String(formatPrice(price)).replace(/[₹$]/g, '')}
-                  </p>
+                {/* --- COMPLEMENTARY PRICE DISPLAY --- */}
+                <div className='flex flex-col items-end shrink-0'>
+                    {/* Market Price: Strikethrough for value perception */}
+                    {marketPrice && Number(marketPrice) > Number(price) && (
+                        <p className='text-[9px] font-bold text-gray-400 line-through tabular-nums decoration-[#BC002D]/40 mb-[-2px]'>
+                            {currency}{formatPrice(marketPrice)}
+                        </p>
+                    )}
+                    
+                    {/* Acquisition Price: Bold Crimson Currency */}
+                    <p className='text-[13px] lg:text-[14px] font-black text-gray-900 tabular-nums'>
+                        <span className='text-[10px] mr-0.5 text-[#BC002D]'>{currency}</span>
+                        {formatPrice(price)}
+                    </p>
                 </div>
               </div>
               
-              {/* Action Prompt */}
-              <div className=' pb-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-1 group-hover:translate-y-0'>
-                <div className='h-[1px] w-9 bg-[#BC002D]'></div>
-                {/* <span className='text-[8px] tracking-[0.4em] font-black text-[#BC002D] uppercase'>
-                    {linkToFilter ? 'Open Ledger' : 'Acquire'}
-                </span> */}
+              {/* Action Prompt Accent */}
+              <div className='mt-3 flex items-center pb-5 gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-1 group-hover:translate-y-0'>
+                <div className='h-[1px] w-6 bg-[#BC002D]'></div>
+                <span className='text-[7px] tracking-[0.3em] font-black text-[#BC002D] uppercase'>
+                    {linkToFilter ? 'View Ledger' : 'Acquire Specimen'}
+                </span>
               </div>
           </div>
       </Link>

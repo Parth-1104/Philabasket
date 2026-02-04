@@ -2,46 +2,72 @@ import React, { useContext, useEffect, useState } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import ProductItem from './ProductItem';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-const ALL_CATEGORIES = [
-    "AgriCulture Stamp", "Airmail", "Americas", "Ancillaries", "Animal & WildLife", 
-    "Army", "Army Postal Cover APC", "Asia", "Autograph Cover", "Aviation Stamps", 
-    "Bank", "Bird Stamps", "Block of Four", "Block of Four with Traffic light", 
-    "Booklet", "BOPP", "Bridge Stamps", "Brochure Blank", "Brochure with MS", 
-    "Brochure with stamp", "Buddha / Buddhism", "Building Stamps", "Butterfly & Insects", 
-    "Carried Cover", "Cars", "Catalogue", "Children's Day Series", "Christianity", 
-    "Christmas", "Cinema on Stamps", "Classic Items", "Coffee", "Color Cancellation", 
-    "Commemorative", "Commemorative Coin", "Commemorative Year", "Country", "Covid 19", 
-    "Cricket", "Cultural Theme", "Currency Stamps", "Dance Stamps", "Definitive", 
-    "Definitive Block", "Definitive Number Strip", "Definitive Sheet", "Definitive Stamp", 
-    "Educational Institute", "Environment", "Error", "Europe", "Exhibition Special", 
-    "Face Value", "Fauna and Flora", "Festival", "First Day Cover", "First Day Cover Blank", 
-    "First Day Cover Commercial Used", "First Day Cover with Miniature Sheet", 
-    "First Flight/ AirMail", "Flag", "Food on Stamps", "FootBall", "Foreign First Day Covers", 
-    "Foreign Miniature Sheets", "Foreign Stamps", "Fort / Castle/ Palace", "Fragrance Stamps", 
-    "Freedom", "Freedom Fighter", "Full Sheet", "Gandhi Stamps", "GI Tag", "Greeting Card", 
-    "Greetings", "Hinduism", "Historical", "Historical Place", "Indian Theme", "Jainism", 
-    "Joint Issue", "Judiciary System", "Kumbh", "Light House", "Literature", 
-    "Locomotive / Trains", "Marine / Fish", "Medical / Health", "Meghdoot", 
-    "Miniature Sheets", "Musical Instrument", "My Stamp", "News Paper", 
-    "Odd Shape / Unusual", "Olympic", "Organizations", "Personality", 
-    "Place Cancellation", "Post Office", "Postal Stationery", "Postcard / Maxim Card", 
-    "PPC", "Presentation Pack", "Ramayana", "Rare", "Red Cross", "River / Canal", 
-    "RSS Rashtriya Swayamsevak Sangh", "Scout", "SheetLet", "Ships", "Sikhism", 
-    "Single Stamp", "Single Stamp with Traffic light", "Social Message", "Space", 
-    "Special Cancellation", "Special Cover", "Sports Stamps", "Stamp on Stamp", 
-    "Technology", "Temple", "Tiger", "Transport", "United Nations UN", "Women Power", 
-    "WWF", "Year", "Year Pack", "Yoga"
-];
+// const ALL_CATEGORIES = [
+//     "AgriCulture Stamp", "Airmail", "Americas", "Ancillaries", "Animal & WildLife", 
+//     "Army", "Army Postal Cover APC", "Asia", "Autograph Cover", "Aviation Stamps", 
+//     "Bank", "Bird Stamps", "Block of Four", "Block of Four with Traffic light", 
+//     "Booklet", "BOPP", "Bridge Stamps", "Brochure Blank", "Brochure with MS", 
+//     "Brochure with stamp", "Buddha / Buddhism", "Building Stamps", "Butterfly & Insects", 
+//     "Carried Cover", "Cars", "Catalogue", "Children's Day Series", "Christianity", 
+//     "Christmas", "Cinema on Stamps", "Classic Items", "Coffee", "Color Cancellation", 
+//     "Commemorative", "Commemorative Coin", "Commemorative Year", "Country", "Covid 19", 
+//     "Cricket", "Cultural Theme", "Currency Stamps", "Dance Stamps", "Definitive", 
+//     "Definitive Block", "Definitive Number Strip", "Definitive Sheet", "Definitive Stamp", 
+//     "Educational Institute", "Environment", "Error", "Europe", "Exhibition Special", 
+//     "Face Value", "Fauna and Flora", "Festival", "First Day Cover", "First Day Cover Blank", 
+//     "First Day Cover Commercial Used", "First Day Cover with Miniature Sheet", 
+//     "First Flight/ AirMail", "Flag", "Food on Stamps", "FootBall", "Foreign First Day Covers", 
+//     "Foreign Miniature Sheets", "Foreign Stamps", "Fort / Castle/ Palace", "Fragrance Stamps", 
+//     "Freedom", "Freedom Fighter", "Full Sheet", "Gandhi Stamps", "GI Tag", "Greeting Card", 
+//     "Greetings", "Hinduism", "Historical", "Historical Place", "Indian Theme", "Jainism", 
+//     "Joint Issue", "Judiciary System", "Kumbh", "Light House", "Literature", 
+//     "Locomotive / Trains", "Marine / Fish", "Medical / Health", "Meghdoot", 
+//     "Miniature Sheets", "Musical Instrument", "My Stamp", "News Paper", 
+//     "Odd Shape / Unusual", "Olympic", "Organizations", "Personality", 
+//     "Place Cancellation", "Post Office", "Postal Stationery", "Postcard / Maxim Card", 
+//     "PPC", "Presentation Pack", "Ramayana", "Rare", "Red Cross", "River / Canal", 
+//     "RSS Rashtriya Swayamsevak Sangh", "Scout", "SheetLet", "Ships", "Sikhism", 
+//     "Single Stamp", "Single Stamp with Traffic light", "Social Message", "Space", 
+//     "Special Cancellation", "Special Cover", "Sports Stamps", "Stamp on Stamp", 
+//     "Technology", "Temple", "Tiger", "Transport", "United Nations UN", "Women Power", 
+//     "WWF", "Year", "Year Pack", "Yoga"
+// ];
 
 const LatestCollection = () => {
     const { products } = useContext(ShopContext);
     const [latestProducts, setLatestProducts] = useState([]);
+    const { backendUrl } = useContext(ShopContext);
+
     const navigate = useNavigate();
 
     useEffect(() => {
         setLatestProducts(products.slice(0, 6)); 
     }, [products]);
+
+    // Inside your Add component
+const [ALL_CATEGORIES, setCategoryOptions] = useState([]);
+
+const fetchCategories = async () => {
+    try {
+        const response = await axios.get(backendUrl + '/api/category/list');
+        if (response.data.success) {
+            // Extract the names from the category objects
+            const names = response.data.categories.map(cat => cat.name);
+            setCategoryOptions(names);
+        } else {
+            toast.error(response.data.message);
+        }
+    } catch (error) {
+        console.error(error);
+        toast.error("Registry Sync Failed: Could not load categories");
+    }
+};
+
+useEffect(() => {
+    fetchCategories();
+}, []);
 
     return (
         <div className='bg-white py-12 md:py-32 overflow-hidden select-none relative'>
@@ -108,48 +134,48 @@ const LatestCollection = () => {
                     </div>
 
                     {/* --- MAIN PRODUCT GRID: SYNCED SIZING WITH BESTSELLER --- */}
-                    <div className='w-full lg:w-3/4'>
-                        {/* Changed gap-x-8 to gap-x-12 for desktop grid sync */}
-                        <div className='flex overflow-x-auto lg:grid lg:grid-cols-3 gap-x-6 md:gap-x-12 gap-y-16 pb-10 lg:pb-0 snap-x snap-mandatory mobile-scrollbar'>
-                            {latestProducts.map((item, index) => (
-                                <div key={index} className="min-w-[85vw] sm:min-w-[45vw] lg:min-w-0 snap-center flex flex-col group cursor-pointer">
-                                    {/* Card Container matched to BestSeller curve and hover translation */}
-                                    <div className="relative aspect-[3/4] bg-white border border-gray-100 p-3 shadow-sm transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl group-hover:border-[#bd002d]/20 overflow-hidden rounded-br-[40px] md:rounded-br-[60px]">
-                                    <div className="absolute top-0 right-0 z-20 overflow-hidden w-24 h-24 pointer-events-none">
-    <div className="absolute top-[18%] -right-[32%] bg-[#bd002d] text-white text-[7px] md:text-[8px] font-black py-1.5 w-[140%] text-center transform rotate-45 shadow-sm">
-        Latest
-    </div>
-</div>
-                                        {/* Inner Frame matched to BestSeller rounding and padding */}
-                                        <div className="w-full h-full bg-[#f8f8f8] flex items-center justify-center p-4 relative rounded-br-[30px] md:rounded-br-[40px]">
-                                            <ProductItem 
-                                                id={item._id} 
-                                                image={item.image} 
-                                                name={item.name} 
-                                                price={item.price} 
-                                                category={item.category[0]}
-                                                linkToFilter={true}
-                                            />
-                                        </div>
-                                    </div>
-                                    {/* Synced Info Section with BestSeller typography and underline effect */}
-                                    {/* <div className="mt-6 space-y-2 px-2">
-                                        <div className="flex justify-between items-center text-[10px] font-black tracking-widest uppercase text-[#bd002d]/60">
-                                            <span>{item.country || 'Registry'}</span>
-                                            <span>{item.year || '2026'}</span>
-                                        </div>
-                                        <h3 className="text-gray-900 font-bold text-base md:text-lg truncate group-hover:text-[#bd002d] transition-colors">
-                                            {item.name}
-                                        </h3>
-                                        <div className="h-[1.5px] w-0 group-hover:w-full bg-[#bd002d] transition-all duration-700"></div>
-                                    </div> */}
-                                </div>
-                            ))}
+                    {/* --- MAIN PRODUCT GRID --- */}
+<div className='w-full lg:w-3/4'>
+    {/* CHANGE: Updated gap and snap settings. 
+       'gap-4' for mobile, 'md:gap-x-12' for desktop.
+    */}
+    <div className='flex overflow-x-auto lg:grid lg:grid-cols-3 gap-4 md:gap-x-12 gap-y-16 pb-10 lg:pb-0 snap-x snap-mandatory mobile-scrollbar'>
+        {latestProducts.map((item, index) => (
+            <div 
+                key={index} 
+                /* CHANGE: min-w-[48%] allows 2 items to fit on mobile screen width.
+                   Changed from [85vw] to [48%] for a compact registry look.
+                */
+                className="min-w-[48%] sm:min-w-[45vw] lg:min-w-0 snap-center flex flex-col group cursor-pointer"
+            >
+                {/* Card Container */}
+                <div className="relative aspect-[3/4] bg-white border border-gray-100 p-2 md:p-3 shadow-sm transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl group-hover:border-[#bd002d]/20 overflow-hidden rounded-br-[30px] md:rounded-br-[60px]">
+                    <div className="absolute top-0 right-0 z-20 overflow-hidden w-16 h-16 md:w-24 md:h-24 pointer-events-none">
+                        <div className="absolute top-[18%] -right-[32%] bg-[#bd002d] text-white text-[6px] md:text-[8px] font-black py-1 w-[140%] text-center transform rotate-45 shadow-sm">
+                            Latest
                         </div>
-                        <p className='lg:hidden text-[8px] font-black uppercase tracking-[0.4em] text-gray-300 text-center mt-4 animate-pulse'>
-                            Scroll for more specimens
-                        </p>
                     </div>
+                    
+                    {/* Inner Frame */}
+                    <div className="w-full h-full bg-[#f8f8f8] flex items-center justify-center p-2 md:p-4 relative rounded-br-[20px] md:rounded-br-[40px]">
+                        <ProductItem 
+                            id={item._id} 
+                            image={item.image} 
+                            name={item.name} 
+                            price={item.price} 
+                            marketPrice={item.marketPrice}
+                            category={item.category[0]}
+                            linkToFilter={true}
+                        />
+                    </div>
+                </div>
+            </div>
+        ))}
+    </div>
+    <p className='lg:hidden text-[8px] font-black uppercase tracking-[0.4em] text-gray-300 text-center mt-4 animate-pulse'>
+        Swipe for more specimens
+    </p>
+</div>
                 </div>
 
                 {/* --- Footer Invitation --- */}

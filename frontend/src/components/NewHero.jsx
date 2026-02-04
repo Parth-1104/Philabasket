@@ -19,12 +19,12 @@ const NewHero = ({ scrollHandler }) => {
         Acquire the Unwritten Chapters of History.
         </p>
 
-        <button 
+        {/* <button 
           onClick={scrollHandler}
           className="mt-4 lg:mt-8 px-4 lg:px-8 py-2 lg:py-4 bg-black text-white text-[8px] lg:text-xs font-black uppercase tracking-[0.2em] lg:tracking-[0.3em] hover:bg-[#bd002d] transition-all duration-500 rounded-sm"
         >
           Explore
-        </button>
+        </button> */}
       </div>
 
       {/* --- GRAPHIC AREA (Right Side) --- */}

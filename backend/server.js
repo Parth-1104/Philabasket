@@ -12,6 +12,7 @@ import newsletterRouter from './routes/newsletterRoute.js'
 import blogRouter from './routes/blogRouter.js';
 
 import mailRouter from './routes/mailRoute.js';
+import categoryRouter from './routes/categoryRoute.js'
 
 // App Config
 const app = express()
@@ -42,6 +43,7 @@ app.use('/api/blog', blogRouter);
 // ... other imports and app initialization
 
 app.use('/api/mail', mailRouter);
+app.use('/api/category', categoryRouter);
 
 app.get('/',(req,res)=>{
     res.send("API Working")

@@ -44,6 +44,7 @@ const RelatedProducts = ({ category, id }) => { // Added 'id' to props to exclud
                 name={item.name} 
                 price={item.price} 
                 image={item.image}
+                marketPrice={item.marketPrice}
                 category={item.category && item.category[0]} // Pass category back for link functionality
             />
         ))}

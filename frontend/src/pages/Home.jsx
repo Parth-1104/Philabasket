@@ -22,7 +22,9 @@ const Home = () => {
         <LatestCollection/>
       </div>
 
-      <BestSeller/>
+      <BestSeller />
+
+      <NewsletterBox />
 
 
       {/* 3. THE PALATE CLEANSER: Breaks the grid pattern and builds authority/trust 
@@ -34,7 +36,7 @@ const Home = () => {
       {/* <BestSeller/> */}
 
       {/* 5. THE CLOSURE: Inviting them into the long-term community */}
-      <NewsletterBox/>
+      
     </div>
   )
 }

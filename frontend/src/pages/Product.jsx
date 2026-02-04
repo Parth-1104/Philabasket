@@ -4,13 +4,13 @@ import { ShopContext } from '../context/ShopContext';
 import { assets } from '../assets/assets';
 import RelatedProducts from '../components/RelatedProducts';
 import { Heart } from 'lucide-react';
+
 const Product = () => {
   const { productId } = useParams();
-  const { products, addToCart, formatPrice, currency, navigate } = useContext(ShopContext);
+  const { products, addToCart, formatPrice, currency, navigate, wishlist, toggleWishlist } = useContext(ShopContext);
   const [productData, setProductData] = useState(false);
   const [image, setImage] = useState('');
   const [showPopup, setShowPopup] = useState(false);
-  const { wishlist, toggleWishlist } = useContext(ShopContext);
 
   const fetchProductData = async () => {
     const item = products.find((item) => item._id === productId);
@@ -40,162 +40,142 @@ const Product = () => {
   const valuationValue = currency === 'USD' ? (rewardPoints * 0.012).toFixed(2) : (rewardPoints / 10).toFixed(2);
 
   return productData ? (
-    <div className='bg-white min-h-screen pt-24 pb-20 px-6 md:px-16 lg:px-24 text-black select-none animate-fade-in relative'>
+    <div className='bg-white min-h-screen pt-20 pb-12 px-6 md:px-16 lg:px-24 text-black select-none animate-fade-in relative'>
       
       {showPopup && (
-        <div className='fixed top-10 left-1/2 -translate-x-1/2 z-[1000] animate-bounce-in'>
-          <div className='bg-black text-white px-8 py-4 flex items-center gap-4 shadow-2xl border border-[#D4AF37]/50 rounded-sm backdrop-blur-md bg-opacity-90'>
-            <div className='w-2 h-2 bg-[#D4AF37] rounded-full'></div>
-            <p className='text-[10px] font-black uppercase tracking-[0.3em]'>Specimen Added to Archive</p>
-            <div className='w-2 h-2 bg-[#D4AF37] rounded-full'></div>
+        <div className='fixed top-6 left-1/2 -translate-x-1/2 z-[1000] animate-bounce-in'>
+          <div className='bg-black text-white px-6 py-3 flex items-center gap-3 shadow-2xl border border-[#D4AF37]/50 rounded-sm backdrop-blur-md bg-opacity-90'>
+            <p className='text-[9px] font-black uppercase tracking-[0.2em]'>Specimen Catalogued</p>
           </div>
         </div>
       )}
 
-      <div className='flex gap-16 flex-col lg:flex-row'>
-        <div className='flex-1 flex flex-col-reverse gap-6 lg:flex-row'>
-          <div className='flex lg:flex-col overflow-x-auto lg:overflow-y-auto justify-between lg:justify-normal lg:w-[12%] w-full hide-scrollbar'>
+      <div className='flex gap-10 flex-col lg:flex-row items-start'>
+        {/* MEDIA SECTION - Compacted */}
+        <div className='flex-1 flex flex-col-reverse gap-4 lg:flex-row w-full'>
+          <div className='flex lg:flex-col overflow-x-auto lg:w-[12%] w-full hide-scrollbar gap-3'>
               {productData.image.map((item, index) => (
                   <img draggable="false" onClick={() => setImage(item)} src={item} key={index} 
-                    className={`w-[22%] lg:w-full lg:mb-4 flex-shrink-0 cursor-pointer border-2 transition-all duration-700 p-2 bg-[#F9F9F9] ${image === item ? 'border-[#BC002D] scale-105' : 'border-black/5 opacity-60 hover:opacity-100'}`} 
+                    className={`w-[18%] lg:w-full aspect-square object-contain cursor-pointer border transition-all duration-500 p-1.5 bg-[#F9F9F9] ${image === item ? 'border-[#BC002D]' : 'border-black/5 opacity-50'}`} 
                     alt="Thumbnail" />
               ))}
           </div>
-          <div className='w-full lg:w-[62%] relative group overflow-hidden bg-[#F9F9F9] p-8 border border-black/5 shadow-sm'>
+          <div className='w-full lg:w-[88%] relative group bg-[#F9F9F9] flex items-center justify-center border border-black/5 p-8 min-h-[350px] md:min-h-[450px]'>
               {productData.price > 1000 && (
-                <div className='absolute top-6 left-6 z-20 flex items-center gap-2 bg-white/80 backdrop-blur-md px-3 py-1 border border-[#D4AF37]/30'>
-                   <div className='w-1.5 h-1.5 bg-[#D4AF37] rounded-full animate-pulse'></div>
-                   <span className='text-[8px] font-black tracking-[0.3em] uppercase text-[#D4AF37]'>Rare Specimen</span>
+                <div className='absolute top-4 left-4 z-20 flex items-center gap-2 bg-white/90 px-2 py-1 border border-[#D4AF37]/30'>
+                   <div className='w-1 h-1 bg-[#D4AF37] rounded-full animate-pulse'></div>
+                   <span className='text-[7px] font-black tracking-[0.2em] uppercase text-[#D4AF37]'>Rare</span>
                 </div>
               )}
-              <img draggable="false" className='w-full h-auto transform group-hover:scale-110 transition-transform duration-[1.5s] ease-out cursor-zoom-in' src={image} alt="Main Specimen" />
+              <img draggable="false" className='max-w-full max-h-[380px] object-contain drop-shadow-xl transition-transform duration-700 hover:scale-105' src={image} alt="Main Specimen" />
           </div>
         </div>
 
-        <div className='flex-1 lg:max-w-[550px]'>
-          <div className='flex items-center gap-4 mb-8'>
-            <span className='bg-[#BC002D]/5 text-[#BC002D] text-[9px] font-black tracking-[0.4em] px-4 py-2 border border-[#BC002D]/10 uppercase'>{productData.country}</span>
-            <span className='text-gray-400 text-[9px] font-bold tracking-[0.4em] uppercase border-l border-black/10 pl-4'>{productData.year} Archive</span>
+        {/* INFO SECTION - Streamlined */}
+        <div className='flex-1 lg:max-w-[480px]'>
+          <div className='flex items-center gap-3 mb-4'>
+            <span className='text-[#BC002D] text-[8px] font-black tracking-[0.3em] px-3 py-1 bg-[#BC002D]/5 uppercase'>{productData.country}</span>
+            <span className='text-gray-400 text-[8px] font-bold tracking-[0.3em] uppercase'>{productData.year} Archive</span>
           </div>
 
-          <h1 className='font-serif text-4xl md:text-6xl text-black tracking-tight leading-tight mb-4'>{productData.name}</h1>
+          <h1 className='font-serif text-3xl md:text-4xl text-black tracking-tight leading-tight mb-2 uppercase font-bold'>{productData.name}</h1>
           
-          <div className='flex items-center gap-2 mb-8'>
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className={`w-1 h-1 rounded-full ${i < 4 ? 'bg-[#BC002D]' : 'bg-black/10'}`}></div>
-              ))}
-              <p className='pl-3 text-[9px] tracking-[0.5em] text-gray-400 uppercase font-black'>Verified Heritage Asset</p>
+          <div className='flex items-center gap-2 mb-6'>
+              <div className='flex gap-1'>
+                {[...Array(5)].map((_, i) => <div key={i} className={`w-1 h-1 rounded-full ${i < 4 ? 'bg-[#BC002D]' : 'bg-black/10'}`}></div>)}
+              </div>
+              <p className='text-[8px] tracking-[0.3em] text-gray-400 uppercase font-black'>Certified Heritage Asset</p>
           </div>
 
-          {/* --- NEW: TECHNICAL APPRAISAL SECTION --- */}
-          <div className='mb-10 grid grid-cols-2 gap-y-4 gap-x-12 border-y border-black/5 py-8'>
-              <div className='flex flex-col gap-1'>
-                  <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest'>Condition</p>
-                  <p className='text-xs font-bold uppercase tracking-wider text-black'>{productData.condition}</p>
-              </div>
-              <div className='flex flex-col gap-1'>
-                  <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest'>Origin</p>
-                  <p className='text-xs font-bold uppercase tracking-wider text-black'>{productData.country}</p>
-              </div>
-              <div className='flex flex-col gap-1'>
-                  <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest'>Issue Year</p>
-                  <p className='text-xs font-bold uppercase tracking-wider text-black'>{productData.year}</p>
-              </div>
-              <div className='flex flex-col gap-1'>
-                  <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest'>Registry Stock</p>
-                  <p className={`text-xs font-bold uppercase tracking-wider ${productData.stock < 5 ? 'text-[#BC002D]' : 'text-black'}`}>
-                    {productData.stock > 0 ? `${productData.stock} Specimens Available` : 'Exhausted'}
-                  </p>
-              </div>
-          </div>
-          <div className='mb-10'>
-    <div className='flex items-center gap-2 mb-4'>
-        <div className='h-[1px] w-4 bg-[#BC002D]'></div>
-        <p className='text-[9px] font-black text-[#BC002D] uppercase tracking-[0.3em]'>Historical Significance</p>
-    </div>
-    
-    {/* Description styling: High contrast, slightly larger, and high-impact */}
-    <p className='text-sm md:text-base font-bold text-gray-900 leading-relaxed tracking-tight'>
-        {productData.description}
-    </p>
-</div>
-
-          <div className='flex items-end gap-2 mb-10'>
-            <span className='text-3xl font-serif text-[#D4AF37] leading-none mb-1'>{currency === 'USD' ? '$' : '₹'}</span>
-            <p className='text-5xl md:text-6xl font-medium text-[#D4AF37] tracking-tighter tabular-nums'>
-                {String(formatPrice(productData.price)).replace(/[₹$]/g, '')}
-            </p>
-          </div>
-
-          <div className='mb-12 p-6 border border-black/5 bg-[#FBFBFB] relative group overflow-hidden'>
-            <div className='absolute left-0 top-0 h-full w-[2px] bg-[#BC002D]'></div>
-            <div className='flex items-center gap-5'>
-                <img src={assets.coin} className='w-10 h-10 grayscale group-hover:grayscale-0 transition-all duration-700' alt="Points" />
-                <div>
-                  <p className='text-[10px] font-black text-[#BC002D] uppercase tracking-[0.4em] mb-1'>Collector Privilege</p>
-                  <p className='text-xs text-gray-500 font-light leading-relaxed uppercase tracking-wider'>
-                    Acquire to earn <span className='text-black font-bold'>{rewardPoints} PTS</span>. 
-                    Valuation credit: <span className='text-black font-bold'>{valuationSymbol}{valuationValue}</span>
-                  </p>
+          {/* APPRAISAL GRID - Compact */}
+          <div className='mb-6 grid grid-cols-2 gap-y-3 gap-x-8 border-y border-black/5 py-5'>
+              {[
+                {label: 'Condition', val: productData.condition || 'Mint'},
+                {label: 'Origin', val: productData.country},
+                {label: 'Issue Year', val: productData.year},
+                {label: 'Stock', val: productData.stock > 0 ? `${productData.stock} left` : 'Sold Out', color: productData.stock < 5}
+              ].map((stat, i) => (
+                <div key={i} className='flex flex-col'>
+                    <p className='text-[7px] font-black text-gray-400 uppercase tracking-widest'>{stat.label}</p>
+                    <p className={`text-[10px] font-bold uppercase tracking-wider ${stat.color ? 'text-[#BC002D]' : 'text-black'}`}>{stat.val}</p>
                 </div>
+              ))}
+          </div>
+
+          <div className='mb-6'>
+              <p className='text-[7px] font-black text-[#BC002D] uppercase tracking-[0.3em] mb-2'>Significance</p>
+              <p className='text-xs md:text-sm font-bold text-gray-700 leading-relaxed line-clamp-3 hover:line-clamp-none cursor-default transition-all'>
+                  {productData.description}
+              </p>
+          </div>
+
+          {/* PRICE - High Impact but sized correctly */}
+          <div className='flex items-end gap-3 mb-6'>
+              <div className='flex items-end gap-0.5'>
+                  <span className='text-xl font-serif text-[#D4AF37] mb-1'>{valuationSymbol}</span>
+                  <p className='text-4xl md:text-5xl font-medium text-[#D4AF37] tracking-tighter tabular-nums'>
+                      {String(formatPrice(productData.price)).replace(/[₹$]/g, '')}
+                  </p>
+              </div>
+              {productData.marketPrice > productData.price && (
+                  <p className='text-lg font-medium text-gray-300 line-through mb-1.5 tabular-nums'>
+                      {String(formatPrice(productData.marketPrice)).replace(/[₹$]/g, '')}
+                  </p>
+              )}
+          </div>
+
+          {/* PRIVILEGE BOX - Slimmer */}
+          <div className='mb-8 p-4 border border-black/5 bg-[#FBFBFB] flex items-center gap-4'>
+            <img src={assets.coin} className='w-7 h-7 grayscale' alt="Points" />
+            <div>
+              <p className='text-[8px] font-black text-[#BC002D] uppercase tracking-[0.3em]'>Points Credit</p>
+              <p className='text-[9px] text-gray-500 font-bold uppercase tracking-wider'>
+                Earn <span className='text-black'>{rewardPoints} PTS</span> (~{valuationSymbol}{valuationValue})
+              </p>
             </div>
           </div>
           
-          <div className='mb-16 flex flex-col sm:flex-row gap-4 items-stretch'>
+          <div className='mb-10 flex flex-col sm:flex-row gap-3'>
             {productData.stock > 0 ? (
               <>
-                <button onClick={handleAddToCart} className='group relative flex-[3] bg-black text-white px-10 py-6 text-[11px] font-black tracking-[0.5em] uppercase overflow-hidden rounded-sm'>
-                  <span className="absolute inset-0 w-0 bg-[#BC002D] transition-all duration-500 group-hover:w-full"></span>
-                  <span className="relative z-10">Add to Collection</span>
+              <button onClick={() => toggleWishlist(productData._id)} className='flex-1 flex items-center justify-center border border-black/5 py-5 hover:bg-gray-50'>
+                  <Heart size={18} className={wishlist.includes(productData._id) ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-300'} />
                 </button>
-                <button onClick={handleBuyNow} className='flex-[3] border-2 border-black text-black px-10 py-6 text-[11px] font-black tracking-[0.5em] uppercase hover:bg-black hover:text-white transition-all duration-500 rounded-sm'>
-                  Purchase Acquisition
+                <button onClick={handleAddToCart} className='flex-[2] bg-black text-white py-4 text-[10px] font-black tracking-[0.4em] uppercase hover:bg-[#BC002D] transition-colors rounded-sm'>
+                  Add to Cart
                 </button>
-                <button 
-  onClick={() => toggleWishlist(productData._id)}
-  className={`flex-1 flex items-center justify-center p-6 border transition-all duration-500 rounded-sm ${
-    wishlist.includes(productData._id) 
-    ? 'bg-[#BC002D]/5 border-[#BC002D]/20' 
-    : 'border-black/5 hover:bg-gray-50'
-  }`}
-  title="Archive Specimen"
->
-  <Heart 
-    size={22} 
-    /* Logic: If in wishlist, fill with Red and remove stroke. 
-       If not, show as a light gray outline.
-    */
-    className={`transition-all duration-500 transform ${
-      wishlist.includes(productData._id) 
-      ? 'fill-[#BC002D] text-[#BC002D] scale-110' 
-      : 'text-gray-300 hover:text-black'
-    }`}
-    strokeWidth={wishlist.includes(productData._id) ? 1 : 2}
-  />
-</button>
+                <button onClick={handleBuyNow} className='flex-[2] border border-black py-4 text-[10px] font-black tracking-[0.4em] uppercase hover:bg-black hover:text-white transition-colors rounded-sm'>
+                  Buy Now
+                </button>
+                
               </>
             ) : (
-              <button disabled className='w-full border border-black/5 text-gray-300 px-16 py-6 text-[11px] font-black tracking-[0.5em] uppercase cursor-not-allowed'>Specimen Exhausted</button>
+              <button disabled className='w-full border border-black/5 text-gray-300 py-4 text-[10px] font-black tracking-[0.4em] uppercase'>Exhausted</button>
             )}
           </div>
 
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-6 pt-12 border-t border-black/5'>
-              <div className='flex flex-col gap-2'><p className='text-[9px] font-black tracking-[0.3em] uppercase text-black'>Authenticity</p><p className='text-[10px] text-gray-400 font-medium leading-relaxed uppercase tracking-widest'>Certified Registry Provenance</p></div>
-              <div className='flex flex-col gap-2'><p className='text-[9px] font-black tracking-[0.3em] uppercase text-black'>Logistics</p><p className='text-[10px] text-gray-400 font-medium leading-relaxed uppercase tracking-widest'>White-Glove Insured Transit</p></div>
-              <div className='flex flex-col gap-2'><p className='text-[9px] font-black tracking-[0.3em] uppercase text-black'>Vault Return</p><p className='text-[10px] text-gray-400 font-medium leading-relaxed uppercase tracking-widest'>14-Day Reflection Period</p></div>
-          </div>
+          {/* TRUST BADGES - Horizontal and tight */}
+          {/* <div className='flex justify-between pt-6 border-t border-black/5 gap-2'>
+              {['Authentic', 'Insured'].map((text, i) => (
+                <div key={i} className='flex flex-col gap-1'>
+                  <p className='text-[7px] font-black uppercase text-black'>{text}</p>
+                  <p className='text-[7px] text-gray-400 font-bold uppercase tracking-tighter'>Verified</p>
+                </div>
+              ))}
+          </div> */}
         </div>
       </div>
       
-      <div className='mt-32 border-t border-black/5 pt-20'>
-         <div className='mb-12 text-center'>
-            <p className='text-[10px] tracking-[0.6em] text-[#BC002D] uppercase font-black mb-2'>Historical Parallel</p>
-            <h2 className='text-3xl font-serif text-black'>Related <span className='italic font-light text-black/20'>Specimens</span></h2>
-         </div>
+      {/* RELATED - Reduced Margin */}
+      <div className='mt-20 border-t border-black/5 pt-[-3vh]'>
+         {/* <div className='mb-8 text-center'>
+            <p className='text-[8px] tracking-[0.4em] text-[#BC002D] uppercase font-black mb-1'>Parallel Specimens</p>
+            <h2 className='text-2xl font-serif text-black italic'>You may also like</h2>
+         </div> */}
          <RelatedProducts category={productData.category[0]} />
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } @keyframes bounce-in { 0% { transform: translate(-50%, -20px); opacity: 0; } 50% { transform: translate(-50%, 10px); } 100% { transform: translate(-50%, 0); opacity: 1; } } .animate-bounce-in { animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards; }`}} />
+      <style dangerouslySetInnerHTML={{ __html: `.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } @keyframes bounce-in { 0% { transform: translate(-50%, -20px); opacity: 0; } 100% { transform: translate(-50%, 0); opacity: 1; } } .animate-bounce-in { animation: bounce-in 0.4s ease-out forwards; }`}} />
     </div>
   ) : <div className='min-h-screen bg-white'></div>
 }
