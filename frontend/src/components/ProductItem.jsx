@@ -26,15 +26,15 @@ const ProductItem = ({ id, image, name, price, category, linkToFilter = false })
         onDragStart={handleDragStart} 
       >
           {/* Main Container: Crimson Accents & NewHero Curve */}
-          <div className='relative overflow-hidden bg-white p-4 transition-all duration-700 border border-black/[0.05] group-hover:border-[#BC002D]/30 rounded-br-[60px] group-hover:rounded-br-[80px] shadow-sm group-hover:shadow-2xl'>
+          <div className='relative overflow-hidden bg-white p-2 lg:p-1 transition-all duration-700 border border-black/[0.05] group-hover:border-[#BC002D]/30 rounded-br-[60px] group-hover:rounded-br-[80px] shadow-sm group-hover:shadow-2xl'>
               
               {/* Vertical Registry Tag - NewHero Style */}
               <div className='absolute top-0 right-6 z-20'>
-                <div className='bg-black text-white px-2 py-4 flex flex-col items-center gap-2 group-hover:bg-[#BC002D] transition-colors duration-500'>
+                {/* <div className='bg-black text-white px-2 py-4 flex flex-col items-center gap-2 group-hover:bg-[#BC002D] transition-colors duration-500'>
                   <span className='[writing-mode:vertical-lr] text-[7px] font-black tracking-[0.3em] uppercase'>
                     REG. {registryNo}
                   </span>
-                </div>
+                </div> */}
               </div>
 
               {/* Rarity Pulse - Crimson */}
@@ -52,7 +52,7 @@ const ProductItem = ({ id, image, name, price, category, linkToFilter = false })
                   
                   <img 
                       draggable="false"
-                      className='z-10 w-full h-full object-contain p-8 filter grayscale-[0.3] group-hover:grayscale-0 drop-shadow-[0_10px_20px_rgba(0,0,0,0.08)] transform group-hover:scale-110 transition-transform duration-[1.5s] ease-out' 
+                      className='z-10 w-full h-full object-contain p-8 filter grayscale-[0.3] group-hover:grayscale-3 drop-shadow-[0_10px_20px_rgba(0,0,0,0.08)] transform group-hover:scale-110 transition-transform duration-[1.5s] ease-out' 
                       src={image && image[0] ? image[0] : ""} 
                       alt={name} 
                   />
@@ -75,7 +75,7 @@ const ProductItem = ({ id, image, name, price, category, linkToFilter = false })
                       {name || "Untitled Specimen"}
                   </h3>
                   <p className='text-[9px] font-bold text-gray-400 uppercase tracking-widest'>
-                    {category} • Archive
+                    {category} 
                   </p>
                 </div>
                 
@@ -89,11 +89,11 @@ const ProductItem = ({ id, image, name, price, category, linkToFilter = false })
               </div>
               
               {/* Action Prompt */}
-              <div className='mt-4 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-1 group-hover:translate-y-0'>
-                <div className='h-[1px] w-6 bg-[#BC002D]'></div>
-                <span className='text-[8px] tracking-[0.4em] font-black text-[#BC002D] uppercase'>
+              <div className=' pb-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-500 translate-y-1 group-hover:translate-y-0'>
+                <div className='h-[1px] w-9 bg-[#BC002D]'></div>
+                {/* <span className='text-[8px] tracking-[0.4em] font-black text-[#BC002D] uppercase'>
                     {linkToFilter ? 'Open Ledger' : 'Acquire'}
-                </span>
+                </span> */}
               </div>
           </div>
       </Link>

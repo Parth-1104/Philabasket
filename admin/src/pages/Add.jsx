@@ -3,28 +3,31 @@ import { assets } from '../assets/assets'
 import axios from 'axios'
 import { backendUrl } from '../App'
 import { toast } from 'react-toastify'
+import { Link } from 'react-router-dom'
+import { Image as ImageIcon, FileText, UploadCloud } from 'lucide-react'
 
 const Add = ({ token }) => {
-  // --- State for Modes ---
-  const [uploadMode, setUploadMode] = useState('manual'); // 'manual' or 'csv'
+  const [uploadMode, setUploadMode] = useState('manual');
+  const [loading, setLoading] = useState(false);
 
-  // --- State for Manual Entry ---
+  // --- Manual Entry State ---
   const [image1, setImage1] = useState(false)
   const [image2, setImage2] = useState(false)
   const [image3, setImage3] = useState(false)
   const [image4, setImage4] = useState(false)
+  
+  // NEW: Sync via Registry Name
+  const [imageName, setImageName] = useState(""); 
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
-  const [categories, setCategories] = useState([]); // Array for multi-category
+  const [categories, setCategories] = useState([]);
   const [year, setYear] = useState("");
   const [country, setCountry] = useState("");
   const [condition, setCondition] = useState("Mint");
   const [stock, setStock] = useState(1);
-  const [bestseller, setBestseller] = useState(false);
 
-  // Available options
   const categoryOptions = [
     "AgriCulture Stamp", "Airmail", "Americas", "Ancillaries", "Animal & WildLife", 
     "Army", "Army Postal Cover APC", "Asia", "Autograph Cover", "Aviation Stamps", 
@@ -62,9 +65,11 @@ const Add = ({ token }) => {
 
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+    if (loading) return;
+    setLoading(true);
+
     try {
       const formData = new FormData()
-
       formData.append("name", name)
       formData.append("description", description)
       formData.append("price", price)
@@ -73,7 +78,9 @@ const Add = ({ token }) => {
       formData.append("country", country)
       formData.append("condition", condition)
       formData.append("stock", stock)
-      formData.append("bestseller", false)
+      
+      // NEW: Send the registry name if no local file is uploaded
+      if (imageName) formData.append("imageName", imageName);
 
       image1 && formData.append("image1", image1)
       image2 && formData.append("image2", image2)
@@ -84,152 +91,151 @@ const Add = ({ token }) => {
 
       if (response.data.success) {
         toast.success(response.data.message)
-        // Reset fields
         setName(''); setDescription(''); setPrice(''); setYear(''); setCountry(''); setCategories([]);
-        setImage1(false); setImage2(false); setImage3(false); setImage4(false);
+        setImageName(''); setImage1(false); setImage2(false); setImage3(false); setImage4(false);
       } else {
         toast.error(response.data.message)
       }
     } catch (error) {
-      const message = error.response?.data?.message || "Server unreachable. Please check your connection.";
-        toast.error(`Upload Failed: ${message}`);
+      toast.error("Upload failed. Verify your registry connection.");
+    } finally {
+      setLoading(false);
     }
   }
 
-  // Placeholder for CSV handler
   const onCsvUploadHandler = async(e) => {
     const file = e.target.files[0];
-    if (!file) return;
-
-    if (file.type !== "text/csv" && !file.name.endsWith('.csv')) {
-      return toast.error("Invalid file type. Please upload a .csv file.");
-  }
+    if (!file || loading) return;
+    setLoading(true);
 
     const formData = new FormData();
     formData.append("file", file);
 
     try {
-        const response = await axios.post(backendUrl + "/api/product/bulk-add", formData, { 
-            headers: { token } 
-        });
-
+        const response = await axios.post(backendUrl + "/api/product/bulk-add", formData, { headers: { token } });
         if (response.data.success) {
             toast.success(response.data.message);
-            setUploadMode('manual'); // Switch back to manual mode after success
+            setUploadMode('manual');
         } else {
             toast.error(response.data.message);
         }
     } catch (error) {
-      const reason = error.response?.data?.message || error.message;
-      toast.error(`Bulk Upload Failed: ${reason}`);
-    }finally {
-      setLoading(false);
+        toast.error("Bulk Upload Failed. Ensure imageName column matches Media Registry.");
+    } finally {
+        setLoading(false);
     }
   }
 
   return (
-    <div className='w-full p-4'>
+    <div className='w-full p-8 bg-white min-h-screen font-sans'>
+      <div className='flex items-center justify-between mb-8'>
+        <div>
+            <h2 className='text-3xl font-black uppercase tracking-tighter'>Stamp Admission</h2>
+            <p className='text-[10px] font-bold text-blue-600 uppercase tracking-widest'>Syncing with Media Registry</p>
+        </div>
+        <Link to="/media-library" className='bg-gray-100 px-6 py-3 rounded-xl text-[10px] font-black uppercase flex items-center gap-2 hover:bg-blue-50 transition-all'>
+            <ImageIcon size={14}/> Open Media Library
+        </Link>
+      </div>
+
       {/* Mode Switcher */}
-      <div className='flex gap-4 mb-8 border-b pb-4'>
-        <button 
-          onClick={() => setUploadMode('manual')}
-          className={`px-4 py-2 rounded ${uploadMode === 'manual' ? 'bg-black text-white' : 'bg-gray-100'}`}
-        >
-          Single Stamp Entry
+      <div className='flex gap-4 mb-10 bg-gray-50 p-2 rounded-2xl w-fit'>
+        <button onClick={() => setUploadMode('manual')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${uploadMode === 'manual' ? 'bg-black text-white shadow-xl' : 'text-gray-400'}`}>
+          <div className='flex items-center gap-2'><FileText size={14}/> Manual Entry</div>
         </button>
-        <button 
-          onClick={() => setUploadMode('csv')}
-          className={`px-4 py-2 rounded ${uploadMode === 'csv' ? 'bg-black text-white' : 'bg-gray-100'}`}
-        >
-          Bulk Upload (CSV)
+        <button onClick={() => setUploadMode('csv')} className={`px-6 py-3 rounded-xl text-[10px] font-black uppercase transition-all ${uploadMode === 'csv' ? 'bg-black text-white shadow-xl' : 'text-gray-400'}`}>
+          <div className='flex items-center gap-2'><UploadCloud size={14}/> Bulk CSV</div>
         </button>
       </div>
 
       {uploadMode === 'csv' ? (
-        <div className='flex flex-col items-center justify-center border-2 border-dashed border-gray-300 p-10 rounded-lg'>
-          <p className='mb-4 text-gray-600'>Upload a CSV file with stamp details</p>
-          <input type="file" accept=".csv" onChange={onCsvUploadHandler} className='block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100'/>
-          <p className='mt-4 text-xs text-gray-400'>Columns required: name, price, description, year, country, stock...</p>
+        <div className='flex flex-col items-center justify-center border-2 border-dashed border-gray-200 p-20 rounded-[40px] bg-gray-50 transition-all hover:border-blue-300 group'>
+          <UploadCloud size={48} className='text-gray-300 group-hover:text-blue-500 transition-colors mb-6' />
+          <p className='mb-6 text-sm font-bold text-gray-500 uppercase tracking-widest'>Upload Stamp Registry CSV</p>
+          <input type="file" accept=".csv" onChange={onCsvUploadHandler} className='block w-fit text-xs text-gray-500 file:mr-4 file:py-3 file:px-8 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-blue-600 file:text-white hover:file:bg-black file:transition-all cursor-pointer'/>
+          <p className='mt-8 text-[9px] text-gray-400 font-bold uppercase tracking-widest bg-white px-4 py-2 rounded-full border border-gray-100'>
+            Required: name, price, imageName (matches Media Library)
+          </p>
         </div>
       ) : (
-        <form onSubmit={onSubmitHandler} className='flex flex-col w-full items-start gap-4'>
+        <form onSubmit={onSubmitHandler} className='flex flex-col w-full items-start gap-8 max-w-4xl'>
           
-          {/* Image Upload Section */}
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-12 w-full'>
+            {/* Left Column: Media */}
+            <div className='space-y-6'>
+                <div>
+                    <p className='mb-3 text-[10px] font-black uppercase tracking-widest text-gray-400'>Local Upload</p>
+                    <div className='flex gap-3'>
+                        {[image1, image2, image3, image4].map((img, index) => (
+                            <label key={index} htmlFor={`image${index + 1}`} className='relative group'>
+                                <img className='w-20 h-24 object-cover border border-gray-200 rounded-xl cursor-pointer group-hover:opacity-75 transition-all' src={!img ? assets.upload_area : URL.createObjectURL(img)} alt="" />
+                                <input onChange={(e) => [setImage1, setImage2, setImage3, setImage4][index](e.target.files[0])} type="file" id={`image${index + 1}`} hidden />
+                            </label>
+                        ))}
+                    </div>
+                </div>
+
+                <div className='relative'>
+                    <div className='absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none'>
+                        <ImageIcon size={14} className='text-blue-500' />
+                    </div>
+                    <p className='mb-3 text-[10px] font-black uppercase tracking-widest text-gray-400'>OR Sync from Registry</p>
+                    <input 
+                        onChange={(e) => setImageName(e.target.value)} 
+                        value={imageName} 
+                        className='w-full pl-10 pr-4 py-4 bg-blue-50/50 border border-blue-100 rounded-2xl text-xs font-bold placeholder:text-blue-300 outline-none focus:border-blue-400 transition-all' 
+                        type="text" 
+                        placeholder='Enter Filename (e.g. main02.png)' 
+                    />
+                </div>
+            </div>
+
+            {/* Right Column: Identity */}
+            <div className='space-y-6'>
+                <div className='w-full'>
+                    <p className='mb-3 text-[10px] font-black uppercase tracking-widest text-gray-400'>Stamp Title</p>
+                    <input onChange={(e) => setName(e.target.value)} value={name} className='w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold outline-none focus:border-black transition-all' type="text" placeholder='e.g. 1840 Penny Black' required />
+                </div>
+                <div className='w-full'>
+                    <p className='mb-3 text-[10px] font-black uppercase tracking-widest text-gray-400'>Historical Dossier</p>
+                    <textarea onChange={(e) => setDescription(e.target.value)} value={description} className='w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm outline-none focus:border-black transition-all' rows={4} placeholder='Details on watermark, perforation, and heritage...' required />
+                </div>
+            </div>
+          </div>
+
+          <div className='grid grid-cols-2 md:grid-cols-4 gap-6 w-full'>
+            <div>
+              <p className='mb-3 text-[10px] font-black uppercase tracking-widest text-gray-400'>Country</p>
+              <input onChange={(e) => setCountry(e.target.value)} value={country} className='w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold outline-none' type="text" placeholder='UK' required />
+            </div>
+            <div>
+              <p className='mb-3 text-[10px] font-black uppercase tracking-widest text-gray-400'>Year</p>
+              <input onChange={(e) => setYear(e.target.value)} value={year} className='w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold outline-none' type="number" placeholder='1840' required />
+            </div>
+            <div>
+              <p className='mb-3 text-[10px] font-black uppercase tracking-widest text-gray-400'>Price (Valuation)</p>
+              <input onChange={(e) => setPrice(e.target.value)} value={price} className='w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold outline-none' type="Number" placeholder='500' required />
+            </div>
+            <div>
+              <p className='mb-3 text-[10px] font-black uppercase tracking-widest text-gray-400'>Stock</p>
+              <input onChange={(e) => setStock(e.target.value)} value={stock} className='w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold outline-none' type="number" placeholder='1' />
+            </div>
+          </div>
+
           <div>
-            <p className='mb-2 font-medium'>Upload Stamp Images</p>
-            <div className='flex gap-2'>
-              {[image1, image2, image3, image4].map((img, index) => (
-                <label key={index} htmlFor={`image${index + 1}`}>
-                  <img draggable="false" className='w-24 h-24 object-cover border-2 border-dotted border-gray-300 cursor-pointer' src={!img ? assets.upload_area : URL.createObjectURL(img)} alt="" />
-                  <input onChange={(e) => [setImage1, setImage2, setImage3, setImage4][index](e.target.files[0])} type="file" id={`image${index + 1}`} hidden />
-                </label>
-              ))}
-            </div>
-          </div>
-
-          <div className='w-full'>
-            <p className='mb-2 font-medium'>Stamp Name / Title</p>
-            <input onChange={(e) => setName(e.target.value)} value={name} className='w-full max-w-[500px] px-3 py-2 border rounded' type="text" placeholder='e.g. 1840 Penny Black' required />
-          </div>
-
-          <div className='w-full'>
-            <p className='mb-2 font-medium'>Historical Description</p>
-            <textarea onChange={(e) => setDescription(e.target.value)} value={description} className='w-full max-w-[500px] px-3 py-2 border rounded' rows={3} placeholder='Describe history, watermark, or perforation details' required />
-          </div>
-
-          <div className='grid grid-cols-1 sm:grid-cols-3 gap-4 w-full max-w-[700px]'>
-            <div>
-              <p className='mb-2 font-medium'>Country</p>
-              <input onChange={(e) => setCountry(e.target.value)} value={country} className='w-full px-3 py-2 border rounded' type="text" placeholder='Great Britain' required />
-            </div>
-            <div>
-              <p className='mb-2 font-medium'>Year of Issue</p>
-              <input onChange={(e) => setYear(e.target.value)} value={year} className='w-full px-3 py-2 border rounded' type="number" placeholder='1840' required />
-            </div>
-            <div>
-              <p className='mb-2 font-medium'>Price ($)</p>
-              <input onChange={(e) => setPrice(e.target.value)} value={price} className='w-full px-3 py-2 border rounded' type="Number" placeholder='500' required />
-            </div>
-          </div>
-
-          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-[500px]'>
-            <div>
-              <p className='mb-2 font-medium'>Condition</p>
-              <select onChange={(e) => setCondition(e.target.value)} className='w-full px-3 py-2 border rounded bg-white'>
-                <option value="Mint">Mint (Unused)</option>
-                <option value="Used">Used</option>
-                <option value="Fine">Fine</option>
-                <option value="Near Mint">Near Mint</option>
-              </select>
-            </div>
-            <div>
-              <p className='mb-2 font-medium'>Available Stock</p>
-              <input onChange={(e) => setStock(e.target.value)} value={stock} className='w-full px-3 py-2 border rounded' type="number" placeholder='1' />
-            </div>
-          </div>
-
-          {/* Multiple Category Selection */}
-          <div>
-            <p className='mb-2 font-medium'>Categories (Select Multiple)</p>
+            <p className='mb-4 text-[10px] font-black uppercase tracking-widest text-gray-400'>Registry Categories</p>
             <div className='flex flex-wrap gap-2'>
               {categoryOptions.map((cat) => (
-                <p 
-                  key={cat}
-                  onClick={() => toggleCategory(cat)}
-                  className={`${categories.includes(cat) ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-600"} px-4 py-1 rounded-full cursor-pointer text-sm transition-all`}
-                >
+                <p key={cat} onClick={() => toggleCategory(cat)} className={`${categories.includes(cat) ? "bg-black text-white" : "bg-gray-100 text-gray-400"} px-4 py-2 rounded-full cursor-pointer text-[9px] font-black uppercase tracking-widest transition-all hover:scale-105`}>
                   {cat}
                 </p>
               ))}
             </div>
           </div>
 
-          {/* <div className='flex gap-2 mt-2 items-center'>
-            <input onChange={() => setBestseller(prev => !prev)} checked={bestseller} type="checkbox" id='bestseller' className='w-4 h-4' />
-            <label className='cursor-pointer font-medium' htmlFor="bestseller">Mark as Featured / Bestseller</label>
-          </div> */}
-
-          <button type="submit" className='w-44 py-3 mt-4 bg-black text-white font-bold hover:bg-gray-800 transition-colors'>ADD STAMP</button>
+          <button type="submit" disabled={loading} className='w-full md:w-64 py-5 mt-4 bg-blue-600 text-white text-[11px] font-black uppercase tracking-[0.4em] rounded-2xl hover:bg-black transition-all shadow-xl shadow-blue-100 active:scale-95'>
+            {loading ? "Synchronizing..." : "Commit to Archive"}
+          </button>
         </form>
       )}
     </div>

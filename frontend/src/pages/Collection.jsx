@@ -93,17 +93,17 @@ const Collection = () => {
       <div className="absolute -right-[10vw] top-0 h-[60vh] w-[40vw] bg-[#BC002D]/5 rounded-bl-[600px] pointer-events-none"></div>
 
       {/* --- HEADER: Archive Status --- */}
-      <div className='relative z-10 flex flex-col md:flex-row justify-between items-end mb-16 gap-8'>
+      <div className='relative z-10 flex flex-col md:flex-row justify-between items-end mb-16 gap-8 lg:pt-[-5vh]'>
           <div className='max-w-2xl'>
-              <div className='flex items-center gap-4 mb-4'>
-                  <span className='h-[1.5px] w-12 bg-[#BC002D]'></span>
-                  <p className='text-[10px] tracking-[0.6em] text-[#BC002D] uppercase font-black'>Registry Database</p>
+              <div className='flex items-center gap-4 md:mt-[-5vh] mb-4'>
+                  <span className='h-[1.5px] md:mt-[-9vh] w-12 bg-[#BC002D]'></span>
+                  <p className='text-[10px] tracking-[0.6em] md:mt-[-9vh] text-[#BC002D] uppercase font-black'>Registry Database</p>
               </div>
-              <h2 className='text-6xl md:text-8xl font-bold text-gray-900 tracking-tighter leading-none'>
+              <h2 className='text-6xl md:text-5xl font-bold text-gray-900 md:mt-[-5vh] tracking-tighter leading-none'>
                   THE <span className='text-[#BC002D]'>GALLERY.</span>
               </h2>
               <p className='mt-6 text-gray-400 text-xs font-bold uppercase tracking-[0.2em] leading-relaxed'>
-                  Currently indexing <span className='text-black'>{filterProducts.length} certified specimens</span> for international acquisition.
+                  <span className='text-black'>{filterProducts.length} certified specimens found</span> 
               </p>
           </div>
 
@@ -123,14 +123,14 @@ const Collection = () => {
 
       <div className='flex flex-col lg:flex-row gap-12 relative z-10'>
         
-        {/* --- SIDEBAR: The Vault Index --- */}
-        <aside className={`
+     {/* --- SIDEBAR: The Vault Index --- */}
+<aside className={`
     fixed inset-0 z-[2000] lg:relative lg:z-0 lg:inset-auto
-    lg:w-80 lg:block lg:sticky lg:top-32 lg:h-[calc(100vh-180px)]
+    lg:w-80 lg:block lg:sticky lg:top-32 lg:h-fit
     transition-all duration-700
     ${showFilter ? 'opacity-100' : 'opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto'}
 `}>
-  {/* Mobile Backdrop with Blur */}
+  {/* Mobile Backdrop */}
   <div onClick={() => setShowFilter(false)} className='absolute inset-0 bg-black/80 backdrop-blur-sm lg:hidden'></div>
 
   <div className={`
@@ -139,8 +139,8 @@ const Collection = () => {
     ${showFilter ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
   `}>
     
-    {/* Header with Gold Accents */}
-    <div className='flex justify-between items-center mb-8'>
+    {/* Header */}
+    <div className='flex justify-between items-center mb-8 shrink-0'>
       <div className='flex flex-col'>
         <h3 className='text-white font-black text-xs tracking-[0.3em] uppercase'>Registry Index</h3>
         <div className='h-[2px] w-8 bg-white/30 mt-2'></div>
@@ -148,8 +148,8 @@ const Collection = () => {
       <button onClick={() => setShowFilter(false)} className='lg:hidden text-white/60 hover:text-white'><X size={24}/></button>
     </div>
 
-    {/* Filter Search: High Contrast Dark Mode Style */}
-    <div className='relative mb-8'>
+    {/* Search Input */}
+    <div className='relative mb-8 shrink-0'>
         <SearchIcon size={14} className='absolute left-5 top-1/2 -translate-y-1/2 text-white/50' />
         <input 
           type="text" 
@@ -159,47 +159,42 @@ const Collection = () => {
         />
     </div>
 
-    {/* Scrollable List with Amber/White Highlights */}
-    <div className='flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3'>
-      {filteredCategoryList.map((item) => (
-        <button 
-          key={item} 
-          onClick={() => toggleCategory(item)}
-          className={`w-full group flex items-center justify-between p-4 rounded-xl transition-all duration-500 border ${
-            category.includes(item) 
-            ? 'bg-white border-white shadow-xl shadow-black/10' 
-            : 'bg-black/5 border-transparent hover:border-white/20 hover:bg-black/10'
-          }`}
-        >
-          <span className={`text-[9px] tracking-[0.2em] uppercase font-black transition-colors duration-300 ${
-            category.includes(item) ? 'text-[#BC002D]' : 'text-white/70 group-hover:text-white'
-          }`}>
-              {item}
-          </span>
-          
-          {category.includes(item) ? (
-            <div className='w-1.5 h-1.5 bg-[#BC002D] rounded-full shadow-[0_0_8px_rgba(188,0,45,0.4)]'></div>
-          ) : (
-            <div className='w-1 h-1 bg-white/10 rounded-full group-hover:bg-white/40 transition-all'></div>
-          )}
-        </button>
-      ))}
+    {/* Category List: flex-1 and overflow-y-auto ONLY active on mobile (via lg:overflow-visible) */}
+    <div className='flex-1 overflow-y-auto lg:overflow-visible pr-2 lg:pr-0 custom-scrollbar'>
+      <div className='flex flex-col space-y-3 pb-10 lg:pb-0'>
+        {filteredCategoryList.map((item) => (
+          <button 
+            key={item} 
+            onClick={() => toggleCategory(item)}
+            className={`w-full group flex items-center justify-between p-4 rounded-xl transition-all duration-500 border ${
+              category.includes(item) 
+              ? 'bg-white border-white shadow-xl shadow-black/10' 
+              : 'bg-black/5 border-transparent hover:border-white/20 hover:bg-black/10'
+            }`}
+          >
+            <span className={`text-[9px] tracking-[0.2em] uppercase font-black transition-colors duration-300 ${
+              category.includes(item) ? 'text-[#BC002D]' : 'text-[#fff442] group-hover:text-white'
+            }`}>
+                {item}
+            </span>
+            
+            {category.includes(item) ? (
+              <div className='w-1.5 h-1.5 bg-[#BC002D] rounded-full shadow-[0_0_8px_rgba(188,0,45,0.4)]'></div>
+            ) : (
+              <div className='w-1 h-1 bg-white/10 rounded-full group-hover:bg-white/40 transition-all'></div>
+            )}
+          </button>
+        ))}
+      </div>
     </div>
 
     {/* Mobile Action Footer */}
-    <div className='lg:hidden mt-10 pt-6 border-t border-white/10'>
+    <div className='lg:hidden mt-auto pt-6 border-t border-white/10 shrink-0'>
         <p className='text-[8px] font-black text-white/40 uppercase tracking-[0.5em] text-center mb-4'>Verified Registry Sync</p>
     </div>
   </div>
-  
-  {/* Custom Scrollbar Styling for Red Theme */}
-  <style dangerouslySetInnerHTML={{ __html: `
-    .custom-scrollbar::-webkit-scrollbar { width: 3px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.1); }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
-    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.5); }
-  `}} />
 </aside>
+
 
         {/* --- MAIN DISPLAY --- */}
         <main className='flex-1'>
@@ -207,7 +202,7 @@ const Collection = () => {
           {/* Mobile Actions Bar */}
           <div className='lg:hidden flex gap-4 mb-8'>
             <button onClick={() => setShowFilter(true)} className='flex-1 bg-black text-white p-5 rounded-xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest'>
-               <Filter size={14} /> Filter Index
+               <Filter size={14} /> Categories
             </button>
             <div className='flex-1 bg-gray-100 p-5 rounded-xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-gray-900'>
                <ArrowUpDown size={14} /> {sortType === 'relevant' ? 'Relevant' : 'Price'}
@@ -228,18 +223,20 @@ const Collection = () => {
           )}
 
           {/* Result Grid */}
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-16'>
-            {filterProducts.map((item, index) => (
-              <ProductItem 
-                key={item._id || index} 
-                name={item.name} 
-                id={item._id} 
-                price={item.price} 
-                image={item.image} 
-                category={item.category && item.category[0]} 
-              />
-            ))}
-          </div>
+          {/* Result Grid: Updated to 4 columns on large screens */}
+<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-x-6 md:gap-x-8 gap-y-16'>
+  {filterProducts.map((item, index) => (
+    <div key={item._id || index} className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <ProductItem 
+        name={item.name} 
+        id={item._id} 
+        price={item.price} 
+        image={item.image} 
+        category={item.category && item.category[0]} 
+      />
+    </div>
+  ))}
+</div>
 
           {/* Empty State */}
           {filterProducts.length === 0 && (

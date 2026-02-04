@@ -14,6 +14,7 @@ import ListBlog from './pages/ListBlog'
 import EditBlog from './pages/EditBlog'
 import CustomerMail from './pages/CustomMail'
 import NewsletterDispatch from './pages/NewsletterDispatch'
+import MediaLibrary from './pages/MediaLibrary'
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL
 export const currency = '$'
@@ -47,6 +48,9 @@ const App = () => {
                 <Route path='/edit-blog/:id' element={<EditBlog token={token}  />} />
                 <Route path='/mail' element={<CustomerMail token={token}  />} />
                 <Route path='/news' element={<NewsletterDispatch token={token}  />} />
+                <Route path='/media' element={<MediaLibrary token={token}  />} />
+
+
 
 
 

@@ -48,13 +48,13 @@ const Navbar = () => {
         <div className='group relative flex flex-col items-center gap-1 cursor-pointer '>
             <div className='flex items-center gap-1.5 px-2 transition-all duration-500'>
                 {/* <span className='text-[7px] font-black text-[#BC002D] mb-1'>{menuData.id}</span> */}
-                <p className='text-[10px] font-black tracking-[0.4em] uppercase text-gray-900/60 group-hover:text-black transition-colors'>{menuData.title}</p>
+                <p className='text-[10px] font-black tracking-[0.4em] uppercase text-black group-hover:text-[#BC002D] transition-colors'>{menuData.title}</p>
             </div>
             <div className='absolute top-full left-1/2 -translate-x-1/2 pt-8 hidden group-hover:block z-[110]'>
                 <div className='bg-white border-t-2 border-[#BC002D] p-10 flex gap-16 w-max shadow-2xl'>
                     {Object.entries(menuData.items).map(([groupName, items], idx) => (
                         <div key={idx} className='flex flex-col min-w-[160px]'>
-                            <h3 className='text-[9px] font-black text-[#D4AF37] mb-6 tracking-[0.3em] uppercase border-b border-gray-100 pb-3'>{groupName}</h3>
+                            <h3 className='text-[9px] font-black text-[#BC002D] mb-6 tracking-[0.3em] uppercase border-b border-gray-100 pb-3'>{groupName}</h3>
                             <div className='flex flex-col gap-4'>
                                 {items.map((item, i) => (
                                     <Link key={i} onClick={() => { window.scrollTo(0,0); setVisible(false); }} to={`/collection?category=${encodeURIComponent(item)}`} className='text-[10px] text-gray-400 hover:text-[#BC002D] font-bold uppercase tracking-[0.2em] transition-all hover:translate-x-1'>{item}</Link>
@@ -72,7 +72,7 @@ const Navbar = () => {
             
             {/* LOGO */}
             <Link to='/' className='flex-shrink-0 group'>
-                <div className='flex items-center gap-4 mr-5'>
+                <div className='flex items-center gap-4 mr-7'>
                     <img src={assets.logo} className='w-10 lg:w-12 group-hover:rotate-[360deg] transition-transform duration-1000' alt="PhilaBasket" />
                     <div className='hidden lg:flex flex-col'>
                         <h1 className='text-xl font-bold text-gray-900 tracking-tighter leading-none'>PHILA<span className='text-[#BC002D] italic'>BASKET</span></h1>
@@ -96,13 +96,13 @@ const Navbar = () => {
             </nav>
 
             {/* UTILITIES */}
-            <div className='flex items-center gap-4 lg:gap-7'>
+            <div className='flex items-center gap-4 lg:gap-2'>
                 
                 {/* REWARDS (Desktop) */}
                 {/* REWARDS (Desktop) */}
-                <div className='relative group hidden md:block'>
+                <div className='relative group hidden md:block  ml-5'>
     {/* Added min-w-max to prevent shrinking and items-center to keep things balanced */}
-    <div className='flex items-center gap-3 bg-[#BC002D] text-white px-4 py-2 min-w-max h-12 rounded-sm cursor-pointer shadow-lg shadow-[#BC002D]/10 active:scale-95 transition-all'>
+    <div className='flex items-center  bg-[#BC002D] text-white px-3 py-2 min-w-max  lg:px-2 h-12 rounded-sm cursor-pointer shadow-lg shadow-[#BC002D]/10 active:scale-95 transition-all'>
         
         {/* Added flex-shrink-0 so the image never squashes */}
         <img 
@@ -113,10 +113,10 @@ const Navbar = () => {
         
         {/* Container for text to ensure it stays on one line */}
         <div className='flex flex-col items-start leading-none'>
-            <span className='text-[8px] font-black tracking-[0.2em] uppercase opacity-80'>
+            <span className='text-[7px] font-black tracking-[0.2em] uppercase opacity-80'>
                 Archive Vault
             </span>
-            <span className='text-[11px] font-black tracking-widest uppercase mt-0.5'>
+            <span className='text-[7px] font-black tracking-widest uppercase mt-0.5'>
                 {token ? `${userPoints} PTS` : 'Join Rewards'}
             </span>
         </div>

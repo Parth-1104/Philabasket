@@ -4,6 +4,70 @@ import csv from 'csv-parser';
 import streamifier from 'streamifier';
 import { Readable } from 'stream';
 
+import mediaModel from '../models/mediaModel.js';
+
+// Logic to register an asset in the Media Registry
+
+
+const uploadMedia = async (req, res) => {
+    try {
+        const { originalName } = req.body;
+        const imageFile = req.file; // This is now a buffer, not a path
+
+        if (!imageFile) {
+            return res.json({ success: false, message: "No asset detected in buffer" });
+        }
+
+        // Use upload_stream for memory buffers
+        const cld_upload_stream = cloudinary.uploader.upload_stream(
+            {
+                folder: "stamp_registry",
+                resource_type: "image",
+            },
+            async (error, result) => {
+                if (error) {
+                    console.error("Cloudinary Stream Error:", error);
+                    return res.json({ success: false, message: "Cloudinary upload failed" });
+                }
+
+                // Save the mapping to your Media Registry
+                await mediaModel.findOneAndUpdate(
+                    { originalName: originalName },
+                    { 
+                        imageUrl: result.secure_url, 
+                        isAssigned: false 
+                    },
+                    { upsert: true, new: true }
+                );
+
+                res.json({ 
+                    success: true, 
+                    message: `Asset ${originalName} synchronized with registry.` 
+                });
+            }
+        );
+
+        // Pipe the buffer into the Cloudinary stream
+        cld_upload_stream.end(imageFile.buffer);
+
+    } catch (error) {
+        console.error("Internal Server Error:", error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+const listMedia = async (req, res) => {
+    try {
+        const media = await mediaModel.find({}).sort({ _id: -1 });
+        res.json({ success: true, media });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+};
+// Add to your exports
+
+
+
 // --- HELPER: Upload Memory Buffer to Cloudinary ---
 const uploadToCloudinary = (fileBuffer) => {
     return new Promise((resolve, reject) => {
@@ -16,6 +80,113 @@ const uploadToCloudinary = (fileBuffer) => {
         );
         streamifier.createReadStream(fileBuffer).pipe(stream);
     });
+};
+
+
+// controllers/productController.js
+
+// controllers/productController.js
+
+
+ const bulkAddProducts = async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.json({ success: false, message: "Please upload a CSV file" });
+        }
+
+        const stamps = [];
+        const skippedRows = [];
+        
+        // 1. Fetch data in bulk rather than per-row to reduce DB round-trips
+        const [existingStamps, allMedia] = await Promise.all([
+            productModel.find({}, 'name'),
+            mediaModel.find({}, 'originalName imageUrl')
+        ]);
+
+        const existingNames = new Set(existingStamps.map(s => s.name.toLowerCase().trim()));
+        
+        // Convert Media Registry into a Map for O(1) instant lookup
+        const mediaMap = new Map(allMedia.map(m => [m.originalName.trim(), m.imageUrl]));
+
+        const stream = Readable.from(req.file.buffer);
+
+        // 2. Process the stream
+        stream.pipe(csv())
+            .on('data', (row) => {
+                try {
+                    // --- VALIDATION ---
+                    if (!row.name || !row.price || !row.imageName) {
+                        skippedRows.push({ row: row.name || "Unknown", reason: "Missing fields" });
+                        return;
+                    }
+
+                    const nameTrimmed = row.name.trim();
+                    if (existingNames.has(nameTrimmed.toLowerCase())) {
+                        skippedRows.push({ row: nameTrimmed, reason: "Duplicate entry" });
+                        return;
+                    }
+
+                    // --- OPTIMIZED MATCHING ---
+                    // Instant lookup from our Map instead of a DB query per row
+                    const imageUrl = mediaMap.get(row.imageName.trim());
+
+                    // --- PARSING ---
+                    let parsedCategory = [];
+                    if (row.category) {
+                        const cleaned = row.category.trim();
+                        parsedCategory = (cleaned.startsWith('[') && cleaned.endsWith(']')) 
+                            ? JSON.parse(cleaned) 
+                            : cleaned.split(',').map(c => c.trim());
+                    }
+
+                    stamps.push({
+                        name: nameTrimmed,
+                        description: row.description || "",
+                        price: Number(row.price),
+                        category: parsedCategory,
+                        year: Number(row.year) || 2026,
+                        country: row.country?.trim() || "India",
+                        condition: row.condition || "Mint",
+                        stock: Number(row.stock) || 1,
+                        bestseller: String(row.bestseller).toLowerCase() === 'true',
+                        image: imageUrl ? [imageUrl] : [], 
+                        date: Date.now()
+                    });
+
+                    existingNames.add(nameTrimmed.toLowerCase());
+                } catch (err) {
+                    skippedRows.push({ row: row.name || "Unknown", reason: "Format Error" });
+                }
+            })
+            .on('end', async () => {
+                try {
+                    if (stamps.length === 0) {
+                        return res.json({ success: false, message: "No valid data to upload", errors: skippedRows });
+                    }
+
+                    // 3. Use bulkWrite or insertMany with ordered:false for maximum speed
+                    await productModel.insertMany(stamps, { ordered: false });
+
+                    // 4. Update Media Registry: Mark images as 'Assigned'
+                    const usedImageNames = stamps.map(s => s.imageName); 
+                    await mediaModel.updateMany(
+                        { originalName: { $in: usedImageNames } },
+                        { $set: { isAssigned: true } }
+                    );
+
+                    res.json({ 
+                        success: true, 
+                        message: `Archive Updated: ${stamps.length} stamps registered.`,
+                        skippedCount: skippedRows.length 
+                    });
+                } catch (dbErr) {
+                    res.json({ success: false, message: "Database Write Error" });
+                }
+            });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: "Server Protocol Error: " + error.message });
+    }
 };
 
 // --- FEATURE: Bulk Add Stamps from CSV Buffer ---
@@ -245,5 +416,5 @@ const updateProduct = async (req, res) => {
 
 export { 
     listProducts, addProduct, removeProduct, singleProduct, 
-    bulkAddStamps, updateProductImages, updateProduct, removeBulkProducts ,uploadSingleImage
+    bulkAddStamps, updateProductImages, updateProduct, removeBulkProducts ,uploadSingleImage,bulkAddProducts,uploadMedia,listMedia
 };
