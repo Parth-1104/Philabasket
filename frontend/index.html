@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="scroll-smooth">
+<html lang="en" class="scroll-smooth bg-[#0a0a0a]">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/logo.png" />
@@ -8,24 +8,39 @@
     <title>PhilaBasket | The World of Philately</title>
     <meta name="description" content="Secure acquisition and archival of rare philatelic specimens.">
 
+    <link rel="preconnect" href="https://res.cloudinary.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="dns-prefetch" href="https://checkout.razorpay.com">
+
     <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:italic@0;1&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 
     <style>
-      /* Prevent FOUC (Flash of Unstyled Content) */
+      /* 3. CRITICAL CSS: Prevent "White Flash" on load */
       body {
         margin: 0;
-        background-color: #ffffff; /* Matches your white-label theme */
+        /* Forced dark theme for instant branding */
+        background-color: #0a0a0a !important; 
+        color: #ffffff;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden;
       }
 
-      /* Custom selection color to match Crimson Theme */
+      /* Loader for initial mounting state */
+      #root:empty {
+        background-color: #0a0a0a;
+        width: 100vw;
+        height: 100vh;
+      }
+
       ::selection {
         background: #BC002D;
         color: white;
       }
+
+      /* Hide scrollbar for a cleaner gallery look while loading */
+      .hide-scrollbar::-webkit-scrollbar { display: none; }
     </style>
   </head>
   <body>
@@ -33,6 +48,6 @@
     
     <script type="module" src="/src/main.jsx"></script>
     
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
   </body>
 </html>

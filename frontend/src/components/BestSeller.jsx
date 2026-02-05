@@ -50,22 +50,23 @@ const BestSeller = () => {
                 {/* --- Ranked Grid: SYNCED SIZING WITH LATEST --- */}
                 {/* Fixed gap and min-w to allow 2-column feel on mobile */}
                 <div className='flex overflow-x-auto gap-4 md:gap-x-12 snap-x snap-mandatory mobile-scrollbar lg:grid lg:grid-cols-4 lg:gap-y-20 lg:overflow-visible pb-10 lg:pb-0'>
-                    {
+                    
+                       {
                         bestSeller.map((item, index) => (
                             <div 
                                 key={index} 
-                                /* SYNCED: min-w-[48%] matches the compact New Arrivals look */
-                                className="min-w-[48%] sm:min-w-[45vw] lg:min-w-0 snap-center group relative transition-all duration-700"
+                                onClick={() => navigate(`/product/${item._id}`)} // Explicit Navigation
+                                className="min-w-[48%] sm:min-w-[45vw] lg:min-w-0 snap-center group relative transition-all duration-700 cursor-pointer" // Added cursor-pointer
                             >
-                                {/* Visual Rank Badge - Adjusted for compact size */}
-                                <div className="absolute -top-4 -left-2 z-20">
+                                {/* Visual Rank Badge */}
+                                <div className="absolute -top-4 -left-2 z-20 pointer-events-none"> {/* Added pointer-events-none to prevent badge from blocking click */}
                                     <div className="bg-[#bd002d] text-white w-10 h-10 md:w-14 md:h-14 rounded-full flex flex-col items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-500">
                                         <span className="text-[6px] md:text-[8px] font-black leading-none opacity-60">RANK</span>
                                         <span className="text-sm md:text-xl font-black leading-none">0{index + 1}</span>
                                     </div>
                                 </div>
                                 
-                                {/* Card: Fully Synced with LatestCollection logic */}
+                                {/* Card Content */}
                                 <div className='pt-4 md:pt-6'>
                                     <div className="relative aspect-[3/4] bg-white border border-gray-100 p-2 md:p-3 shadow-sm transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl group-hover:border-[#bd002d]/20 overflow-hidden rounded-br-[30px] md:rounded-br-[60px]">
                                         
@@ -73,7 +74,7 @@ const BestSeller = () => {
                                             <div className="w-1 h-1 bg-[#D4AF37] rounded-full animate-pulse"></div>
                                             <span className="text-[7px] font-black text-gray-400 uppercase tracking-tighter">High Demand</span>
                                         </div>
-
+                    
                                         <div className="w-full h-full bg-[#f8f8f8] flex items-center justify-center p-2 md:p-4 rounded-br-[20px] md:rounded-br-[40px]">
                                             <ProductItem 
                                                 id={item._id} 
@@ -90,6 +91,7 @@ const BestSeller = () => {
                             </div>
                         ))
                     }
+                    
                 </div>
 
                 {/* --- Bottom Hallmark --- */}

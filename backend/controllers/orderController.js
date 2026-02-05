@@ -6,6 +6,8 @@ import razorpay from 'razorpay';
 import { sendEmail } from "../config/email.js";
 import twilio from 'twilio';
 import 'dotenv/config';
+import axios from 'axios';
+
 
 
 // --- CONFIGURATION ---
@@ -26,6 +28,32 @@ const sendWhatsAppAlert = async (orderData) => {
     try {
         await client.messages.create({ from: 'whatsapp:+14155238886', to: `whatsapp:${process.env.OWNER_PHONE}`, body: message });
     } catch (error) { console.error("WhatsApp Alert Failed:", error); }
+};
+
+// backend/controllers/orderController.js
+
+export const getTrackingStatus = async (req, res) => {
+    try {
+        const { trackingNumber } = req.body;
+        
+        // backend/controllers/trackingController.js
+const options = {
+    method: 'POST',
+    url: 'https://speedpost-tracking-api-for-india-post.p.rapidapi.com/track/consignment',
+    timeout: 30000, // <--- Add this (30 seconds)
+    headers: {
+        'content-type': 'application/x-www-form-urlencoded',
+        'x-rapidapi-host': 'speedpost-tracking-api-for-india-post.p.rapidapi.com',
+        'x-rapidapi-key': process.env.RAPID_API_KEY 
+    },
+    data: new URLSearchParams({ consignment_number: trackingNumber })
+};
+
+        const response = await axios.request(options);
+        res.json({ success: true, data: response.data });
+    } catch (error) {
+        res.json({ success: false, message: "Tracking Registry Offline" });
+    }
 };
 
 const getOrderHtmlTemplate = (name, items, amount, currency, trackingNumber = null) => {

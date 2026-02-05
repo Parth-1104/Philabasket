@@ -209,8 +209,8 @@ const Navbar = () => {
                         <option value="USD">USD $</option>
                     </select>
 
-                    <Link to='/cart' className='relative active:scale-90 transition-transform'>
-                        <div className='bg-black p-2 rounded-sm hover:bg-[#BC002D] transition-all'>
+                    <Link to='/cart' className='hidden lg:flex relative active:scale-90 transition-transform'>
+                        <div className=' bg-black p-2 rounded-sm hover:bg-[#BC002D] transition-all'>
                             <ShoppingBag size={16} className='text-white' />
                         </div>
                         <p className='absolute -right-1.5 -top-1.5 w-4 h-4 text-[8px] flex items-center justify-center bg-[#BC002D] text-white rounded-full font-black'>{getCartCount()}</p>

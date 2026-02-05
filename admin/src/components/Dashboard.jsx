@@ -112,7 +112,7 @@ const Dashboard = ({ token }) => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Revenue Trend Chart remains same */}
                 <div className="lg:col-span-2 bg-white p-6 border rounded-xl shadow-sm">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-8 text-gray-400">Revenue Trend (₹)</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-8 text-gray-800">Revenue Trend (₹)</h3>
                     <div className="h-80">
                     <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={historicalSalesTrend}>
@@ -153,7 +153,7 @@ const Dashboard = ({ token }) => {
 
                 {/* TOP PHILATELISTS: Using corrected Verified Sum */}
                 <div className="bg-white p-6 border rounded-xl shadow-sm overflow-hidden">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-6 text-gray-400">Top Philatelists</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-6 text-gray-800">Top Philatelists</h3>
                     <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
                         {topPhilatelistsVerified.map((buyer) => (
                             <div 
@@ -169,7 +169,7 @@ const Dashboard = ({ token }) => {
                                                 <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < (buyer.referralCount || 0) ? 'bg-[#BC002D]' : 'bg-gray-200'}`} />
                                             ))}
                                         </div>
-                                        <span className={`text-[8px] font-black uppercase tracking-tighter ${buyer.referralCount >= 3 ? 'text-[#BC002D]' : 'text-gray-400'}`}>
+                                        <span className={`text-[8px] font-black uppercase tracking-tighter ${buyer.referralCount >= 3 ? 'text-[#BC002D]' : 'text-gray-800'}`}>
                                             {buyer.referralCount >= 3 ? 'Cap Reached' : `${buyer.referralCount || 0}/3 Invites`}
                                         </span>
                                     </div>

@@ -14,7 +14,7 @@ const Sidebar = () => {
     <div className='w-[18%] min-h-screen border-r border-gray-100 bg-white'>
         <div className='flex flex-col gap-2 pt-8 pl-[15%]'>
             
-            <p className='text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] mb-4 hidden md:block'>
+            <p className='text-[10px] font-black text-gray-800 uppercase tracking-[0.3em] mb-4 hidden md:block'>
               Sovereign Ops
             </p>
 
@@ -23,7 +23,7 @@ const Sidebar = () => {
               to="/dashboard"
               className={({ isActive }) => 
                 `flex items-center gap-3 px-4 py-3 transition-all duration-300 border-r-4 ${
-                  isActive ? 'bg-[#BC002D]/5 border-[#BC002D] text-[#BC002D]' : 'border-transparent text-gray-400 hover:text-black hover:bg-gray-50'
+                  isActive ? 'bg-[#BC002D]/5 border-[#BC002D] text-[#BC002D]' : 'border-transparent text-gray-800 hover:text-black hover:bg-gray-50'
                 }`
               }
             >
