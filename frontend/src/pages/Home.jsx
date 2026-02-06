@@ -6,6 +6,7 @@ import BestSeller from '../components/BestSeller'
 import OurPolicy from '../components/OurPolicy'
 import NewsletterBox from '../components/NewsletterBox'
 import NewHero from '../components/NewHero'
+import Banner from '../components/Banner'
 
 const Home = () => {
   const latestCollectionRef = useRef(null);
@@ -15,7 +16,8 @@ const Home = () => {
   return (
     <div className='bg-white'>
       {/* 1. THE HOOK: High-impact emotional entrance */}
-      <NewHero scrollHandler={scrollToCollection} />
+      {/* <NewHero scrollHandler={scrollToCollection} /> */}
+      <Banner scrollHandler={scrollToCollection}/>
 
       {/* 2. THE DISCOVERY: What is new in the archive today */}
       <div ref={latestCollectionRef}>

@@ -4,16 +4,18 @@ import ProductItem from '../components/ProductItem';
 import { Filter, X, ArrowUpDown, Search as SearchIcon, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { useLocation } from 'react-router-dom';
 
 const Collection = () => {
   const { search, showSearch, backendUrl } = useContext(ShopContext);
+  const location = useLocation();
   
   // --- PERFORMANCE STATE ---
-  const [products, setProducts] = useState([]); // Cumulative list
+  const [products, setProducts] = useState([]); 
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [totalFound, setTotalFound] = useState(0); // For the "specimens found" text
+  const [totalFound, setTotalFound] = useState(0); 
 
   // --- UI STATE ---
   const [showFilter, setShowFilter] = useState(false); 
@@ -38,7 +40,7 @@ const Collection = () => {
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
 
-  // 2. SERVER-SIDE ENGINE: Replaces applyFilter()
+  // 2. SERVER-SIDE ENGINE
   const fetchFromRegistry = async (currentPage, isNewQuery = false) => {
     if (!backendUrl) return;
     setLoading(true);
@@ -54,10 +56,22 @@ const Collection = () => {
       });
 
       if (response.data.success) {
-        const newItems = response.data.products;
+        let newItems = response.data.products;
+
+        // --- PRIORITY ID LOGIC: Move clicked item to top on first load ---
+        if (isNewQuery && currentPage === 1 && location.state?.priorityId) {
+            const priorityId = location.state.priorityId;
+            const priorityItem = newItems.find(item => item._id === priorityId);
+            
+            if (priorityItem) {
+                const remaining = newItems.filter(item => item._id !== priorityId);
+                newItems = [priorityItem, ...remaining];
+            } 
+        }
+
         setProducts(prev => isNewQuery ? newItems : [...prev, ...newItems]);
         setTotalFound(response.data.total);
-        setHasMore(newItems.length === 20); // If 20 returned, assume there's more
+        setHasMore(newItems.length === 20); 
       }
     } catch (error) {
       toast.error("Registry Sync Failed");
@@ -66,18 +80,15 @@ const Collection = () => {
     }
   };
 
-  // Triggered on Page Change
   useEffect(() => {
     if (page > 1) fetchFromRegistry(page);
   }, [page]);
 
-  // Triggered on Filter/Search Reset
   useEffect(() => {
     setPage(1);
     fetchFromRegistry(1, true);
   }, [category, sortType, search, showSearch]);
 
-  // FETCH CATEGORIES
   const fetchCategories = async () => {
     try {
       const response = await axios.get(backendUrl + '/api/category/list');
@@ -101,7 +112,6 @@ const Collection = () => {
   return (
     <div className='bg-white min-h-screen pt-24 pb-20 px-6 md:px-16 lg:px-24 select-none relative animate-fade-in'>
       
-      {/* Decorative Arc - Ensure z-index is low */}
       <div className="absolute -right-[10vw] top-0 h-[60vh] w-[40vw] bg-[#BC002D]/5 rounded-bl-[600px] pointer-events-none z-0"></div>
 
       {/* --- HEADER --- */}
@@ -111,17 +121,26 @@ const Collection = () => {
                   <span className='h-[1.5px] w-12 bg-[#BC002D]'></span>
                   <p className='text-[10px] tracking-[0.6em] text-[#BC002D] uppercase font-black'>Registry Database</p>
               </div>
-              <h2 className='text-6xl md:text-5xl font-bold text-gray-900 tracking-tighter leading-none'>
+              <h2 className='text-6xl md:text-5xl font-bold text-gray-900 tracking-tighter leading-none uppercase'>
                   THE <span className='text-[#BC002D]'>GALLERY.</span>
               </h2>
+              
+              {/* NEW: SEARCH RESULTS HEADER */}
+              {showSearch && search && (
+                <div className='mt-6 flex items-center gap-2 animate-slide-down'>
+                  <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Search Results for:</p>
+                  <span className='text-[10px] font-black text-[#BC002D] uppercase tracking-widest bg-[#BC002D]/5 px-3 py-1 border border-[#BC002D]/20 rounded-sm italic'>"{search}"</span>
+                </div>
+              )}
+
               <p className='mt-6 text-gray-400 text-xs font-bold uppercase tracking-[0.2em] leading-relaxed'>
                   <span className='text-black'>{totalFound} certified specimens archived</span> 
               </p>
           </div>
 
           <div className='hidden lg:flex items-center gap-4 bg-gray-50 p-2 rounded-full border border-gray-100'>
-              <div className='pl-4 text-[9px] font-black uppercase tracking-widest text-gray-400'>Order By:</div>
-              <select onChange={(e)=>setSortType(e.target.value)} className='bg-white border-none text-[10px] font-black tracking-widest uppercase px-6 py-3 rounded-full outline-none cursor-pointer'>
+              <div className='pl-4 text-[9px] font-black uppercase tracking-widest text-gray-700'>Order By:</div>
+              <select onChange={(e)=>setSortType(e.target.value)} className='bg-white border-none text-[10px] text-gray-700 font-black tracking-widest uppercase px-6 py-3 rounded-full outline-none cursor-pointer'>
                   <option value="relevant">Relevance</option>
                   <option value="low-high">Value: Low-High</option>
                   <option value="high-low">Value: High-Low</option>
@@ -158,7 +177,6 @@ const Collection = () => {
 
         {/* --- MAIN DISPLAY --- */}
         <main className='flex-1'>
-          {/* Mobile Buttons */}
           <div className='lg:hidden flex gap-4 mb-8'>
             <button onClick={() => setShowFilter(true)} className='flex-1 bg-black text-white p-5 rounded-xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest'>
                <Filter size={14} /> Categories
@@ -168,7 +186,6 @@ const Collection = () => {
             </div>
           </div>
 
-          {/* Applied Filter Tags */}
           {category.length > 0 && (
             <div className='flex flex-wrap gap-3 mb-12'>
               {category.map(cat => (
@@ -181,8 +198,7 @@ const Collection = () => {
             </div>
           )}
 
-          {/* Product Grid */}
-          <div className='grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-16'>
+          <div className='grid grid-cols-2 md:grid-col-4 lg:grid-cols-4 xl:grid-cols-4 gap-x-8 gap-y-16'>
             {products.map((item, index) => (
               <ProductItem 
                 key={`${item._id}-${index}`} 
@@ -193,7 +209,6 @@ const Collection = () => {
             ))}
           </div>
 
-          {/* --- SCROLL SENTINEL & LOADING --- */}
           <div ref={lastElementRef} className='h-60 flex flex-col items-center justify-center gap-4'>
             {loading && (
               <div className='flex flex-col items-center gap-2'>
@@ -206,7 +221,6 @@ const Collection = () => {
             )}
           </div>
 
-          {/* Empty State */}
           {!loading && products.length === 0 && (
             <div className='py-40 text-center bg-gray-50 rounded-[40px] border border-dashed border-gray-200'>
                <h3 className='text-2xl font-black text-gray-900 uppercase tracking-tighter'>Specimen Not Found</h3>
@@ -223,6 +237,8 @@ const Collection = () => {
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #BC002D; }
         .animate-fade-in { animation: fadeIn 0.8s ease-out; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-slide-down { animation: slideDown 0.4s ease-out forwards; }
       `}} />
     </div>
   )

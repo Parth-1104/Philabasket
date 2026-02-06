@@ -107,25 +107,35 @@ const ShopContextProvider = (props) => {
     }
 
     // --- CART LOGIC ---
-    const addToCart = async (itemId) => {
+    const addToCart = async (itemId, quantity) => {
+        // 1. Create a deep copy of the current cart state
         let cartData = structuredClone(cartItems);
-
+    
+        // 2. Update logic: Use the passed quantity instead of hardcoded 1
         if (cartData[itemId]) {
-            cartData[itemId] += 1;
+            cartData[itemId] += quantity;
         } else {
-            cartData[itemId] = 1;
+            cartData[itemId] = quantity;
         }
+    
+        // 3. Update the local state for immediate UI feedback
         setCartItems(cartData);
-
+    
+        // 4. Synchronize with the backend registry
         if (token) {
             try {
-                await axios.post(backendUrl + '/api/cart/add', { itemId }, { headers: { token } });
+                await axios.post(
+                    backendUrl + '/api/cart/add', 
+                    { itemId, quantity }, // Send quantity to backend
+                    { headers: { token } }
+                );
             } catch (error) {
+                console.error(error);
                 toast.error(error.message);
             }
         }
-    }
-
+    };
+    
     const getCartCount = () => {
         let totalCount = 0;
         for (const items in cartItems) {
@@ -139,31 +149,45 @@ const ShopContextProvider = (props) => {
     }
 
     const updateQuantity = async (itemId, quantity) => {
+        // 1. Create a deep copy of the current cart state
         let cartData = structuredClone(cartItems);
-        cartData[itemId] = quantity;
+    
+        // 2. Logic: If quantity is 0, remove the item; otherwise update it
+        if (quantity <= 0) {
+            delete cartData[itemId];
+        } else {
+            cartData[itemId] = quantity;
+        }
+    
+        // 3. Update local state for immediate UI reflection
         setCartItems(cartData);
-
+    
+        // 4. Synchronize with the backend registry
         if (token) {
             try {
-                await axios.post(backendUrl + '/api/cart/update', { itemId, quantity }, { headers: { token } });
+                await axios.post(
+                    backendUrl + '/api/cart/update', 
+                    { itemId, quantity }, 
+                    { headers: { token } }
+                );
             } catch (error) {
+                console.error(error);
                 toast.error(error.message);
             }
         }
-    }
+    };
 
     const getCartAmount = () => {
         let totalAmount = 0;
         for (const items in cartItems) {
             let itemInfo = products.find((product) => product._id === items);
-            try {
-                if (cartItems[items] > 0) {
-                    totalAmount += itemInfo.price * cartItems[items];
-                }
-            } catch (error) {}
+            if (itemInfo && cartItems[items] > 0) {
+                // MULTIPLICATION IS KEY HERE
+                totalAmount += itemInfo.price * cartItems[items];
+            }
         }
         return totalAmount;
-    }
+    };
 
     const getUserCart = async (userToken) => {
         try {

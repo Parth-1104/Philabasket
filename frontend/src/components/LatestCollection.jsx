@@ -3,81 +3,51 @@ import { ShopContext } from '../context/ShopContext';
 import ProductItem from './ProductItem';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-
-// const ALL_CATEGORIES = [
-//     "AgriCulture Stamp", "Airmail", "Americas", "Ancillaries", "Animal & WildLife", 
-//     "Army", "Army Postal Cover APC", "Asia", "Autograph Cover", "Aviation Stamps", 
-//     "Bank", "Bird Stamps", "Block of Four", "Block of Four with Traffic light", 
-//     "Booklet", "BOPP", "Bridge Stamps", "Brochure Blank", "Brochure with MS", 
-//     "Brochure with stamp", "Buddha / Buddhism", "Building Stamps", "Butterfly & Insects", 
-//     "Carried Cover", "Cars", "Catalogue", "Children's Day Series", "Christianity", 
-//     "Christmas", "Cinema on Stamps", "Classic Items", "Coffee", "Color Cancellation", 
-//     "Commemorative", "Commemorative Coin", "Commemorative Year", "Country", "Covid 19", 
-//     "Cricket", "Cultural Theme", "Currency Stamps", "Dance Stamps", "Definitive", 
-//     "Definitive Block", "Definitive Number Strip", "Definitive Sheet", "Definitive Stamp", 
-//     "Educational Institute", "Environment", "Error", "Europe", "Exhibition Special", 
-//     "Face Value", "Fauna and Flora", "Festival", "First Day Cover", "First Day Cover Blank", 
-//     "First Day Cover Commercial Used", "First Day Cover with Miniature Sheet", 
-//     "First Flight/ AirMail", "Flag", "Food on Stamps", "FootBall", "Foreign First Day Covers", 
-//     "Foreign Miniature Sheets", "Foreign Stamps", "Fort / Castle/ Palace", "Fragrance Stamps", 
-//     "Freedom", "Freedom Fighter", "Full Sheet", "Gandhi Stamps", "GI Tag", "Greeting Card", 
-//     "Greetings", "Hinduism", "Historical", "Historical Place", "Indian Theme", "Jainism", 
-//     "Joint Issue", "Judiciary System", "Kumbh", "Light House", "Literature", 
-//     "Locomotive / Trains", "Marine / Fish", "Medical / Health", "Meghdoot", 
-//     "Miniature Sheets", "Musical Instrument", "My Stamp", "News Paper", 
-//     "Odd Shape / Unusual", "Olympic", "Organizations", "Personality", 
-//     "Place Cancellation", "Post Office", "Postal Stationery", "Postcard / Maxim Card", 
-//     "PPC", "Presentation Pack", "Ramayana", "Rare", "Red Cross", "River / Canal", 
-//     "RSS Rashtriya Swayamsevak Sangh", "Scout", "SheetLet", "Ships", "Sikhism", 
-//     "Single Stamp", "Single Stamp with Traffic light", "Social Message", "Space", 
-//     "Special Cancellation", "Special Cover", "Sports Stamps", "Stamp on Stamp", 
-//     "Technology", "Temple", "Tiger", "Transport", "United Nations UN", "Women Power", 
-//     "WWF", "Year", "Year Pack", "Yoga"
-// ];
+import { toast } from 'react-toastify'; // Added for registry sync feedback
 
 const LatestCollection = () => {
-    const { products } = useContext(ShopContext);
+    const { products, backendUrl } = useContext(ShopContext);
     const [latestProducts, setLatestProducts] = useState([]);
-    const { backendUrl } = useContext(ShopContext);
-
+    const [ALL_CATEGORIES, setCategoryOptions] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
-        setLatestProducts(products.slice(0, 6)); 
+        setLatestProducts(products.slice(0, 9)); 
     }, [products]);
 
-    // Inside your Add component
-const [ALL_CATEGORIES, setCategoryOptions] = useState([]);
-
-const fetchCategories = async () => {
-    try {
-        const response = await axios.get(backendUrl + '/api/category/list');
-        if (response.data.success) {
-            // Extract the names from the category objects
-            const names = response.data.categories.map(cat => cat.name);
-            setCategoryOptions(names);
-        } else {
-            toast.error(response.data.message);
+    const fetchCategories = async () => {
+        try {
+            const response = await axios.get(backendUrl + '/api/category/list');
+            if (response.data.success) {
+                const names = response.data.categories.map(cat => cat.name);
+                setCategoryOptions(names);
+            } else {
+                toast.error(response.data.message);
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error("Registry Sync Failed: Could not load categories");
         }
-    } catch (error) {
-        console.error(error);
-        toast.error("Registry Sync Failed: Could not load categories");
-    }
-};
+    };
 
-useEffect(() => {
-    fetchCategories();
-}, []);
+    useEffect(() => {
+        if(backendUrl) fetchCategories();
+    }, [backendUrl]);
+
+    // NEW: Function to handle navigation and prioritize the clicked item in the grid
+    const handleProductClick = (productId) => {
+        // We pass the priorityId in the state object
+        navigate('/collection', { state: { priorityId: productId } });
+        window.scrollTo(0, 0);
+    };
 
     return (
         <div className='bg-white py-12 md:py-32 overflow-hidden select-none relative'>
             
-            {/* --- Hero-style Curve Accent --- */}
             <div className="absolute -left-[10vw] top-[10%] h-[80%] w-[35%] bg-[#bd002d]/5 rounded-r-[600px] pointer-events-none"></div>
 
             <div className='px-6 md:px-16 lg:px-24 relative z-10'>
                 
-                {/* --- Header Section --- */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-8">
                     <div className="max-w-2xl">
                         <div className="flex items-center gap-4 mb-4">
@@ -118,8 +88,7 @@ useEffect(() => {
                                         </button>
                                     ))}
                                     
-                                    <Link to='/collection' onClick={() => {
-        window.scrollTo(0, 0);}}  className='hidden lg:flex mt-6 py-4 border-t border-white/10 items-center justify-between group/more'>
+                                    <Link to='/collection' onClick={() => window.scrollTo(0, 0)} className='hidden lg:flex mt-6 py-4 border-t border-white/10 items-center justify-between group/more'>
                                         <span className='text-amber-400 text-[10px] font-black uppercase tracking-[0.2em]'>Explore All Categories</span>
                                         <span className='text-white group-hover/more:translate-x-2 transition-transform'>→</span>
                                     </Link>
@@ -133,53 +102,57 @@ useEffect(() => {
                         </div>
                     </div>
 
-                    {/* --- MAIN PRODUCT GRID: SYNCED SIZING WITH BESTSELLER --- */}
                     {/* --- MAIN PRODUCT GRID --- */}
-<div className='w-full lg:w-3/4'>
-    {/* CHANGE: Updated gap and snap settings. 
-       'gap-4' for mobile, 'md:gap-x-12' for desktop.
-    */}
-    <div className='flex overflow-x-auto lg:grid lg:grid-cols-3 gap-4 md:gap-x-12 gap-y-16 pb-10 lg:pb-0 snap-x snap-mandatory mobile-scrollbar'>
-        {latestProducts.map((item, index) => (
-            <div 
-                key={index} 
-                /* CHANGE: min-w-[48%] allows 2 items to fit on mobile screen width.
-                   Changed from [85vw] to [48%] for a compact registry look.
-                */
-                className="min-w-[48%] sm:min-w-[45vw] lg:min-w-0 snap-center flex flex-col group cursor-pointer"
-            >
-                {/* Card Container */}
-                <div className="relative aspect-[3/4] bg-white border border-gray-100 p-2 md:p-3 shadow-sm transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl group-hover:border-[#bd002d]/20 overflow-hidden rounded-br-[30px] md:rounded-br-[60px]">
-                    <div className="absolute top-0 right-0 z-20 overflow-hidden w-16 h-16 md:w-24 md:h-24 pointer-events-none">
-                        <div className="absolute top-[18%] -right-[32%] bg-[#bd002d] text-white text-[6px] md:text-[8px] font-black py-1 w-[140%] text-center transform rotate-45 shadow-sm">
-                            Latest
-                        </div>
-                    </div>
-                    
-                    {/* Inner Frame */}
-                    <div className="w-full h-full bg-[#f8f8f8] flex items-center justify-center p-2 md:p-4 relative rounded-br-[20px] md:rounded-br-[40px]">
-                        <ProductItem 
-                            id={item._id} 
-                            image={item.image} 
-                            name={item.name} 
-                            price={item.price} 
-                            marketPrice={item.marketPrice}
-                            category={item.category[0]}
-                            linkToFilter={true}
-                        />
-                    </div>
+                    <div className='w-full lg:w-3/4'>
+                        <div className='flex overflow-x-auto lg:grid lg:grid-cols-3 gap-4 md:gap-x-12 gap-y-16 pb-10 lg:pb-0 snap-x snap-mandatory mobile-scrollbar'>
+                        {latestProducts.map((item, index) => (
+    <div 
+        key={index} 
+        /* FIX: We wrap the priority logic in a function that 
+           prevents children (like ProductItem's Link) from 
+           triggering this parent click.
+        */
+        onClick={(e) => {
+            // If the user clicked the product name or image specifically, 
+            // let the ProductItem handle it. Otherwise, handle priority.
+            handleProductClick(item._id);
+        }}
+        className="min-w-[48%] sm:min-w-[45vw] lg:min-w-0 snap-center flex flex-col group cursor-pointer"
+    >
+        <div className="relative aspect-[3/4] bg-white border border-gray-100 p-2 md:p-3 shadow-sm transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl group-hover:border-[#bd002d]/20 overflow-hidden rounded-br-[30px] md:rounded-br-[60px]">
+            <div className="absolute top-0 right-0 z-20 overflow-hidden w-16 h-16 md:w-24 md:h-24 pointer-events-none">
+                <div className="absolute top-[18%] -right-[32%] bg-[#bd002d] text-white text-[6px] md:text-[8px] font-black py-1 w-[140%] text-center transform rotate-45 shadow-sm">
+                    Latest
                 </div>
             </div>
-        ))}
+            
+            <div className="w-full h-full bg-[#f8f8f8] flex items-center justify-center p-2 md:p-4 relative rounded-br-[20px] md:rounded-br-[40px]">
+                {/* IMPORTANT: Add an onClick here that stops the event 
+                   from reaching the parent div when you click the actual item.
+                */}
+                <div onClick={(e) => e.stopPropagation()}>
+                    <ProductItem 
+                        id={item._id} 
+                        image={item.image} 
+                        name={item.name} 
+                        price={item.price} 
+                        marketPrice={item.marketPrice}
+                        category={item.category[0]}
+                        linkToFilter={true} // Keeps it navigating to /product/id
+                    />
+                </div>
+            </div>
+        </div>
     </div>
-    <p className='lg:hidden text-[8px] font-black uppercase tracking-[0.4em] text-gray-300 text-center mt-4 animate-pulse'>
-        Swipe for more specimens
-    </p>
-</div>
+))}
+                        </div>
+                        <p className='lg:hidden text-[8px] font-black uppercase tracking-[0.4em] text-gray-300 text-center mt-4 animate-pulse'>
+                            Swipe for more specimens
+                        </p>
+                    </div>
                 </div>
 
-                {/* --- Footer Invitation --- */}
-                <div className='rounded-[40px] md:rounded-[100px] overflow-hidden mt-16 lg:mt-[10vh] bg-[#bd002d] py-8 lg:mt-[10vh] px-10 relative flex flex-col items-center shadow-2xl'>
+                <div className='rounded-[40px] md:rounded-[100px] overflow-hidden mt-16 lg:mt-[10vh] bg-[#bd002d] py-8 px-10 relative flex flex-col items-center shadow-2xl'>
                     <span className="absolute inset-0 flex items-center justify-center text-white/5 text-[30vw] md:text-[20vw] font-bold pointer-events-none select-none italic">ARCHIVES</span>
                     <div className="relative z-10 text-center">
                         <h3 className="text-white text-3xl md:text-6xl font-bold mb-8 tracking-tighter leading-none">

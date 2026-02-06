@@ -69,6 +69,8 @@ const listMedia = async (req, res) => {
 };
 
 // --- BULK ADD LOGIC (The Working Version - Optimized) ---
+
+
 const bulkAddProducts = async (req, res) => {
     try {
         if (!req.file) return res.json({ success: false, message: "Please upload a CSV file" });
@@ -77,7 +79,7 @@ const bulkAddProducts = async (req, res) => {
         const usedImageNames = [];
         const discoveredCategories = new Set(); 
 
-        // PERFORMANCE: Using .lean() to keep memory low during huge lookups
+        // 1. Optimized Fetch: Only pull what we need to minimize memory for 100k+ records
         const [existingStamps, allMedia] = await Promise.all([
             productModel.find({}, 'name').lean(),
             mediaModel.find({}, 'originalName imageUrl').lean()
@@ -91,73 +93,172 @@ const bulkAddProducts = async (req, res) => {
         stream.pipe(csv())
             .on('data', (row) => {
                 try {
-                    const csvImageName = row.imageName?.trim();
-                    if (!row.name || !row.price || !csvImageName) return;
+                    // Mandatory validation
+                    if (!row.name || !row.imageName1) return; 
 
                     const nameTrimmed = row.name.trim();
                     if (existingNames.has(nameTrimmed.toLowerCase())) return;
 
-                    let imageUrl = mediaMap.get(csvImageName);
-                    if (!imageUrl) return;
-
-                    // Ensure images are optimized even if stored as raw URLs
-                    if (!imageUrl.includes('f_auto')) {
-                        imageUrl = imageUrl.replace('/upload/', '/upload/f_auto,q_auto/');
+                    // 2. PROCESS MULTIPLE IMAGES (1 to 4)
+                    const productImages = [];
+                    for (let i = 1; i <= 4; i++) {
+                        const imgName = row[`imageName${i}`]?.trim();
+                        if (imgName) {
+                            let imageUrl = mediaMap.get(imgName);
+                            if (imageUrl) {
+                                // Apply Cloudinary auto-optimization and watermarking logic placeholder
+                                if (!imageUrl.includes('f_auto')) {
+                                    imageUrl = imageUrl.replace('/upload/', '/upload/f_auto,q_auto/');
+                                }
+                                productImages.push(imageUrl);
+                                usedImageNames.push(imgName);
+                            }
+                        }
                     }
 
+                    if (productImages.length === 0) return; 
+
+                    // 3. YOUTUBE URL LOGIC: Cleaning tracking parameters for clean embeds
+                    let cleanedYoutubeUrl = "";
+                    if (row.youtubeUrl) {
+                        const ytUrl = row.youtubeUrl.trim();
+                        if (ytUrl.includes('youtube.com') || ytUrl.includes('youtu.be')) {
+                            // Extract base URL before '&' to remove timestamps/tracking
+                            cleanedYoutubeUrl = ytUrl.split('&')[0]; 
+                        }
+                    }
+
+                    // 4. CATEGORY PARSING: Handling both plain text and array strings
                     let parsedCategory = [];
                     if (row.category) {
                         const cleaned = row.category.trim();
                         const rawContent = (cleaned.startsWith('[') && cleaned.endsWith(']')) 
                             ? cleaned.substring(1, cleaned.length - 1) : cleaned;
-                        parsedCategory = rawContent.split(',').map(c => c.trim().replace(/^["']|["']$/g, '')).filter(c => c !== "");
+                        
+                        parsedCategory = rawContent
+                            .split(',')
+                            .map(c => c.trim().replace(/^["']|["']$/g, ''))
+                            .filter(c => c !== "");
+                        
                         parsedCategory.forEach(cat => discoveredCategories.add(cat));
                     }
 
+                    const finalPrice = Number(row.price) || 0;
+                    const finalMarketPrice = Number(row.marketPrice) || finalPrice;
+
+                    // 5. DATA ASSEMBLY: Matches your ProductModel Schema exactly
                     stamps.push({
                         name: nameTrimmed,
-                        description: row.description || "",
-                        price: Number(row.price),
-                        marketPrice: Number(row.marketPrice) || 0,
+                        description: row.description || "Historical philatelic specimen.",
+                        price: finalPrice,
+                        marketPrice: finalMarketPrice,
+                        image: productImages, // Array of 1-4 strings
+                        youtubeUrl: cleanedYoutubeUrl,
                         category: parsedCategory,
                         year: Number(row.year) || 2026,
                         country: row.country?.trim() || "India",
                         condition: row.condition || "Mint",
                         stock: Number(row.stock) || 1,
                         bestseller: String(row.bestseller).toLowerCase() === 'true',
-                        image: [imageUrl],
-                        date: Date.now()
+                        date: Date.now(),
+                        // rewardPoints will be handled by the pre-save hook in your model
                     });
-                    usedImageNames.push(csvImageName);
-                } catch (err) { console.error("Row Error", err); }
+                } catch (err) { console.error("Row processing error:", err); }
             })
             .on('end', async () => {
                 try {
-                    if (stamps.length === 0) return res.json({ success: false, message: "No new data to sync" });
+                    if (stamps.length === 0) return res.json({ success: false, message: "No new unique stamps found in CSV" });
 
+                    // 6. BULK CATEGORY SYNC
                     const categoryArray = Array.from(discoveredCategories);
                     if (categoryArray.length > 0) {
                         const existingCatsInDB = await categoryModel.find({ name: { $in: categoryArray } }).lean();
                         const existingCatNames = new Set(existingCatsInDB.map(c => c.name));
-                        const newCats = categoryArray.filter(n => !existingCatNames.has(n)).map(name => ({ name }));
-                        if (newCats.length > 0) await categoryModel.insertMany(newCats, { ordered: false });
+                        const newCats = categoryArray
+                            .filter(n => !existingCatNames.has(n))
+                            .map(name => ({ name }));
+                        
+                        if (newCats.length > 0) {
+                            await categoryModel.insertMany(newCats, { ordered: false });
+                        }
                     }
 
-                    // Bulk insert is standard for high-performance scaling
+                    // 7. ATOMIC BULK INSERT
                     await productModel.insertMany(stamps, { ordered: false });
-                    await mediaModel.updateMany({ originalName: { $in: usedImageNames } }, { $set: { isAssigned: true } });
-                    res.json({ success: true, message: `Successfully synchronized ${stamps.length} stamps.` });
-                } catch (dbErr) { res.json({ success: false, message: dbErr.message }); }
+                    
+                    // 8. MEDIA STATUS UPDATE: Mark image assets as assigned
+                    if (usedImageNames.length > 0) {
+                        await mediaModel.updateMany(
+                            { originalName: { $in: usedImageNames } }, 
+                            { $set: { isAssigned: true } }
+                        );
+                    }
+                    
+                    res.json({ 
+                        success: true, 
+                        message: `Successfully synchronized ${stamps.length} stamps with multi-media and video support.` 
+                    });
+                } catch (dbErr) { 
+                    console.error("Database Bulk Insert Error:", dbErr);
+                    res.json({ success: false, message: "Bulk insert failed. Check for duplicate names or schema violations." }); 
+                }
             });
     } catch (error) {
+        console.error("Controller Error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
 
+
+
 // --- CORE CRUD (Upgraded for 100k+ Items) ---
+// const listProducts = async (req, res) => {
+//     try {
+//         // ADDED: Server-side pagination support for the Infinite Scroll frontend
+//         const page = parseInt(req.query.page) || 1;
+//         const limit = parseInt(req.query.limit) || 20;
+//         const skip = (page - 1) * limit;
+
+//         const { category, sort, search } = req.query;
+//         let query = {};
+
+//         // PERFORMANCE: Use Text Index if searching
+//         if (search) {
+//             query.$text = { $search: search };
+//         }
+
+//         if (category) {
+//             query.category = { $in: category.split(',') };
+//         }
+
+//         let sortOrder = search ? { score: { $meta: "textScore" } } : { date: -1 };
+
+//         // Logic choice: If sort is requested via query, use it
+//         if (sort === 'low-high') sortOrder = { price: 1 };
+//         if (sort === 'high-low') sortOrder = { price: -1 };
+
+//         const products = await productModel.find(query)
+//             .select('-description') // Do not load description in the list view (Saves bandwidth)
+//             .sort(sortOrder)
+//             .skip(skip)
+//             .limit(limit)
+//             .lean(); // Returns plain JS objects (Much faster)
+
+//         const total = await productModel.countDocuments(query);
+
+//         res.json({ 
+//             success: true, 
+//             products, 
+//             total,
+//             hasMore: total > skip + limit 
+//         });
+//     } catch (error) {
+//         res.json({ success: false, message: error.message });
+//     }
+// };
+
 const listProducts = async (req, res) => {
     try {
-        // ADDED: Server-side pagination support for the Infinite Scroll frontend
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 20;
         const skip = (page - 1) * limit;
@@ -165,29 +266,41 @@ const listProducts = async (req, res) => {
         const { category, sort, search } = req.query;
         let query = {};
 
-        // PERFORMANCE: Use Text Index if searching
+        // Layered Search: Regex for mid-name + Text for relevance
         if (search) {
-            query.$text = { $search: search };
+            const searchRegex = new RegExp(search, 'i');
+            query.$or = [
+                { name: { $regex: searchRegex } },
+                { country: { $regex: searchRegex } },
+                { category: { $regex: searchRegex } },
+                { $text: { $search: search } }
+            ];
         }
 
         if (category) {
             query.category = { $in: category.split(',') };
         }
 
-        let sortOrder = search ? { score: { $meta: "textScore" } } : { date: -1 };
-
-        // Logic choice: If sort is requested via query, use it
+        // Determine Sort Order
+        let sortOrder = { date: -1 }; 
         if (sort === 'low-high') sortOrder = { price: 1 };
         if (sort === 'high-low') sortOrder = { price: -1 };
+        
+        // If searching without price sort, prioritize text relevance
+        if (search && !sort) {
+            sortOrder = { score: { $meta: "textScore" } };
+        }
 
-        const products = await productModel.find(query)
-            .select('-description') // Do not load description in the list view (Saves bandwidth)
-            .sort(sortOrder)
-            .skip(skip)
-            .limit(limit)
-            .lean(); // Returns plain JS objects (Much faster)
-
-        const total = await productModel.countDocuments(query);
+        // Executing Query and Count in Parallel
+        const [products, total] = await Promise.all([
+            productModel.find(query)
+                .select('name price marketPrice image category country year stock date bestseller')
+                .sort(sortOrder)
+                .skip(skip)
+                .limit(limit)
+                .lean(), // lean() is critical for memory management with 100k+ docs
+            productModel.countDocuments(query)
+        ]);
 
         res.json({ 
             success: true, 
@@ -196,7 +309,8 @@ const listProducts = async (req, res) => {
             hasMore: total > skip + limit 
         });
     } catch (error) {
-        res.json({ success: false, message: error.message });
+        console.error("Registry Query Error:", error);
+        res.status(500).json({ success: false, message: "Registry Sync Error" });
     }
 };
 
@@ -230,6 +344,28 @@ const singleProduct = async (req, res) => {
         res.json({ success: true, product });
     } catch (error) { res.json({ success: false, message: error.message }); }
 };
+
+
+// Function to fetch a single product detail by ID
+const singleProduct1 = async (req, res) => {
+    try {
+        // Since we use .get with params, use req.query
+        const { productId } = req.query; 
+        
+        const product = await productModel.findById(productId).lean();
+        
+        if (product) {
+            res.json({ success: true, product });
+        } else {
+            res.json({ success: false, message: "Specimen not found" });
+        }
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// Ensure you export it
+
 
 const removeProduct = async (req, res) => {
     try {
@@ -283,5 +419,5 @@ export const uploadSingleImage = async (req, res) => {
 
 export { 
     listProducts, addProduct, removeProduct, singleProduct, 
-    updateProduct, removeBulkProducts, bulkAddProducts, uploadMedia, listMedia 
+    updateProduct, removeBulkProducts, bulkAddProducts, uploadMedia, listMedia ,singleProduct1
 };

@@ -9,7 +9,8 @@ import {
     updateProduct,
     removeBulkProducts,
     uploadMedia,
-    bulkAddProducts,listMedia // Use the new matching logic
+    bulkAddProducts,listMedia, // Use the new matching logic
+    singleProduct1
 } from '../controllers/productController.js'
 import upload from '../middleware/multer.js';
 import adminAuth from '../middleware/adminAuth.js';
@@ -45,5 +46,6 @@ productRouter.post('/update-images', adminAuth, upload.fields([
 productRouter.post('/remove', adminAuth, removeProduct);
 productRouter.post('/single', singleProduct);
 productRouter.get('/list', listProducts);
+productRouter.get('/single', singleProduct1);
 
 export default productRouter;

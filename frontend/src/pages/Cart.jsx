@@ -131,7 +131,7 @@ const Cart = () => {
                 <CartTotal />
                 
                 <button onClick={() => navigate('/place-order')} className='w-full mt-10 bg-black text-white text-[10px] py-5 uppercase tracking-[0.5em] font-black hover:bg-[#BC002D] transition-all rounded-sm shadow-xl active:scale-95'>
-                    Proceed To pat
+                    Proceed To pay
                 </button>
                 
                 <div className='mt-8 pt-6 border-t border-black/5 flex flex-col gap-3'>
