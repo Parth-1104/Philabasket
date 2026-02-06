@@ -257,6 +257,8 @@ const bulkAddProducts = async (req, res) => {
 //     }
 // };
 
+// --- UPDATED listProducts CONTROLLER ---
+
 const listProducts = async (req, res) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -266,14 +268,13 @@ const listProducts = async (req, res) => {
         const { category, sort, search } = req.query;
         let query = {};
 
-        // Layered Search: Regex for mid-name + Text for relevance
+        // Layered Search
         if (search) {
             const searchRegex = new RegExp(search, 'i');
             query.$or = [
                 { name: { $regex: searchRegex } },
                 { country: { $regex: searchRegex } },
-                { category: { $regex: searchRegex } },
-                { $text: { $search: search } }
+                { category: { $regex: searchRegex } }
             ];
         }
 
@@ -281,24 +282,20 @@ const listProducts = async (req, res) => {
             query.category = { $in: category.split(',') };
         }
 
-        // Determine Sort Order
+        // Sort Logic
         let sortOrder = { date: -1 }; 
         if (sort === 'low-high') sortOrder = { price: 1 };
         if (sort === 'high-low') sortOrder = { price: -1 };
-        
-        // If searching without price sort, prioritize text relevance
-        if (search && !sort) {
-            sortOrder = { score: { $meta: "textScore" } };
-        }
 
-        // Executing Query and Count in Parallel
+        // Executing Query
         const [products, total] = await Promise.all([
             productModel.find(query)
-                .select('name price marketPrice image category country year stock date bestseller')
+                // ADDED: description, youtubeUrl, isActive, and isLatest to the selection
+                .select('name price marketPrice image category country year stock date bestseller description youtubeUrl isActive isLatest')
                 .sort(sortOrder)
                 .skip(skip)
                 .limit(limit)
-                .lean(), // lean() is critical for memory management with 100k+ docs
+                .lean(), 
             productModel.countDocuments(query)
         ]);
 
@@ -313,7 +310,6 @@ const listProducts = async (req, res) => {
         res.status(500).json({ success: false, message: "Registry Sync Error" });
     }
 };
-
 const addProduct = async (req, res) => {
     try {
         const { name, description, price, marketPrice, category, year, condition, country, stock, bestseller, imageName } = req.body;
@@ -382,21 +378,97 @@ const removeBulkProducts = async (req, res) => {
     } catch (error) { res.json({ success: false, message: error.message }); }
 };
 
+// controllers/productController.js
+
 const updateProduct = async (req, res) => {
     try {
-        const { id, name, description, price, marketPrice, category, year, condition, country, stock, bestseller, youtubeUrl, soldCount, image } = req.body;
-        await productModel.findByIdAndUpdate(id, {
-            name, description, price, marketPrice, category, year, 
-            condition, country, stock, bestseller, youtubeUrl, soldCount, image
+        // Destructure the ID and collect all other fields into 'rest'
+        const { id, ...updateData } = req.body;
+
+        // 1. Data Sanitization: Ensure booleans are actually booleans
+        // (Sometimes forms send them as strings "true"/"false")
+        if (updateData.isLatest !== undefined) {
+            updateData.isLatest = updateData.isLatest === true || updateData.isLatest === 'true';
+        }
+        if (updateData.isActive !== undefined) {
+            updateData.isActive = updateData.isActive === true || updateData.isActive === 'true';
+        }
+        if (updateData.bestseller !== undefined) {
+            updateData.bestseller = updateData.bestseller === true || updateData.bestseller === 'true';
+        }
+
+        // 2. Perform the update
+        // { new: true } returns the document AFTER the update
+        // { runValidators: true } ensures the new data matches your schema rules
+        const updatedProduct = await productModel.findByIdAndUpdate(
+            id, 
+            updateData, 
+            { new: true, runValidators: true }
+        );
+
+        if (!updatedProduct) {
+            return res.json({ success: false, message: "Specimen not found in registry" });
+        }
+
+        res.json({ 
+            success: true, 
+            message: "Registry Record Synchronized", 
+            product: updatedProduct 
         });
-        res.json({ success: true, message: "Product Updated" });
+
     } catch (error) {
+        console.error("Update Error:", error);
         res.json({ success: false, message: error.message });
     }
 }
 
 export const updateProductImages = async (req, res) => {
-    // Logic placeholder as per user request to keep all functions
+    try {
+        const { id } = req.body;
+
+        // 1. Fetch the existing product to get current images
+        const product = await productModel.findById(id);
+        if (!product) {
+            return res.json({ success: false, message: "Specimen not found" });
+        }
+
+        // 2. Extract files from Multer
+        const image1 = req.files.image1 && req.files.image1[0];
+        const image2 = req.files.image2 && req.files.image2[0];
+        const image3 = req.files.image3 && req.files.image3[0];
+        const image4 = req.files.image4 && req.files.image4[0];
+
+        const images = [image1, image2, image3, image4].filter((item) => item !== undefined);
+
+        // 3. Upload new images to Cloudinary
+        // We use Promise.all to upload all images simultaneously for speed
+        let imagesUrl = await Promise.all(
+            images.map(async (item) => {
+                let result = await cloudinary.uploader.upload(item.path, { 
+                    resource_type: 'image',
+                    folder: 'stamp_registry' // Optional: keeps your Cloudinary organized
+                });
+                return result.secure_url;
+            })
+        );
+
+        // 4. Update Strategy: 
+        // If the admin uploaded NEW images, we replace the array. 
+        // If no files were sent, we keep the old ones.
+        const updatedImages = imagesUrl.length > 0 ? imagesUrl : product.image;
+
+        await productModel.findByIdAndUpdate(id, { image: updatedImages });
+
+        res.json({ 
+            success: true, 
+            message: "Visual Archive Updated", 
+            images: updatedImages 
+        });
+
+    } catch (error) {
+        console.error("Image Update Error:", error);
+        res.json({ success: false, message: error.message });
+    }
 };
 
 export const uploadSingleImage = async (req, res) => {

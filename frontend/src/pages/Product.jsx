@@ -17,6 +17,7 @@ const Product = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [isMainLoaded, setIsMainLoaded] = useState(false);
 
+  // --- AUTOMATED WATERMARK LOGIC ---
   const getWatermarkedUrl = (url) => {
     if (!url || !url.includes('cloudinary')) return url;
     const watermarkTransform = 'l_Logo-5_nqnyl4,o_50,w_0.6,c_scale';
@@ -25,19 +26,16 @@ const Product = () => {
       : url.replace('/upload/', `/upload/f_auto,q_auto,${watermarkTransform}/`);
   };
 
-  // REVISED YOUTUBE LOGIC
+  // --- YOUTUBE EMBED LOGIC ---
   const getEmbedUrl = (url) => {
     if (!url) return null;
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=|shorts\/)([^#\&\?]*).*/;
     const match = url.match(regExp);
     const videoId = (match && match[2].length === 11) ? match[2] : null;
-    
-    if (videoId) {
-      return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1`;
-    }
-    return null;
+    return videoId ? `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1` : null;
   };
 
+  // --- REGISTRY DATA SYNC ---
   const fetchProductData = useCallback(async () => {
     let item = products.find((item) => item._id === productId);
 
@@ -46,7 +44,6 @@ const Product = () => {
         setImage(getWatermarkedUrl(item.image[0]));
     } else {
         try {
-            // Using your /single endpoint logic
             const response = await axios.get(`${backendUrl}/api/product/single`, { params: { productId } });
             if (response.data.success) {
                 const fetchedItem = response.data.product;
@@ -63,7 +60,7 @@ const Product = () => {
   }, [productId, products, backendUrl, navigate]);
 
   useEffect(() => {
-    setProductData(false);
+    setProductData(false); // Reset state to trigger loader on ID change
     fetchProductData();
   }, [productId, products, fetchProductData]);
 
@@ -91,16 +88,6 @@ const Product = () => {
 
   const valuationSymbol = currency === 'USD' ? '$' : '₹';
 
-  // Helper to safely handle formatPrice as string
-  const getSafePrice = (val) => {
-    try {
-        const formatted = formatPrice(val);
-        return String(formatted).replace(/[₹$]/g, '').trim();
-    } catch (e) {
-        return val;
-    }
-  };
-
   return productData ? (
     <div className='bg-white min-h-screen pt-20 pb-12 px-6 md:px-16 lg:px-24 text-black select-none animate-fade-in relative'>
       
@@ -120,30 +107,42 @@ const Product = () => {
               {productData.image.map((item, index) => {
                   const thumb = getWatermarkedUrl(item);
                   return (
-                    <img 
+                    <div
                       key={index}
-                      onClick={() => { setImage(thumb); setActiveVideo(''); }} 
-                      src={thumb} 
-                      className={`w-[18%] lg:w-full aspect-square object-contain cursor-pointer border transition-all p-1.5 bg-[#F9F9F9] ${image === thumb && !activeVideo ? 'border-[#BC002D]' : 'border-black/5 opacity-50 hover:opacity-100'}`} 
-                      alt="" 
-                    />
+                      onClick={(e) => { 
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('Thumbnail clicked:', index);
+                        setImage(thumb); 
+                        setActiveVideo(''); 
+                        setIsMainLoaded(false); 
+                      }}
+                      className={`w-[18%] lg:w-full aspect-square cursor-pointer border transition-all p-1.5 bg-[#F9F9F9] ${image === thumb && !activeVideo ? 'border-[#BC002D]' : 'border-black/5 opacity-50 hover:opacity-100'}`}
+                      style={{ pointerEvents: 'auto' }}
+                    >
+                      <img 
+                        src={thumb} 
+                        className="w-full h-full object-contain pointer-events-none"
+                        alt={`Product thumbnail ${index + 1}`}
+                        draggable={false}
+                      />
+                    </div>
                   );
               })}
 
               {productData.youtubeUrl && (
                 <div 
-                  onClick={() => {
-                      const url = getEmbedUrl(productData.youtubeUrl);
-                      if(url) {
-                        setActiveVideo(url);
-                      } else {
-                        toast.error("Video record link invalid");
-                      }
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('Video thumbnail clicked');
+                    setActiveVideo(getEmbedUrl(productData.youtubeUrl));
                   }}
                   className={`w-[18%] lg:w-full aspect-square flex flex-col items-center justify-center cursor-pointer border p-1.5 bg-black text-white transition-all ${activeVideo ? 'border-[#BC002D]' : 'opacity-60 hover:opacity-100'}`}
+                  style={{ pointerEvents: 'auto' }}
                 >
-                  <PlayCircle size={20} />
-                  <span className='text-[7px] font-black uppercase mt-1'>Video</span>
+                  <PlayCircle size={20} className="pointer-events-none" />
+                  <span className='text-[7px] font-black uppercase mt-1 pointer-events-none'>Video</span>
                 </div>
               )}
           </div>
@@ -168,7 +167,7 @@ const Product = () => {
                   onLoad={() => setIsMainLoaded(true)}
                   className={`max-w-full max-h-[380px] object-contain drop-shadow-2xl transition-all duration-700 ${isMainLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} 
                   src={image} 
-                  alt="" 
+                  alt="Product main view" 
                 />
               )}
           </div>
@@ -211,27 +210,22 @@ const Product = () => {
 
           {/* VALUATION SECTION */}
           <div className='flex flex-col gap-1 mb-10'>
-              <div className='flex items-baseline gap-2'>
-                  <span className='text-2xl font-serif text-[#D4AF37]'>{valuationSymbol}</span>
-                  <p className='text-5xl md:text-6xl font-medium text-[#D4AF37] tracking-tighter tabular-nums'>
-                    {getSafePrice(productData.price * quantity)}
-                  </p>
-              </div>
+            <p className='text-5xl md:text-6xl font-medium text-[#D4AF37] tracking-tighter tabular-nums'>
+              {String(formatPrice(productData.price * quantity)).replace(/[₹$]/g, '')}
+            </p>
 
-              {productData.marketPrice > productData.price && (
-                <div className='flex items-baseline gap-1 opacity-40 ml-1'>
-                    <span className='text-xs font-serif text-gray-500'>{valuationSymbol}</span>
-                    <p className='text-xl font-medium line-through decoration-[#BC002D]'>
-                        {getSafePrice(productData.marketPrice * quantity)}
-                    </p>
-                </div>
-              )}
+            {/* Market Price Display (Inside the condition) */}
+            {productData.marketPrice > productData.price && (
+              <p className='text-xl font-medium line-through decoration-[#BC002D]'>
+                {String(formatPrice(productData.marketPrice * quantity)).replace(/[₹$]/g, '')}
+              </p>
+            )}
           </div>
 
           <div className='flex flex-col sm:flex-row gap-3'>
             {productData.stock > 0 ? (
               <>
-                <button onClick={() => toggleWishlist(productData._id)} className='flex-1 border border-black/5 py-4 flex items-center justify-center hover:bg-gray-50 transition-colors'>
+                <button onClick={() => toggleWishlist(productData._id)} className='flex-1 border border-black/5 py-4 flex items-center justify-center'>
                     <Heart size={18} className={wishlist.includes(productData._id) ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-300'} />
                 </button>
                 <button onClick={handleAddToCart} className='flex-[3] bg-black text-white py-4 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-[#BC002D] transition-all'>
@@ -257,6 +251,8 @@ const Product = () => {
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        .pointer-events-none { pointer-events: none !important; }
+        .cursor-pointer { cursor: pointer !important; }
       `}} />
     </div>
   ) : (
