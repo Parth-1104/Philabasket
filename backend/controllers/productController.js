@@ -384,13 +384,16 @@ const removeBulkProducts = async (req, res) => {
 
 const updateProduct = async (req, res) => {
     try {
-        const { id, name, country, year, price, category, stock } = req.body;
+        const { id, name, description, price, marketPrice, category, year, condition, country, stock, bestseller, youtubeUrl, soldCount, image } = req.body;
         await productModel.findByIdAndUpdate(id, {
-            name, country, year: Number(year), price: Number(price), stock: Number(stock), category 
+            name, description, price, marketPrice, category, year, 
+            condition, country, stock, bestseller, youtubeUrl, soldCount, image
         });
-        res.json({ success: true, message: "Stamp details updated" });
-    } catch (error) { res.json({ success: false, message: error.message }); }
-};
+        res.json({ success: true, message: "Product Updated" });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+}
 
 export const updateProductImages = async (req, res) => {
     // Logic placeholder as per user request to keep all functions

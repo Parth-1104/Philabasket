@@ -116,6 +116,7 @@ const Product = () => {
                         "@type": "Offer",
                         "url": window.location.href,
                         "priceCurrency": currency,
+                        "marketPrice":productData.marketPrice,
                         "price": productData.price,
                         "availability": productData.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
                     }
@@ -206,17 +207,12 @@ const Product = () => {
             <span className='text-gray-400 text-[8px] font-bold tracking-[0.3em] uppercase'>{productData.year} Archive</span>
           </div>
 
-          <h1 className='font-serif text-3xl md:text-4xl text-black tracking-tight leading-tight mb-4 uppercase font-bold'>{productData._id}. {productData.name}</h1>
+          <h1 className='text-1xl md:text-3xl text-black tracking-tight leading-tight mb-4 uppercase font-bold'>{productData.name}</h1>
           
           {/* RESTORED DESCRIPTION SECTION */}
-          <div className='mb-6'>
-            <p className='text-[8px] font-black text-[#BC002D] uppercase tracking-[0.3em] mb-2'>Archival Records</p>
-            <p className='text-xs text-gray-500 leading-relaxed font-medium italic'>
-              {productData.description}
-            </p>
-          </div>
+          
 
-          <div className='flex items-center gap-2 mb-6 text-gray-400'>
+          <div className='flex items-center gap-2 mb-6 text-gray-400 '>
               <div className='flex gap-1'>
                 {[...Array(5)].map((_, i) => <div key={i} className={`w-1 h-1 rounded-full ${i < 4 ? 'bg-[#BC002D]' : 'bg-black/10'}`}></div>)}
               </div>
@@ -231,10 +227,17 @@ const Product = () => {
                 {label: 'Stock', val: productData.stock > 0 ? `${productData.stock} left` : 'Sold Out', color: productData.stock < 5}
               ].map((stat, i) => (
                 <div key={i} className='flex flex-col'>
-                    <p className='text-[7px] font-black text-gray-400 uppercase tracking-widest'>{stat.label}</p>
+                    <p className='text-[9px]  font-black text-gray-400 uppercase tracking-widest'>{stat.label}</p>
                     <p className={`text-[10px] font-bold uppercase tracking-wider ${stat.color ? 'text-[#BC002D]' : 'text-black'}`}>{stat.val}</p>
                 </div>
               ))}
+          </div>
+
+          <div className='mb-6'>
+            <p className='text-[8px] font-black text-[#BC002D] uppercase tracking-[0.3em] mb-2'>Archival Records</p>
+            <p className='text-xs md:text-2xl text-gray-500 leading-relaxed font-medium italic'>
+              {productData.description}
+            </p>
           </div>
 
           <div className='mb-8'>
@@ -258,14 +261,28 @@ const Product = () => {
               </div>
           </div>
 
-          <div className='flex items-end gap-3 mb-6'>
-              <div className='flex items-end gap-0.5'>
-                  <span className='text-xl font-serif text-[#D4AF37] mb-1'>{valuationSymbol}</span>
-                  <p className='text-4xl md:text-5xl font-medium text-[#D4AF37] tracking-tighter tabular-nums'>
-                      {String(formatPrice(productData.price * quantity)).replace(/[₹$]/g, '')}
-                  </p>
-              </div>
-          </div>
+          <div className='flex items-baseline gap-4'>
+        {/* Main Price Display */}
+        <div className='flex items-baseline gap-1'>
+
+        {productData.marketPrice > productData.price && (
+            <div className='flex items-baseline gap-1 opacity-40 transition-opacity hover:opacity-60'>
+                <span className='text-xs font-serif text-gray-500'>{valuationSymbol}</span>
+                <p className='text-xl md:text-2xl font-medium text-gray-500 tabular-nums line-through decoration-[#BC002D]/40 decoration-[1.5px]'>
+                    {String(formatPrice(productData.marketPrice * quantity)).replace(/[₹$]/g, '')}
+                </p>
+            </div>
+        )}
+
+            <span className='text-2xl font-serif text-[#D4AF37]'>{valuationSymbol}</span>
+            <p className='text-5xl md:text-6xl font-medium text-[#D4AF37] tracking-tighter tabular-nums leading-none'>
+                {String(formatPrice(productData.price * quantity)).replace(/[₹$]/g, '')}
+            </p>
+        </div>
+
+        {/* Market Price with "Cut" Effect */}
+        
+    </div>
 
           <div className='mb-10 flex flex-col sm:flex-row gap-3'>
             {productData.stock > 0 ? (

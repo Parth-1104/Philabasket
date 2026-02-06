@@ -58,6 +58,7 @@ const productSchema = new mongoose.Schema({
         index: true 
     },
     rewardPoints: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true },
 }, { 
     timestamps: true 
 });

@@ -8,6 +8,7 @@ import SearchBar from './components/SearchBar';
 import Home from './pages/Home'; // Home should never be lazy
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import UtilityBar from './components/UtilityBar';
 
 // --- LAZY IMPORTS (Load on Demand) ---
 const Collection = lazy(() => import('./pages/Collection'));
@@ -64,7 +65,7 @@ const App = () => {
           <Route path='/blog/:blogId' element={<BlogContent />} />
         </Routes>
       </Suspense>
-
+      <UtilityBar/>
       <Footer />
     </div>
   )

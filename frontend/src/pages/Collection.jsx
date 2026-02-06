@@ -110,7 +110,7 @@ const Collection = () => {
   }, [filterSearch, ALL_CATEGORIES]);
 
   return (
-    <div className='bg-white min-h-screen pt-24 pb-20 px-6 md:px-16 lg:px-24 select-none relative animate-fade-in'>
+    <div className='bg-white min-h-screen pt-4 pb-20 px-6 md:px-16 lg:px-24 select-none relative animate-fade-in'>
       
       <div className="absolute -right-[10vw] top-0 h-[60vh] w-[40vw] bg-[#BC002D]/5 rounded-bl-[600px] pointer-events-none z-0"></div>
 
@@ -121,7 +121,7 @@ const Collection = () => {
                   <span className='h-[1.5px] w-12 bg-[#BC002D]'></span>
                   <p className='text-[10px] tracking-[0.6em] text-[#BC002D] uppercase font-black'>Registry Database</p>
               </div>
-              <h2 className='text-6xl md:text-5xl font-bold text-gray-900 tracking-tighter leading-none uppercase'>
+              <h2 className='text-2xl md:text-5xl font-bold text-gray-900 tracking-tighter leading-none uppercase'>
                   THE <span className='text-[#BC002D]'>GALLERY.</span>
               </h2>
               

@@ -59,7 +59,7 @@ const Navbar = () => {
     );
 
     return (
-        <div className='flex items-center justify-between py-5 px-[6%] sticky top-0 z-[100] bg-white  lg:p-[34px]'>
+<div className='flex items-center justify-between py-5 px-[6%] sticky top-0 lg:relative z-[100] bg-white border-b border-black/[0.03] lg:p-[34px] w-full'>
             
             {/* LOGO */}
             <Link to='/' className='flex-shrink-0 group'>
@@ -84,7 +84,7 @@ const Navbar = () => {
                 {/* REWARDS DROPDOWN (DESKTOP & MOBILE RESPONSIVE) */}
                 <div className='relative ml-2'>
                     {/* Desktop Button */}
-                    <div 
+                    {/* <div 
                         onClick={() => {
                             if (token) setShowRewardsDropdown(!showRewardsDropdown);
                             else navigate('/login');
@@ -98,10 +98,10 @@ const Navbar = () => {
                             </span>
 
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* MOBILE POINTS CHIP */}
-                    {!visible && (
+                    {/* {!visible && (
                         <div 
                             onClick={() => {
                                 if (token) setShowRewardsDropdown(!showRewardsDropdown);
@@ -114,7 +114,7 @@ const Navbar = () => {
                                 {token ? `${userPoints} PTS` : 'Rewards'}
                             </span>
                         </div>
-                    )}
+                    )} */}
 
                     {/* UNIFIED DROPDOWN / MOBILE BOTTOM SHEET */}
                     {token && showRewardsDropdown && (
@@ -137,7 +137,7 @@ const Navbar = () => {
 
                                 <div className='p-3'>
     {/* NEW: Points to Money Conversion Display */}
-    <div className='mb-3 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200'>
+    {/* <div className='mb-3 p-4 bg-gray-50 rounded-2xl border border-dashed border-gray-200'>
         <div className='flex justify-between items-center mb-1'>
             <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest'>Use During Checkout</p>
             <TrendingUp size={12} className='text-green-500' />
@@ -153,10 +153,10 @@ const Navbar = () => {
             <span className='text-[9px] font-black text-green-600 uppercase'>Available</span>
         </div>
         <p className='text-[7px] text-gray-400 font-bold uppercase mt-1'>Rate: 10 PTS = 1.00 INR</p>
-    </div>
+    </div> */}
 
     {/* Refer Item */}
-    <div onClick={() => { navigate('/referral'); setShowRewardsDropdown(false); }} className='group flex items-center gap-3 p-4 md:p-3 hover:bg-red-50 rounded-xl transition-all cursor-pointer'>
+    {/* <div onClick={() => { navigate('/referral'); setShowRewardsDropdown(false); }} className='group flex items-center gap-3 p-4 md:p-3 hover:bg-red-50 rounded-xl transition-all cursor-pointer'>
         <div className='w-10 h-10 md:w-8 md:h-8 rounded-full bg-red-100 flex items-center justify-center text-[#BC002D] group-hover:bg-[#BC002D] group-hover:text-white transition-all'>
             <Users size={16}/>
         </div>
@@ -164,10 +164,10 @@ const Navbar = () => {
             <p className='text-[10px] md:text-[9px] font-black uppercase text-gray-900'>Refer Collector</p>
             <p className='text-[8px] text-gray-400 font-bold uppercase'>Earn 50 Points</p>
         </div>
-    </div>
+    </div> */}
 
     {/* Redeem Item */}
-    <div className='group flex items-center gap-3 p-4 md:p-3 hover:bg-amber-50 rounded-xl transition-all cursor-pointer'>
+    {/* <div className='group flex items-center gap-3 p-4 md:p-3 hover:bg-amber-50 rounded-xl transition-all cursor-pointer'>
         <div className='w-10 h-10 md:w-8 md:h-8 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all'>
             <Gift size={16}/>
         </div>
@@ -175,7 +175,7 @@ const Navbar = () => {
             <p className='text-[10px] md:text-[9px] font-black uppercase text-gray-900'>Redeem Points</p>
             <p className='text-[8px] text-gray-400 font-bold uppercase'>Use for Checkout</p>
         </div>
-    </div>
+    </div> */}
 </div>
                                 <button onClick={() => { navigate('/referral'); setShowRewardsDropdown(false); }} className='w-full py-5 md:py-4 bg-[#c3bf89] text-white text-[10px] md:text-[9px] font-black uppercase tracking-[0.3em] hover:bg-[#BC002D] transition-colors'>Refer to Earn</button>
                             </div>
@@ -204,10 +204,10 @@ const Navbar = () => {
                         )}
                     </div>
 
-                    <select value={currency} onChange={(e) => toggleCurrency(e.target.value)} className='bg-transparent text-black text-[9px] md:text-[10px] font-black border-none focus:ring-0 uppercase tracking-[0.1em] cursor-pointer block'>
+                    {/* <select value={currency} onChange={(e) => toggleCurrency(e.target.value)} className='bg-transparent text-black text-[9px] md:text-[10px] font-black border-none focus:ring-0 uppercase tracking-[0.1em] cursor-pointer block'>
                         <option value="INR">INR ₹</option>
                         <option value="USD">USD $</option>
-                    </select>
+                    </select> */}
 
                     <Link to='/cart' className='hidden lg:flex relative active:scale-90 transition-transform'>
                         <div className=' bg-black p-2 rounded-sm hover:bg-[#BC002D] transition-all'>
@@ -276,7 +276,7 @@ const Navbar = () => {
                             </div>
 
                             {/* MOBILE REWARDS STANDING */}
-                            <div className='p-6 bg-gray-50 rounded-2xl border border-black/5'>
+                            {/* <div className='p-6 bg-gray-50 rounded-2xl border border-black/5'>
                                 <div className='flex justify-between items-center mb-4'>
                                     <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest'>Your Standing</p>
                                     <Trophy size={14} className='text-amber-500' />
@@ -287,7 +287,7 @@ const Navbar = () => {
                                     </p>
                                     <button onClick={() => { navigate(token ? '/referral' : '/login'); setVisible(false); }} className='text-[9px] font-black text-[#BC002D] uppercase border-b border-[#BC002D]/20'>View Benefits</button>
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
 
                         <div className='p-8'>

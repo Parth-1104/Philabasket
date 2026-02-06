@@ -103,53 +103,58 @@ const LatestCollection = () => {
                     </div>
 
                     {/* --- MAIN PRODUCT GRID --- */}
-                    <div className='w-full lg:w-3/4'>
-                        <div className='flex overflow-x-auto lg:grid lg:grid-cols-3 gap-4 md:gap-x-12 gap-y-16 pb-10 lg:pb-0 snap-x snap-mandatory mobile-scrollbar'>
-                        {latestProducts.map((item, index) => (
-    <div 
-        key={index} 
-        /* FIX: We wrap the priority logic in a function that 
-           prevents children (like ProductItem's Link) from 
-           triggering this parent click.
-        */
-        onClick={(e) => {
-            // If the user clicked the product name or image specifically, 
-            // let the ProductItem handle it. Otherwise, handle priority.
-            handleProductClick(item._id);
-        }}
-        className="min-w-[48%] sm:min-w-[45vw] lg:min-w-0 snap-center flex flex-col group cursor-pointer"
-    >
-        <div className="relative aspect-[3/4] bg-white border border-gray-100 p-2 md:p-3 shadow-sm transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl group-hover:border-[#bd002d]/20 overflow-hidden rounded-br-[30px] md:rounded-br-[60px]">
-            <div className="absolute top-0 right-0 z-20 overflow-hidden w-16 h-16 md:w-24 md:h-24 pointer-events-none">
-                <div className="absolute top-[18%] -right-[32%] bg-[#bd002d] text-white text-[6px] md:text-[8px] font-black py-1 w-[140%] text-center transform rotate-45 shadow-sm">
-                    Latest
-                </div>
-            </div>
-            
-            <div className="w-full h-full bg-[#f8f8f8] flex items-center justify-center p-2 md:p-4 relative rounded-br-[20px] md:rounded-br-[40px]">
-                {/* IMPORTANT: Add an onClick here that stops the event 
-                   from reaching the parent div when you click the actual item.
+                    <div className='w-full lg:w-5/9'>
+    <div className='flex overflow-x-auto lg:grid lg:grid-cols-3 gap-6 md:gap-x-12 gap-y-16 pb-10 lg:pb-0 snap-x snap-mandatory mobile-scrollbar px-2'>
+        {latestProducts.map((item, index) => (
+            <div 
+                key={index} 
+                onClick={() => handleProductClick(item._id)}
+                /* MOBILE SCALE: Increased min-w to 85% for a massive "featured" feel.
+                   Height is controlled by the aspect ratio below.
+                */
+                className="min-w-[85%] sm:min-w-[45vw] lg:min-w-0 snap-center flex flex-col group cursor-pointer"
+            >
+                {/* MOBILE CONTAINER: Using aspect-[3/4.5] for extra height. 
+                   Removed extra padding p-2 and replaced with p-1 to maximize internal image size.
                 */}
-                <div onClick={(e) => e.stopPropagation()}>
-                    <ProductItem 
-                        id={item._id} 
-                        image={item.image} 
-                        name={item.name} 
-                        price={item.price} 
-                        marketPrice={item.marketPrice}
-                        category={item.category[0]}
-                        linkToFilter={true} // Keeps it navigating to /product/id
-                    />
+                <div className="relative aspect-[3/4.5] lg:aspect-[3/4] bg-white border border-gray-100 p-1 md:p-3 shadow-lg transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl group-hover:border-[#bd002d]/20 overflow-hidden rounded-br-[40px] md:rounded-br-[60px]">
+                    
+                    {/* Ribbon: Scaled slightly for better mobile visibility */}
+                    <div className="absolute top-0 right-0 z-20 overflow-hidden w-20 h-20 md:w-24 md:h-24 pointer-events-none">
+                        <div className="absolute top-[20%] -right-[30%] bg-[#bd002d] text-white text-[7px] md:text-[8px] font-black py-1 w-[140%] text-center transform rotate-45 shadow-sm uppercase tracking-tighter">
+                            New
+                        </div>
+                    </div>
+                    
+                    {/* INNER SPECIMEN AREA: 
+                        Reduced padding here so the ProductItem image can expand fully.
+                    */}
+                    <div className="w-full h-full bg-[#f8f8f8] flex items-center justify-center p-1 md:p-4 relative rounded-br-[35px] md:rounded-br-[40px]">
+                        <div className='w-full h-full' onClick={(e) => e.stopPropagation()}>
+                            <ProductItem 
+                                id={item._id} 
+                                image={item.image} 
+                                name={item.name} 
+                                price={item.price} 
+                                marketPrice={item.marketPrice}
+                                category={item.category[0]}
+                                linkToFilter={true} 
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        ))}
     </div>
-))}
-                        </div>
-                        <p className='lg:hidden text-[8px] font-black uppercase tracking-[0.4em] text-gray-300 text-center mt-4 animate-pulse'>
-                            Swipe for more specimens
-                        </p>
-                    </div>
+    <div className='lg:hidden flex flex-col items-center mt-6'>
+        <div className='w-20 h-[2px] bg-gray-100 rounded-full overflow-hidden'>
+            <div className='w-1/3 h-full bg-[#BC002D] animate-scroll-indicator'></div>
+        </div>
+        <p className='text-[8px] font-black uppercase tracking-[0.4em] text-gray-400 mt-3'>
+            Swipe Gallery
+        </p>
+    </div>
+</div>
                 </div>
 
                 <div className='rounded-[40px] md:rounded-[100px] overflow-hidden mt-16 lg:mt-[10vh] bg-[#bd002d] py-8 px-10 relative flex flex-col items-center shadow-2xl'>
