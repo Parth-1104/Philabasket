@@ -20,37 +20,54 @@ const List = ({ token }) => {
   const [editFormData, setEditFormData] = useState(null);
 
   // --- REGISTRY SYNC FETCHING ---
-  const fetchList = useCallback(async (reset = false) => {
-    try {
+  // --- REGISTRY SYNC FETCHING ---
+const fetchList = useCallback(async (isReset = false) => {
+  try {
       setLoading(true);
-      const targetPage = reset ? 1 : page;
+      // Use a local variable for the page to avoid waiting for state updates
+      const targetPage = isReset ? 1 : page;
+      
       const response = await axios.get(`${backendUrl}/api/product/list`, {
-        params: { page: targetPage, limit: 30, search: searchTerm }
+          params: { 
+              page: targetPage, 
+              limit: 30, 
+              search: searchTerm 
+          }
       });
 
       if (response.data.success) {
-        setList(prev => reset ? response.data.products : [...prev, ...response.data.products]);
-        setTotalCount(response.data.total);
-        setHasMore(response.data.products.length === 30);
+          // If it's a reset (search/initial load), replace the list. 
+          // Otherwise, append the new results to the existing list.
+          setList(prev => isReset ? response.data.products : [...prev, ...response.data.products]);
+          setTotalCount(response.data.total);
+          
+          // hasMore should check if we actually received a full page of results
+          setHasMore(response.data.products.length === 30);
       }
-    } catch (error) {
+  } catch (error) {
       toast.error("Registry connection failed");
-    } finally {
+  } finally {
       setLoading(false);
-    }
-  }, [page, searchTerm, backendUrl]);
+  }
+  // REMOVED 'page' from dependencies to prevent the infinite loop
+}, [searchTerm, backendUrl]); 
 
-  useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      setPage(1);
-      fetchList(true);
-    }, 500);
-    return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm, fetchList]);
+// --- EFFECT 1: SEARCH DEBOUNCE (Handles Resets) ---
+useEffect(() => {
+  const delayDebounceFn = setTimeout(() => {
+      setPage(1); // Reset page counter
+      fetchList(true); // Trigger a reset fetch
+  }, 500);
+  return () => clearTimeout(delayDebounceFn);
+}, [searchTerm, fetchList]);
 
-  useEffect(() => {
-    if (page > 1) fetchList();
-  }, [page, fetchList]);
+// --- EFFECT 2: PAGINATION (Handles Loading More) ---
+useEffect(() => {
+  // Only trigger if we are navigating to page 2 or beyond
+  if (page > 1) {
+      fetchList(false); // Trigger an append fetch
+  }
+}, [page, fetchList]);
 
   // --- OPEN MODAL: ENSURES EXISTING DATA IS LOADED ---
   const openEditModal = (item) => {
