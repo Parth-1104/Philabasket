@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { ShopContext } from '../context/ShopContext';
 import RelatedProducts from '../components/RelatedProducts';
-import { Heart, Loader2, Minus, Plus, PlayCircle, X } from 'lucide-react';
+import { Heart, Loader2, Minus, Plus, PlayCircle, X,Zap } from 'lucide-react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
@@ -84,6 +84,23 @@ const Product = () => {
     addToCart(productData._id, quantity); 
     setShowPopup(true);
     setTimeout(() => setShowPopup(false), 3000);
+  };
+
+  const handleInstantCheckout = async () => {
+    try {
+      // 1. Await the successful addition to the database
+      // Ensure your context's addToCart is an async function
+      await addToCart(productData._id, quantity);
+      
+      // 2. Only navigate once the cart state is synchronized
+      navigate('/cart');
+      
+      // 3. Optional: Scroll to top of the next page
+      window.scrollTo(0, 0);
+    } catch (error) {
+      console.error("Checkout failed:", error);
+      toast.error("Could not add specimen to cart for checkout");
+    }
   };
 
   const valuationSymbol = currency === 'USD' ? '$' : '₹';
@@ -209,18 +226,26 @@ const Product = () => {
           </div>
 
           {/* VALUATION SECTION */}
-          <div className='flex flex-col gap-1 mb-10'>
-            <p className='text-5xl md:text-6xl font-medium text-[#D4AF37] tracking-tighter tabular-nums'>
-              {String(formatPrice(productData.price * quantity)).replace(/[₹$]/g, '')}
-            </p>
+          {/* VALUATION SECTION */}
+<div className='flex flex-col gap-1 mb-10'>
+    {/* Main Price Display */}
+    <div className='flex items-baseline gap-2'>
+        <span className='text-2xl font-serif text-[#D4AF37]'>{valuationSymbol}</span>
+        <p className='text-5xl md:text-6xl font-medium text-[#D4AF37] tracking-tighter tabular-nums leading-none'>
+            {String(formatPrice(productData.price * quantity)).replace(/[₹$]/g, '').trim()}
+        </p>
+    </div>
 
-            {/* Market Price Display (Inside the condition) */}
-            {productData.marketPrice > productData.price && (
-              <p className='text-xl font-medium line-through decoration-[#BC002D]'>
-                {String(formatPrice(productData.marketPrice * quantity)).replace(/[₹$]/g, '')}
-              </p>
-            )}
-          </div>
+    {/* Market Price Display (Conditional) */}
+    {productData.marketPrice > productData.price && (
+        <div className='flex items-baseline gap-1 opacity-40 ml-1'>
+            <span className='text-xs font-serif text-gray-500'>{valuationSymbol}</span>
+            <p className='text-xl font-medium text-gray-500 line-through decoration-[#BC002D] tabular-nums'>
+                {String(formatPrice(productData.marketPrice * quantity)).replace(/[₹$]/g, '').trim()}
+            </p>
+        </div>
+    )}
+</div>
 
           <div className='flex flex-col sm:flex-row gap-3'>
             {productData.stock > 0 ? (
@@ -231,9 +256,12 @@ const Product = () => {
                 <button onClick={handleAddToCart} className='flex-[3] bg-black text-white py-4 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-[#BC002D] transition-all'>
                   Add to Cart
                 </button>
-                <button onClick={() => navigate('/cart')} className='flex-[3] border border-black py-4 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-black hover:text-white transition-all'>
-                  Instant Checkout
-                </button>
+                <button 
+  onClick={handleInstantCheckout} 
+  className='flex-[3] border border-black py-4 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-black hover:text-white transition-all flex items-center justify-center gap-2'
+>
+  <Zap size={14} /> Buy Now
+</button>
               </>
             ) : (
               <button disabled className='w-full border border-black/5 text-gray-300 py-4 text-[10px] font-black uppercase'>Registry Exhausted</button>
