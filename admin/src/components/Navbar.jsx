@@ -11,7 +11,7 @@ const Navbar = ({ setToken }) => {
           <img 
             draggable="false" 
             className='w-12 h-12 object-contain' 
-            src={assets.logo} 
+            src='/Logo-5.png' 
             alt="PhilaBasket Logo" 
           />
           {/* Subtle "Admin" badge to distinguish from the shop */}

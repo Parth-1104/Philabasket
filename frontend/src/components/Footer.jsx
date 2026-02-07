@@ -14,16 +14,21 @@ const Footer = () => {
           
           {/* Brand Identity */}
           <div className="flex flex-col gap-10">
-            <div className="flex flex-col gap-4">
-               <img 
-                src={assets.logo} 
-                className="w-14 lg:w-16 transition-all duration-500 hover:rotate-[360deg]" 
-                alt="PhilaBasket" 
-              />
-              <h2 className='text-2xl font-bold text-gray-900 tracking-tighter'>
-                PHILA<span className='text-[#BC002D] italic'>BASKET.</span>
-              </h2>
-            </div>
+          <div className='flex items-center gap-2 md:gap-3 mr-7 group cursor-pointer'>
+    {/* BRAND LOGO - The Mark */}
+    <img 
+      src={assets.logo} 
+      className='w-8 md:w-10 lg:w-12 group-hover:rotate-[360deg] transition-transform duration-1000 object-contain' 
+      alt="PhilaBasket Logo" 
+    />
+    
+    {/* BRAND TEXT - Logo-5.png */}
+    <img 
+      src='Logo-5.png' 
+      className='w-24 md:w-28 lg:w-32 h-auto object-contain' 
+      alt="PhilaBasket Text" 
+    />
+</div>
             
             <p className="text-gray-400 text-[10px] leading-relaxed tracking-[0.2em] font-black uppercase max-w-xs">
               Sovereign Registry for international philatelic specimens. Empowering global collectors since <span className='text-black'>MMXXVI.</span>

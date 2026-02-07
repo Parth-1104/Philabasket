@@ -63,13 +63,21 @@ const Navbar = () => {
             
             {/* LOGO */}
             <Link to='/' className='flex-shrink-0 group'>
-                <div className='flex items-center gap-4 mr-7'>
-                    <img src={assets.logo} className='w-10 lg:w-12 group-hover:rotate-[360deg] transition-transform duration-1000' alt="PhilaBasket" />
-                    <div className='hidden lg:flex flex-col'>
-                        <h1 className='text-xl font-bold text-gray-900 tracking-tighter leading-none'>PHILA<span className='text-[#BC002D] italic'>BASKET</span></h1>
-                        <p className='text-[7px] text-[#BC002D] font-black uppercase tracking-[0.6em]'>The Archive</p>
-                    </div>
-                </div>
+            <div className='flex items-center gap-2 md:gap-3 mr-7 group cursor-pointer'>
+    {/* BRAND LOGO - The Mark */}
+    <img 
+      src={assets.logo} 
+      className='w-8 md:w-10 lg:w-12 group-hover:rotate-[360deg] transition-transform duration-1000 object-contain' 
+      alt="PhilaBasket Logo" 
+    />
+    
+    {/* BRAND TEXT - Logo-5.png */}
+    <img 
+      src='Logo-5.png' 
+      className='w-24 md:w-28 lg:w-32 h-auto object-contain' 
+      alt="PhilaBasket Text" 
+    />
+</div>
             </Link>
 
             {/* DESKTOP NAVIGATION */}
