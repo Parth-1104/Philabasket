@@ -14,21 +14,21 @@ const Footer = () => {
           
           {/* Brand Identity */}
           <div className="flex flex-col gap-10">
-          <div className='flex items-center gap-2 md:gap-3 mr-7 group cursor-pointer'>
-    {/* BRAND LOGO - The Mark */}
-    <img 
-      src={assets.logo} 
-      className='w-8 md:w-10 lg:w-12 group-hover:rotate-[360deg] transition-transform duration-1000 object-contain' 
-      alt="PhilaBasket Logo" 
-    />
-    
-    {/* BRAND TEXT - Logo-5.png */}
-    <img 
-      src='Logo-5.png' 
-      className='w-24 md:w-28 lg:w-32 h-auto object-contain' 
-      alt="PhilaBasket Text" 
-    />
-</div>
+            <div className='flex items-center gap-2 md:gap-3 mr-7 group cursor-pointer'>
+                {/* BRAND LOGO - The Mark */}
+                <img 
+                  src={assets.logo} 
+                  className='w-8 md:w-10 lg:w-12 group-hover:rotate-[360deg] transition-transform duration-1000 object-contain' 
+                  alt="PhilaBasket Logo" 
+                />
+                
+                {/* BRAND TEXT - Logo-5.png */}
+                <img 
+                  src='Logo-5.png' 
+                  className='w-24 md:w-28 lg:w-32 h-auto object-contain' 
+                  alt="PhilaBasket Text" 
+                />
+            </div>
             
             <p className="text-gray-400 text-[10px] leading-relaxed tracking-[0.2em] font-black uppercase max-w-xs">
               Sovereign Registry for international philatelic specimens. Empowering global collectors since <span className='text-black'>MMXXVI.</span>
@@ -48,15 +48,30 @@ const Footer = () => {
           {[
             {
               title: 'Registry Index',
-              links: [{label: 'Gallery', path: '/collection'}, {label: 'New Arrivals', path: '/collection'}, {label: 'Rare Archive', path: '/collection'}, {label: 'Bestsellers', path: '/collection'}]
+              links: [
+                {label: 'Gallery', path: '/collection'}, 
+                {label: 'New Arrivals', path: '/collection'}, 
+                {label: 'Rare Archive', path: '/collection'}, 
+                {label: 'Bestsellers', path: '/collection'}
+              ]
             },
             {
               title: 'Curator Support',
-              links: [{label: 'Authentication', path: '/about'}, {label: 'Shipping Policy', path: '/about'}, {label: 'Vault Access', path: '/contact'}, {label: 'FAQs', path: '/contact'}]
+              links: [
+                {label: 'Authentication', path: '/about'}, 
+                {label: 'Shipping Policy', path: '/about'}, 
+                {label: 'Vault Access', path: '/contact'}, 
+                {label: 'FAQs', path: '/contact'}
+              ]
             },
             {
               title: 'The Archive',
-              links: [{label: 'Our Heritage', path: '/about'}, {label: 'Collector Network', path: '/about'}, {label: 'Contact', path: '/contact'}, {label: 'Legal', path: '/about'}]
+              links: [
+                {label: 'Our Heritage', path: '/about'}, 
+                {label: 'Collector Network', path: '/about'}, 
+                {label: 'Contact', path: '/contact'}, 
+                {label: 'Legal', path: '/about'}
+              ]
             }
           ].map((column, idx) => (
             <div key={idx} className="lg:ml-auto">
@@ -113,4 +128,4 @@ const Footer = () => {
   )
 }
 
-export default Footer
+export default Footer;

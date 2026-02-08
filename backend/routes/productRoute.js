@@ -10,7 +10,9 @@ import {
     removeBulkProducts,
     uploadMedia,
     bulkAddProducts,listMedia, // Use the new matching logic
-    singleProduct1
+    singleProduct1,
+    deleteMedia,
+    updateMediaName
 } from '../controllers/productController.js'
 import upload from '../middleware/multer.js';
 import adminAuth from '../middleware/adminAuth.js';
@@ -47,5 +49,10 @@ productRouter.post('/remove', adminAuth, removeProduct);
 productRouter.post('/single', singleProduct);
 productRouter.get('/list', listProducts);
 productRouter.get('/single', singleProduct1);
+// Route to update media filename
+productRouter.post('/update-media-name', adminAuth, updateMediaName);
+
+// Route for bulk/single deletion
+productRouter.post('/delete-media', adminAuth, deleteMedia);
 
 export default productRouter;

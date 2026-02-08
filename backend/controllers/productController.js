@@ -45,9 +45,14 @@ const uploadMedia = async (req, res) => {
                 
                 const optimizedUrl = result.secure_url.replace('/upload/', '/upload/f_auto,q_auto/');
                 
+                // ADDED: Capture result.public_id
                 await mediaModel.findOneAndUpdate(
                     { originalName: originalName },
-                    { imageUrl: optimizedUrl, isAssigned: false },
+                    { 
+                        imageUrl: optimizedUrl, 
+                        public_id: result.public_id, // Store this for deletion
+                        isAssigned: false 
+                    },
                     { upsert: true, new: true }
                 );
                 res.json({ success: true, message: `Asset ${originalName} synchronized.` });
@@ -58,7 +63,6 @@ const uploadMedia = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
-
 const listMedia = async (req, res) => {
     try {
         const media = await mediaModel.find({}).sort({ _id: -1 }).lean(); // Added .lean() for speed
@@ -471,6 +475,63 @@ export const updateProductImages = async (req, res) => {
     }
 };
 
+const updateMediaName = async (req, res) => {
+    try {
+        const { id, newName } = req.body;
+        
+        const updatedMedia = await mediaModel.findByIdAndUpdate(
+            id, 
+            { originalName: newName }, 
+            { new: true }
+        );
+
+        if (!updatedMedia) {
+            return res.json({ success: false, message: "Asset not found" });
+        }
+
+        res.json({ success: true, message: "Filename updated in registry" });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+const deleteMedia = async (req, res) => {
+    try {
+        const { ids } = req.body; // Array of MongoDB _ids
+
+        if (!Array.isArray(ids) || ids.length === 0) {
+            return res.json({ success: false, message: "No assets selected" });
+        }
+
+        // 1. Fetch assets to get Cloudinary public_ids
+        const assetsToDelete = await mediaModel.find({ _id: { $in: ids } }).select('public_id');
+        
+        // Filter out any records that might be missing a public_id
+        const publicIds = assetsToDelete
+            .map(asset => asset.public_id)
+            .filter(id => id != null);
+
+        // 2. Delete from Cloudinary
+        if (publicIds.length > 0) {
+            // cloudinary.api.delete_resources can handle up to 100 IDs per call
+            await cloudinary.api.delete_resources(publicIds);
+        }
+
+        // 3. Delete from MongoDB
+        const deleteResult = await mediaModel.deleteMany({ _id: { $in: ids } });
+
+        res.json({ 
+            success: true, 
+            message: `${deleteResult.deletedCount} assets purged from registry and Cloudinary.` 
+        });
+    } catch (error) {
+        console.error("Purge Error:", error);
+        res.json({ success: false, message: "Purge failed: " + error.message });
+    }
+}
+
+
 export const uploadSingleImage = async (req, res) => {
     try {
         const imageFile = req.files && req.files.image1 && req.files.image1[0];
@@ -494,5 +555,5 @@ export const uploadSingleImage = async (req, res) => {
 
 export { 
     listProducts, addProduct, removeProduct, singleProduct, 
-    updateProduct, removeBulkProducts, bulkAddProducts, uploadMedia, listMedia ,singleProduct1
+    updateProduct, removeBulkProducts, bulkAddProducts, uploadMedia, listMedia ,singleProduct1,updateMediaName,deleteMedia
 };

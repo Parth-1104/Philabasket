@@ -20,7 +20,7 @@ const Product = () => {
   // --- AUTOMATED WATERMARK LOGIC ---
   const getWatermarkedUrl = (url) => {
     if (!url || !url.includes('cloudinary')) return url;
-    const watermarkTransform = 'l_Logo-5_nqnyl4,o_50,w_0.6,c_scale';
+    const watermarkTransform = 'l_Logo-5_nqnyl4,o_50,w_0.3,c_scale';
     return url.includes('f_auto,q_auto') 
       ? url.replace('/f_auto,q_auto/', `/f_auto,q_auto,${watermarkTransform}/`)
       : url.replace('/upload/', `/upload/f_auto,q_auto,${watermarkTransform}/`);
