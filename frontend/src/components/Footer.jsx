@@ -24,14 +24,14 @@ const Footer = () => {
                 
                 {/* BRAND TEXT - Logo-5.png */}
                 <img 
-                  src='Logo-5.png' 
+                  src={assets.logo5}
                   className='w-24 md:w-28 lg:w-32 h-auto object-contain' 
                   alt="PhilaBasket Text" 
                 />
             </div>
             
             <p className="text-gray-400 text-[10px] leading-relaxed tracking-[0.2em] font-black uppercase max-w-xs">
-              Sovereign Registry for international philatelic specimens. Empowering global collectors since <span className='text-black'>MMXXVI.</span>
+              Sovereign Registry for international philatelic specimens.
             </p>
 
             {/* Social Channels */}
@@ -49,30 +49,30 @@ const Footer = () => {
             {
               title: 'Registry Index',
               links: [
-                {label: 'Gallery', path: '/collection'}, 
-                {label: 'New Arrivals', path: '/collection'}, 
-                {label: 'Rare Archive', path: '/collection'}, 
-                {label: 'Bestsellers', path: '/collection'}
+                {label: 'Membership', path: '/collection'}, 
+                {label: 'Reward', path: '/collection'}, 
+                {label: 'Catalogue', path: '/collection'}, 
+                {label: 'Blogs', path: '/collection'}
               ]
             },
             {
               title: 'Curator Support',
               links: [
-                {label: 'Authentication', path: '/about'}, 
+                {label: 'Contact Us', path: '/about'}, 
                 {label: 'Shipping Policy', path: '/about'}, 
-                {label: 'Vault Access', path: '/contact'}, 
+                {label: 'Terms and Condition', path: '/contact'}, 
                 {label: 'FAQs', path: '/contact'}
               ]
             },
-            {
-              title: 'The Archive',
-              links: [
-                {label: 'Our Heritage', path: '/about'}, 
-                {label: 'Collector Network', path: '/about'}, 
-                {label: 'Contact', path: '/contact'}, 
-                {label: 'Legal', path: '/about'}
-              ]
-            }
+            // {
+            //   title: 'The Archive',
+            //   links: [
+            //     {label: 'Our Heritage', path: '/about'}, 
+            //     {label: 'Collector Network', path: '/about'}, 
+            //     {label: 'Contact', path: '/contact'}, 
+            //     {label: 'Legal', path: '/about'}
+            //   ]
+            // }
           ].map((column, idx) => (
             <div key={idx} className="lg:ml-auto">
               <h4 className="text-[#BC002D] text-[10px] uppercase tracking-[0.5em] mb-10 font-black">

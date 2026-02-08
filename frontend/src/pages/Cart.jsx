@@ -6,8 +6,9 @@ import { Link } from 'react-router-dom';
 import { Heart, Trash2, Plus, Minus, ShieldCheck } from 'lucide-react';
 
 const Cart = () => {
-  const { products, cartItems, updateQuantity, navigate, formatPrice, toggleWishlist, wishlist } = useContext(ShopContext);
+  const { products, cartItems, updateQuantity, navigate, formatPrice, toggleWishlist, wishlist ,currency} = useContext(ShopContext);
   const [cartData, setCartData] = useState([]);
+  const valuationSymbol = currency === 'USD' ? '$' : '₹';
 
   useEffect(() => {
     if (products.length > 0) {
@@ -82,10 +83,19 @@ const Cart = () => {
                                     <h3 className='text-sm sm:text-base font-bold text-gray-900 leading-tight uppercase'>{productData.name}</h3>
                                 </div>
                                 <div className='flex flex-col items-end'>
-                                    <p className='text-sm sm:text-lg font-black text-gray-900 tabular-nums'>
-                                        <span className='text-[10px] mr-1 text-[#BC002D]'>{productData.currency}</span>
-                                        {formatPrice(productData.price)}
-                                    </p>
+                                    {/* Market Price / Strike-through (Optional) */}
+    {productData.marketPrice > productData.price && (
+        <p className='text-[10px] lg:text-[12px] font-bold text-gray-400 tabular-nums line-through decoration-[#BC002D]/40 mb-1'>
+            <span className='mr-0.5'>{valuationSymbol}</span>
+            {formatPrice(productData.marketPrice)}
+        </p>
+    )}
+
+    {/* Main Price Display */}
+    <p className='text-sm sm:text-xl font-black text-gray-900 tabular-nums leading-none'>
+        <span className='text-[10px] mr-1 text-[#BC002D] font-black'>{valuationSymbol}</span>
+        {formatPrice(productData.price)}
+    </p>
                                 </div>
                             </div>
 

@@ -80,8 +80,17 @@ const Product = () => {
   const handleAddToCart = () => {
     addToCart(productData._id, quantity); 
     setShowPopup(true);
-    setTimeout(() => setShowPopup(false), 3000);
-  };
+    
+    // Optional: Keep toast for mobile accessibility
+    toast.success("Registry Updated", {
+        position: "bottom-right",
+        autoClose: 2000,
+        hideProgressBar: true,
+    });
+
+    // Auto-hide the custom popup after 4 seconds
+    setTimeout(() => setShowPopup(false), 4000);
+};
 
   const handleInstantCheckout = async () => {
     try {
@@ -97,6 +106,44 @@ const Product = () => {
 
   return productData ? (
     <div className='bg-white min-h-screen pt-24 pb-12 px-6 md:px-16 lg:px-24 select-none animate-fade-in relative'>
+      {/* --- ARCHIVE SYNC POPUP --- */}
+{showPopup && (
+    <div className='fixed top-10 left-1/2 -translate-x-1/2 z-[2000] w-[90vw] max-w-md animate-slide-down'>
+        <div className='bg-white/80 backdrop-blur-xl border border-black/5 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-2xl p-4 flex items-center gap-4'>
+            
+            {/* Specimen Preview */}
+            <div className='w-16 h-16 bg-[#F9F9F9] rounded-xl flex items-center justify-center p-2 border border-black/5'>
+                <img 
+                    src={productData.image[0]} 
+                    className='w-full h-full object-contain' 
+                    alt="Success preview" 
+                />
+            </div>
+
+            {/* Details */}
+            <div className='flex-1'>
+                <div className='flex items-center gap-2 mb-1'>
+                    <div className='w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse'></div>
+                    <p className='text-[9px] font-black uppercase tracking-[0.2em] text-gray-400'>Specimen Secured</p>
+                </div>
+                <h4 className='text-[11px] font-black uppercase tracking-tight text-gray-900 line-clamp-1'>
+                    {productData.name}
+                </h4>
+                <p className='text-[9px] font-bold text-[#BC002D] mt-1'>
+                    Quantity: {quantity} • Volume Synced
+                </p>
+            </div>
+
+            {/* Close Button */}
+            <button 
+                onClick={() => setShowPopup(false)}
+                className='p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400'
+            >
+                <X size={16} />
+            </button>
+        </div>
+    </div>
+)}
       
       {/* BACKGROUND ACCENT */}
       <div className="absolute -right-[10vw] top-0 h-[50vh] w-[40vw] bg-[#BC002D]/5 rounded-bl-[600px] pointer-events-none z-0"></div>
@@ -209,10 +256,27 @@ const Product = () => {
               <div className='flex items-center gap-6'>
                   <p className='text-[10px] font-black text-gray-900 uppercase tracking-widest'>Volume:</p>
                   <div className='flex items-center bg-gray-50 rounded-xl p-1 border border-black/5'>
-                      <button onClick={() => updateQuantity(quantity - 1)} className='p-3 hover:text-[#BC002D]'><Minus size={14} /></button>
-                      <span className='w-12 text-center text-sm font-black'>{quantity}</span>
-                      <button onClick={() => updateQuantity(quantity + 1)} className='p-3 hover:text-[#BC002D]'><Plus size={14} /></button>
-                  </div>
+    {/* Minus Button with Black Icon */}
+    <button 
+        onClick={() => updateQuantity(quantity - 1)} 
+        className='p-3 text-black hover:text-[#BC002D] transition-colors'
+    >
+        <Minus size={14} color="black" strokeWidth={3} />
+    </button>
+
+    {/* Quantity Display */}
+    <span className='w-12 text-center text-sm font-black text-black tabular-nums'>
+        {quantity}
+    </span>
+
+    {/* Plus Button with Black Icon */}
+    <button 
+        onClick={() => updateQuantity(quantity + 1)} 
+        className='p-3 text-black hover:text-[#BC002D] transition-colors'
+    >
+        <Plus size={14} color="black" strokeWidth={3} />
+    </button>
+</div>
               </div>
 
               <div className='flex flex-col sm:flex-row gap-4'>
@@ -222,7 +286,7 @@ const Product = () => {
                         <Heart size={24} className={wishlist.includes(productData._id) ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-300'} />
                     </button>
                     <button onClick={handleAddToCart} className='flex-1 bg-gray-900 text-white py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] hover:bg-black transition-all shadow-xl'>
-                      Add to Registry
+                      Add to Cart
                     </button>
                     <button onClick={handleInstantCheckout} className='flex-1 bg-[#BC002D] text-white py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] hover:scale-105 transition-all flex items-center justify-center gap-3 shadow-xl'>
                       <Zap size={16} fill="white" /> Buy Now
@@ -245,6 +309,20 @@ const Product = () => {
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        
+        @keyframes slideDown {
+    from { 
+        opacity: 0; 
+        transform: translate(-50%, -20px) scale(0.95); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translate(-50%, 0) scale(1); 
+    }
+}
+.animate-slide-down {
+    animation: slideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
       `}} />
     </div>
   ) : (
