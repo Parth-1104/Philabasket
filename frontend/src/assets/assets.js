@@ -35,6 +35,7 @@ import widemiss from './wideMiss.jpg'
 import thapper from './thapper.jpg'
 import mem from './mem.png'
 import member from './membership.png'
+import logo5 from './Logo-5.png'
 
 export const assets = {
     logo,
@@ -67,7 +68,7 @@ export const assets = {
     baldin,
     bal,
     bal69,
-    wide,thapper,mem,member,widemiss
+    wide,thapper,mem,member,widemiss,logo5
 }
 
 

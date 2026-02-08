@@ -3,66 +3,109 @@ import { ShopContext } from '../context/ShopContext';
 import Title from '../components/Title';
 import ProductItem from '../components/ProductItem';
 import { assets } from '../assets/assets';
+import { Trash2, Zap, ShoppingBag } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const Wishlist = () => {
-    const { products, wishlist, toggleWishlist } = useContext(ShopContext);
+    const { products, wishlist, toggleWishlist, addToCart } = useContext(ShopContext);
+    const navigate = useNavigate();
     
     // Filter products to show only saved specimens
     const wishlistProducts = products.filter(item => wishlist.includes(item._id));
 
+    const handleBuyNow = async (id) => {
+        await addToCart(id, 1);
+        navigate('/cart');
+        window.scroll(0,0);
+    };
+
     return (
-        <div className='pt-24 px-6 md:px-16 lg:px-24 min-h-screen bg-[#FCF9F4] select-none animate-fade-in'>
+        <div className='pt-24 px-6 md:px-16 lg:px-24 min-h-screen bg-white select-none animate-fade-in'>
             
-            <div className='text-2xl mb-10'>
-                <Title text1={'PRIVATE'} text2={'ARCHIVE'} />
-                <p className='text-[10px] tracking-[0.5em] text-gray-400 uppercase mt-2'>Curated specimens for future acquisition</p>
+            {/* --- BACKGROUND DECOR --- */}
+            <div className="absolute -left-[10vw] top-0 h-[50vh] w-[40vw] bg-[#BC002D]/5 rounded-br-[600px] pointer-events-none z-0"></div>
+
+            <div className='relative z-10 text-2xl mb-16'>
+                <Title text1={'MY'} text2={'WISHLIST'} />
+                <div className='flex items-center gap-3 mt-2'>
+                    <div className='w-1 h-1 bg-[#BC002D] rounded-full animate-pulse'></div>
+                    <p className='text-[10px] tracking-[0.5em] text-gray-800 uppercase font-black'>
+                        {wishlistProducts.length} Specimens secured in vault
+                    </p>
+                </div>
             </div>
 
             {/* --- WISHLIST GRID --- */}
-            <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12 mt-10'>
+            <div className='relative z-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-16 mt-10'>
                 {wishlistProducts.map((item, index) => (
-                    <div key={index} className='relative group'>
+                    <div key={index} className='flex flex-col group bg-white border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-700 rounded-br-[40px] lg:rounded-br-[60px] overflow-hidden h-full'>
                         
-                        {/* --- REMOVE BUTTON (Top Right Overlap) --- */}
-                        <button 
-                            onClick={() => toggleWishlist(item._id)}
-                            className='absolute -top-3 -right-3 z-30 w-8 h-8 bg-white border border-black/5 rounded-full flex items-center justify-center shadow-lg hover:bg-[#BC002D] transition-all duration-500 group/btn'
-                            title="Remove from Archive"
-                        >
-                            <span className='text-lg font-light text-black group-hover/btn:text-white group-hover/btn:rotate-90 transition-all'>×</span>
-                        </button>
+                        {/* --- PRODUCT CONTENT --- */}
+                        <div className='flex-grow relative'>
+                            {/* --- REMOVE ACTION (Overlay) --- */}
+                            <button 
+                                onClick={() => {
+                                    toggleWishlist(item._id);
+                                    toast.info("Specimen removed from archive");
+                                }}
+                                className='absolute top-4 right-4 z-30 p-2 bg-white/80 backdrop-blur-md rounded-full border border-black/5 text-gray-400 hover:text-[#BC002D] hover:bg-white transition-all shadow-sm'
+                                title="Purge from Archive"
+                            >
+                                <Trash2 size={14} />
+                            </button>
 
-                        {/* Standard Product Item Component */}
-                        <ProductItem 
-                            id={item._id} 
-                            image={item.image} 
-                            name={item.name} 
-                            price={item.price} 
-                        />
+                            <ProductItem 
+                                id={item._id} 
+                                _id={item._id}
+                                image={item.image} 
+                                name={item.name} 
+                                price={item.price} 
+                                marketPrice={item.marketPrice}
+                            />
+                        </div>
 
-                        {/* Additional Action for Wishlist Items */}
-                        <button 
-                            onClick={() => toggleWishlist(item._id)}
-                            className='w-full mt-4 py-2 text-[9px] font-black uppercase tracking-[0.3em] text-gray-400 border border-black/5 hover:text-[#BC002D] hover:border-[#BC002D]/20 transition-all'
-                        >
-                            Remove Specimen
-                        </button>
+                        {/* --- FIXED ACTIONS SECTION --- */}
+                        <div className='flex flex-col gap-2 p-3 lg:p-4 mt-auto border-t border-gray-50 bg-white'>
+                            <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
+                                <button 
+                                    onClick={() => {
+                                        addToCart(item._id, 1);
+                                        toast.success("Moved to Registry");
+                                    }}
+                                    className='w-full bg-gray-50 text-gray-900 py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-black hover:text-white transition-all duration-300'
+                                >
+                                    <ShoppingBag size={12} />
+                                    <span className='text-[8px] lg:text-[9px] font-black uppercase tracking-widest'>Add</span>
+                                </button>
+                                
+                                <button 
+                                    onClick={() => handleBuyNow(item._id)}
+                                    className='w-full bg-black text-white py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#BC002D] transition-all duration-300 shadow-lg shadow-black/5'
+                                >
+                                    <Zap size={12} className='fill-amber-400 text-amber-400' />
+                                    <span className='text-[8px] lg:text-[9px] font-black uppercase tracking-widest'>Buy Now</span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 ))}
             </div>
 
             {/* --- EMPTY STATE --- */}
             {wishlistProducts.length === 0 && (
-                <div className='flex flex-col items-center justify-center py-32 text-center'>
-                    <img src={assets.parcel_icon} className='w-16 opacity-10 mb-6 grayscale' alt="" />
+                <div className='relative z-10 flex flex-col items-center justify-center py-48 text-center'>
+                    <div className='w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-8 border border-gray-100'>
+                        <img src={assets.parcel_icon} className='w-8 opacity-20 grayscale' alt="" />
+                    </div>
                     <p className='text-[11px] tracking-[0.6em] text-gray-400 uppercase font-black'>
                         Your private vault is currently empty
                     </p>
                     <button 
-                        onClick={() => window.history.back()}
-                        className='mt-8 text-[10px] text-[#BC002D] font-bold uppercase tracking-widest border-b border-[#BC002D]/20 pb-1 hover:border-[#BC002D] transition-all'
+                        onClick={() => navigate('/collection')}
+                        className='mt-10 px-10 py-4 bg-black text-white text-[10px] font-black uppercase tracking-[0.4em] rounded-full hover:bg-[#BC002D] transition-all shadow-xl'
                     >
-                        Return to Gallery
+                        Explore the Gallery
                     </button>
                 </div>
             )}

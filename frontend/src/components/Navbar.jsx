@@ -73,7 +73,7 @@ const Navbar = () => {
     
     {/* BRAND TEXT - Logo-5.png */}
     <img 
-      src='Logo-5.png' 
+      src={assets.logo5} 
       className='w-24 md:w-28 lg:w-32 h-auto object-contain' 
       alt="PhilaBasket Text" 
     />

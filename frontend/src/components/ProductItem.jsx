@@ -18,7 +18,19 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, linkT
   const optimizedImage = useMemo(() => {
     const rawUrl = image && image[0] ? image[0] : "";
     if (!rawUrl || !rawUrl.includes('cloudinary')) return rawUrl;
-    const watermarkTransform = 'l_Logo-5_nqnyl4,o_50,w_0.6,c_scale';
+
+    /**
+     * fl_relative: Makes the overlay relative to the base image size.
+     * w_1.0: Sets the overlay width to 100% of the base image.
+     * a_45: (Optional) Tilts the watermark diagonally.
+     * o_30: Reduced opacity for better visibility of the specimen.
+     */
+    const watermarkTransform = 'l_Logo-5_go95bd,fl_relative,w_0.9,c_scale,o_70,a_-45';
+    
+    // Injecting the transformation
+    if (rawUrl.includes('f_auto,q_auto')) {
+        return rawUrl.replace('/f_auto,q_auto/', `/f_auto,q_auto,${watermarkTransform}/`);
+    }
     return rawUrl.replace('/upload/', `/upload/f_auto,q_auto,w_600,${watermarkTransform}/`);
   }, [image]);
 
@@ -104,9 +116,9 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, linkT
                       Line-clamp ensures it doesn't exceed 3 lines, 
                       Min-height ensures it always occupies the space of 3 lines 
                   */}
-                  <h3 className='text-[5px] lg:text-[10px] font-black uppercase tracking-[0.05em] text-gray-900 group-hover:text-[#BC002D] transition-colors leading-[1.4] line-clamp-3 min-h-[4.2em] lg:min-h-[4.2em] overflow-hidden' onClick={handleNavigation}>
-                      {name || "Untitled Specimen"}
-                  </h3>
+                  <h3 className='text-[10px] lg:text-[13px] font-black uppercase tracking-[0.05em] text-gray-900 group-hover:text-[#BC002D] transition-colors leading-[1.4] line-clamp-3 min-h-[4.2em] lg:min-h-[4.2em] overflow-hidden' onClick={handleNavigation}>
+    {name || "Untitled Specimen"}
+</h3>
                   
                   <div className='flex flex-col items-end shrink-0'>
                     {marketPrice > price && (
