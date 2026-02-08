@@ -1,14 +1,16 @@
 import React, { useContext, useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import ProductItem from '../components/ProductItem';
-import { Filter, X, ArrowUpDown, Search as SearchIcon, RefreshCw } from 'lucide-react';
+import { Filter, X, ArrowUpDown, Search as SearchIcon, RefreshCw, ShoppingCart, Zap } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const Collection = () => {
-  const { search, showSearch, backendUrl } = useContext(ShopContext);
+  // Destructure addToCart and navigate correctly
+  const { search, showSearch, backendUrl, addToCart } = useContext(ShopContext);
   const location = useLocation();
+  const navigate = useNavigate();
   
   // --- PERFORMANCE STATE ---
   const [products, setProducts] = useState([]); 
@@ -40,6 +42,20 @@ const Collection = () => {
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
 
+  // --- ACTION HANDLERS ---
+  const handleAddToCart = (e, productId) => {
+    e.stopPropagation(); 
+    addToCart(productId, 1);
+    toast.success("Added to Registry", { position: "bottom-right", autoClose: 1000 });
+  };
+
+  const handleBuyNow = async (e, productId) => {
+    e.stopPropagation();
+    await addToCart(productId, 1);
+    navigate('/cart');
+    window.scrollTo(0, 0);
+  };
+
   // 2. SERVER-SIDE ENGINE
   const fetchFromRegistry = async (currentPage, isNewQuery = false) => {
     if (!backendUrl) return;
@@ -58,7 +74,6 @@ const Collection = () => {
       if (response.data.success) {
         let newItems = response.data.products;
 
-        // --- PRIORITY ID LOGIC: Move clicked item to top on first load ---
         if (isNewQuery && currentPage === 1 && location.state?.priorityId) {
             const priorityId = location.state.priorityId;
             const priorityItem = newItems.find(item => item._id === priorityId);
@@ -87,7 +102,7 @@ const Collection = () => {
   useEffect(() => {
     setPage(1);
     fetchFromRegistry(1, true);
-  }, [category, sortType, search, showSearch]);
+  }, [category, sortType, search, showSearch, backendUrl]);
 
   const fetchCategories = async () => {
     try {
@@ -99,7 +114,7 @@ const Collection = () => {
     } catch (error) { console.error(error); }
   };
 
-  useEffect(() => { fetchCategories(); }, [backendUrl]);
+  useEffect(() => { if(backendUrl) fetchCategories(); }, [backendUrl]);
 
   const toggleCategory = (val) => {
     setCategory(prev => prev.includes(val) ? prev.filter(i => i !== val) : [...prev, val]);
@@ -125,7 +140,6 @@ const Collection = () => {
                   THE <span className='text-[#BC002D]'>GALLERY.</span>
               </h2>
               
-              {/* NEW: SEARCH RESULTS HEADER */}
               {showSearch && search && (
                 <div className='mt-6 flex items-center gap-2 animate-slide-down'>
                   <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Search Results for:</p>
@@ -198,14 +212,42 @@ const Collection = () => {
             </div>
           )}
 
-          <div className='grid grid-cols-2 md:grid-col-4 lg:grid-cols-4 xl:grid-cols-4 gap-x-8 gap-y-16'>
+          {/* --- GRID MODIFIED TO INCLUDE BUTTONS --- */}
+          <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 md:gap-x-8 gap-y-16'>
             {products.map((item, index) => (
-              <ProductItem 
+              <div 
                 key={`${item._id}-${index}`} 
-                id={item._id} 
-                {...item} 
-                image={item.image} 
-              />
+                className="flex flex-col group bg-white border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 rounded-br-[40px] lg:rounded-br-[60px] overflow-hidden h-full"
+              >
+                <div className="flex-grow">
+                  <ProductItem 
+                    id={item._id} 
+                    _id={item._id}
+                    {...item} 
+                    image={item.image} 
+                  />
+                </div>
+
+                <div className="flex flex-col gap-2 p-3 lg:p-4 mt-auto border-t border-gray-50 bg-white">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button 
+                      onClick={(e) => handleAddToCart(e, item._id)}
+                      className="w-full bg-gray-50 text-gray-900 py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-black hover:text-white transition-all duration-300"
+                    >
+                      <ShoppingCart size={12} />
+                      <span className="text-[8px] lg:text-[9px] font-black uppercase tracking-widest">Add</span>
+                    </button>
+                    
+                    <button 
+                      onClick={(e) => handleBuyNow(e, item._id)}
+                      className="w-full bg-black text-white py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#BC002D] transition-all duration-300 shadow-lg shadow-black/5"
+                    >
+                      <Zap size={12} className="fill-amber-400 text-amber-400" />
+                      <span className="text-[8px] lg:text-[9px] font-black uppercase tracking-widest">Buy Now</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
 

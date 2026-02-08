@@ -80,7 +80,7 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, linkT
                   />
                   
                   {/* QUICK ACTIONS OVERLAY */}
-                  <div className='absolute bottom-4 left-0 right-0 z-30 flex flex-col items-center gap-2 translate-y-20 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 px-4'>
+                  {/* <div className='absolute bottom-4 left-0 right-0 z-30 flex flex-col items-center gap-2 translate-y-20 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 px-4'>
                      <button 
                         onClick={onAddToCart}
                         className='w-full bg-white text-black border border-black/10 flex items-center justify-center gap-2 py-2 rounded-full text-[8px] font-black uppercase tracking-widest hover:bg-gray-50'
@@ -93,7 +93,7 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, linkT
                      >
                         <Zap size={10} /> Buy Now
                      </button>
-                  </div>
+                  </div> */}
               </div>
           </div>
           
@@ -104,7 +104,7 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, linkT
                       Line-clamp ensures it doesn't exceed 3 lines, 
                       Min-height ensures it always occupies the space of 3 lines 
                   */}
-                  <h3 className='text-[11px] lg:text-[13px] font-black uppercase tracking-[0.05em] text-gray-900 group-hover:text-[#BC002D] transition-colors leading-[1.4] line-clamp-3 min-h-[4.2em] lg:min-h-[4.2em] overflow-hidden' onClick={handleNavigation}>
+                  <h3 className='text-[5px] lg:text-[10px] font-black uppercase tracking-[0.05em] text-gray-900 group-hover:text-[#BC002D] transition-colors leading-[1.4] line-clamp-3 min-h-[4.2em] lg:min-h-[4.2em] overflow-hidden' onClick={handleNavigation}>
                       {name || "Untitled Specimen"}
                   </h3>
                   

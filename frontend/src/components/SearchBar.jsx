@@ -13,6 +13,15 @@ const SearchBar = () => {
     const navigate = useNavigate();
     const debounceTimeout = useRef(null);
 
+    const createSeoSlug = (text) => {
+        return text
+            .toLowerCase()
+            .replace(/ /g, '-')
+            .replace(/[^\w-]+/g, '')
+            .replace(/--+/g, '-')
+            .trim();
+    };
+
     useEffect(() => {
         if (location.pathname.includes('collection')) {
             setVisible(true);
@@ -103,9 +112,14 @@ const SearchBar = () => {
                             <div 
                                 key={item._id}
                                 onClick={() => {
-                                    setSearch(item.name);
+                                    const slug = createSeoSlug(item.name);
+                                    setSearch(""); // Clear search bar
                                     setSuggestions([]);
-                                    navigate(`/product/${item._id}`);
+                                    setShowSearch(false); // Close the bar
+                                    
+                                    // Navigate using the full pattern expected by your App routes
+                                    navigate(`/product/${item._id}/${slug}`);
+                                    window.scrollTo(0, 0);
                                 }}
                                 className='flex items-center gap-4 p-4 hover:bg-[#F9F9F9] cursor-pointer group border-b border-black/[0.02] last:border-none'
                             >
