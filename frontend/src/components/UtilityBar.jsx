@@ -90,13 +90,7 @@ const UtilityBar = () => {
 
     return (
         <div 
-            style={{ 
-                left: `${position.x}px`, 
-                top: `${position.y}px`, 
-                transform: isCollapsed ? 'none' : 'translateX(-50%)',
-                transition: isDragging ? 'none' : 'all 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28)'
-            }}
-            className={`fixed z-[9999] touch-none ${isDragging ? 'scale-105' : ''}`}
+            className='fixed bottom-24 left-6 z-[4000]'
         >
             {/* --- 1. DETAIL PANEL --- */}
             {!isCollapsed && (

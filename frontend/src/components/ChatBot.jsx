@@ -49,10 +49,20 @@ const { data } = await axios.post(`${backendUrl}/api/product/query`, {
         }
     };
 
-    useEffect(() => { 
-        if (chatEndRef.current) {
-            chatEndRef.current.scrollIntoView({ behavior: "smooth" });
-        }
+    useEffect(() => {
+        const scrollToBottom = () => {
+            if (chatEndRef.current) {
+                chatEndRef.current.scrollIntoView({ 
+                    behavior: "smooth", 
+                    block: "end" 
+                });
+            }
+        };
+    
+        // Small delay ensures the DOM has calculated the new height
+        const timeoutId = setTimeout(scrollToBottom, 100);
+    
+        return () => clearTimeout(timeoutId);
     }, [messages, loading]);
 
     return (
