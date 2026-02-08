@@ -9,6 +9,7 @@ import Home from './pages/Home'; // Home should never be lazy
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UtilityBar from './components/UtilityBar';
+import ChatBot from './components/ChatBot';
 
 // --- LAZY IMPORTS (Load on Demand) ---
 const Collection = lazy(() => import('./pages/Collection'));
@@ -67,6 +68,7 @@ const App = () => {
       </Suspense>
       <UtilityBar/>
       <Footer />
+      <ChatBot/>
     </div>
   )
 }
