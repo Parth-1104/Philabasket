@@ -240,7 +240,7 @@ const Product = () => {
                       {String(formatPrice(productData.price * quantity)).replace(/[₹$]/g, '').trim()}
                   </p>
               </div>
-              {productData.marketPrice >= productData.price && (
+              {productData.marketPrice > productData.price && (
                   <div className='flex items-baseline gap-2 opacity-30'>
                       <span className='text-sm font-serif text-gray-500'>{valuationSymbol}</span>
                       <p className='text-2xl font-bold text-gray-500 line-through decoration-[#BC002D] tabular-nums'>
