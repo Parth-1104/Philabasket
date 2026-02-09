@@ -5,7 +5,7 @@ import { toast } from 'react-toastify';
 import { 
   AlertCircle, TrendingDown, Search, ChevronDown, Trash2, 
   Edit3, X, Image as ImageIcon, Video, Globe, 
-  Layers, Tag, Save, Eye, Plus, Youtube, Pin, Power, PowerOff
+  Layers, Tag, Save, Eye, Plus, Youtube, Pin, Power, PowerOff, CheckSquare, Square
 } from 'lucide-react';
 
 const List = ({ token }) => {
@@ -19,57 +19,80 @@ const List = ({ token }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState(null);
 
-  // --- REGISTRY SYNC FETCHING ---
-  // --- REGISTRY SYNC FETCHING ---
-const fetchList = useCallback(async (isReset = false) => {
-  try {
+  // --- BULK SELECTION STATE ---
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  const fetchList = useCallback(async (isReset = false) => {
+    try {
+        setLoading(true);
+        const targetPage = isReset ? 1 : page;
+        
+        const response = await axios.get(`${backendUrl}/api/product/list`, {
+            params: { page: targetPage, limit: 30, search: searchTerm }
+        });
+
+        if (response.data.success) {
+            setList(prev => isReset ? response.data.products : [...prev, ...response.data.products]);
+            setTotalCount(response.data.total);
+            setHasMore(response.data.products.length === 30);
+        }
+    } catch (error) {
+        toast.error("Registry connection failed");
+    } finally {
+        setLoading(false);
+    }
+  }, [searchTerm, backendUrl, page]); 
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+        setPage(1);
+        setSelectedIds([]); // Clear selection on search
+        fetchList(true);
+    }, 500);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, fetchList]);
+
+  useEffect(() => {
+    if (page > 1) {
+        fetchList(false);
+    }
+  }, [page, fetchList]);
+
+  // --- BULK ACTION HANDLERS ---
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === list.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(list.map(item => item._id));
+    }
+  };
+
+  const removeBulkProducts = async () => {
+    if (!window.confirm(`Purge ${selectedIds.length} specimens from registry?`)) return;
+    try {
       setLoading(true);
-      // Use a local variable for the page to avoid waiting for state updates
-      const targetPage = isReset ? 1 : page;
-      
-      const response = await axios.get(`${backendUrl}/api/product/list`, {
-          params: { 
-              page: targetPage, 
-              limit: 30, 
-              search: searchTerm 
-          }
-      });
-
-      if (response.data.success) {
-          // If it's a reset (search/initial load), replace the list. 
-          // Otherwise, append the new results to the existing list.
-          setList(prev => isReset ? response.data.products : [...prev, ...response.data.products]);
-          setTotalCount(response.data.total);
-          
-          // hasMore should check if we actually received a full page of results
-          setHasMore(response.data.products.length === 30);
+      const res = await axios.post(`${backendUrl}/api/product/remove-bulk`, 
+        { ids: selectedIds }, 
+        { headers: { token } }
+      );
+      if (res.data.success) {
+        toast.success(res.data.message);
+        setSelectedIds([]);
+        fetchList(true);
       }
-  } catch (error) {
-      toast.error("Registry connection failed");
-  } finally {
+    } catch (error) {
+      toast.error("Bulk removal failed");
+    } finally {
       setLoading(false);
-  }
-  // REMOVED 'page' from dependencies to prevent the infinite loop
-}, [searchTerm, backendUrl]); 
+    }
+  };
 
-// --- EFFECT 1: SEARCH DEBOUNCE (Handles Resets) ---
-useEffect(() => {
-  const delayDebounceFn = setTimeout(() => {
-      setPage(1); // Reset page counter
-      fetchList(true); // Trigger a reset fetch
-  }, 500);
-  return () => clearTimeout(delayDebounceFn);
-}, [searchTerm, fetchList]);
-
-// --- EFFECT 2: PAGINATION (Handles Loading More) ---
-useEffect(() => {
-  // Only trigger if we are navigating to page 2 or beyond
-  if (page > 1) {
-      fetchList(false); // Trigger an append fetch
-  }
-}, [page, fetchList]);
-
-  // --- OPEN MODAL: ENSURES EXISTING DATA IS LOADED ---
   const openEditModal = (item) => {
     setEditFormData({ 
       ...item, 
@@ -92,10 +115,10 @@ useEffect(() => {
       if (res.data.success) {
         toast.success("Registry Synchronized");
         setIsModalOpen(false);
-        fetchList(true); // Refresh list to reflect changes
+        fetchList(true);
       }
     } catch (error) {
-      toast.error("Sync Failed: Check backend controller");
+      toast.error("Sync Failed");
     }
   };
 
@@ -137,26 +160,69 @@ useEffect(() => {
           <input 
             type="text" 
             placeholder="Search Registry..."
-            className='w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-2xl text-xs font-bold outline-none'
+            className='w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-2xl text-xs font-bold outline-none shadow-sm'
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
+      {/* --- BULK ACTION COMMAND BAR --- */}
+      {list.length > 0 && (
+        <div className='mb-6 flex items-center justify-between bg-white p-4 rounded-2xl border border-gray-100 shadow-sm'>
+          <div className='flex items-center gap-4'>
+            <button 
+              onClick={toggleSelectAll}
+              className='flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-black transition-colors'
+            >
+              {selectedIds.length === list.length ? <CheckSquare size={18} className='text-[#BC002D]'/> : <Square size={18}/>}
+              {selectedIds.length === list.length ? "Deselect All" : "Select All"}
+            </button>
+            {selectedIds.length > 0 && (
+              <span className='text-[10px] font-black text-[#BC002D] bg-[#BC002D]/5 px-3 py-1 rounded-full'>
+                {selectedIds.length} Selected
+              </span>
+            )}
+          </div>
+          
+          {selectedIds.length > 0 && (
+            <button 
+              onClick={removeBulkProducts}
+              className='flex items-center gap-2 bg-[#BC002D] text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-[#BC002D]/20'
+            >
+              <Trash2 size={14}/> Purge Selected
+            </button>
+          )}
+        </div>
+      )}
+
       {/* LIST TABLE */}
-      <div className='space-y-4'>
+      <div className='space-y-4 pb-20'>
         {list.map((item) => (
-          <div key={item._id} className={`bg-white p-4 rounded-2xl border flex items-center justify-between hover:shadow-xl transition-all group ${!item.isActive ? 'opacity-50 border-dashed' : 'border-gray-100'}`}>
-            <div className='flex items-center gap-6'>
-              <div className='w-14 h-16 bg-gray-50 rounded-lg p-1 border relative'>
-                <img src={item.image[0]} className='w-full h-full object-contain' alt="" />
-                {item.isLatest && <Pin size={10} className='absolute -top-2 -right-2 text-[#BC002D] fill-[#BC002D]'/>}
-              </div>
-              <div>
-                <h4 className='text-sm font-black text-gray-900 uppercase'>{item.name}</h4>
-                <p className='text-[9px] font-bold text-gray-400 uppercase tracking-widest'>{item.country} • {item.year}</p>
+          <div 
+            key={item._id} 
+            className={`bg-white p-4 rounded-2xl border flex items-center justify-between hover:shadow-xl transition-all group relative ${!item.isActive ? 'opacity-50 border-dashed' : 'border-gray-100'} ${selectedIds.includes(item._id) ? 'border-[#BC002D] bg-[#BC002D]/5' : ''}`}
+          >
+            <div className='flex items-center gap-4'>
+              {/* Selection Checkbox */}
+              <button 
+                onClick={() => toggleSelect(item._id)}
+                className='p-1 text-gray-300 hover:text-[#BC002D] transition-colors'
+              >
+                {selectedIds.includes(item._id) ? <CheckSquare size={20} className='text-[#BC002D]'/> : <Square size={20}/>}
+              </button>
+
+              <div className='flex items-center gap-6' onClick={() => openEditModal(item)}>
+                <div className='w-14 h-16 bg-gray-50 rounded-lg p-1 border relative cursor-pointer'>
+                  <img src={item.image[0]} className='w-full h-full object-contain' alt="" />
+                  {item.isLatest && <Pin size={10} className='absolute -top-2 -right-2 text-[#BC002D] fill-[#BC002D]'/>}
+                </div>
+                <div className='cursor-pointer'>
+                  <h4 className='text-sm font-black text-gray-900 uppercase'>{item.name}</h4>
+                  <p className='text-[9px] font-bold text-gray-400 uppercase tracking-widest'>{item.country} • {item.year}</p>
+                </div>
               </div>
             </div>
+
             <div className='flex items-center gap-3 pr-4'>
                 <button onClick={() => openEditModal(item)} className='p-3 bg-gray-50 rounded-xl hover:bg-black hover:text-white transition-all'><Edit3 size={16}/></button>
                 <button onClick={() => removeProduct(item._id)} className='p-3 bg-gray-50 rounded-xl hover:bg-[#BC002D] hover:text-white transition-all'><Trash2 size={16}/></button>
@@ -164,6 +230,10 @@ useEffect(() => {
           </div>
         ))}
       </div>
+
+      {/* ... (Keep existing EDIT MODAL code) ... */}
+      
+      
 
       {/* --- EDIT MODAL --- */}
       {isModalOpen && editFormData && (
