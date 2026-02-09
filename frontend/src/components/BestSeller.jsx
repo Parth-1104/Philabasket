@@ -81,13 +81,23 @@ const BestSeller = () => {
                                 
                                 <div className='pt-4 md:pt-6 h-full'>
                                     {/* NAVIGATION WRAPPER: Fixed to use the specific productId parameter */}
-                                    <div 
-                                        onClick={() => {
-                                            navigate(`/product/${item._id}`); // Direct link to the specimen dossier
-                                            window.scrollTo(0, 0); // Reset scroll position for new entry
-                                        }}
-                                        className="flex flex-col h-full relative bg-white border border-gray-100 shadow-lg cursor-pointer transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl group-hover:border-[#bd002d]/20 overflow-hidden rounded-br-[40px] md:rounded-br-[60px]"
-                                    >
+                                   
+                                   {/* NAVIGATION WRAPPER: Fixed to match /product/ID/SEED pattern */}
+<div 
+    onClick={() => {
+        // Create a URL-friendly seed from the product name
+        const seed = item.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric characters with hyphens
+            .replace(/^-+|-+$/g, '');    // Remove leading/trailing hyphens
+
+        // Navigate using the exact pattern: /product/ID/SEED
+        navigate(`/product/${item._id}/${seed}`); 
+        window.scrollTo(0, 0); 
+    }}
+    className="flex flex-col h-full relative bg-white border border-gray-100 shadow-lg cursor-pointer transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl group-hover:border-[#bd002d]/20 overflow-hidden rounded-br-[40px] md:rounded-br-[60px]"
+> 
+                                    
                                         
                                         {/* High Demand Status */}
                                         <div className="absolute top-3 right-3 flex items-center gap-1 z-10">
@@ -179,3 +189,4 @@ const BestSeller = () => {
 }
 
 export default BestSeller;
+
