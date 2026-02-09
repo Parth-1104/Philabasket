@@ -25,7 +25,7 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, linkT
      * a_45: (Optional) Tilts the watermark diagonally.
      * o_30: Reduced opacity for better visibility of the specimen.
      */
-    const watermarkTransform = 'l_Logo-5_go95bd,fl_relative,w_0.9,c_scale,o_70,a_-45';
+    const watermarkTransform = 'l_Logo-5_go95bd,fl_relative,w_0.5,c_scale,o_70,a_-45';
     
     // Injecting the transformation
     if (rawUrl.includes('f_auto,q_auto')) {

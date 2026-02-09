@@ -1,28 +1,24 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useMemo } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import ProductItem from './ProductItem';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { ShoppingCart, Zap } from 'lucide-react';
+import { ShoppingCart, Zap, ChevronDown } from 'lucide-react';
 
 const LatestCollection = () => {
-    // Destructured everything needed from context
     const { products, backendUrl, addToCart } = useContext(ShopContext);
     const [latestProducts, setLatestProducts] = useState([]);
-    const [ALL_CATEGORIES, setCategoryOptions] = useState([]);
+    const [dbCategories, setDbCategories] = useState([]);
+    const [openGroups, setOpenGroups] = useState({});
     const navigate = useNavigate();
 
-    useEffect(() => {
-        setLatestProducts(products.slice(0, 9)); 
-    }, [products]);
-
+    // 1. Fetch raw categories from DB
     const fetchCategories = async () => {
         try {
             const response = await axios.get(backendUrl + '/api/category/list');
             if (response.data.success) {
-                const names = response.data.categories.map(cat => cat.name);
-                setCategoryOptions(names);
+                setDbCategories(response.data.categories);
             }
         } catch (error) {
             console.error("Category Fetch Error:", error);
@@ -30,26 +26,72 @@ const LatestCollection = () => {
     };
 
     useEffect(() => {
-        if(backendUrl) fetchCategories();
+        setLatestProducts(products.slice(0, 9)); 
+    }, [products]);
+
+    useEffect(() => {
+        if (backendUrl) fetchCategories();
     }, [backendUrl]);
 
-    const handleProductClick = (productId) => {
-        navigate('/collection', { state: { priorityId: productId } });
+    // 2. REACTIVE COUNTING ENGINE
+    // This recalculates automatically when products or dbCategories change
+    // ... inside LatestCollection component
+
+    const { grouped, independent } = useMemo(() => {
+        const groupedResult = {};
+        const independentResult = [];
+    
+        // 1. Ensure we have data before calculating
+        if (!dbCategories.length || !products.length) {
+            return { grouped: {}, independent: [] };
+        }
+    
+        dbCategories.forEach(cat => {
+            // 2. THE ACCURATE COUNT ENGINE
+            // We filter the GLOBAL products array (not the latest slice)
+            const count = products.filter(p => {
+                // Check if 'category' exists and is an array
+                if (p.category && Array.isArray(p.category)) {
+                    // Return true if ANY of the strings in the array match the cat.name exactly
+                    return p.category.some(item => 
+                        item.trim().toLowerCase() === cat.name.trim().toLowerCase()
+                    );
+                }
+                // Fallback for single string categories
+                return p.category === cat.name;
+            }).length;
+    
+            const item = { name: cat.name, count };
+    
+            // 3. SORTING LOGIC
+            if (!cat.group || ['General', 'Independent', 'none', ''].includes(cat.group)) {
+                independentResult.push(item);
+            } else {
+                if (!groupedResult[cat.group]) groupedResult[cat.group] = [];
+                groupedResult[cat.group].push(item);
+            }
+        });
+    
+        return { grouped: groupedResult, independent: independentResult };
+    }, [dbCategories, products]); // Re-runs instantly when global product list updates// This re-runs perfectly when the ShopContext products update
+
+    const toggleGroup = (groupName) => {
+        setOpenGroups(prev => ({ ...prev, [groupName]: !prev[groupName] }));
+    };
+
+    const handleGroupClick = (groupName) => {
+        navigate(`/collection?group=${encodeURIComponent(groupName)}`);
         window.scrollTo(0, 0);
     };
 
-    const onAddToCart = (e, productId) => {
-        e.stopPropagation(); 
-        addToCart(productId, 1);
-        toast.success("Added to Registry", { position: "bottom-right", autoClose: 1000 });
-    };
-
-    const onBuyNow = async (e, productId) => {
-        e.stopPropagation();
-        await addToCart(productId, 1);
-        navigate('/cart');
+    const handleCategoryClick = (catName) => {
+        navigate(`/collection?category=${encodeURIComponent(catName)}`);
         window.scrollTo(0, 0);
     };
+
+    const handleProductClick = (productId) => { navigate('/collection', { state: { priorityId: productId } }); window.scrollTo(0, 0); };
+    const onAddToCart = (e, productId) => { e.stopPropagation(); addToCart(productId, 1); toast.success("Added to Registry", { position: "bottom-right", autoClose: 1000 }); };
+    const onBuyNow = async (e, productId) => { e.stopPropagation(); await addToCart(productId, 1); navigate('/cart'); window.scrollTo(0, 0); };
 
     return (
         <div className='bg-white py-12 md:py-32 overflow-hidden select-none relative'>
@@ -71,89 +113,98 @@ const LatestCollection = () => {
                 </div>
 
                 <div className='flex flex-col lg:flex-row gap-12'>
-                    
-                    {/* --- CATEGORY SIDEBAR RESTORED --- */}
                     <div className='w-full lg:w-1/4'>
                         <div className='lg:sticky lg:top-32'>
                             <div className='bg-[#bd002d] p-6 lg:p-8 rounded-[30px] lg:rounded-[40px] shadow-2xl shadow-[#bd002d]/20 relative overflow-hidden'>
-                                <div className='flex items-center justify-between mb-4 lg:mb-6 relative z-10'>
-                                    <h3 className='text-white font-black text-[9px] lg:text-xs tracking-[0.3em] uppercase'>Categories</h3>
+                                <div className='flex items-center justify-between mb-8 relative z-10'>
+                                    <h3 className='text-white font-black text-[9px] lg:text-xs tracking-[0.3em] uppercase'>Registry Index</h3>
                                     <Link to='/collection' className='text-amber-400 text-[8px] lg:hidden font-black uppercase'>View All</Link>
                                 </div>
 
-                                <div className='flex flex-row lg:flex-col gap-3 lg:gap-4 overflow-x-auto lg:overflow-visible hide-scrollbar relative z-10 pb-2 lg:pb-0'>
-                                    {ALL_CATEGORIES.slice(0, 15).map((cat) => (
-                                        <button 
-                                            key={cat}
-                                            onClick={() => {
-                                                navigate(`/collection?category=${encodeURIComponent(cat)}`);
-                                                window.scrollTo(0, 0);
-                                            }}
-                                            className='whitespace-nowrap lg:whitespace-normal bg-white/10 lg:bg-transparent border border-white/10 lg:border-none px-4 py-2 lg:p-0 rounded-full lg:rounded-none text-white/70 hover:text-white text-[10px] lg:text-xs font-bold tracking-widest uppercase text-left transition-all flex items-center gap-3 group/item'
-                                        >
-                                            <span className='hidden lg:block w-0 h-[1px] bg-amber-400 group-hover/item:w-4 transition-all'></span>
-                                            {cat}
-                                        </button>
+                                <div className='flex flex-col gap-2 overflow-y-auto max-h-[70vh] hide-scrollbar relative z-10 pr-2'>
+                                    {/* --- 1. GROUPED SECTION --- */}
+                                    {Object.keys(grouped).sort().map((groupName) => (
+                                        <div key={groupName} className="flex flex-col mb-1">
+                                            <div 
+                                                className='flex items-center justify-between cursor-pointer py-3 border-b border-white/10 hover:bg-white/5 px-2 rounded-lg transition-all' 
+                                                onClick={() => toggleGroup(groupName)}
+                                            >
+                                                <div className='flex items-center gap-3'>
+                                                    <button 
+                                                        onClick={(e) => { e.stopPropagation(); handleGroupClick(groupName); }}
+                                                        className="text-amber-400 text-[10px] font-black uppercase tracking-[0.15em] hover:text-white transition-all text-left leading-tight max-w-[140px]"
+                                                    >
+                                                        {groupName}
+                                                    </button>
+                                                    <span className='text-[8px] text-white/40 font-bold tabular-nums'>
+                                                        ({grouped[groupName].reduce((sum, c) => sum + c.count, 0)})
+                                                    </span>
+                                                </div>
+                                                <ChevronDown size={14} className={`text-amber-400 transition-transform duration-300 ${openGroups[groupName] ? 'rotate-180' : ''}`} />
+                                            </div>
+                                            
+                                            <div className={`flex flex-col gap-0.5 ml-3 border-l-2 border-amber-400/20 pl-4 transition-all duration-500 overflow-hidden ${openGroups[groupName] ? 'max-h-[800px] mt-2 opacity-100 mb-4' : 'max-h-0 opacity-0'}`}>
+                                                {grouped[groupName].map((cat) => (
+                                                    <button 
+                                                        key={cat.name}
+                                                        onClick={() => handleCategoryClick(cat.name)}
+                                                        className='text-white/70 hover:text-white text-[9px] font-bold uppercase text-left py-2 flex items-center justify-between group/item border-b border-white/5 last:border-0'
+                                                    >
+                                                        <span className='truncate mr-2 group-hover/item:translate-x-1 transition-transform'>{cat.name}</span>
+                                                        <span className='text-[8px] text-amber-400/60 font-mono'>{cat.count}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
                                     ))}
-                                    
-                                    <Link to='/collection' onClick={() => window.scrollTo(0, 0)} className='hidden lg:flex mt-6 py-4 border-t border-white/10 items-center justify-between group/more'>
-                                        <span className='text-amber-400 text-[10px] font-black uppercase tracking-[0.2em]'>Full Index</span>
-                                        <span className='text-white group-hover/more:translate-x-2 transition-transform'>→</span>
-                                    </Link>
+
+                                    {/* --- 2. INDEPENDENT SECTION --- */}
+                                    {independent.length > 0 && (
+                                        <div className="mt-4 pt-4 border-t border-white/20">
+                                            <p className='text-[8px] text-white/30 font-black uppercase tracking-widest mb-4 ml-2'>General Registry</p>
+                                            <div className='flex flex-col gap-1'>
+                                                {independent.map((cat) => (
+                                                    <button 
+                                                        key={cat.name}
+                                                        onClick={() => handleCategoryClick(cat.name)}
+                                                        className='text-white/80 hover:text-amber-400 text-[10px] font-black tracking-widest uppercase text-left py-3 px-3 hover:bg-white/5 rounded-xl transition-all flex items-center justify-between group'
+                                                    >
+                                                        <span className='truncate'>{cat.name}</span>
+                                                        <span className='text-[8px] opacity-40 group-hover:opacity-100 font-mono'>{cat.count}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                            
-                            <div className='hidden lg:block p-8 border border-gray-100 rounded-[40px] bg-gray-50/50 mt-8'>
-                                <p className='text-[10px] font-black text-[#bd002d] uppercase tracking-widest mb-2'>Total Inventory</p>
-                                <p className='text-3xl font-bold text-gray-900 tracking-tighter'>1,00,480+ <span className='text-sm text-gray-400 font-normal tracking-normal'>Items</span></p>
+
+                                <Link to='/collection' onClick={() => window.scrollTo(0, 0)} className='hidden lg:flex mt-8 pt-6 border-t border-white/10 items-center justify-between group/more relative z-10'>
+                                    <span className='text-amber-400 text-[10px] font-black uppercase tracking-[0.2em]'>Full Archive</span>
+                                    <span className='text-white group-hover/more:translate-x-2 transition-transform'>→</span>
+                                </Link>
                             </div>
                         </div>
                     </div>
 
-                    {/* --- MAIN PRODUCT GRID --- */}
                     <div className='w-full lg:w-3/4'>
                         <div className='flex overflow-x-auto lg:grid lg:grid-cols-3 gap-6 md:gap-x-8 gap-y-12 pb-10 lg:pb-0 snap-x snap-mandatory mobile-scrollbar px-2'>
                             {latestProducts.map((item, index) => (
-                                <div 
-                                    key={index} 
-                                    className="min-w-[85%] sm:min-w-[45vw] lg:min-w-0 snap-center flex flex-col group bg-white border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-br-[40px] md:rounded-br-[60px] overflow-hidden"
-                                >
+                                <div key={index} className="min-w-[85%] sm:min-w-[45vw] lg:min-w-0 snap-center flex flex-col group bg-white border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-br-[40px] md:rounded-br-[60px] overflow-hidden">
                                     <div className="relative p-1 md:p-3 flex-grow cursor-pointer" onClick={() => handleProductClick(item._id)}>
                                         <div className="absolute top-0 right-0 z-20 overflow-hidden w-20 h-20 pointer-events-none">
-                                            <div className="absolute top-[20%] -right-[30%] bg-[#bd002d] text-white text-[7px] font-black py-1 w-[140%] text-center transform rotate-45 shadow-sm uppercase tracking-tighter">
-                                                New
-                                            </div>
+                                            <div className="absolute top-[20%] -right-[30%] bg-[#bd002d] text-white text-[7px] font-black py-1 w-[140%] text-center transform rotate-45 shadow-sm uppercase tracking-tighter">New</div>
                                         </div>
-                                        
                                         <div className="w-full bg-[#f8f8f8] rounded-br-[35px] md:rounded-br-[45px] p-2">
-                                            <ProductItem 
-                                                id={item._id} 
-                                                _id={item._id}
-                                                image={item.image} 
-                                                name={item.name} 
-                                                price={item.price} 
-                                                marketPrice={item.marketPrice}
-                                                category={item.category[0]}
-                                                linkToFilter={true} 
-                                            />
+                                            <ProductItem id={item._id} _id={item._id} image={item.image} name={item.name} price={item.price} marketPrice={item.marketPrice} category={item.category[0]} linkToFilter={true} />
                                         </div>
                                     </div>
-
-                                    {/* FIXED BUTTON SECTION */}
                                     <div className="flex flex-col gap-2 p-4 pt-0">
                                         <div className="grid grid-cols-2 gap-2">
-                                            <button 
-                                                onClick={(e) => onAddToCart(e, item._id)}
-                                                className="bg-gray-100 text-gray-900 py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-black hover:text-white transition-all duration-300"
-                                            >
+                                            <button onClick={(e) => onAddToCart(e, item._id)} className="bg-gray-100 text-gray-900 py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-black hover:text-white transition-all duration-300">
                                                 <ShoppingCart size={14} />
                                                 <span className="text-[8px] font-black uppercase tracking-widest">Add</span>
                                             </button>
-                                            
-                                            <button 
-                                                onClick={(e) => onBuyNow(e, item._id)}
-                                                className="bg-black text-white py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#bd002d] transition-all duration-300 shadow-lg shadow-black/10"
-                                            >
+                                            <button onClick={(e) => onBuyNow(e, item._id)} className="bg-black text-white py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#bd002d] transition-all duration-300 shadow-lg shadow-black/10">
                                                 <Zap size={14} className="fill-amber-400 text-amber-400" />
                                                 <span className="text-[8px] font-black uppercase tracking-widest">Buy Now</span>
                                             </button>
@@ -165,32 +216,8 @@ const LatestCollection = () => {
                     </div>
                 </div>
             </div>
-
-            {/* STYLES SECTION */}
-            <style dangerouslySetInnerHTML={{ __html: `
-                .hide-scrollbar::-webkit-scrollbar { display: none; }
-                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-                @media (max-width: 1023px) {
-                    .mobile-scrollbar::-webkit-scrollbar {
-                        display: block;
-                        height: 3px;
-                    }
-                    .mobile-scrollbar::-webkit-scrollbar-track {
-                        background: #f1f1f1;
-                        margin: 0 10vw;
-                        border-radius: 10px;
-                    }
-                    .mobile-scrollbar::-webkit-scrollbar-thumb {
-                        background: #bd002d;
-                        border-radius: 10px;
-                    }
-                }
-                
-                @media (min-width: 1024px) {
-                    .mobile-scrollbar::-webkit-scrollbar { display: none; }
-                }
-            `}} />
+            
+            <style dangerouslySetInnerHTML={{ __html: `.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } @media (max-width: 1023px) { .mobile-scrollbar::-webkit-scrollbar { display: block; height: 3px; } .mobile-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; margin: 0 10vw; border-radius: 10px; } .mobile-scrollbar::-webkit-scrollbar-thumb { background: #bd002d; border-radius: 10px; } } @media (min-width: 1024px) { .mobile-scrollbar::-webkit-scrollbar { display: none; } }`}} />
         </div>
     );
 };
