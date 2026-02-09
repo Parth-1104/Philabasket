@@ -12,7 +12,8 @@ import {
     bulkAddProducts,listMedia, // Use the new matching logic
     singleProduct1,
     deleteMedia,
-    updateMediaName
+    updateMediaName,
+    bulkUpdateStatus
 } from '../controllers/productController.js'
 import upload from '../middleware/multer.js';
 import adminAuth from '../middleware/adminAuth.js';
@@ -56,6 +57,11 @@ productRouter.post('/update-media-name', adminAuth, updateMediaName);
 // Route for bulk/single deletion
 productRouter.post('/delete-media', adminAuth, deleteMedia);
 productRouter.post('/query', chatWithRegistry);
+productRouter.post('/bulk-status', adminAuth, bulkUpdateStatus);
+
+
+
+
 
 
 export default productRouter;

@@ -269,32 +269,42 @@ const listProducts = async (req, res) => {
         const limit = parseInt(req.query.limit) || 20;
         const skip = (page - 1) * limit;
 
-        const { category, sort, search } = req.query;
+        const { category, sort, search, includeHidden } = req.query;
+        
+        // --- 1. BASE QUERY ---
         let query = {};
 
-        // Layered Search
+        // Force isActive: true for public storefront
+        if (includeHidden !== 'true') {
+            query.isActive = true;
+        }
+
+        // --- 2. LAYERED FILTERS ---
+        // We use $and to ensure the search doesn't override the isActive filter
         if (search) {
             const searchRegex = new RegExp(search, 'i');
-            query.$or = [
-                { name: { $regex: searchRegex } },
-                { country: { $regex: searchRegex } },
-                { category: { $regex: searchRegex } }
-            ];
+            query.$and = query.$and || [];
+            query.$and.push({
+                $or: [
+                    { name: { $regex: searchRegex } },
+                    { country: { $regex: searchRegex } },
+                    { category: { $regex: searchRegex } }
+                ]
+            });
         }
 
         if (category) {
             query.category = { $in: category.split(',') };
         }
 
-        // Sort Logic
+        // --- 3. SORT LOGIC ---
         let sortOrder = { date: -1 }; 
         if (sort === 'low-high') sortOrder = { price: 1 };
         if (sort === 'high-low') sortOrder = { price: -1 };
 
-        // Executing Query
+        // --- 4. EXECUTION ---
         const [products, total] = await Promise.all([
             productModel.find(query)
-                // ADDED: description, youtubeUrl, isActive, and isLatest to the selection
                 .select('name price marketPrice image category country year stock date bestseller description youtubeUrl isActive isLatest')
                 .sort(sortOrder)
                 .skip(skip)
@@ -365,7 +375,22 @@ const singleProduct1 = async (req, res) => {
 }
 
 // Ensure you export it
-
+// Bulk toggle visibility (isActive)
+export const bulkUpdateStatus = async (req, res) => {
+    try {
+        const { ids, isActive } = req.body;
+        await productModel.updateMany(
+            { _id: { $in: ids } },
+            { $set: { isActive: isActive } }
+        );
+        res.json({ 
+            success: true, 
+            message: `${ids.length} Specimens updated to ${isActive ? 'Active' : 'Hidden'}` 
+        });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+};
 
 const removeProduct = async (req, res) => {
     try {
