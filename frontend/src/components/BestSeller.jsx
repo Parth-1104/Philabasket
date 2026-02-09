@@ -11,6 +11,7 @@ const BestSeller = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
+        // Sorts the sovereign ledger by sold count to identify top specimens
         const sortedProducts = [...products]
             .sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0))
             .slice(0, 4);
@@ -18,15 +19,15 @@ const BestSeller = () => {
         setBestSeller(sortedProducts);
     }, [products]);
 
-    // --- ACTION HANDLERS ---
+    // --- LOGISTICS HANDLERS ---
     const onAddToCart = (e, productId) => {
-        e.stopPropagation(); 
+        e.stopPropagation(); // Prevents the card's navigation from triggering
         addToCart(productId, 1);
         toast.success("Added to Registry", { position: "bottom-right", autoClose: 1000 });
     };
 
     const onBuyNow = async (e, productId) => {
-        e.stopPropagation();
+        e.stopPropagation(); // Ensures direct checkout without intermediate navigation
         await addToCart(productId, 1);
         navigate('/cart');
         window.scrollTo(0, 0);
@@ -35,10 +36,12 @@ const BestSeller = () => {
     return (
         <div className='bg-white py-22 md:py-32 lg:mt-[-14vh] overflow-hidden select-none relative border-t border-black/[0.03]'>
             
+            {/* Background Decorative Accent */}
             <div className="absolute -right-[15vw] top-[20%] h-[70%] w-[45%] bg-[#bd002d]/5 rounded-l-[600px] pointer-events-none"></div>
 
             <div className='px-6 md:px-16 lg:px-24 relative z-10'>
                 
+                {/* Section Header */}
                 <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-8'>
                     <div className="max-w-2xl">
                         <div className="flex items-center gap-4 mb-4">
@@ -60,6 +63,7 @@ const BestSeller = () => {
                     </div>
                 </div>
 
+                {/* Ranked Product Grid */}
                 <div className='flex overflow-x-auto gap-6 md:gap-x-12 snap-x snap-mandatory mobile-scrollbar lg:grid lg:grid-cols-4 lg:gap-y-20 lg:overflow-visible pb-10 lg:pb-0 px-2'>
                     {
                         bestSeller.map((item, index) => (
@@ -67,7 +71,7 @@ const BestSeller = () => {
                                 key={index} 
                                 className="min-w-[85%] sm:min-w-[45vw] lg:min-w-0 snap-center group relative transition-all duration-700"
                             >
-                                {/* Rank Badge */}
+                                {/* Sovereign Rank Badge */}
                                 <div className="absolute -top-2 -left-2 z-20 pointer-events-none">
                                     <div className="bg-[#bd002d] text-white w-12 h-12 md:w-14 md:h-14 rounded-full flex flex-col items-center justify-center shadow-lg transform group-hover:rotate-12 transition-transform duration-500 border-2 border-white">
                                         <span className="text-[6px] md:text-[8px] font-black leading-none opacity-60">RANK</span>
@@ -76,16 +80,33 @@ const BestSeller = () => {
                                 </div>
                                 
                                 <div className='pt-4 md:pt-6 h-full'>
-                                    <div className="flex flex-col h-full relative bg-white border border-gray-100 shadow-lg transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl group-hover:border-[#bd002d]/20 overflow-hidden rounded-br-[40px] md:rounded-br-[60px]">
+                                    {/* NAVIGATION WRAPPER: Fixed to use the specific productId parameter */}
+                                   
+                                   {/* NAVIGATION WRAPPER: Fixed to match /product/ID/SEED pattern */}
+<div 
+    onClick={() => {
+        // Create a URL-friendly seed from the product name
+        const seed = item.name
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric characters with hyphens
+            .replace(/^-+|-+$/g, '');    // Remove leading/trailing hyphens
+
+        // Navigate using the exact pattern: /product/ID/SEED
+        navigate(`/product/${item._id}/${seed}`); 
+        window.scrollTo(0, 0); 
+    }}
+    className="flex flex-col h-full relative bg-white border border-gray-100 shadow-lg cursor-pointer transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl group-hover:border-[#bd002d]/20 overflow-hidden rounded-br-[40px] md:rounded-br-[60px]"
+> 
+                                    
                                         
-                                        {/* Status Indicator */}
+                                        {/* High Demand Status */}
                                         <div className="absolute top-3 right-3 flex items-center gap-1 z-10">
                                             <div className="w-1 h-1 bg-[#D4AF37] rounded-full animate-pulse shadow-[0_0_5px_#D4AF37]"></div>
                                             <span className="text-[7px] font-black text-gray-400 uppercase tracking-tighter">High Demand</span>
                                         </div>
                     
-                                        {/* Product Item Content */}
-                                        <div className="flex-grow p-1 md:p-3 cursor-pointer" onClick={() => { navigate(`/product/${item._id}`); window.scrollTo(0,0); }}>
+                                        {/* Visual Asset Container */}
+                                        <div className="flex-grow p-1 md:p-3">
                                             <div className="w-full h-full bg-[#f8f8f8] flex items-center justify-center p-1 md:p-4 rounded-br-[35px] md:rounded-br-[40px]">
                                                 <ProductItem 
                                                     id={item._id} 
@@ -95,13 +116,16 @@ const BestSeller = () => {
                                                     price={item.price} 
                                                     marketPrice={item.marketPrice}
                                                     category={item.category[0]}
-                                                    linkToFilter={false}
+                                                    linkToFilter={false} // Prevents Link nesting errors
                                                 />
                                             </div>
                                         </div>
 
-                                        {/* --- FIXED ACTION BUTTONS --- */}
-                                        <div className="flex flex-col gap-2 p-3 lg:p-4 bg-white border-t border-gray-50">
+                                        {/* --- FIXED LOGISTICS ACTIONS --- */}
+                                        <div 
+                                            className="flex flex-col gap-2 p-3 lg:p-4 bg-white border-t border-gray-50"
+                                            onClick={(e) => e.stopPropagation()} // Blocks card-level navigation on button click
+                                        >
                                             <div className="grid grid-cols-2 gap-2">
                                                 <button 
                                                     onClick={(e) => onAddToCart(e, item._id)}
@@ -127,6 +151,7 @@ const BestSeller = () => {
                     }
                 </div>
 
+                {/* Footer Hallmark */}
                 <div className="mt-16 md:mt-32 flex flex-col items-center gap-6">
                     <div className='h-12 md:h-16 w-[1px] bg-gradient-to-b from-[#bd002d] to-transparent'></div>
                     <p className='text-[8px] tracking-[0.8em] text-black/20 uppercase font-black'>
