@@ -27,7 +27,7 @@ const UtilityBar = () => {
     };
 
     return (
-        <div className='fixed bottom-24 left-6 z-[4000] select-none flex flex-col items-start'>
+        <div className='fixed bottom-20 left-6 z-[4000] select-none flex flex-col items-start'>
             
             {/* --- 1. DETAIL PANEL (REWARDS) --- */}
             {!isCollapsed && isExpanded && (
