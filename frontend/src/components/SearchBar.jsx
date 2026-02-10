@@ -9,18 +9,41 @@ const SearchBar = () => {
     const [visible, setVisible] = useState(false);
     const [suggestions, setSuggestions] = useState([]);
     const [loading, setLoading] = useState(false);
+    
+    const dropdownRef = useRef(null); 
+    const debounceTimeout = useRef(null);
+    
     const location = useLocation();
     const navigate = useNavigate();
-    const debounceTimeout = useRef(null);
 
     const createSeoSlug = (text) => {
-        return text
-            .toLowerCase()
-            .replace(/ /g, '-')
-            .replace(/[^\w-]+/g, '')
-            .replace(/--+/g, '-')
-            .trim();
+        return text.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '').replace(/--+/g, '-').trim();
     };
+
+    // --- SMART DROPDOWN DISMISSAL ---
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            // Close the suggestion panel if clicking outside the search container
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setSuggestions([]);
+            }
+        };
+
+        const handleEscKey = (event) => {
+            if (event.key === 'Escape') setSuggestions([]);
+        };
+
+        // Attach listeners when suggestions are active
+        if (suggestions.length > 0) {
+            document.addEventListener('mousedown', handleClickOutside);
+            document.addEventListener('keydown', handleEscKey);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('keydown', handleEscKey);
+        };
+    }, [suggestions]);
 
     useEffect(() => {
         if (location.pathname.includes('collection')) {
@@ -30,11 +53,6 @@ const SearchBar = () => {
         }
     }, [location]);
 
-    /**
-     * ADVANCED SEARCH STRATEGY:
-     * 1. Backend uses regex 'i' flag for mid-name matches.
-     * 2. Backend text index handles multi-field fuzzy matching.
-     */
     const fetchSuggestions = async (query) => {
         if (!query || query.trim().length < 2) {
             setSuggestions([]);
@@ -44,17 +62,9 @@ const SearchBar = () => {
         setLoading(true);
         try {
             const response = await axios.get(`${backendUrl}/api/product/list`, {
-                params: { 
-                    search: query.trim(), 
-                    limit: 8,
-                    // We send a 'fuzzy' flag so your backend knows to use Regex/Fuzzy logic
-                    fuzzy: true 
-                }
+                params: { search: query.trim(), limit: 8, fuzzy: true }
             });
-
-            if (response.data.success) {
-                setSuggestions(response.data.products);
-            }
+            if (response.data.success) setSuggestions(response.data.products);
         } catch (error) {
             console.error("Search Suggestion Error:", error);
         } finally {
@@ -64,20 +74,20 @@ const SearchBar = () => {
 
     const handleSearchChange = (e) => {
         const value = e.target.value;
-        setSearch(value);
+        setSearch(value); // This still updates the gallery in real-time
 
         if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
         
         debounceTimeout.current = setTimeout(() => {
             fetchSuggestions(value);
-        }, 350); // Slightly longer debounce for heavier fuzzy queries
+        }, 350);
     };
 
     if (!showSearch || !visible) return null;
 
     return (
         <div className='sticky top-[80px] z-[90] w-full bg-white/90 backdrop-blur-xl border-b border-black/5 animate-fade-in'>
-            <div className='max-w-4xl mx-auto px-6 py-8 relative'>
+            <div ref={dropdownRef} className='max-w-4xl mx-auto px-6 py-8 relative'>
                 
                 <p className='text-[9px] tracking-[0.5em] text-[#BC002D] uppercase font-black mb-4 text-center'>
                     Registry Smart-Match Search
@@ -105,19 +115,17 @@ const SearchBar = () => {
                     </button>
                 </div>
 
-                {/* --- SMART SUGGESTIONS PANEL --- */}
+                {/* --- SUGGESTIONS PANEL (Only closes on click-outside) --- */}
                 {suggestions.length > 0 && (
-                    <div className='absolute left-6 right-16 mt-2 bg-white border border-black/5 shadow-2xl rounded-sm overflow-hidden z-[100]'>
+                    <div className='absolute left-6 right-16 mt-2 bg-white border border-black/5 shadow-2xl rounded-sm overflow-hidden z-[100] animate-slide-down'>
                         {suggestions.map((item) => (
                             <div 
                                 key={item._id}
                                 onClick={() => {
                                     const slug = createSeoSlug(item.name);
-                                    setSearch(""); // Clear search bar
+                                    setSearch(""); 
                                     setSuggestions([]);
-                                    setShowSearch(false); // Close the bar
-                                    
-                                    // Navigate using the full pattern expected by your App routes
+                                    setShowSearch(false); 
                                     navigate(`/product/${item._id}/${slug}`);
                                     window.scrollTo(0, 0);
                                 }}
@@ -125,30 +133,21 @@ const SearchBar = () => {
                             >
                                 <img src={item.image[0]} className='w-12 h-12 object-contain bg-white border border-black/5 p-1' alt="" />
                                 <div className='flex-1'>
-                                    <p className='text-[11px] font-black text-black uppercase tracking-widest'>
-                                        {/* Highlight the match if possible (Visual feedback for mid-name match) */}
+                                    <p className='text-[11px] font-black text-black uppercase tracking-widest leading-tight'>
                                         {item.name}
                                     </p>
                                     <p className='text-[8px] text-[#BC002D] font-bold uppercase tracking-[0.2em] mt-1'>
-                                        {item.country} • {item.year} • {item.category[0]}
+                                        {item.country} • {item.year}
                                     </p>
                                 </div>
-                                <span className='text-[9px] font-black text-gray-300 group-hover:text-[#BC002D] transition-colors'>MATCH FOUND →</span>
+                                <span className='text-[9px] font-black text-gray-300 group-hover:text-[#BC002D] transition-colors shrink-0'>VIEW →</span>
                             </div>
                         ))}
                     </div>
                 )}
-
-                {/* --- "NO RESULTS" SUGGESTION --- */}
-                {!loading && search.length >= 2 && suggestions.length === 0 && (
-                    <div className='absolute left-6 right-16 mt-2 bg-white p-6 border border-black/5 shadow-xl text-center'>
-                        <p className='text-[10px] font-bold text-gray-400 uppercase tracking-widest'>No exact matches in registry.</p>
-                        <p className='text-[9px] text-gray-300 uppercase mt-1'>Check your spelling or try a different era.</p>
-                    </div>
-                )}
             </div>
         </div>
-    )
-}
+    );
+};
 
 export default SearchBar;

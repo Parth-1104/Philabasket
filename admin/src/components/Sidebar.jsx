@@ -89,6 +89,21 @@ const Sidebar = () => {
                 </>
               )}
             </NavLink>
+            <NavLink 
+              to="/category"
+              className={({ isActive }) => 
+                `flex items-center gap-3 px-4 py-3 transition-all duration-300 border-r-4 ${
+                  isActive ? 'bg-[#BC002D]/5 border-[#BC002D] text-[#BC002D]' : 'border-transparent text-gray-400 hover:text-black hover:bg-gray-50'
+                }`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <PlusCircle size={18} strokeWidth={isActive ? 2.5 : 2} />
+                  <p className='hidden md:block font-black text-[10px] uppercase tracking-widest'>Make Group</p>
+                </>
+              )}
+            </NavLink>
 
             <NavLink 
               to="/list"

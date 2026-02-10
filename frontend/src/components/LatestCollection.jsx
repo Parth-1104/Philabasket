@@ -4,16 +4,16 @@ import ProductItem from './ProductItem';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { ShoppingCart, Zap, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Zap, ChevronDown, Plus, Minus } from 'lucide-react'; 
 
 const LatestCollection = () => {
     const { products, backendUrl, addToCart } = useContext(ShopContext);
     const [latestProducts, setLatestProducts] = useState([]);
     const [dbCategories, setDbCategories] = useState([]);
-    const [openGroups, setOpenGroups] = useState({});
+    const [openGroups, setOpenGroups] = useState({}); 
+    const [showAllIndependent, setShowAllIndependent] = useState(false); // Toggle for mobile "View All"
     const navigate = useNavigate();
 
-    // 1. Fetch raw categories from DB
     const fetchCategories = async () => {
         try {
             const response = await axios.get(backendUrl + '/api/category/list');
@@ -33,37 +33,26 @@ const LatestCollection = () => {
         if (backendUrl) fetchCategories();
     }, [backendUrl]);
 
-    // 2. REACTIVE COUNTING ENGINE
-    // This recalculates automatically when products or dbCategories change
-    // ... inside LatestCollection component
-
     const { grouped, independent } = useMemo(() => {
         const groupedResult = {};
         const independentResult = [];
     
-        // 1. Ensure we have data before calculating
         if (!dbCategories.length || !products.length) {
             return { grouped: {}, independent: [] };
         }
     
         dbCategories.forEach(cat => {
-            // 2. THE ACCURATE COUNT ENGINE
-            // We filter the GLOBAL products array (not the latest slice)
             const count = products.filter(p => {
-                // Check if 'category' exists and is an array
                 if (p.category && Array.isArray(p.category)) {
-                    // Return true if ANY of the strings in the array match the cat.name exactly
                     return p.category.some(item => 
                         item.trim().toLowerCase() === cat.name.trim().toLowerCase()
                     );
                 }
-                // Fallback for single string categories
                 return p.category === cat.name;
             }).length;
     
             const item = { name: cat.name, count };
     
-            // 3. SORTING LOGIC
             if (!cat.group || ['General', 'Independent', 'none', ''].includes(cat.group)) {
                 independentResult.push(item);
             } else {
@@ -73,15 +62,10 @@ const LatestCollection = () => {
         });
     
         return { grouped: groupedResult, independent: independentResult };
-    }, [dbCategories, products]); // Re-runs instantly when global product list updates// This re-runs perfectly when the ShopContext products update
+    }, [dbCategories, products]);
 
     const toggleGroup = (groupName) => {
         setOpenGroups(prev => ({ ...prev, [groupName]: !prev[groupName] }));
-    };
-
-    const handleGroupClick = (groupName) => {
-        navigate(`/collection?group=${encodeURIComponent(groupName)}`);
-        window.scrollTo(0, 0);
     };
 
     const handleCategoryClick = (catName) => {
@@ -113,15 +97,23 @@ const LatestCollection = () => {
                 </div>
 
                 <div className='flex flex-col lg:flex-row gap-12'>
+                    {/* --- SIDEBAR --- */}
                     <div className='w-full lg:w-1/4'>
                         <div className='lg:sticky lg:top-32'>
                             <div className='bg-[#bd002d] p-6 lg:p-8 rounded-[30px] lg:rounded-[40px] shadow-2xl shadow-[#bd002d]/20 relative overflow-hidden'>
-                                <div className='flex items-center justify-between mb-8 relative z-10'>
-                                    <h3 className='text-white font-black text-[9px] lg:text-xs tracking-[0.3em] uppercase'>Registry Index</h3>
-                                    <Link to='/collection' className='text-amber-400 text-[8px] lg:hidden font-black uppercase'>View All</Link>
-                                </div>
+                            <div className='flex items-center justify-between mb-8 relative z-10'>
+    <h3 className='text-white font-black text-[9px] lg:text-xs tracking-[0.3em] uppercase'>Registry Index</h3>
+    
+    {/* MOBILE ONLY TOGGLE */}
+    <button 
+        onClick={() => setShowAllIndependent(!showAllIndependent)} 
+        className='text-amber-400 text-[8px] lg:hidden font-black uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full'
+    >
+        {showAllIndependent ? 'View Less' : 'View All'}
+    </button>
+</div>
 
-                                <div className='flex flex-col gap-2 overflow-y-auto max-h-[70vh] hide-scrollbar relative z-10 pr-2'>
+                                <div className='flex flex-col gap-2 overflow-y-auto max-h-[180vh] hide-scrollbar relative z-10 pr-2'>
                                     {/* --- 1. GROUPED SECTION --- */}
                                     {Object.keys(grouped).sort().map((groupName) => (
                                         <div key={groupName} className="flex flex-col mb-1">
@@ -130,12 +122,9 @@ const LatestCollection = () => {
                                                 onClick={() => toggleGroup(groupName)}
                                             >
                                                 <div className='flex items-center gap-3'>
-                                                    <button 
-                                                        onClick={(e) => { e.stopPropagation(); handleGroupClick(groupName); }}
-                                                        className="text-amber-400 text-[10px] font-black uppercase tracking-[0.15em] hover:text-white transition-all text-left leading-tight max-w-[140px]"
-                                                    >
+                                                    <span className="text-amber-400 text-[10px] font-black uppercase tracking-[0.15em] hover:text-white transition-all text-left leading-tight max-w-[140px]">
                                                         {groupName}
-                                                    </button>
+                                                    </span>
                                                     <span className='text-[8px] text-white/40 font-bold tabular-nums'>
                                                         ({grouped[groupName].reduce((sum, c) => sum + c.count, 0)})
                                                     </span>
@@ -158,12 +147,15 @@ const LatestCollection = () => {
                                         </div>
                                     ))}
 
-                                    {/* --- 2. INDEPENDENT SECTION --- */}
+                                    {/* --- 2. INDEPENDENT SECTION (Mobile Collapsible) --- */}
                                     {independent.length > 0 && (
                                         <div className="mt-4 pt-4 border-t border-white/20">
                                             <p className='text-[8px] text-white/30 font-black uppercase tracking-widest mb-4 ml-2'>General Registry</p>
                                             <div className='flex flex-col gap-1'>
-                                                {independent.map((cat) => (
+                                                {/* Logic: On mobile, only show 4 unless expanded. On desktop, show all. */}
+                                                {independent
+                                                    .slice(0, (!showAllIndependent && window.innerWidth < 1024) ? 4 : independent.length)
+                                                    .map((cat) => (
                                                     <button 
                                                         key={cat.name}
                                                         onClick={() => handleCategoryClick(cat.name)}
@@ -173,20 +165,27 @@ const LatestCollection = () => {
                                                         <span className='text-[8px] opacity-40 group-hover:opacity-100 font-mono'>{cat.count}</span>
                                                     </button>
                                                 ))}
+
+                                                {/* View All Button - Only visible on Mobile if there are more than 4 items */}
+                                                {independent.length > 4 && (
+                                                    <button 
+                                                        onClick={() => setShowAllIndependent(!showAllIndependent)}
+                                                        className='lg:hidden mt-2 text-center py-2 text-amber-400 text-[9px] font-black uppercase tracking-widest bg-white/5 rounded-lg border border-white/10 flex items-center justify-center gap-2'
+                                                    >
+                                                        {showAllIndependent ? <><Minus size={10}/> View Less</> : <><Plus size={10}/> View All ({independent.length})</>}
+                                                    </button>
+                                                )}
                                             </div>
                                         </div>
                                     )}
                                 </div>
-
-                                <Link to='/collection' onClick={() => window.scrollTo(0, 0)} className='hidden lg:flex mt-8 pt-6 border-t border-white/10 items-center justify-between group/more relative z-10'>
-                                    <span className='text-amber-400 text-[10px] font-black uppercase tracking-[0.2em]'>Full Archive</span>
-                                    <span className='text-white group-hover/more:translate-x-2 transition-transform'>→</span>
-                                </Link>
                             </div>
                         </div>
                     </div>
 
+                    {/* MAIN PRODUCT GRID REMAINS SAME */}
                     <div className='w-full lg:w-3/4'>
+                        {/* ... mapping latestProducts ... */}
                         <div className='flex overflow-x-auto lg:grid lg:grid-cols-3 gap-6 md:gap-x-8 gap-y-12 pb-10 lg:pb-0 snap-x snap-mandatory mobile-scrollbar px-2'>
                             {latestProducts.map((item, index) => (
                                 <div key={index} className="min-w-[85%] sm:min-w-[45vw] lg:min-w-0 snap-center flex flex-col group bg-white border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-br-[40px] md:rounded-br-[60px] overflow-hidden">
@@ -216,8 +215,6 @@ const LatestCollection = () => {
                     </div>
                 </div>
             </div>
-            
-            <style dangerouslySetInnerHTML={{ __html: `.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } @media (max-width: 1023px) { .mobile-scrollbar::-webkit-scrollbar { display: block; height: 3px; } .mobile-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; margin: 0 10vw; border-radius: 10px; } .mobile-scrollbar::-webkit-scrollbar-thumb { background: #bd002d; border-radius: 10px; } } @media (min-width: 1024px) { .mobile-scrollbar::-webkit-scrollbar { display: none; } }`}} />
         </div>
     );
 };

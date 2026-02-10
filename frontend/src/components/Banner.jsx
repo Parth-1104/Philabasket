@@ -8,6 +8,8 @@ const Banner = ({ scrollHandler }) => {
   const banners = [
     { image: 'banner.png', title: "FDC Festival" },
     { image: 'phila.png', title: "Royal Collection" },
+    { image: assets.banner009, title: "Royal Collection" },
+
     // { image: assets.main03, title: "Rare Global" }
   ];
 

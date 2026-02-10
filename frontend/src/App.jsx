@@ -10,6 +10,8 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UtilityBar from './components/UtilityBar';
 import ChatBot from './components/ChatBot';
+// import Rewards from './pages/Rewards';
+const Rewards=lazy(()=>import('./pages/Rewards'))
 
 // --- LAZY IMPORTS (Load on Demand) ---
 const Collection = lazy(() => import('./pages/Collection'));
@@ -27,6 +29,9 @@ const Profile = lazy(() => import('./pages/Profile'));
 const ResetPassword = lazy(() => import('./pages/ResetPassword'));
 const ArchiveBlogs = lazy(() => import('./pages/ArchieveBlogs'));
 const BlogContent = lazy(() => import('./pages/BlogContent'));
+const Terms=lazy(()=>import('./pages/Terms'))
+const FAQ=lazy(()=>import('./pages/FAQs'))
+const Shipping=lazy(()=>import('./pages/Shipping'))
 
 const App = () => {
   return (
@@ -63,6 +68,14 @@ const App = () => {
           <Route path='/verify' element={<Verify />} />
           <Route path='/reset-password/:token' element={<ResetPassword/>} />
           <Route path='/blogs' element={<ArchiveBlogs />} />
+          <Route path='/rewards' element={<Rewards />} />
+          <Route path='/terms' element={<Terms/>} />
+          <Route path='/faq' element={<FAQ/>} />
+          <Route path='/ship' element={<Shipping/>} />
+
+
+
+
           <Route path='/blog/:blogId' element={<BlogContent />} />
         </Routes>
       </Suspense>

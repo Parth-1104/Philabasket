@@ -52,15 +52,35 @@ const Collection = () => {
 
   useEffect(() => { if(backendUrl) fetchCategories(); }, [backendUrl]);
 
-  const groupedCategories = useMemo(() => {
-    return dbCategories.reduce((acc, cat) => {
-      const key = cat.group || 'Independent';
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(cat.name);
-      return acc;
-    }, {});
-  }, [dbCategories]);
+  // 1. Add this state at the top of your component for the accordion
+const [openGroups, setOpenGroups] = useState({});
 
+// 2. Add a toggle function
+const toggleGroupAccordion = (groupName) => {
+    setOpenGroups(prev => ({
+        ...prev,
+        [groupName]: !prev[groupName]
+    }));
+};
+
+// 3. Update your useMemo to handle data accurately
+const { grouped, independent } = useMemo(() => {
+    const groupedResult = {};
+    const independentResult = [];
+
+    dbCategories.forEach(cat => {
+        // Strict check for grouping
+        if (!cat.group || ['General', 'Independent', 'none', ''].includes(cat.group.trim())) {
+            independentResult.push(cat.name);
+        } else {
+            const groupName = cat.group.trim();
+            if (!groupedResult[groupName]) groupedResult[groupName] = [];
+            groupedResult[groupName].push(cat.name);
+        }
+    });
+
+    return { grouped: groupedResult, independent: independentResult };
+}, [dbCategories]);
   // SYNC URL PARAMS TO STATE
   useEffect(() => {
     if (categoryParam) setCategory(categoryParam.split(','));
@@ -119,51 +139,91 @@ const Collection = () => {
       {/* HEADER SECTION REMAINS SAME */}
 
       <div className='flex flex-col lg:flex-row gap-12 relative z-20'>
-        {/* --- UPDATED HIERARCHICAL SIDEBAR --- */}
-        <aside className={`fixed inset-0 z-[3000] lg:relative lg:z-0 lg:inset-auto lg:w-72 lg:block lg:sticky lg:top-32 lg:h-fit transition-all duration-700 ${showFilter ? 'opacity-100' : 'opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto'}`}>
-          <div onClick={() => setShowFilter(false)} className='absolute inset-0 bg-black/80 backdrop-blur-sm lg:hidden'></div>
-          <div className={`absolute top-0 right-0 h-full w-[85%] bg-[#BC002D] p-8 flex flex-col transition-transform duration-500 lg:relative lg:w-full lg:p-8 lg:translate-x-0 lg:rounded-br-[80px] lg:shadow-2xl ${showFilter ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}`}>
-            
-            <h3 className='text-white font-black text-xs tracking-[0.3em] uppercase mb-8'>Archive Index</h3>
-            
-            <div className='flex-1 overflow-y-auto custom-scrollbar space-y-8 pr-2'>
-              {Object.keys(groupedCategories).sort().map(groupName => (
-                <div key={groupName} className="flex flex-col">
-                  {/* PARENT GROUP TOGGLE */}
-                  <button 
-                    onClick={() => selectGroup(groupName)}
-                    className={`flex items-center justify-between mb-3 pb-1 border-b transition-all ${activeGroup === groupName ? 'border-white' : 'border-white/10 hover:border-white/40'}`}
-                  >
-                    <div className='flex items-center gap-2'>
-                      <FolderTree size={14} className={activeGroup === groupName ? 'text-white' : 'text-white/40'} />
-                      <span className={`text-[10px] font-black uppercase tracking-widest ${activeGroup === groupName ? 'text-white' : 'text-white/60'}`}>
-                        {groupName}
-                      </span>
-                    </div>
-                    <ChevronRight size={12} className='text-white/40' />
-                  </button>
 
-                  {/* CHILDREN LIST */}
-                  <div className='flex flex-col gap-1 ml-4 border-l border-white/10 pl-3'>
-                    {groupedCategories[groupName].map(cat => (
-                      <button 
-                        key={cat} 
-                        onClick={() => toggleCategory(cat)}
-                        className={`text-left py-1 text-[9px] font-bold uppercase tracking-widest transition-all hover:text-white ${category.includes(cat) ? 'text-white' : 'text-white/40'}`}
-                      >
-                        {cat}
-                      </button>
-                    ))}
-                  </div>
+      <aside className={`fixed inset-0 z-[3000] lg:relative lg:z-0 lg:inset-auto lg:w-60 lg:block lg:sticky lg:top-10 lg:self-start transition-all duration-700 ${showFilter ? 'opacity-100' : 'opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto'}`}>
+  {/* Mobile Backdrop */}
+  <div onClick={() => setShowFilter(false)} className='absolute inset-0 bg-black/80 backdrop-blur-sm lg:hidden'></div>
+  
+  <div className={`
+    /* MOBILE: Full height and scrollable */
+    absolute top-0 right-0 h-full w-[85%] overflow-y-auto bg-[#BC002D] p-8 flex flex-col 
+    /* DESKTOP: Natural height, no internal scroll, rounded corners */
+    lg:relative lg:w-full lg:h-auto lg:overflow-visible lg:p-8 lg:translate-x-0 lg:rounded-3xl lg:shadow-2xl 
+    transition-transform duration-500 ${showFilter ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+  `}>
+    
+    <div className="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
+        <h3 className='text-white font-black text-[10px] tracking-[0.3em] uppercase'>Registry Index</h3>
+        {/* Mobile Close Button */}
+        <X onClick={() => setShowFilter(false)} className="lg:hidden text-white/60 cursor-pointer" size={20} />
+    </div>
+    
+    <div className='flex flex-col'>
+      {/* 1. PARENT GROUPS */}
+      <div className="space-y-4 mb-10">
+        {Object.keys(grouped).sort().map(groupName => (
+          <div key={groupName} className="flex flex-col">
+            <div 
+                className='flex items-center justify-between cursor-pointer py-1' 
+                onClick={() => toggleGroupAccordion(groupName)}
+            >
+                <div className='flex items-center gap-3'>
+                    <FolderTree size={14} className={activeGroup === groupName ? 'text-white' : 'text-white/40'} />
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); selectGroup(groupName); }}
+                        className={`text-[10px] font-black uppercase tracking-widest text-left transition-all ${activeGroup === groupName ? 'text-white' : 'text-white/60 hover:text-white'}`}
+                    >
+                        {groupName}
+                    </button>
                 </div>
-              ))}
+                <ChevronRight 
+                    size={12} 
+                    className={`text-white/40 transition-transform duration-300 ${openGroups[groupName] ? 'rotate-90' : ''}`} 
+                />
             </div>
 
-            <button onClick={() => {setCategory([]); setActiveGroup("");}} className="mt-8 pt-6 border-t border-white/10 text-[9px] font-black text-white/50 uppercase tracking-[0.3em] hover:text-white transition-all">
-                Reset Archive Filters
-            </button>
+            <div className={`flex flex-col gap-2 ml-6 border-l border-white/10 pl-4 overflow-hidden transition-all duration-500 ${openGroups[groupName] ? 'max-h-[2000px] mt-3 opacity-100 mb-4' : 'max-h-0 opacity-0'}`}>
+              {grouped[groupName].map(cat => (
+                <button 
+                  key={cat} 
+                  onClick={() => toggleCategory(cat)}
+                  className={`text-left py-1 text-[9px] font-bold uppercase tracking-widest transition-all ${category.includes(cat) ? 'text-white translate-x-1' : 'text-white/40 hover:text-white hover:translate-x-1'}`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
           </div>
-        </aside>
+        ))}
+      </div>
+
+      {/* 2. INDEPENDENT CATEGORIES */}
+      {independent.length > 0 && (
+        <div className="pt-8 border-t border-white/20">
+            <p className='text-[8px] text-white/20 font-black uppercase tracking-widest mb-6 ml-1'>General Archive</p>
+            <div className='flex flex-col gap-2'>
+                {independent.sort().map(cat => (
+                    <button 
+                        key={cat} 
+                        onClick={() => toggleCategory(cat)}
+                        className={`text-left py-2.5 px-4 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all ${category.includes(cat) ? 'bg-white text-[#BC002D]' : 'text-white/60 hover:bg-white/5 hover:text-white'}`}
+                    >
+                        {cat}
+                    </button>
+                ))}
+            </div>
+        </div>
+      )}
+    </div>
+
+    <button 
+        onClick={() => {setCategory([]); setActiveGroup("");}} 
+        className="mt-10 mb-8 lg:mb-0 pt-6 border-t border-white/10 text-[10px] font-black text-white/40 hover:text-white uppercase tracking-[0.3em] transition-all"
+    >
+        Reset Filters
+    </button>
+  </div>
+</aside>
 
         {/* --- MAIN DISPLAY REMAINS SAME --- */}
       {/* </div>
@@ -195,7 +255,7 @@ const Collection = () => {
           )}
 
           {/* --- GRID MODIFIED TO INCLUDE BUTTONS --- */}
-          <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-x-6 md:gap-x-8 gap-y-16'>
+          <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-x-6 md:gap-x-8 gap-y-16'>
             {products.map((item, index) => (
               <div 
                 key={`${item._id}-${index}`} 

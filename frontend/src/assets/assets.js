@@ -11,6 +11,7 @@ import baldin from './baldin.jpeg'
 import bal from './bal.jpg'
 import bal69 from './bal69.jpeg'
 import wide from './wide.jpg'
+import banner009 from './banner009.png'
 
 import logo from './logo.png'
 import hero_img from './hero_img.png'
@@ -68,7 +69,7 @@ export const assets = {
     baldin,
     bal,
     bal69,
-    wide,thapper,mem,member,widemiss,logo5
+    wide,thapper,mem,member,widemiss,logo5,banner009
 }
 
 

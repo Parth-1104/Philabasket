@@ -49,22 +49,32 @@ const Footer = () => {
             {
               title: 'Registry Index',
               links: [
-                {label: 'Membership', path: '/collection'}, 
-                {label: 'Reward', path: '/collection'}, 
-                {label: 'Catalogue', path: '/collection'}, 
-                {label: 'Blogs', path: '/collection'}
+                {label: 'Membership', path: '/referral'}, 
+                {label: 'Reward', path: '/reward'}, 
+                // {label: 'Catalogue', path: '/collection'}, 
+                {label: 'Blogs', path: '/blogs'}
               ]
             },
             {
               title: 'Curator Support',
               links: [
                 {label: 'Contact Us', path: '/about'}, 
-                {label: 'Shipping Policy', path: '/about'}, 
-                {label: 'Terms and Condition', path: '/contact'}, 
-                {label: 'FAQs', path: '/contact'}
+                {label: 'Shipping Policy', path: '/ship'}, 
+                {label: 'Terms and Condition', path: '/terms'}, 
+                {label: 'FAQs', path: '/faq'}
               ]
             },
-            // {
+            {
+              title:"Contact Info",
+              links: [
+                {label:"New Delhi, 110092 India"},
+                {label:"Phone: + 91 9999167799"},
+                {label:"Email: admin@philabasket.com"}
+
+
+              ]
+            }
+        // {
             //   title: 'The Archive',
             //   links: [
             //     {label: 'Our Heritage', path: '/about'}, 
