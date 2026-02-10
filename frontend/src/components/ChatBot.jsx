@@ -66,7 +66,7 @@ const { data } = await axios.post(`${backendUrl}/api/product/query`, {
     }, [messages, loading]);
 
     return (
-        <div className="fixed bottom-24 right-6 z-[4000]">
+        <div className="fixed bottom-20 right-6 z-[4000]">
             {isOpen ? (
                 <div className="w-80 md:w-96 h-[500px] bg-white border border-gray-200 shadow-2xl rounded-3xl overflow-hidden flex flex-col animate-fade-in ring-1 ring-black/5">
                     {/* Header */}
