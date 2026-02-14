@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { MessageSquare, Send, X, Bot } from 'lucide-react';
-import { ShopContext } from '../context/ShopContext'; // Ensure you have your context for backendUrl
+import { MessageSquare, Send, X, Bot, Share2, Facebook, MessageCircle } from 'lucide-react';
+import { ShopContext } from '../context/ShopContext';
 import { toast } from 'react-toastify';
 
 const ChatBot = () => {
-    const { backendUrl } = useContext(ShopContext); // Get your API base URL
+    const { backendUrl } = useContext(ShopContext);
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([{ role: 'bot', text: 'Welcome to the Archive. How can I assist your search today?' }]);
     const [input, setInput] = useState("");
@@ -13,28 +13,27 @@ const ChatBot = () => {
     const [history, setHistory] = useState([]); 
     const chatEndRef = useRef(null);
 
+    // Replace these with your actual Group/Bot links
+    const WHATSAPP_LINK = "https://wa.me/919999167799"; 
+    const FACEBOOK_LINK = "https://m.me/philabasket";
+
     const handleSend = async () => {
         if (!input.trim()) return;
         
         const userMsgText = input;
-        // Update UI immediately
         setMessages(prev => [...prev, { role: 'user', text: userMsgText }]);
         setInput("");
         setLoading(true);
 
         try {
-            // UPDATED: Use absolute URL with backendUrl
-            // In ChatBot.jsx handleSend function
-const { data } = await axios.post(`${backendUrl}/api/product/query`, { 
-    message: userMsgText,
-    history: history // Sending the history back to the server
-});
+            const { data } = await axios.post(`${backendUrl}/api/product/query`, { 
+                message: userMsgText,
+                history: history 
+            });
 
             if (data.success) {
                 const botReply = data.reply;
                 setMessages(prev => [...prev, { role: 'bot', text: botReply }]);
-
-                // Update Gemini History Format
                 setHistory(prev => [
                     ...prev,
                     { role: "user", parts: [{ text: userMsgText }] },
@@ -52,34 +51,38 @@ const { data } = await axios.post(`${backendUrl}/api/product/query`, {
     useEffect(() => {
         const scrollToBottom = () => {
             if (chatEndRef.current) {
-                chatEndRef.current.scrollIntoView({ 
-                    behavior: "smooth", 
-                    block: "end" 
-                });
+                chatEndRef.current.scrollIntoView({ behavior: "smooth", block: "end" });
             }
         };
-    
-        // Small delay ensures the DOM has calculated the new height
         const timeoutId = setTimeout(scrollToBottom, 100);
-    
         return () => clearTimeout(timeoutId);
     }, [messages, loading]);
 
     return (
         <div className="fixed bottom-20 right-6 z-[4000]">
             {isOpen ? (
-                <div className="w-80 md:w-96 h-[500px] bg-white border border-gray-200 shadow-2xl rounded-3xl overflow-hidden flex flex-col animate-fade-in ring-1 ring-black/5">
+                <div className="w-80 md:w-96 h-[550px] bg-white border border-gray-200 shadow-2xl rounded-3xl overflow-hidden flex flex-col animate-fade-in ring-1 ring-black/5">
+                    
                     {/* Header */}
                     <div className="bg-gray-900 p-4 text-white flex justify-between items-center shadow-md">
                         <div className="flex items-center gap-2">
                             <div className="p-1.5 bg-[#BC002D] rounded-lg">
                                 <Bot size={18} className="text-white" />
                             </div>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em]">Archival Assistant</p>
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.2em]">Archival Assistant</p>
+                                <p className="text-[7px] text-gray-400 uppercase tracking-widest mt-0.5">Sovereign Registry AI</p>
+                            </div>
                         </div>
-                        <button onClick={() => setIsOpen(false)} className="hover:rotate-90 transition-transform duration-300">
-                            <X size={20} className="text-gray-400 hover:text-white" />
-                        </button>
+                        <div className="flex items-center gap-4">
+                             {/* Optional: Social Icons in Header */}
+                             <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer" className="hover:text-[#25D366] transition-colors">
+                                <MessageCircle size={16} />
+                             </a>
+                             <button onClick={() => setIsOpen(false)} className="hover:rotate-90 transition-transform duration-300">
+                                <X size={20} className="text-gray-400 hover:text-white" />
+                             </button>
+                        </div>
                     </div>
 
                     {/* Messages Area */}
@@ -94,8 +97,32 @@ const { data } = await axios.post(`${backendUrl}/api/product/query`, {
                                 </div>
                             </div>
                         ))}
+
+                        {/* Community Link "Quick Actions" */}
+                        <div className="pt-2">
+                            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Protocol Extensions</p>
+                            <div className="flex gap-2">
+                                <a 
+                                    href={WHATSAPP_LINK} 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="flex items-center gap-2 bg-[#25D366]/10 text-[#25D366] px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-[#25D366] hover:text-white transition-all"
+                                >
+                                    <MessageCircle size={14} /> WhatsApp Group
+                                </a>
+                                <a 
+                                    href={FACEBOOK_LINK} 
+                                    target="_blank" 
+                                    rel="noreferrer"
+                                    className="flex items-center gap-2 bg-[#1877F2]/10 text-[#1877F2] px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-[#1877F2] hover:text-white transition-all"
+                                >
+                                    <Facebook size={14} /> FB Messenger
+                                </a>
+                            </div>
+                        </div>
+
                         {loading && (
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 pt-2">
                                 <div className="w-1.5 h-1.5 bg-[#BC002D] rounded-full animate-bounce"></div>
                                 <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Consulting Registry...</span>
                             </div>
@@ -109,13 +136,13 @@ const { data } = await axios.post(`${backendUrl}/api/product/query`, {
                             value={input} 
                             onChange={(e) => setInput(e.target.value)} 
                             onKeyPress={(e) => e.key === 'Enter' && handleSend()} 
-                            placeholder="Search the archive..." 
+                            placeholder="Ask about a specimen..." 
                             className="flex-1 bg-gray-50 border border-gray-100 px-4 py-3 rounded-xl text-sm text-black placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#BC002D]/10 transition-all"
                         />
                         <button 
                             onClick={handleSend} 
                             disabled={loading || !input.trim()}
-                            className="p-3 bg-[#BC002D] text-white rounded-xl shadow-lg shadow-[#BC002D]/20 active:scale-90 transition-all disabled:opacity-50 disabled:grayscale"
+                            className="p-3 bg-[#BC002D] text-white rounded-xl shadow-lg shadow-[#BC002D]/20 active:scale-90 transition-all disabled:opacity-50"
                         >
                             <Send size={18} />
                         </button>
@@ -124,9 +151,9 @@ const { data } = await axios.post(`${backendUrl}/api/product/query`, {
             ) : (
                 <button 
                     onClick={() => setIsOpen(true)} 
-                    className="w-16 h-16 bg-gray-900 text-white rounded-full flex items-center justify-center shadow-2xl hover:bg-[#BC002D] hover:scale-110 transition-all duration-500 group"
+                    className="w-14 h-14 bg-gray-900 text-white rounded-full flex items-center justify-center shadow-2xl hover:bg-[#BC002D] hover:scale-110 transition-all duration-500 group"
                 >
-                    <MessageSquare size={26} className="group-hover:rotate-12 transition-transform" />
+                    <Bot size={26} className="group-hover:rotate-12 transition-transform" />
                     <span className="absolute -top-1 -right-1 bg-[#BC002D] text-white text-[8px] px-1.5 py-0.5 rounded-full font-black border-2 border-white animate-pulse">LIVE</span>
                 </button>
             )}
