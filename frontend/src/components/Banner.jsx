@@ -2,15 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { assets } from '../assets/assets';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-const Banner = ({ scrollHandler }) => {
+const Banner = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const banners = [
-    { image: 'banner.png', title: "FDC Festival" },
-    { image: 'phila.png', title: "Royal Collection" },
+    { image: assets.banner001 || 'banner.png', title: "FDC Festival" },
+    { image: assets.banner002 || 'phila.png', title: "Royal Collection" },
     { image: assets.banner009, title: "Royal Collection" },
-
-    // { image: assets.main03, title: "Rare Global" }
   ];
 
   const nextSlide = () => setCurrentSlide((prev) => (prev === banners.length - 1 ? 0 : prev + 1));
@@ -22,47 +20,65 @@ const Banner = ({ scrollHandler }) => {
   }, []);
 
   return (
-    /* Container: Full width, limited height. 
-       Mobile: auto height based on aspect ratio. Desktop: max height of 60vh to 75vh */
-       <div className='relative -top-[5vh] sm:top-0 w-full overflow-hidden select-none bg-white h-[30vh] md:aspect-auto md:h-[60vh] lg:h-[50vh] group'>
+    <div className='relative w-full overflow-hidden select-none bg-white group
+        /* RESPONSIVE HEIGHT SCALE */
+        h-[25vh]       /* Mobile: Short height to prevent huge scrolling */
+        sm:h-[35vh]    /* Tablet */
+        md:h-[50vh]    /* Small Laptop */
+        lg:h-[55vh]    /* Desktop */
+        xl:h-[60vh]    /* Ultra-wide */
+    '>
       
       {/* Slide Content */}
       {banners.map((slide, index) => (
         <div 
           key={index}
-          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentSlide ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+          className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+            index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+          }`}
         >
-          {/* The Image Logic:
-            - w-full h-full ensures it fills the container.
-            - object-fill or object-contain ensures the full image is visible.
-            - Based on your screenshots, the image is tailored to fit the banner width.
+          {/* IMAGE SCALING LOGIC:
+             - object-cover: Ensures the container is ALWAYS filled (no white gaps).
+             - object-center: Keeps the middle of the stamp/banner visible on mobile crop.
           */}
           <img 
               draggable="false" 
-              className='w-full h-full object-contain md:object-cover' 
+              className='w-full h-full object-contain object-center sm:object-fill lg:object-contain md:object-contain' 
               src={slide.image}
               alt={slide.title} 
           />
+          
+          {/* Subtle Gradient Overlay to make navigation/text pop */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-transparent pointer-events-none"></div>
         </div>
       ))}
 
-      {/* Minimalist Navigation Arrows - Visible on Hover */}
-      <div className='absolute inset-0 flex items-center justify-between px-4 opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none'>
-        <button onClick={prevSlide} className='pointer-events-auto p-2 bg-black/10 hover:bg-black/30 rounded-full text-white transition-all'>
-            <ChevronLeft size={30} />
+      {/* Navigation Arrows - Optimized for Touch & Mouse */}
+      <div className='absolute inset-0 flex items-center justify-between px-2 md:px-4 opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none'>
+        <button 
+          onClick={prevSlide} 
+          className='pointer-events-auto p-1.5 md:p-3 bg-black/20 hover:bg-[#BC002D] backdrop-blur-sm rounded-full text-white transition-all transform hover:scale-110'
+        >
+            <ChevronLeft className='w-5 h-5 md:w-8 md:h-8' />
         </button>
-        <button onClick={nextSlide} className='pointer-events-auto p-2 bg-black/10 hover:bg-black/30 rounded-full text-white transition-all'>
-            <ChevronRight size={30} />
+        <button 
+          onClick={nextSlide} 
+          className='pointer-events-auto p-1.5 md:p-3 bg-black/20 hover:bg-[#BC002D] backdrop-blur-sm rounded-full text-white transition-all transform hover:scale-110'
+        >
+            <ChevronRight className='w-5 h-5 md:w-8 md:h-8' />
         </button>
       </div>
 
-      {/* Pagination Indicators - Bottom Center */}
-      <div className='absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-30'>
+      {/* Pagination - Slimmer for better visibility */}
+      <div className='absolute bottom-3 md:bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 md:gap-3 z-30'>
         {banners.map((_, i) => (
-          <div 
+          <button 
             key={i}
             onClick={() => setCurrentSlide(i)}
-            className={`cursor-pointer transition-all duration-500 h-1 rounded-full ${i === currentSlide ? 'w-8 bg-[#BC002D]' : 'w-2 bg-black/20'}`}
+            className={`cursor-pointer transition-all duration-500 h-1 rounded-full ${
+              i === currentSlide ? 'w-6 md:w-12 bg-[#BC002D]' : 'w-2 md:w-3 bg-white/40 hover:bg-white/60'
+            }`}
+            aria-label={`Go to slide ${i + 1}`}
           />
         ))}
       </div>

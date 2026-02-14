@@ -318,43 +318,49 @@ const listProducts = async (req, res) => {
         // --- 1. BASE QUERY ---
         let query = {};
 
-        // Force isActive: true for public storefront
+        // Visibility check
         if (includeHidden !== 'true') {
             query.isActive = true;
         }
 
         // --- 2. LAYERED FILTERS ---
+        
+        // Search Logic
         if (search) {
             const searchRegex = new RegExp(search, 'i');
-            query.$and = query.$and || [];
-            query.$and.push({
-                $or: [
-                    { name: { $regex: searchRegex } },
-                    { country: { $regex: searchRegex } },
-                    { category: { $regex: searchRegex } }
-                ]
-            });
+            query.$or = [
+                { name: { $regex: searchRegex } },
+                { country: { $regex: searchRegex } },
+                { category: { $regex: searchRegex } },
+                { description: { $regex: searchRegex } }
+            ];
         }
 
-        // --- NEW: PARENT GROUP FILTERING ---
-        if (group) {
-            // Find all sub-categories belonging to this Parent Group
-            const categoriesInGroup = await categoryModel.find({ group: group }).lean();
-            const categoryNames = categoriesInGroup.map(cat => cat.name);
-            
-            // Add to query using $in operator
-            query.category = { $in: categoryNames };
+        // Category & Group Logic (Merged into one filter)
+        let categoryFilter = [];
+
+        if (category && category !== "") {
+            // If specific categories are provided, use them
+            categoryFilter = category.split(',');
+        } else if (group && group !== "") {
+            // If only a group is provided, find all categories in that group
+            const categoriesInGroup = await categoryModel.find({ group: group }).select('name').lean();
+            categoryFilter = categoriesInGroup.map(cat => cat.name);
         }
 
-        // Keep existing individual category filter (overrides group if both provided)
-        if (category) {
-            query.category = { $in: category.split(',') };
+        // Apply category filter if either condition above was met
+        if (categoryFilter.length > 0) {
+            query.category = { $in: categoryFilter };
         }
 
-        // --- 3. SORT LOGIC ---
-        let sortOrder = { date: -1 }; 
-        if (sort === 'low-high') sortOrder = { price: 1 };
-        if (sort === 'high-low') sortOrder = { price: -1 };
+        // --- 3. SORT LOGIC (Updated to match Frontend) ---
+        let sortOrder = { date: -1 }; // Default: Relevance/Latest
+
+        if (sort === 'price-low') sortOrder = { price: 1 };
+        if (sort === 'price-high') sortOrder = { price: -1 };
+        if (sort === 'year-new') sortOrder = { year: -1 };
+        if (sort === 'year-old') sortOrder = { year: 1 };
+        if (sort === 'name-asc') sortOrder = { name: 1 };
 
         // --- 4. EXECUTION ---
         const [products, total] = await Promise.all([
@@ -371,8 +377,9 @@ const listProducts = async (req, res) => {
             success: true, 
             products, 
             total,
-            hasMore: total > skip + limit 
+            hasMore: total > (skip + products.length) 
         });
+
     } catch (error) {
         console.error("Registry Query Error:", error);
         res.status(500).json({ success: false, message: "Registry Sync Error" });

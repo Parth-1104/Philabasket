@@ -1,6 +1,7 @@
 import React from 'react'
 import { assets } from '../assets/assets'
 import { Link } from 'react-router-dom'
+import { ShieldCheck, Lock } from 'lucide-react'
 
 const Footer = () => {
   return (
@@ -15,14 +16,11 @@ const Footer = () => {
           {/* Brand Identity */}
           <div className="flex flex-col gap-10">
             <div className='flex items-center gap-2 md:gap-3 mr-7 group cursor-pointer'>
-                {/* BRAND LOGO - The Mark */}
                 <img 
                   src={assets.logo} 
                   className='w-8 md:w-10 lg:w-12 group-hover:rotate-[360deg] transition-transform duration-1000 object-contain' 
                   alt="PhilaBasket Logo" 
                 />
-                
-                {/* BRAND TEXT - Logo-5.png */}
                 <img 
                   src={assets.logo5}
                   className='w-24 md:w-28 lg:w-32 h-auto object-contain' 
@@ -34,8 +32,23 @@ const Footer = () => {
               Sovereign Registry for international philatelic specimens.
             </p>
 
+            {/* Payment Methods & Security */}
+            <div className="flex flex-col gap-6">
+                <div className="flex items-center gap-2">
+                    <p className="text-[8px] font-black tracking-[0.3em] text-gray-300 uppercase">Settlement Protocols</p>
+                    <Lock size={8} className="text-gray-300" />
+                </div>
+                <div className="flex flex-wrap gap-x-5 gap-y-4 items-center opacity-100  transition-all duration-700">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" className="h-2.5 w-auto" alt="Visa" />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" className="h-4 w-auto" alt="Mastercard" />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/2/24/Paytm_Logo_%28standalone%29.svg" className="h-3 w-auto" alt="Paytm" />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Razorpay_logo.svg" className="h-2.5 w-auto" alt="Razorpay" />
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" className="h-3.5 w-auto" alt="Stripe" />
+                </div>
+            </div>
+
             {/* Social Channels */}
-            <div className="flex gap-8">
+            <div className="flex gap-8 pt-2">
               {['Twitter', 'Instagram', 'LinkedIn'].map((name) => (
                 <span key={name} className="text-[9px] font-black tracking-widest text-gray-900 hover:text-[#BC002D] cursor-pointer transition-all uppercase">
                   {name}
@@ -51,7 +64,6 @@ const Footer = () => {
               links: [
                 {label: 'Membership', path: '/referral'}, 
                 {label: 'Reward', path: '/reward'}, 
-                // {label: 'Catalogue', path: '/collection'}, 
                 {label: 'Blogs', path: '/blogs'}
               ]
             },
@@ -70,19 +82,8 @@ const Footer = () => {
                 {label:"New Delhi, 110092 India"},
                 {label:"Phone: + 91 9999167799"},
                 {label:"Email: admin@philabasket.com"}
-
-
               ]
             }
-        // {
-            //   title: 'The Archive',
-            //   links: [
-            //     {label: 'Our Heritage', path: '/about'}, 
-            //     {label: 'Collector Network', path: '/about'}, 
-            //     {label: 'Contact', path: '/contact'}, 
-            //     {label: 'Legal', path: '/about'}
-            //   ]
-            // }
           ].map((column, idx) => (
             <div key={idx} className="lg:ml-auto">
               <h4 className="text-[#BC002D] text-[10px] uppercase tracking-[0.5em] mb-10 font-black">
@@ -92,7 +93,7 @@ const Footer = () => {
                 {column.links.map((link, lIdx) => (
                   <li key={lIdx}>
                     <Link 
-                      to={link.path}
+                      to={link.path || "#"}
                       onClick={() => window.scrollTo(0, 0)}
                       className="text-gray-900 hover:text-black text-[10px] font-black tracking-[0.2em] uppercase transition-all duration-300 block w-fit hover:translate-x-1"
                     >

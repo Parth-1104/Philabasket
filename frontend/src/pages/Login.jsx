@@ -113,8 +113,8 @@ const Login = () => {
             )}
 
             <div className="flex flex-col gap-2">
-              <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Registry Email</label>
-              <input onChange={(e) => setEmail(e.target.value)} value={email} type="email" className="w-full px-5 py-4 rounded-sm bg-[#F9F9F9] border border-black/5 focus:bg-white focus:border-[#BC002D]/30 outline-none transition-all text-sm" placeholder="collector@archive.com" required />
+              <label className="text-[9px] font-black text-gray-700 uppercase tracking-widest ml-1">Registry Email</label>
+              <input onChange={(e) => setEmail(e.target.value)} value={email} type="email" className="w-full px-5 py-4 text-gray-700 rounded-sm bg-[#F9F9F9] border border-black/5 focus:bg-white focus:border-[#BC002D]/30 outline-none transition-all text-sm" placeholder="collector@archive.com" required />
             </div>
 
             {currentState !== 'Reset Password' && (
@@ -125,7 +125,7 @@ const Login = () => {
                     <span onClick={() => setCurrentState('Reset Password')} className="text-[9px] text-[#BC002D] hover:underline cursor-pointer transition-colors uppercase font-bold tracking-widest">Forgot password?</span>
                   )}
                 </div>
-                <input onChange={(e) => setPassword(e.target.value)} value={password} type="password" className="w-full px-5 py-4 rounded-sm bg-[#F9F9F9] border border-black/5 focus:bg-white focus:border-[#BC002D]/30 outline-none transition-all text-sm" placeholder="••••••••" required />
+                <input onChange={(e) => setPassword(e.target.value)} value={password} type="password" className="w-full text-gray-700 px-5 py-4 rounded-sm bg-[#F9F9F9] border border-black/5 focus:bg-white focus:border-[#BC002D]/30 outline-none transition-all text-sm" placeholder="••••••••" required />
               </div>
             )}
 

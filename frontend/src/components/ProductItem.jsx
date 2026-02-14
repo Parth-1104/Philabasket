@@ -116,7 +116,7 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, linkT
                       Line-clamp ensures it doesn't exceed 3 lines, 
                       Min-height ensures it always occupies the space of 3 lines 
                   */}
-                  <h3 className='text-[10px] lg:text-[13px] font-black uppercase tracking-[0.05em] text-gray-900 group-hover:text-[#BC002D] transition-colors leading-[1.4] line-clamp-3 min-h-[4.2em] lg:min-h-[4.2em] overflow-hidden' onClick={handleNavigation}>
+                  <h3 className='text-[10px] lg:text-[13px] font-black  tracking-[0.05em] text-gray-900 group-hover:text-[#BC002D] transition-colors leading-[1.4] line-clamp-3 min-h-[4.2em] lg:min-h-[4.2em] overflow-hidden' onClick={handleNavigation}>
     {name || "Untitled Specimen"}
 </h3>
                   

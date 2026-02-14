@@ -105,9 +105,9 @@ const Product = () => {
                   <div className='flex-1'>
                       <div className='flex items-center gap-2 mb-1'>
                           <div className='w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse'></div>
-                          <p className='text-[9px] font-black uppercase tracking-[0.2em] text-gray-400'>Specimen Secured</p>
+                          <p className='text-[9px] font-black  tracking-[0.2em] text-gray-400'>Specimen Secured</p>
                       </div>
-                      <h5 className='text-[5px] font-black uppercase tracking-tight text-gray-900 line-clamp-1'>{productData.name}</h5>
+                      <h5 className='text-[5px] font-black  tracking-tight text-gray-900 line-clamp-1'>{productData.name}</h5>
                       <p className='text-[9px] font-bold text-[#BC002D] mt-1'>Quantity: {quantity} • Volume Synced</p>
                   </div>
                   <button onClick={() => setShowPopup(false)} className='p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400'><X size={16} /></button>
@@ -172,20 +172,20 @@ const Product = () => {
         {/* INFO SECTION */}
         <div className='flex-1 lg:max-w-[550px] py-4'>
           <div className='flex items-center gap-4 mb-6'>
-            <span className='text-[#BC002D] text-[10px] font-black tracking-[0.4em] px-4 py-1.5 bg-[#BC002D]/5 uppercase rounded-full'>{productData.country}</span>
-            <span className='text-gray-400 text-[10px] font-bold tracking-[0.4em] uppercase'>{productData.year} ARCHIVE</span>
+            <span className='text-[#BC002D] text-[10px] font-black tracking-[0.4em] px-4 py-1.5 bg-[#BC002D]/5  rounded-full'>{productData.country}</span>
+            <span className='text-gray-400 text-[10px] font-bold tracking-[0.4em] '>{productData.year} ARCHIVE</span>
           </div>
 
-          <h1 className='text-2xl md:text-2xl font-black text-gray-900 tracking-tighter leading-none mb-8 uppercase'>{productData.name}</h1>
+          <h1 className='text-2xl md:text-2xl font-black text-gray-900 tracking-tighter leading-none mb-8 '>{productData.name}</h1>
           
           <div className='grid grid-cols-2 gap-8 border-y border-black/[0.03] py-8 mb-8'>
               <div className='flex flex-col gap-1'>
-                  <p className='text-[9px] font-black text-gray-400 uppercase tracking-widest'>Certified Condition</p>
-                  <p className='text-xs font-black uppercase text-gray-900'>{productData.condition || 'Mint State'}</p>
+                  <p className='text-[9px] font-black text-gray-400  tracking-widest'>Certified Condition</p>
+                  <p className='text-xs font-black  text-gray-900'>{productData.condition || 'Mint State'}</p>
               </div>
               <div className='flex flex-col gap-1'>
-                  <p className='text-[9px] font-black text-gray-400 uppercase tracking-widest'>Availability</p>
-                  <p className={`text-xs font-black uppercase ${productData.stock < 5 ? 'text-[#BC002D]' : 'text-green-600'}`}>
+                  <p className='text-[9px] font-black text-gray-400  tracking-widest'>Availability</p>
+                  <p className={`text-xs font-black  ${productData.stock < 5 ? 'text-[#BC002D]' : 'text-green-600'}`}>
                     {productData.stock > 0 ? `${productData.stock} Specimens Left` : 'Registry Exhausted'}
                   </p>
               </div>
@@ -198,34 +198,34 @@ const Product = () => {
                 <div className='flex items-start gap-3'>
                     <div className='p-2 bg-white rounded-lg shadow-sm text-[#BC002D]'><Globe size={14}/></div>
                     <div>
-                        <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1'>Place of Origin</p>
-                        <p className='text-[10px] font-bold text-gray-900 uppercase'>{productData.country}</p>
+                        <p className='text-[8px] font-black text-gray-400  tracking-widest mb-1'>Place of Origin</p>
+                        <p className='text-[10px] font-bold text-gray-900 '>{productData.country}</p>
                     </div>
                 </div>
                 <div className='flex items-start gap-3'>
                     <div className='p-2 bg-white rounded-lg shadow-sm text-[#BC002D]'><CreditCard size={14}/></div>
                     <div>
-                        <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1'>Payment Terms</p>
-                        <p className='text-[10px] font-bold text-gray-900 uppercase'>Sovereign Settlement</p>
+                        <p className='text-[8px] font-black text-gray-400  tracking-widest mb-1'>Payment Terms</p>
+                        <p className='text-[10px] font-bold text-gray-900 '>Sovereign Settlement</p>
                     </div>
                 </div>
                 <div className='flex items-start gap-3'>
                     <div className='p-2 bg-white rounded-lg shadow-sm text-[#BC002D]'><Layers size={14}/></div>
                     <div>
-                        <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1'>Produced Count</p>
-                        <p className='text-[10px] font-bold text-gray-900 uppercase'>{productData.producedCount || 'Limited Edition'}</p>
+                        <p className='text-[8px] font-black text-gray-400  tracking-widest mb-1'>Produced Count</p>
+                        <p className='text-[10px] font-bold text-gray-900 '>{productData.producedCount || 'Limited Edition'}</p>
                     </div>
                 </div>
                 <div className='flex items-start gap-3'>
                     <div className='p-2 bg-white rounded-lg shadow-sm text-[#BC002D]'><ShoppingBag size={14}/></div>
                     <div>
-                        <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1'>Min. Order Qty</p>
-                        <p className='text-[10px] font-bold text-gray-900 uppercase'>01 Specimen</p>
+                        <p className='text-[8px] font-black text-gray-400  tracking-widest mb-1'>Min. Order Qty</p>
+                        <p className='text-[10px] font-bold text-gray-900 '>01 Specimen</p>
                     </div>
                 </div>
           </div>
           <div className='p-7 '>
-          <h5 className='text-[10px] font-black text-[#BC002D] uppercase tracking-[0.3em] mb-3'>
+          <h5 className='text-[10px] font-black text-[#BC002D]  tracking-[0.3em] mb-3'>
             Specimen Description
         </h5>
           <p className='text-sm md:text-base text-gray-500 leading-relaxed font-medium italic mb-10'>
@@ -252,7 +252,7 @@ const Product = () => {
 
           <div className='flex flex-col gap-8'>
               <div className='flex items-center gap-6'>
-                  <p className='text-[10px] font-black text-gray-900 uppercase tracking-widest'>Volume:</p>
+                  <p className='text-[10px] font-black text-gray-900  tracking-widest'>Volume:</p>
                   <div className='flex items-center bg-gray-50 rounded-xl p-1 border border-black/5'>
                     <button onClick={() => updateQuantity(quantity - 1)} className='p-3 text-black hover:text-[#BC002D] transition-colors'>
                         <Minus size={14} strokeWidth={3} />
@@ -270,13 +270,13 @@ const Product = () => {
                     <button onClick={() => toggleWishlist(productData._id)} className='p-5 border border-black/5 rounded-2xl hover:bg-gray-50 transition-all'>
                         <Heart size={24} className={wishlist.includes(productData._id) ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-300'} />
                     </button>
-                    <button onClick={handleAddToCart} className='flex-1 bg-gray-900 text-white py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] hover:bg-black transition-all shadow-xl'>Add to Cart</button>
-                    <button onClick={handleInstantCheckout} className='flex-1 bg-[#BC002D] text-white py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.4em] hover:scale-105 transition-all flex items-center justify-center gap-3 shadow-xl'>
+                    <button onClick={handleAddToCart} className='flex-1 bg-gray-900 text-white py-5 rounded-2xl text-[10px] font-black  tracking-[0.4em] hover:bg-black transition-all shadow-xl'>Add to Cart</button>
+                    <button onClick={handleInstantCheckout} className='flex-1 bg-[#BC002D] text-white py-5 rounded-2xl text-[10px] font-black  tracking-[0.4em] hover:scale-105 transition-all flex items-center justify-center gap-3 shadow-xl'>
                       <Zap size={16} fill="white" /> Buy Now
                     </button>
                   </>
                 ) : (
-                  <button disabled className='w-full bg-gray-100 text-gray-400 py-6 rounded-2xl text-[10px] font-black uppercase tracking-[0.5em]'>Archive Fully Acquired</button>
+                  <button disabled className='w-full bg-gray-100 text-gray-400 py-6 rounded-2xl text-[10px] font-black  tracking-[0.5em]'>Archive Fully Acquired</button>
                 )}
               </div>
           </div>
@@ -297,7 +297,7 @@ const Product = () => {
   ) : (
     <div className='min-h-screen flex flex-col items-center justify-center bg-white'>
         <Loader2 size={48} className='text-[#BC002D] animate-spin mb-6' />
-        <p className='text-[10px] font-black uppercase tracking-[0.6em] text-gray-400'>Initializing Sovereign Archive...</p>
+        <p className='text-[10px] font-black  tracking-[0.6em] text-gray-400'>Initializing Sovereign Archive...</p>
     </div>
   );
 };
