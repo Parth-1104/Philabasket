@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { assets } from '../assets/assets'
 import axios from 'axios'
 import { backendUrl } from '../App'
 import { toast } from 'react-toastify'
 import { Link } from 'react-router-dom'
-import { Image as ImageIcon, FileText, UploadCloud, RefreshCw } from 'lucide-react'
+import { Image as ImageIcon, FileText, UploadCloud, RefreshCw, Star, Zap } from 'lucide-react'
 
 const Add = ({ token }) => {
   const [uploadMode, setUploadMode] = useState('manual');
   const [loading, setLoading] = useState(false);
 
-  // --- Manual Entry State ---
+  // --- States ---
   const [image1, setImage1] = useState(false)
   const [image2, setImage2] = useState(false)
   const [image3, setImage3] = useState(false)
@@ -21,14 +21,18 @@ const Add = ({ token }) => {
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [marketPrice, setMarketPrice] = useState("");
-  const [category, setCategory] = useState(""); // Single selected category
-  const [dbCategories, setDbCategories] = useState([]); // All categories from DB
+  const [category, setCategory] = useState(""); 
+  const [dbCategories, setDbCategories] = useState([]); 
   const [year, setYear] = useState("");
   const [country, setCountry] = useState("");
   const [condition, setCondition] = useState("Mint");
   const [stock, setStock] = useState(1);
+  
+  // NEW STATES
+  const [producedCount, setProducedCount] = useState("");
+  const [bestseller, setBestseller] = useState(false);
+  const [newArrival, setNewArrival] = useState(false);
 
-  // Fetch categories from the backend
   const fetchCategories = async () => {
     try {
         const response = await axios.get(backendUrl + '/api/category/list');
@@ -42,7 +46,6 @@ const Add = ({ token }) => {
 
   useEffect(() => { fetchCategories(); }, []);
 
-  // Logical grouping for the dropdown 
   const groupedCategories = dbCategories.reduce((acc, cat) => {
       const key = cat.group || 'General / Uncategorized';
       if (!acc[key]) acc[key] = [];
@@ -61,12 +64,17 @@ const Add = ({ token }) => {
       formData.append("description", description);
       formData.append("price", price);
       formData.append("marketPrice", marketPrice);
-      formData.append("category", category); // Sending the single selected category name
+      formData.append("category", category);
       formData.append("year", year);
       formData.append("country", country);
       formData.append("condition", condition);
       formData.append("stock", stock);
       
+      // NEW FIELD APPENDS
+      formData.append("producedCount", producedCount);
+      formData.append("bestseller", bestseller ? "true" : "false");
+      formData.append("newArrival", newArrival ? "true" : "false");
+
       if (imageName) formData.append("imageName", imageName.trim());
       if (image1) formData.append("image1", image1);
       if (image2) formData.append("image2", image2);
@@ -79,7 +87,8 @@ const Add = ({ token }) => {
         toast.success(response.data.message);
         // Reset form
         setName(''); setDescription(''); setPrice(''); setMarketPrice(''); setYear(''); 
-        setCountry(''); setCategory(''); setImageName('');
+        setCountry(''); setCategory(''); setImageName(''); setProducedCount('');
+        setBestseller(false); setNewArrival(false);
         setImage1(false); setImage2(false); setImage3(false); setImage4(false);
       } else {
         toast.error(response.data.message);
@@ -91,16 +100,14 @@ const Add = ({ token }) => {
     }
   }
 
+  // (onCsvUploadHandler remains same...)
   const onCsvUploadHandler = async(e) => {
     const file = e.target.files[0];
     if (!file || loading) return;
-
     if (!window.confirm(`Upload "${file.name}" to the Archive?`)) return;
-
     setLoading(true);
     const formData = new FormData();
     formData.append("file", file);
-
     try {
         const response = await axios.post(backendUrl + "/api/product/bulk-add", formData, { headers: { token } });
         if (response.data.success) {
@@ -155,6 +162,7 @@ const Add = ({ token }) => {
           
           <div className='grid grid-cols-1 md:grid-cols-2 gap-12 w-full'>
             <div className='space-y-8'>
+                {/* Image Section */}
                 <div>
                     <p className='mb-3 text-[10px] font-black uppercase tracking-widest text-gray-400'>Physical Asset Upload</p>
                     <div className='flex gap-3'>
@@ -172,6 +180,24 @@ const Add = ({ token }) => {
                     <div className='relative'>
                         <ImageIcon size={14} className='absolute left-4 top-1/2 -translate-y-1/2 text-blue-500' />
                         <input onChange={(e) => setImageName(e.target.value)} value={imageName} className='w-full pl-12 pr-4 py-4 bg-blue-50/30 border border-blue-100 rounded-2xl text-xs font-bold outline-none focus:border-blue-400' type="text" placeholder='Enter Filename (e.g. #BK01.jpg)' />
+                    </div>
+                </div>
+
+                {/* Flags Section (Bestseller / New Arrival) */}
+                <div className='flex gap-4'>
+                    <div 
+                        onClick={() => setBestseller(!bestseller)} 
+                        className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl cursor-pointer border transition-all ${bestseller ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-gray-50 border-gray-100 text-gray-400'}`}
+                    >
+                        <Star size={16} className={bestseller ? 'fill-amber-500' : ''} />
+                        <span className='text-[10px] font-black uppercase tracking-widest'>Bestseller</span>
+                    </div>
+                    <div 
+                        onClick={() => setNewArrival(!newArrival)} 
+                        className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-2xl cursor-pointer border transition-all ${newArrival ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-gray-50 border-gray-100 text-gray-400'}`}
+                    >
+                        <Zap size={16} className={newArrival ? 'fill-blue-500' : ''} />
+                        <span className='text-[10px] font-black uppercase tracking-widest'>New Arrival</span>
                     </div>
                 </div>
 
@@ -205,6 +231,11 @@ const Add = ({ token }) => {
                 <div className='w-full'>
                     <p className='mb-3 text-[10px] font-black uppercase tracking-widest text-gray-400'>Historical Dossier (Description)</p>
                     <textarea onChange={(e) => setDescription(e.target.value)} value={description} className='w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm outline-none' rows={6} placeholder='Heritage details...' required />
+                </div>
+                {/* Produced Count Section */}
+                <div className='w-full'>
+                    <p className='mb-3 text-[10px] font-black uppercase tracking-widest text-gray-400'>Mintage (Produced Count)</p>
+                    <input onChange={(e) => setProducedCount(e.target.value)} value={producedCount} className='w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-sm font-bold outline-none' type="number" placeholder='e.g. 1000000' />
                 </div>
             </div>
           </div>

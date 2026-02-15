@@ -15,14 +15,12 @@ const productSchema = new mongoose.Schema({
     },
     marketPrice: { type: Number, required: true },
     
-    // Updated: Array with a maximum of 4 image URLs
     image: { 
         type: [String], 
         required: true,
         validate: [val => val.length <= 4, '{PATH} exceeds the limit of 4 images']
     },
     
-    // New: Field for YouTube Video record
     youtubeUrl: { 
         type: String, 
         default: "" 
@@ -38,6 +36,11 @@ const productSchema = new mongoose.Schema({
         required: true, 
         index: true 
     },
+    // New: The total quantity ever produced for this specimen
+    producedCount: { 
+        type: Number, 
+        default: 0 
+    },
     condition: { 
         type: String, 
         required: true, 
@@ -51,7 +54,11 @@ const productSchema = new mongoose.Schema({
     },
     stock: { type: Number, required: true, default: 1 },
     soldCount: { type: Number, default: 0 },
+    
+    // Updated: Boolean flags for shop logic
     bestseller: { type: Boolean, default: false, index: true },
+    newArrival: { type: Boolean, default: false, index: true }, // Added newArrival
+
     date: { 
         type: Number, 
         required: true, 
@@ -63,30 +70,20 @@ const productSchema = new mongoose.Schema({
     timestamps: true 
 });
 
-// Performance Indexes
-productSchema.index({ name: 'text', description: 'text' });
-productSchema.index({ category: 1, price: -1 });
+// --- PERFORMANCE INDEXES ---
+productSchema.index({ name: 'text', country: 'text', category: 'text', description: 'text' });
+productSchema.index({ category: 1, date: -1 });
+productSchema.index({ price: 1, date: -1 });
+productSchema.index({ name: 1, date: -1 });
+productSchema.index({ newArrival: 1, date: -1 }); // Optimized for "New Arrivals" section
 
-// Reward Logic
+// --- AUTOMATED LOGIC ---
 productSchema.pre('save', function(next) {
+    // Automatically set reward points to 10% of price
     this.rewardPoints = Math.floor(this.price * 0.10); 
     next();
 });
 
 const productModel = mongoose.models.product || mongoose.model("product", productSchema);
-
-// Add these at the bottom of your productModel.js, before defining the model
-
-// 1. Supports the 'hint' we used (Sorting by date and filtering by name)
-productSchema.index({ name: 1, date: -1 });
-
-// 2. Optimized for the "Sort by Price" in the Gallery
-productSchema.index({ price: 1, date: -1 });
-
-// 3. Optimized for Category filtering
-productSchema.index({ category: 1, date: -1 });
-
-// 4. Ensure your text index handles multiple fields for fuzzy fallback
-productSchema.index({ name: 'text', country: 'text', category: 'text' });
 
 export default productModel;

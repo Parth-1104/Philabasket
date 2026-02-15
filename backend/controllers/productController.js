@@ -100,7 +100,6 @@ const bulkAddProducts = async (req, res) => {
         let skippedDuplicate = 0;
         let skippedNoImage = 0;
 
-        // 1. Pre-fetch registry state
         const [existingStamps, allMedia] = await Promise.all([
             productModel.find({}, 'name').lean(),
             mediaModel.find({}, 'originalName imageUrl').lean()
@@ -119,19 +118,16 @@ const bulkAddProducts = async (req, res) => {
         stream.pipe(csv({
             mapHeaders: ({ header }) => header.trim().replace(/^["']|["']$/g, ''), 
             skipLines: 0,
-            strict: false // Prevents the parser from crashing on mismatched column counts
+            strict: false 
         }))
         .on('data', (row) => {
             rowsProcessed++;
             try {
-                // --- ROBUST SANITIZATION ---
-                // Helper to clean any field of quotes, brackets, and extra whitespace
                 const clean = (val) => val ? String(val).trim().replace(/^["'\[]|["'\]]$/g, '').trim() : "";
 
                 const rawName = row.name || row['"name"'] || Object.values(row)[0]; 
                 const nameTrimmed = clean(rawName);
 
-                // Skip Logic with tracking
                 if (!nameTrimmed) { skippedEmpty++; return; }
                 if (existingNames.has(nameTrimmed.toLowerCase())) { skippedDuplicate++; return; }
 
@@ -155,7 +151,6 @@ const bulkAddProducts = async (req, res) => {
                     }
                 }
 
-                // If no image match, we skip but track it
                 if (productImages.length === 0) { skippedNoImage++; return; }
 
                 // --- CATEGORY PARSING ---
@@ -168,42 +163,42 @@ const bulkAddProducts = async (req, res) => {
                         .filter(c => c !== "");
                 }
 
-                // --- BUILD FINAL OBJECT ---
-
-                
-                // --- BUILD FINAL OBJECT ---
-                
-                // 1. Clean and convert marketPrice
+                // --- NEW FIELD MAPPING & NORMALIZATION ---
+                // --- NEW FIELD MAPPING & NORMALIZATION ---
                 const rawMarketPrice = Number(String(row.marketPrice || 0).replace(/[^0-9.]/g, '')) || 0;
-                
-                // 2. Clean and convert price
                 const rawPrice = Number(String(row.price || 0).replace(/[^0-9.]/g, '')) || 0;
-                
-                // 3. APPLY HIERARCHY: If rawPrice is 0 or empty, use marketPrice
                 const sellingPrice = rawPrice > 0 ? rawPrice : rawMarketPrice;
+
+                // Produced Count (New Field) - Sanitized to Number
+                const producedCount = Number(String(row.producedCount || 0).replace(/[^0-9]/g, '')) || 0;
+
+                // Boolean Logic: DEFAULT IS FALSE
+                // Only sets to true if the CSV cell explicitly contains 'true'
+                const isBestseller = String(row.bestseller || '').toLowerCase().trim() === 'true';
+                const isNewArrival = String(row.newArrival || '').toLowerCase().trim() === 'true';
 
                 stamps.push({
                     name: nameTrimmed,
                     description: clean(row.description) || "Historical philatelic specimen.",
                     marketPrice: rawMarketPrice,
-                    price: sellingPrice, // This is your conditional fallback
+                    price: sellingPrice,
                     image: productImages,
                     youtubeUrl: clean(row.youtubeUrl).split('&')[0],
                     category: parsedCategory,
                     year: Number(row.year) || 0,
                     country: clean(row.country) || "India",
+                    producedCount: producedCount, 
                     condition: clean(row.condition) || "Mint",
                     stock: Number(row.stock) || 1,
-                    bestseller: String(row.bestseller).toLowerCase().includes('true'),
+                    bestseller: isBestseller, // Default False
+                    newArrival: isNewArrival, // Default False
                     isActive: true,
                     date: Date.now()
                 });
 
-                // Only sync categories for items that actually got added
                 parsedCategory.forEach(cat => discoveredCategories.add(cat));
 
             } catch (err) {
-                // If a single row fails, we log it but THE STREAM CONTINUES
                 console.error(`Error processing row ${rowsProcessed}:`, err);
             }
         })
@@ -230,10 +225,8 @@ const bulkAddProducts = async (req, res) => {
                     }
                 }
 
-                // Bulk Insert Products
                 await productModel.insertMany(stamps, { ordered: false });
                 
-                // Flag Media as assigned
                 if (usedImageNames.length > 0) {
                     await mediaModel.updateMany(
                         { originalName: { $in: usedImageNames } }, 
@@ -243,11 +236,11 @@ const bulkAddProducts = async (req, res) => {
                 
                 res.json({ 
                     success: true, 
-                    message: `Sync Complete. Items in CSV: ${rowsProcessed} | Successfully Added: ${stamps.length} | Skipped (Duplicate): ${skippedDuplicate} | Skipped (No Image Match): ${skippedNoImage}` 
+                    message: `Sync Complete. Added: ${stamps.length} | New Arrivals: ${stamps.filter(s => s.newArrival).length}` 
                 });
             } catch (dbErr) {
                 console.error("Final Database Operation Error:", dbErr);
-                res.json({ success: false, message: "Registry update failed at final step." });
+                res.json({ success: false, message: "Registry update failed." });
             }
         });
     } catch (error) {
@@ -313,7 +306,7 @@ const listProducts = async (req, res) => {
         const limit = parseInt(req.query.limit) || 20;
         const skip = (page - 1) * limit;
 
-        const { category, group, sort, search, includeHidden } = req.query;
+        const { category, group, sort, search, includeHidden, bestseller, newArrival } = req.query;
         
         // --- 1. BASE QUERY ---
         let query = {};
@@ -321,6 +314,14 @@ const listProducts = async (req, res) => {
         // Visibility check
         if (includeHidden !== 'true') {
             query.isActive = true;
+        }
+
+        if (bestseller === 'true') {
+            query.bestseller = true;
+        }
+        
+        if (newArrival === 'true') {
+            query.newArrival = true;
         }
 
         // --- 2. LAYERED FILTERS ---
@@ -363,15 +364,17 @@ const listProducts = async (req, res) => {
         if (sort === 'name-asc') sortOrder = { name: 1 };
 
         // --- 4. EXECUTION ---
-        const [products, total] = await Promise.all([
-            productModel.find(query)
-                .select('name price marketPrice image category country year stock date bestseller description youtubeUrl isActive isLatest')
-                .sort(sortOrder)
-                .skip(skip)
-                .limit(limit)
-                .lean(), 
-            productModel.countDocuments(query)
-        ]);
+        // --- 4. EXECUTION ---
+const [products, total] = await Promise.all([
+    productModel.find(query)
+        // ADD newArrival and producedCount to the select string below
+        .select('name price marketPrice image category country year stock date bestseller description youtubeUrl isActive isLatest newArrival producedCount')
+        .sort(sortOrder)
+        .skip(skip)
+        .limit(limit)
+        .lean(), 
+    productModel.countDocuments(query)
+]);
 
         res.json({ 
             success: true, 
@@ -387,26 +390,58 @@ const listProducts = async (req, res) => {
 };
 const addProduct = async (req, res) => {
     try {
-        const { name, description, price, marketPrice, category, year, condition, country, stock, bestseller, imageName } = req.body;
-        let imagesUrl = [];
-        const imageFiles = [req.files?.image1?.[0], req.files?.image2?.[0], req.files?.image3?.[0], req.files?.image4?.[0]].filter(Boolean);
+        const { 
+            name, description, price, marketPrice, category, 
+            year, condition, country, stock, producedCount,
+            bestseller, newArrival, imageName 
+        } = req.body;
 
+        let imagesUrl = [];
+        const imageFiles = [
+            req.files?.image1?.[0], 
+            req.files?.image2?.[0], 
+            req.files?.image3?.[0], 
+            req.files?.image4?.[0]
+        ].filter(Boolean);
+
+        // --- IMAGE HANDLING ---
         if (imageFiles.length > 0) {
             imagesUrl = await Promise.all(imageFiles.map(i => uploadToCloudinary(i.buffer)));
         } else if (imageName) {
             const mediaRecord = await mediaModel.findOne({ originalName: imageName.trim() }).lean();
-            if (mediaRecord) imagesUrl = [mediaRecord.imageUrl];
+            if (mediaRecord) {
+                imagesUrl = [mediaRecord.imageUrl];
+                // Mark as assigned in your media registry
+                await mediaModel.updateOne({ _id: mediaRecord._id }, { $set: { isAssigned: true } });
+            }
         }
 
+        // --- BUILD SPECIMEN OBJECT ---
         const product = new productModel({
-            name, description, price: Number(price), marketPrice: Number(marketPrice) || 0,
+            name,
+            description,
+            price: Number(price),
+            marketPrice: Number(marketPrice) || 0,
             category: Array.isArray(category) ? category : JSON.parse(category),
-            year: Number(year), condition, country, stock: Number(stock),
-            bestseller: bestseller === "true", image: imagesUrl, date: Date.now()
+            year: Number(year),
+            producedCount: Number(producedCount) || 0, // New Field
+            condition,
+            country,
+            stock: Number(stock),
+            // STRICT BOOLEAN CHECK: Defaults to false unless string "true" is passed
+            bestseller: bestseller === "true", 
+            newArrival: newArrival === "true", // New Field
+            image: imagesUrl,
+            date: Date.now()
         });
+
         await product.save();
-        res.json({ success: true, message: "Product Added" });
-    } catch (error) { res.json({ success: false, message: error.message }); }
+        res.json({ success: true, message: "Product Added to Registry" });
+
+    } catch (error) {
+        console.error("Add Product Error:", error);
+        res.json({ success: false, message: error.message });
+    }
 };
 
 const singleProduct = async (req, res) => {
@@ -414,6 +449,31 @@ const singleProduct = async (req, res) => {
         const product = await productModel.findById(req.body.productId).lean();
         res.json({ success: true, product });
     } catch (error) { res.json({ success: false, message: error.message }); }
+};
+
+export const bulkUpdateAttributes = async (req, res) => {
+    try {
+        const { ids, field, value } = req.body;
+
+        // Security: Only allow updating specific UI flags
+        const allowedFields = ['bestseller', 'newArrival', 'isActive', 'isLatest'];
+        if (!allowedFields.includes(field)) {
+            return res.json({ success: false, message: "Invalid attribute update" });
+        }
+
+        await productModel.updateMany(
+            { _id: { $in: ids } },
+            { $set: { [field]: value } }
+        );
+
+        res.json({ 
+            success: true, 
+            message: `Registry updated: ${field} set to ${value}` 
+        });
+
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
 };
 
 
@@ -472,11 +532,9 @@ const removeBulkProducts = async (req, res) => {
 
 const updateProduct = async (req, res) => {
     try {
-        // Destructure the ID and collect all other fields into 'rest'
         const { id, ...updateData } = req.body;
 
-        // 1. Data Sanitization: Ensure booleans are actually booleans
-        // (Sometimes forms send them as strings "true"/"false")
+        // 1. Strict Boolean Sanitization for Registry Flags
         if (updateData.isLatest !== undefined) {
             updateData.isLatest = updateData.isLatest === true || updateData.isLatest === 'true';
         }
@@ -486,13 +544,25 @@ const updateProduct = async (req, res) => {
         if (updateData.bestseller !== undefined) {
             updateData.bestseller = updateData.bestseller === true || updateData.bestseller === 'true';
         }
+        if (updateData.newArrival !== undefined) {
+            updateData.newArrival = updateData.newArrival === true || updateData.newArrival === 'true';
+        }
 
-        // 2. Perform the update
-        // { new: true } returns the document AFTER the update
-        // { runValidators: true } ensures the new data matches your schema rules
+        // 2. Numerical Normalization
+        if (updateData.price) updateData.price = Number(updateData.price);
+        if (updateData.marketPrice) updateData.marketPrice = Number(updateData.marketPrice);
+        if (updateData.producedCount) updateData.producedCount = Number(updateData.producedCount);
+        if (updateData.stock) updateData.stock = Number(updateData.stock);
+
+        // 3. Recalculate Reward Points if price has changed
+        if (updateData.price) {
+            updateData.rewardPoints = Math.floor(updateData.price * 0.10);
+        }
+
+        // 4. Update the Registry
         const updatedProduct = await productModel.findByIdAndUpdate(
             id, 
-            updateData, 
+            { $set: updateData }, 
             { new: true, runValidators: true }
         );
 

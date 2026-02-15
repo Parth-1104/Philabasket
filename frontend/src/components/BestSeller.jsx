@@ -11,23 +11,27 @@ const BestSeller = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Sorts the sovereign ledger by sold count to identify top specimens
-        const sortedProducts = [...products]
-            .sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0))
-            .slice(0, 4);
+        // --- UPDATED LOGIC: Filter by the 'bestseller' boolean flag ---
+        // 1. Filter products where bestseller property is true
+        // 2. Sort by date so the most recently added bestsellers appear first
+        // 3. Slice to take the top 4 for the grid
+        const curatedBestsellers = products
+            .filter(item => item.bestseller === true || item.bestseller === "true")
+            .sort((a, b) => b.date - a.date)
+            .slice(0, 10);
         
-        setBestSeller(sortedProducts);
+        setBestSeller(curatedBestsellers);
     }, [products]);
 
     // --- LOGISTICS HANDLERS ---
     const onAddToCart = (e, productId) => {
-        e.stopPropagation(); // Prevents the card's navigation from triggering
+        e.stopPropagation();
         addToCart(productId, 1);
         toast.success("Added to Registry", { position: "bottom-right", autoClose: 1000 });
     };
 
     const onBuyNow = async (e, productId) => {
-        e.stopPropagation(); // Ensures direct checkout without intermediate navigation
+        e.stopPropagation();
         await addToCart(productId, 1);
         navigate('/cart');
         window.scrollTo(0, 0);
@@ -58,7 +62,7 @@ const BestSeller = () => {
                     
                     <div className="hidden md:block text-right max-w-xs">
                         <p className='text-[11px] text-gray-400 font-bold uppercase tracking-widest leading-relaxed'>
-                            The top specimens defining the <span className='text-black'>PhilaBasket Legacy</span>, ranked by historical acquisition volume.
+                            The top specimens defining the <span className='text-black'>PhilaBasket Legacy</span>, manually curated for their historical significance.
                         </p>
                     </div>
                 </div>
@@ -66,7 +70,7 @@ const BestSeller = () => {
                 {/* Ranked Product Grid */}
                 <div className='flex overflow-x-auto gap-6 md:gap-x-12 snap-x snap-mandatory mobile-scrollbar lg:grid lg:grid-cols-4 lg:gap-y-20 lg:overflow-visible pb-10 lg:pb-0 px-2'>
                     {
-                        bestSeller.map((item, index) => (
+                        bestSeller.length > 0 ? bestSeller.map((item, index) => (
                             <div 
                                 key={index} 
                                 className="min-w-[85%] sm:min-w-[45vw] lg:min-w-0 snap-center group relative transition-all duration-700"
@@ -80,32 +84,20 @@ const BestSeller = () => {
                                 </div>
                                 
                                 <div className='pt-4 md:pt-6 h-full'>
-                                    {/* NAVIGATION WRAPPER: Fixed to use the specific productId parameter */}
-                                   
-                                   {/* NAVIGATION WRAPPER: Fixed to match /product/ID/SEED pattern */}
-<div 
-    onClick={() => {
-        // Create a URL-friendly seed from the product name
-        const seed = item.name
-            .toLowerCase()
-            .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric characters with hyphens
-            .replace(/^-+|-+$/g, '');    // Remove leading/trailing hyphens
-
-        // Navigate using the exact pattern: /product/ID/SEED
-        navigate(`/product/${item._id}/${seed}`); 
-        window.scrollTo(0, 0); 
-    }}
-    className="flex flex-col h-full relative bg-white border border-gray-100 shadow-lg cursor-pointer transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl group-hover:border-[#bd002d]/20 overflow-hidden rounded-br-[40px] md:rounded-br-[60px]"
-> 
-                                    
-                                        
+                                    <div 
+                                        onClick={() => {
+                                            const seed = item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+                                            navigate(`/product/${item._id}/${seed}`); 
+                                            window.scrollTo(0, 0); 
+                                        }}
+                                        className="flex flex-col h-full relative bg-white border border-gray-100 shadow-lg cursor-pointer transition-all duration-500 group-hover:-translate-y-4 group-hover:shadow-2xl group-hover:border-[#bd002d]/20 overflow-hidden rounded-br-[40px] md:rounded-br-[60px]"
+                                    > 
                                         {/* High Demand Status */}
                                         <div className="absolute top-3 right-3 flex items-center gap-1 z-10">
                                             <div className="w-1 h-1 bg-[#D4AF37] rounded-full animate-pulse shadow-[0_0_5px_#D4AF37]"></div>
                                             <span className="text-[7px] font-black text-gray-400 uppercase tracking-tighter">High Demand</span>
                                         </div>
                     
-                                        {/* Visual Asset Container */}
                                         <div className="flex-grow p-1 md:p-3">
                                             <div className="w-full h-full bg-[#f8f8f8] flex items-center justify-center p-1 md:p-4 rounded-br-[35px] md:rounded-br-[40px]">
                                                 <ProductItem 
@@ -116,29 +108,18 @@ const BestSeller = () => {
                                                     price={item.price} 
                                                     marketPrice={item.marketPrice}
                                                     category={item.category[0]}
-                                                    linkToFilter={false} // Prevents Link nesting errors
+                                                    linkToFilter={false}
                                                 />
                                             </div>
                                         </div>
 
-                                        {/* --- FIXED LOGISTICS ACTIONS --- */}
-                                        <div 
-                                            className="flex flex-col gap-2 p-3 lg:p-4 bg-white border-t border-gray-50"
-                                            onClick={(e) => e.stopPropagation()} // Blocks card-level navigation on button click
-                                        >
+                                        <div className="flex flex-col gap-2 p-3 lg:p-4 bg-white border-t border-gray-50" onClick={(e) => e.stopPropagation()}>
                                             <div className="grid grid-cols-2 gap-2">
-                                                <button 
-                                                    onClick={(e) => onAddToCart(e, item._id)}
-                                                    className="bg-gray-50 text-gray-900 py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-black hover:text-white transition-all duration-300"
-                                                >
+                                                <button onClick={(e) => onAddToCart(e, item._id)} className="bg-gray-50 text-gray-900 py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-black hover:text-white transition-all duration-300">
                                                     <ShoppingCart size={14} />
                                                     <span className="text-[8px] font-black uppercase tracking-widest">Add</span>
                                                 </button>
-                                                
-                                                <button 
-                                                    onClick={(e) => onBuyNow(e, item._id)}
-                                                    className="bg-black text-white py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#bd002d] transition-all duration-300 shadow-lg shadow-black/10"
-                                                >
+                                                <button onClick={(e) => onBuyNow(e, item._id)} className="bg-black text-white py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#bd002d] transition-all duration-300 shadow-lg shadow-black/10">
                                                     <Zap size={14} className="fill-amber-400 text-amber-400" />
                                                     <span className="text-[8px] font-black uppercase tracking-widest">Buy Now</span>
                                                 </button>
@@ -147,7 +128,11 @@ const BestSeller = () => {
                                     </div>
                                 </div>
                             </div>
-                        ))
+                        )) : (
+                            <div className="col-span-4 py-20 text-center border-2 border-dashed border-gray-100 rounded-[40px]">
+                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-300">No Specimens Ranked for Bestseller Status</p>
+                            </div>
+                        )
                     }
                 </div>
 
@@ -160,28 +145,13 @@ const BestSeller = () => {
                 </div>
             </div>
 
+            {/* Custom Styles remains same */}
             <style dangerouslySetInnerHTML={{ __html: `
-                .hide-scrollbar::-webkit-scrollbar { display: none; }
-                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
+                .mobile-scrollbar::-webkit-scrollbar { display: none; }
                 @media (max-width: 1023px) {
-                    .mobile-scrollbar::-webkit-scrollbar {
-                        display: block;
-                        height: 3px;
-                    }
-                    .mobile-scrollbar::-webkit-scrollbar-track {
-                        background: #f1f1f1;
-                        margin: 0 10vw;
-                        border-radius: 10px;
-                    }
-                    .mobile-scrollbar::-webkit-scrollbar-thumb {
-                        background: #bd002d;
-                        border-radius: 10px;
-                    }
-                }
-                
-                @media (min-width: 1024px) {
-                    .mobile-scrollbar::-webkit-scrollbar { display: none; }
+                    .mobile-scrollbar::-webkit-scrollbar { display: block; height: 3px; }
+                    .mobile-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; margin: 0 10vw; border-radius: 10px; }
+                    .mobile-scrollbar::-webkit-scrollbar-thumb { background: #bd002d; border-radius: 10px; }
                 }
             `}} />
         </div>

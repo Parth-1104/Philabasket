@@ -26,15 +26,27 @@ const LatestCollection = () => {
         }
     };
 
-    useEffect(() => {
-        setLatestProducts(products.slice(0, 9)); 
-    }, [products]);
+    // --- UPDATED LOGIC: Filter by newArrival flag ---
+   // --- UPDATED LOGIC: Filter by newArrival flag ---
+   useEffect(() => {
+    if (!products) return;
+
+    const filtered = products
+        .filter(item => {
+            // Handle cases where it might be a string "true" or boolean true
+            return item.newArrival === true || item.newArrival === "true";
+        })
+        .sort((a, b) => b.date - a.date)
+        .slice(0, 9);
+        
+    setLatestProducts(filtered); 
+}, [products]);
 
     useEffect(() => {
         if (backendUrl) fetchCategories();
     }, [backendUrl]);
 
-    // Updated Memo to handle Search Filtering
+    // ... (Memoized Category Logic remains the same)
     const { grouped, independent } = useMemo(() => {
         const groupedResult = {};
         const independentResult = [];
@@ -43,7 +55,6 @@ const LatestCollection = () => {
             return { grouped: {}, independent: [] };
         }
 
-        // Filter categories based on search input
         const filteredCategories = dbCategories.filter(cat => 
             cat.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
@@ -110,8 +121,6 @@ const LatestCollection = () => {
                             <div className='bg-[#bd002d] p-6 lg:p-8 rounded-[30px] lg:rounded-[40px] shadow-2xl shadow-[#bd002d]/20 relative overflow-hidden'>
                                 <div className='flex items-center justify-between mb-6 relative z-10'>
                                     <h3 className='text-white font-black text-[9px] lg:text-xs tracking-[0.3em] uppercase'>Registry Index</h3>
-                                    
-                                    {/* MOBILE ONLY TOGGLE */}
                                     <button 
                                         onClick={() => setShowAllIndependent(!showAllIndependent)} 
                                         className='text-amber-400 text-[8px] lg:hidden font-black uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full'
@@ -120,7 +129,6 @@ const LatestCollection = () => {
                                     </button>
                                 </div>
 
-                                {/* --- SEARCH INPUT --- */}
                                 <div className='relative z-10 mb-6 group'>
                                     <div className='absolute left-3 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-amber-400 transition-colors'>
                                         <Search size={12} />
@@ -133,17 +141,13 @@ const LatestCollection = () => {
                                         className="w-full bg-white/10 border border-white/20 rounded-xl pl-9 pr-8 py-2.5 text-[10px] text-white placeholder:text-white/40 outline-none focus:border-amber-400/50 transition-all font-bold uppercase tracking-widest"
                                     />
                                     {searchTerm && (
-                                        <button 
-                                            onClick={() => setSearchTerm("")}
-                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
-                                        >
+                                        <button onClick={() => setSearchTerm("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors">
                                             <X size={14} />
                                         </button>
                                     )}
                                 </div>
 
                                 <div className='flex flex-col gap-2 overflow-y-auto max-h-[180vh] hide-scrollbar relative z-10 pr-2'>
-                                    {/* --- 1. GROUPED SECTION --- */}
                                     {Object.keys(grouped).sort().map((groupName) => (
                                         <div key={groupName} className="flex flex-col mb-1">
                                             <div 
@@ -176,7 +180,6 @@ const LatestCollection = () => {
                                         </div>
                                     ))}
 
-                                    {/* --- 2. INDEPENDENT SECTION (Mobile Collapsible) --- */}
                                     {independent.length > 0 && (
                                         <div className="mt-4 pt-4 border-t border-white/20">
                                             <p className='text-[8px] text-white/30 font-black uppercase tracking-widest mb-4 ml-2'>General Registry</p>
@@ -205,22 +208,15 @@ const LatestCollection = () => {
                                             </div>
                                         </div>
                                     )}
-
-                                    {/* No Search Results State */}
-                                    {searchTerm && Object.keys(grouped).length === 0 && independent.length === 0 && (
-                                        <div className='py-8 text-center'>
-                                            <p className='text-white/40 text-[9px] font-black uppercase tracking-widest italic'>No categories found</p>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* MAIN PRODUCT GRID */}
+                    {/* MAIN PRODUCT GRID (Filtered) */}
                     <div className='w-full lg:w-3/4'>
                         <div className='flex overflow-x-auto lg:grid lg:grid-cols-3 gap-6 md:gap-x-8 gap-y-12 pb-10 lg:pb-0 snap-x snap-mandatory mobile-scrollbar px-2'>
-                            {latestProducts.map((item, index) => (
+                            {latestProducts.length > 0 ? latestProducts.map((item, index) => (
                                 <div key={index} className="min-w-[85%] sm:min-w-[45vw] lg:min-w-0 snap-center flex flex-col group bg-white border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-br-[40px] md:rounded-br-[60px] overflow-hidden">
                                     <div className="relative p-1 md:p-3 flex-grow cursor-pointer" onClick={() => handleProductClick(item._id)}>
                                         <div className="absolute top-0 right-0 z-20 overflow-hidden w-20 h-20 pointer-events-none">
@@ -243,7 +239,11 @@ const LatestCollection = () => {
                                         </div>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <div className='col-span-3 py-20 text-center'>
+                                    <p className='text-xs font-black uppercase tracking-[0.3em] text-gray-400'>No New Specimens in Registry</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
