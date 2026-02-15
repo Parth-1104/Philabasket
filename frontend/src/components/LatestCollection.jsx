@@ -1,17 +1,18 @@
 import React, { useContext, useEffect, useState, useMemo } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import ProductItem from './ProductItem';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { ShoppingCart, Zap, ChevronDown, Plus, Minus } from 'lucide-react'; 
+import { ShoppingCart, Zap, ChevronDown, Plus, Minus, Search, X } from 'lucide-react'; 
 
 const LatestCollection = () => {
     const { products, backendUrl, addToCart } = useContext(ShopContext);
     const [latestProducts, setLatestProducts] = useState([]);
     const [dbCategories, setDbCategories] = useState([]);
     const [openGroups, setOpenGroups] = useState({}); 
-    const [showAllIndependent, setShowAllIndependent] = useState(false); // Toggle for mobile "View All"
+    const [showAllIndependent, setShowAllIndependent] = useState(false);
+    const [searchTerm, setSearchTerm] = useState(""); 
     const navigate = useNavigate();
 
     const fetchCategories = async () => {
@@ -33,6 +34,7 @@ const LatestCollection = () => {
         if (backendUrl) fetchCategories();
     }, [backendUrl]);
 
+    // Updated Memo to handle Search Filtering
     const { grouped, independent } = useMemo(() => {
         const groupedResult = {};
         const independentResult = [];
@@ -40,8 +42,13 @@ const LatestCollection = () => {
         if (!dbCategories.length || !products.length) {
             return { grouped: {}, independent: [] };
         }
+
+        // Filter categories based on search input
+        const filteredCategories = dbCategories.filter(cat => 
+            cat.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
     
-        dbCategories.forEach(cat => {
+        filteredCategories.forEach(cat => {
             const count = products.filter(p => {
                 if (p.category && Array.isArray(p.category)) {
                     return p.category.some(item => 
@@ -62,7 +69,7 @@ const LatestCollection = () => {
         });
     
         return { grouped: groupedResult, independent: independentResult };
-    }, [dbCategories, products]);
+    }, [dbCategories, products, searchTerm]);
 
     const toggleGroup = (groupName) => {
         setOpenGroups(prev => ({ ...prev, [groupName]: !prev[groupName] }));
@@ -101,17 +108,39 @@ const LatestCollection = () => {
                     <div className='w-full lg:w-1/4'>
                         <div className='lg:sticky lg:top-32'>
                             <div className='bg-[#bd002d] p-6 lg:p-8 rounded-[30px] lg:rounded-[40px] shadow-2xl shadow-[#bd002d]/20 relative overflow-hidden'>
-                            <div className='flex items-center justify-between mb-8 relative z-10'>
-    <h3 className='text-white font-black text-[9px] lg:text-xs tracking-[0.3em] uppercase'>Registry Index</h3>
-    
-    {/* MOBILE ONLY TOGGLE */}
-    <button 
-        onClick={() => setShowAllIndependent(!showAllIndependent)} 
-        className='text-amber-400 text-[8px] lg:hidden font-black uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full'
-    >
-        {showAllIndependent ? 'View Less' : 'View All'}
-    </button>
-</div>
+                                <div className='flex items-center justify-between mb-6 relative z-10'>
+                                    <h3 className='text-white font-black text-[9px] lg:text-xs tracking-[0.3em] uppercase'>Registry Index</h3>
+                                    
+                                    {/* MOBILE ONLY TOGGLE */}
+                                    <button 
+                                        onClick={() => setShowAllIndependent(!showAllIndependent)} 
+                                        className='text-amber-400 text-[8px] lg:hidden font-black uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full'
+                                    >
+                                        {showAllIndependent ? 'View Less' : 'View All'}
+                                    </button>
+                                </div>
+
+                                {/* --- SEARCH INPUT --- */}
+                                <div className='relative z-10 mb-6 group'>
+                                    <div className='absolute left-3 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-amber-400 transition-colors'>
+                                        <Search size={12} />
+                                    </div>
+                                    <input 
+                                        type="text"
+                                        placeholder="Search Registry..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full bg-white/10 border border-white/20 rounded-xl pl-9 pr-8 py-2.5 text-[10px] text-white placeholder:text-white/40 outline-none focus:border-amber-400/50 transition-all font-bold uppercase tracking-widest"
+                                    />
+                                    {searchTerm && (
+                                        <button 
+                                            onClick={() => setSearchTerm("")}
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                                        >
+                                            <X size={14} />
+                                        </button>
+                                    )}
+                                </div>
 
                                 <div className='flex flex-col gap-2 overflow-y-auto max-h-[180vh] hide-scrollbar relative z-10 pr-2'>
                                     {/* --- 1. GROUPED SECTION --- */}
@@ -152,7 +181,6 @@ const LatestCollection = () => {
                                         <div className="mt-4 pt-4 border-t border-white/20">
                                             <p className='text-[8px] text-white/30 font-black uppercase tracking-widest mb-4 ml-2'>General Registry</p>
                                             <div className='flex flex-col gap-1'>
-                                                {/* Logic: On mobile, only show 4 unless expanded. On desktop, show all. */}
                                                 {independent
                                                     .slice(0, (!showAllIndependent && window.innerWidth < 1024) ? 4 : independent.length)
                                                     .map((cat) => (
@@ -166,7 +194,6 @@ const LatestCollection = () => {
                                                     </button>
                                                 ))}
 
-                                                {/* View All Button - Only visible on Mobile if there are more than 4 items */}
                                                 {independent.length > 4 && (
                                                     <button 
                                                         onClick={() => setShowAllIndependent(!showAllIndependent)}
@@ -178,14 +205,20 @@ const LatestCollection = () => {
                                             </div>
                                         </div>
                                     )}
+
+                                    {/* No Search Results State */}
+                                    {searchTerm && Object.keys(grouped).length === 0 && independent.length === 0 && (
+                                        <div className='py-8 text-center'>
+                                            <p className='text-white/40 text-[9px] font-black uppercase tracking-widest italic'>No categories found</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* MAIN PRODUCT GRID REMAINS SAME */}
+                    {/* MAIN PRODUCT GRID */}
                     <div className='w-full lg:w-3/4'>
-                        {/* ... mapping latestProducts ... */}
                         <div className='flex overflow-x-auto lg:grid lg:grid-cols-3 gap-6 md:gap-x-8 gap-y-12 pb-10 lg:pb-0 snap-x snap-mandatory mobile-scrollbar px-2'>
                             {latestProducts.map((item, index) => (
                                 <div key={index} className="min-w-[85%] sm:min-w-[45vw] lg:min-w-0 snap-center flex flex-col group bg-white border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-br-[40px] md:rounded-br-[60px] overflow-hidden">

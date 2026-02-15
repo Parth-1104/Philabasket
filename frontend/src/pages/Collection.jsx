@@ -167,7 +167,7 @@ const selectGroup = (groupName) => {
       <div className='flex flex-col lg:flex-row gap-12 relative z-20'>
 
         {/* --- SIDEBAR --- */}
-        <aside className={`fixed inset-0 z-[3000] lg:relative lg:z-0 lg:inset-auto lg:w-64 lg:block lg:sticky lg:top-10 lg:self-start transition-all duration-700 ${showFilter ? 'opacity-100' : 'opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto'}`}>
+        <aside className={`fixed inset-0 z-[3000] lg:relative lg:z-0 lg:inset-auto lg:w-50 lg:block lg:sticky lg:top-10 lg:self-start transition-all duration-700 ${showFilter ? 'opacity-100' : 'opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto'}`}>
           <div onClick={() => setShowFilter(false)} className='absolute inset-0 bg-black/80 backdrop-blur-sm lg:hidden'></div>
           
           <div className='absolute top-0 right-0 h-full w-[85%] overflow-y-auto bg-[#BC002D] p-8 flex flex-col lg:relative lg:w-full lg:h-auto lg:overflow-visible lg:p-10 lg:translate-x-0 lg:rounded-[40px] lg:shadow-2xl transition-transform duration-500'>
