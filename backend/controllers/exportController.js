@@ -1,52 +1,76 @@
-const Order = require('../models/orderModel');
-const XLSX = require('xlsx');
-const { Parser } = require('json2csv');
+import orderModel from "../models/orderModel.js";
+import ExcelJS from 'exceljs';
+import { Parser } from 'json2csv';
 
-exports.exportOrders = async (req, res) => {
-  const { format, filterBy, dateRange, statuses, sortBy, sortOrder } = req.body;
+const exportOrders = async (req, res) => {
+    try {
+        const { format, filterBy, dateRange, sortBy, sortOrder, statuses } = req.body;
 
-  // 1. Build dynamic MongoDB query
-  let query = {};
-  if (statuses && statuses.length > 0) query.status = { $in: statuses };
-  
-  // Dynamic Date Filter (Order Date, Modification, etc.)
-  const fieldMap = { 'Order Date': 'createdAt', 'Paid Date': 'paidAt', 'Completed Date': 'completedAt' };
-  const dbField = fieldMap[filterBy] || 'createdAt';
-  
-  if (dateRange.start || dateRange.end) {
-    query[dbField] = {};
-    if (dateRange.start) query[dbField].$gte = new Date(dateRange.start);
-    if (dateRange.end) query[dbField].$lte = new Date(dateRange.end);
-  }
+        // 1. Build Query
+        let query = {};
+        if (dateRange?.start && dateRange?.end) {
+            const start = new Date(dateRange.start).getTime();
+            const end = new Date(dateRange.end).getTime();
+            query.date = { $gte: start, $lte: end };
+        }
+        if (statuses && statuses.length > 0) {
+            query.status = { $in: statuses };
+        }
 
-  // 2. Fetch and Sort
-  const sortDirection = sortOrder === 'Descending' ? -1 : 1;
-  const orders = await Order.find(query).sort({ [sortBy === 'Order ID' ? '_id' : 'createdAt']: sortDirection }).lean();
+        // 2. Fetch Data
+        const sortDirection = sortOrder === 'Descending' ? -1 : 1;
+        const sortField = sortBy === 'Order ID' ? '_id' : 'date';
+        
+        const orders = await orderModel.find(query)
+            .populate('userId', 'name email')
+            .sort({ [sortField]: sortDirection });
 
-  // 3. Format data based on request type
-  const flatData = orders.map(o => ({
-    'Order ID': o._id,
-    'Customer': o.customerName,
-    'Status': o.status,
-    'Amount': o.totalAmount,
-    'Date': o.createdAt.toLocaleDateString()
-  }));
+        // 3. Format Selection Logic
+        if (format === 'JSON') {
+            return res.status(200).json(orders);
+        }
 
-  if (format === 'CSV') {
-    const json2csvParser = new Parser();
-    const csv = json2csvParser.parse(flatData);
-    res.header('Content-Type', 'text/csv');
-    return res.send(csv);
-  } 
-  
-  if (format === 'XLSX') {
-    const ws = XLSX.utils.json_to_sheet(flatData);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Orders');
-    const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-    res.header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    return res.send(buffer);
-  }
+        if (format === 'CSV') {
+            const json2csvParser = new Parser();
+            const csv = json2csvParser.parse(orders);
+            res.header('Content-Type', 'text/csv');
+            res.attachment(`registry-export-${Date.now()}.csv`);
+            return res.send(csv);
+        }
 
-  res.status(400).send('Format not supported');
+        if (format === 'XLSX') {
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Orders Ledger');
+
+            worksheet.columns = [
+                { header: 'Order ID', key: 'id', width: 25 },
+                { header: 'Date', key: 'date', width: 20 },
+                { header: 'Customer', key: 'customer', width: 30 },
+                { header: 'Amount', key: 'amount', width: 15 },
+                { header: 'Status', key: 'status', width: 15 }
+            ];
+
+            orders.forEach(order => {
+                worksheet.addRow({
+                    id: order._id.toString(),
+                    date: new Date(order.date).toLocaleDateString(),
+                    customer: order.userId?.name || order.address.firstName,
+                    amount: order.amount,
+                    status: order.status
+                });
+            });
+
+            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            res.setHeader('Content-Disposition', `attachment; filename=registry.xlsx`);
+
+            await workbook.xlsx.write(res);
+            return res.end();
+        }
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: error.message });
+    }
 };
+
+export { exportOrders };

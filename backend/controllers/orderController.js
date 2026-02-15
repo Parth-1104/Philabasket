@@ -276,4 +276,80 @@ const placeOrderRazorpay = async (req, res) => {
 const placeOrderStripe = async (req, res) => {
 };
 
+
+
+
+
+
+export  const syncLegacyOrderDetails = async (req, res) => {
+    try {
+        // 1. Find orders that are "Legacy" (missing the new firstName field)
+        const ordersToFix = await orderModel.find({
+            $or: [
+                { "address.firstName": { $exists: false } },
+                { "address.firstName": "" }
+            ]
+        });
+
+        let successCount = 0;
+        let skipCount = 0;
+
+        for (const order of ordersToFix) {
+            // Handle both ObjectId and $oid string formats
+            const userId = order.userId?.$oid || order.userId;
+            
+            // Try to find the user in the User table
+            const user = await userModel.findById(userId);
+            
+            if (user || order.address.name) {
+                // Determine the Name: User Table Name > address.name fallback > Email prefix
+                const fullName = user?.name || order.address.name || user?.email?.split('@')[0] || "Collector";
+                
+                // Split the name for your new Schema (FirstName/LastName)
+                const nameParts = fullName.trim().split(" ");
+                const firstName = nameParts[0];
+                const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "Legacy";
+
+                // Prepare the patched address object
+                const patchedAddress = {
+                    ...order.address, // Keep existing street, city, etc.
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: user?.email || order.address.email || "N/A"
+                };
+
+                // Remove the old 'name' key if it exists to keep the object clean
+                delete patchedAddress.name;
+
+                // Update existing record strictly
+                await orderModel.findByIdAndUpdate(order._id, {
+                    $set: { 
+                        address: patchedAddress,
+                        // Fix date format if it's currently a MongoDB object
+                        date: typeof order.date === 'object' ? Number(order.date.$numberLong) : order.date
+                    }
+                });
+                successCount++;
+            } else {
+                skipCount++;
+            }
+        }
+
+        res.json({
+            success: true,
+            message: `Migration finished. Updated: ${successCount}, Skipped: ${skipCount}`
+        });
+
+    } catch (error) {
+        console.error("Migration Error:", error);
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+
+
+
+
+
+
 export { verifyRazorpay, verifyStripe, placeOrder, placeOrderStripe, placeOrderRazorpay, allOrders, userOrders, updateStatus, getAdminDashboardStats, getDetailedAnalytics, updateStock, cancelOrder };

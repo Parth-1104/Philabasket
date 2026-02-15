@@ -1,4 +1,0 @@
-name,description,price,marketPrice,year,country,condition,category,stock,imageName1,imageName2,imageName3,imageName4,youtubeUrl,bestseller
-"1854 Half Anna Blue","A rare specimen of the first postage stamps of India. Printed in Calcutta.","1500","1800",1854,"India","Mint","[Classic, Rarities, Victorian]",5,bal69.jpeg,main01.png,stamp01_detail.png,,https://www.youtube.com/watch?v=MkGyu60Ie5c,true
-"Penny Black 1840","The world's first adhesive postage stamp used in a public postal system.","5000","5500",1840,"Great Britain","Fine","[International, Historical]",2,penny_front.jpg,penny_close.jpg,,,https://youtu.be/example_id,false
-"Service Overprint 1948","Official service overprint on the Gandhi series. High collector demand.","1200","1400",1948,"India","Used","[Gandhi, Service Stamps]",10,gandhi_01.webp,gandhi_02.webp,gandhi_03.webp,gandhi_04.webp,,true

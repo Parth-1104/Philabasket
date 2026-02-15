@@ -18,6 +18,34 @@ const Orders = ({ token }) => {
   const [showAddressModal, setShowAddressModal] = useState(false);
   const [activeOrder, setActiveOrder] = useState(null);
   const [tempTracking, setTempTracking] = useState("");
+  // 1. Add this state at the top with your other states
+const [sortBy, setSortBy] = useState("DATE_DESC"); // Default: Newest first
+
+// 2. Update your sortedOrders useMemo block
+const sortedOrders = useMemo(() => {
+  let tempOrders = [...orders];
+
+  if (sortBy === "DATE_DESC") {
+    tempOrders.sort((a, b) => b.date - a.date);
+  } 
+  else if (sortBy === "DATE_ASC") {
+    tempOrders.sort((a, b) => a.date - b.date);
+  } 
+  else if (sortBy === "STATUS_PRIORITY") {
+    // Custom workflow priority
+    const priority = { 
+      "Order Placed": 1, 
+      "Packing": 2, 
+      "Shipped": 3, 
+      "Out for delivery": 4, 
+      "Delivered": 5, 
+      "Cancelled": 6 
+    };
+    tempOrders.sort((a, b) => (priority[a.status] || 99) - (priority[b.status] || 99));
+  }
+
+  return tempOrders;
+}, [orders, sortBy]);
 
   // --- CSV EXPORT ENGINE ---
   const downloadCSV = (data, filename) => {
@@ -29,8 +57,8 @@ const Orders = ({ token }) => {
     const rows = data.map(order => [
       `#${String(order._id).slice(-8)}`,
       new Date(order.date).toLocaleDateString('en-IN'),
-      `${order.address.firstName} ${order.address.lastName}`,
-      order.userId?.email || order.address.email,
+      `${order.address?.firstName || "Guest Collector"} ${order.address.lastName}`,
+      (order.userId && order.userId.email) ? order.userId.email : (order.address?.email || "N/A"),
       order.address.phone,
       order.items.map(i => `${i.name}(x${i.quantity})`).join(' | '),
       order.amount,
@@ -93,10 +121,10 @@ const Orders = ({ token }) => {
     }
   }, [token, fetchAllOrders]);
 
-  const sortedOrders = useMemo(() => {
-    const priority = { "Order Placed": 1, "Packing": 2, "Shipped": 3, "Out for delivery": 4, "Delivered": 5, "Cancelled": 6 };
-    return [...orders].sort((a, b) => (priority[a.status] || 99) - (priority[b.status] || 99));
-  }, [orders]);
+  // const sortedOrders = useMemo(() => {
+  //   const priority = { "Order Placed": 1, "Packing": 2, "Shipped": 3, "Out for delivery": 4, "Delivered": 5, "Cancelled": 6 };
+  //   return [...orders].sort((a, b) => (priority[a.status] || 99) - (priority[b.status] || 99));
+  // }, [orders]);
 
   const updateOrder = async (orderId, status, trackingNumber) => {
     // --- ADDED: CONFIRMATION RESTRICTION ---
@@ -154,18 +182,35 @@ const Orders = ({ token }) => {
       )}
 
       {/* HEADER COMMAND BAR */}
-      <div className='max-w-7xl mx-auto flex flex-col gap-6 mb-8'>
-        <div className='flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
-          <div>
-            <h3 className='text-2xl font-black text-gray-900 uppercase tracking-tighter'>Packing Station</h3>
-            <p className='text-[10px] text-gray-400 font-bold uppercase mt-1'>Archive Logistics Management</p>
-          </div>
-          <div className='flex gap-2'>
-              <button onClick={() => fetchAllOrders(true)} className='px-6 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase shadow-lg shadow-blue-100 flex items-center gap-2 transition-all active:scale-95'>
-                <RefreshCw size={14} className={loading ? 'animate-spin' : ''}/> Sync Ledger
-              </button>
-          </div>
+      {/* HEADER COMMAND BAR */}
+<div className='max-w-7xl mx-auto flex flex-col gap-6 mb-8'>
+  <div className='flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-gray-100'>
+    <div>
+      <h3 className='text-2xl font-black text-gray-900 uppercase tracking-tighter'>Packing Station</h3>
+      <p className='text-[10px] text-gray-400 font-bold uppercase mt-1'>Archive Logistics Management</p>
+    </div>
+    
+    <div className='flex flex-wrap items-center gap-4'>
+        {/* NEW: Sorting Dropdown */}
+        <div className='flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100'>
+          <span className='text-[8px] font-black uppercase text-gray-400 tracking-[0.2em]'>Sort</span>
+          <select 
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className='bg-transparent text-[10px] font-black uppercase outline-none cursor-pointer'
+          >
+              <option value="STATUS_PRIORITY">Priority Workflow</option>
+              <option value="DATE_DESC">Newest First</option>
+              <option value="DATE_ASC">Oldest First</option>
+          </select>
         </div>
+
+        <button onClick={() => fetchAllOrders(true)} className='px-6 py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase shadow-lg shadow-blue-100 flex items-center gap-2 transition-all active:scale-95'>
+          <RefreshCw size={14} className={loading ? 'animate-spin' : ''}/> Sync Ledger
+        </button>
+    </div>
+  </div>
+</div>
 
         {/* EXPORT CONTROLS */}
         <div className='grid grid-cols-1 sm:grid-cols-3 gap-4'>
@@ -182,7 +227,38 @@ const Orders = ({ token }) => {
                 <span className='text-[10px] font-black uppercase tracking-widest text-gray-700'>Delivered Archive CSV</span>
             </button>
         </div>
-      </div>
+
+
+<div className='flex items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6'>
+    <div className='flex items-center gap-2'>
+        <span className='text-[10px] font-black uppercase text-gray-400 tracking-widest'>Sort By:</span>
+        <select 
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className='bg-gray-50 border border-gray-100 rounded-xl px-4 py-2 text-[10px] font-black uppercase outline-none cursor-pointer focus:ring-2 focus:ring-blue-500/20'
+        >
+            <option value="DATE_DESC">Date: Newest First</option>
+            <option value="DATE_ASC">Date: Oldest First</option>
+            <option value="STATUS_PRIORITY">Status: Workflow Priority</option>
+        </select>
+    </div>
+
+    {/* Quick Indicator of current queue */}
+    <div className='hidden md:flex items-center gap-3 ml-auto border-l border-gray-100 pl-6'>
+        <div className='flex flex-col items-center'>
+            <span className='text-[8px] font-black text-blue-600 uppercase'>{orders.filter(o => o.status === "Order Placed").length}</span>
+            <span className='text-[7px] font-bold text-gray-400 uppercase'>New</span>
+        </div>
+        <div className='flex flex-col items-center'>
+            <span className='text-[8px] font-black text-amber-600 uppercase'>{orders.filter(o => o.status === "Packing").length}</span>
+            <span className='text-[7px] font-bold text-gray-400 uppercase'>Pending</span>
+        </div>
+        <div className='flex flex-col items-center'>
+            <span className='text-[8px] font-black text-green-600 uppercase'>{orders.filter(o => o.status === "Delivered").length}</span>
+            <span className='text-[7px] font-bold text-gray-400 uppercase'>Done</span>
+        </div>
+    </div>
+</div>
 
       {/* ORDERS LIST */}
       <div className='max-w-7xl mx-auto space-y-4'>
@@ -275,7 +351,11 @@ const Orders = ({ token }) => {
                                 <div key={index} className='flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-2xl group hover:border-blue-200 transition-all'>
                                     <div className='flex items-center gap-4'>
                                         <div className='w-12 h-14 bg-white rounded-lg border border-gray-200 p-1 flex items-center justify-center shadow-sm'>
-                                            <img src={item.image[0]} className='max-w-full max-h-full object-contain' alt="" />
+                                        <img 
+      src={item.image && item.image.length > 0 ? item.image[0] : assets.logo} 
+      className='max-w-full max-h-full object-contain' 
+      alt={item.name} 
+    />
                                         </div>
                                         <div>
                                             <p className='text-xs font-black text-gray-900 line-clamp-1'>{item.name}</p>
