@@ -4,8 +4,9 @@ import Title from '../components/Title';
 import axios from 'axios';
 import { assets } from '../assets/assets';
 import { toast } from 'react-toastify';
-import { Link } from 'react-router-dom';
-import { Truck, Copy, ExternalLink, RefreshCw, PackageCheck, Archive } from 'lucide-react';
+import { Truck, RefreshCw, Download, PackageCheck, ExternalLink } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const Orders = () => {
   const { backendUrl, token, fetchUserData } = useContext(ShopContext);
@@ -13,14 +14,11 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
 
-  // --- FEATURE: Registry Synchronization Engine ---
   const loadOrderData = useCallback(async (isManual = false) => {
     try {
       if (!token) return;
       if (isManual) setSyncing(true);
-
       const response = await axios.post(`${backendUrl}/api/order/userorders`, {}, { headers: { token } });
-      
       if (response.data.success) {
         setRawOrders(response.data.orders);
         fetchUserData(); 
@@ -34,25 +32,77 @@ const Orders = () => {
     }
   }, [backendUrl, token, fetchUserData]);
 
-  // --- OPTIMIZATION: Memoized Order Grouping ---
-  const processedOrders = useMemo(() => {
-    return [...rawOrders].reverse().map((order) => {
-      // Calculate points (10% of amount)
-      const orderTotalPoints = Math.floor((order.amount || 0) * 0.10);
-      
-      // Handle Currency conversion display
-      const displayAmount = order.currency === 'USD' 
-        ? (order.amount / 83).toFixed(2) 
-        : order.amount;
+  const downloadInvoice = (order) => {
+    try {
+        const doc = new jsPDF();
+        doc.setFillColor(188, 0, 45); 
+        doc.rect(10, 10, 20, 20, 'F');
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(12);
+        doc.text("PA", 15, 22);
 
-      return {
-        ...order,
-        displayAmount,
-        rewardPoints: orderTotalPoints,
-        formattedDate: new Date(order.date).toDateString()
-      };
-    });
-  }, [rawOrders]);
+        doc.setTextColor(0, 0, 0);
+        doc.setFontSize(16);
+        doc.text("Phila Art", 35, 18);
+        doc.setFontSize(8);
+        doc.text("G-3, Prakash Kunj Apartment, Kavi Raman Path, Boring Road", 35, 23);
+        doc.text("Patna 800001 Bihar India | philapragya@gmail.com", 35, 27);
+        doc.text("GSTIN: 10AGUPJ4257E1ZI", 35, 31);
+
+        doc.setFontSize(14);
+        doc.text("TAX INVOICE", 140, 18);
+        doc.setFontSize(9);
+        doc.text(`Invoice #: INV/${order._id ? order._id.slice(-6).toUpperCase() : 'N/A'}`, 140, 25);
+        doc.text(`Date: ${new Date(order.date).toLocaleDateString()}`, 140, 30);
+
+        const addr = order.address || {};
+        doc.setFontSize(10);
+        doc.text("BILL TO / SHIP TO:", 14, 45);
+        doc.setFontSize(9);
+        doc.text(`${addr.firstName || ''} ${addr.lastName || ''}`, 14, 50);
+        doc.text(`${addr.street || ''}`, 14, 54);
+        doc.text(`${addr.city || ''}, ${addr.state || ''} ${addr.zipcode || ''}`, 14, 58);
+
+        const shipping = 100;
+        const totalAmount = order.amount || 0;
+        const subtotalWithTax = totalAmount - shipping;
+        const igst = (subtotalWithTax - (subtotalWithTax / 1.05)).toFixed(2);
+
+        const tableRows = (order.items || []).map((item, index) => [
+            index + 1,
+            item.name || 'Specimen',
+            "9704",
+            item.quantity || 1,
+            (item.price || 0).toFixed(2),
+            "5%",
+            ((item.price || 0) * (item.quantity || 1)).toFixed(2)
+        ]);
+
+        autoTable(doc, {
+            startY: 70,
+            head: [['#', 'Item & Description', 'HSN', 'Qty', 'Rate', 'IGST', 'Amount']],
+            body: tableRows,
+            theme: 'grid',
+            headStyles: { fillColor: [188, 0, 45] }
+        });
+
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(9);
+        doc.text(`Sub Total (Tax Inc.): Rs. ${subtotalWithTax.toFixed(2)}`, 140, finalY);
+        doc.text(`IGST (5%): Rs. ${igst}`, 140, finalY + 5);
+        doc.text(`Shipping Charge: Rs. ${shipping.toFixed(2)}`, 140, finalY + 10);
+        doc.setFontSize(11);
+        doc.text(`Total: Rs. ${totalAmount.toFixed(2)}`, 140, finalY + 18);
+
+        doc.setFontSize(8);
+        doc.text("Bank: HDFC Bank ltd | Branch: Exhibition Road, Patna", 14, finalY + 30);
+        doc.text("A/c No: 01868730000112 | IFSC Code: HDFC0000186", 14, finalY + 34);
+
+        doc.save(`Invoice_PhilaArt_${order._id ? order._id.slice(-6) : 'Order'}.pdf`);
+    } catch (err) {
+        toast.error("Invoice generation failed.");
+    }
+  };
 
   const handleTrackAsset = (trackingNumber) => {
     if (!trackingNumber) return;
@@ -63,12 +113,16 @@ const Orders = () => {
     }, 600);
   };
 
+  const processedOrders = useMemo(() => {
+    return [...rawOrders].reverse().map((order) => ({
+      ...order,
+      rewardPoints: Math.floor((order.amount || 0) * 0.10),
+      formattedDate: new Date(order.date).toDateString()
+    }));
+  }, [rawOrders]);
+
   useEffect(() => {
-    if (token) {
-      loadOrderData();
-      const interval = setInterval(() => loadOrderData(), 60000);
-      return () => clearInterval(interval);
-    }
+    if (token) loadOrderData();
   }, [token, loadOrderData]);
 
   if (loading) return (
@@ -80,6 +134,7 @@ const Orders = () => {
   return (
     <div className='bg-[#FCF9F4] min-h-screen pt-24 pb-20 px-6 md:px-16 lg:px-24 text-black select-none animate-fade-in'>
       
+      {/* SECTION HEADER */}
       <div className='text-3xl mb-12 flex items-center justify-between'>
         <div className='flex items-center gap-4'>
            <Title text1={'CONSIGNMENT'} text2={'LEDGER'} />
@@ -90,85 +145,74 @@ const Orders = () => {
 
       <div className='max-w-6xl mx-auto'>
         {processedOrders.length === 0 ? (
-          <div className='flex flex-col items-center justify-center py-32 text-center'>
-            <div className='w-24 h-24 border border-black/5 flex items-center justify-center rounded-full mb-8 bg-white shadow-sm'>
-               <img src={assets.parcel_icon} className='w-10 opacity-10' alt="" />
-            </div>
-            <h2 className='text-xl font-serif text-black/30 tracking-[0.2em] uppercase'>Registry is currently empty</h2>
-            <Link to='/collection' className='mt-8 bg-black text-white px-10 py-4 text-[10px] font-black uppercase tracking-[0.4em] hover:bg-[#BC002D] transition-all shadow-lg'>Initialize Archive</Link>
+          <div className='py-32 text-center bg-white rounded-sm border border-black/5'>
+            <p className='text-gray-400 font-serif uppercase tracking-[0.2em]'>Registry is empty</p>
           </div>
         ) : (
           processedOrders.map((order) => (
-            <div key={order._id} className='group py-8 border border-black/5 bg-white flex flex-col gap-6 px-8 mb-8 rounded-sm transition-all duration-500 hover:border-[#BC002D]/30 shadow-sm'>
+            <div key={order._id} className='group py-8 border border-black/5 bg-white flex flex-col gap-6 px-8 mb-8 rounded-sm shadow-sm hover:border-[#BC002D]/30 transition-all duration-500'>
               
-              {/* Top Row: Order Metadata */}
+              {/* STATUS & METADATA */}
               <div className='flex flex-wrap items-center justify-between gap-4 border-b border-black/5 pb-4'>
                 <div className='flex items-center gap-6'>
-                  <div>
-                    <p className='text-[8px] text-gray-400 uppercase tracking-widest font-black'>Registry Date</p>
-                    <p className='text-xs font-bold'>{order.formattedDate}</p>
-                  </div>
                   <div>
                     <p className='text-[8px] text-gray-400 uppercase tracking-widest font-black'>Sovereign ID</p>
                     <p className='text-[10px] font-mono font-bold text-[#BC002D]'>#{order._id.slice(-8).toUpperCase()}</p>
                   </div>
-                  <div className='px-3 py-1 bg-black text-white rounded-xs'>
-                    <p className='text-[8px] font-black uppercase tracking-widest'>{order.paymentMethod}</p>
+                  <div className='flex items-center gap-3'>
+                    <div className={`w-2 h-2 rounded-full animate-pulse ${order.status === 'Delivered' ? 'bg-green-500' : 'bg-[#BC002D]'}`}></div>
+                    <p className='text-xs font-black tracking-[0.4em] uppercase text-black'>{order.status}</p>
                   </div>
                 </div>
-
-                <div className='flex items-center gap-3'>
-                  <div className={`w-2 h-2 rounded-full animate-pulse ${order.status === 'Delivered' ? 'bg-green-500' : 'bg-[#BC002D]'}`}></div>
-                  <p className='text-xs font-black tracking-[0.4em] uppercase text-black'>{order.status}</p>
-                </div>
+                <button onClick={() => downloadInvoice(order)} className='flex items-center gap-2 text-[10px] font-black uppercase text-[#BC002D] hover:underline'>
+                  <Download size={14} /> Download Invoice
+                </button>
               </div>
 
-              {/* Middle Row: Items List */}
+              {/* ITEMS LIST */}
               <div className='flex flex-col gap-6'>
                 {order.items.map((item, idx) => (
                   <div key={idx} className='flex items-center gap-6'>
                     <div className='w-16 h-20 bg-[#F9F9F9] border border-black/5 flex items-center justify-center overflow-hidden shrink-0'>
-                      <img 
-                        src={item.image && item.image[0] ? item.image[0] : assets.logo} 
-                        alt={item.name} 
-                        className='w-full h-full object-contain p-1'
-                      />
+                      <img src={item.image?.[0] || assets.logo} alt="" className='w-full h-full object-contain p-1' />
                     </div>
                     <div className='flex-1'>
                       <p className='text-md font-serif text-black tracking-tight'>{item.name}</p>
                       <div className='flex items-center gap-4 mt-1'>
-                        <p className='text-[10px] text-gray-400 uppercase tracking-widest font-black'>Quantity: {item.quantity}</p>
-                        {item.size && <p className='text-[10px] text-gray-400 uppercase tracking-widest font-black'>Spec: {item.size}</p>}
+                        <p className='text-[10px] text-gray-400 uppercase font-black'>Quantity: {item.quantity}</p>
+                        <p className='text-[10px] text-gray-400 uppercase font-black'>{order.formattedDate}</p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Bottom Row: Financials & Tracking */}
+              {/* FINANCIALS & ACTIONS */}
               <div className='bg-[#FCF9F4] p-6 rounded-sm flex flex-col lg:flex-row items-center justify-between gap-6'>
                 <div className='flex flex-wrap items-center gap-8'>
                   <div>
                     <p className='text-[8px] text-[#BC002D] font-black uppercase tracking-[0.3em] mb-1'>Ledger Value</p>
-                    <p className='text-xl font-black tracking-tighter'>
-                      {order.currency === 'USD' ? '$' : '₹'}{order.displayAmount}
-                    </p>
+                    <p className='text-xl font-black tracking-tighter'>₹{order.amount.toFixed(2)}</p>
                   </div>
                   <div className={`flex items-center gap-2 py-2 px-4 border rounded-sm ${order.status === 'Delivered' ? 'border-green-100 bg-green-50' : 'border-[#BC002D]/10 bg-white'}`}>
                     <PackageCheck size={14} className={order.status === 'Delivered' ? 'text-green-600' : 'text-[#BC002D]'} />
-                    <p className={`text-[10px] font-black uppercase tracking-widest ${order.status === 'Delivered' ? 'text-green-600' : 'text-[#BC002D]'}`}>
-                        Vault Credit: +{order.rewardPoints} PTS
-                    </p>
+                    <p className='text-[10px] font-black uppercase tracking-widest text-black'>Vault Credit: +{order.rewardPoints} PTS</p>
                   </div>
                 </div>
 
                 <div className='flex gap-4 w-full lg:w-auto'>
                   {order.trackingNumber && (
-                    <button onClick={() => handleTrackAsset(order.trackingNumber)} className='flex-1 lg:flex-none bg-black text-white px-8 py-4 text-[9px] font-black uppercase tracking-[0.4em] flex items-center justify-center gap-2 hover:bg-[#BC002D] transition-all'>
+                    <button 
+                        onClick={() => handleTrackAsset(order.trackingNumber)} 
+                        className='flex-1 lg:flex-none bg-black text-white px-8 py-4 text-[9px] font-black uppercase tracking-[0.4em] flex items-center justify-center gap-2 hover:bg-[#BC002D] transition-all'
+                    >
                       <Truck size={14} /> Track Asset <ExternalLink size={10} />
                     </button>
                   )}
-                  <button onClick={() => loadOrderData(true)} className='flex-1 lg:flex-none bg-white border border-black/10 px-8 py-4 text-[9px] font-black uppercase tracking-[0.4em] hover:bg-black hover:text-white transition-all'>
+                  <button 
+                    onClick={() => loadOrderData(true)} 
+                    className='flex-1 lg:flex-none bg-white border border-black/10 px-8 py-4 text-[9px] font-black uppercase tracking-[0.4em]'
+                  >
                     Refresh
                   </button>
                 </div>
@@ -178,7 +222,7 @@ const Orders = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default Orders;
