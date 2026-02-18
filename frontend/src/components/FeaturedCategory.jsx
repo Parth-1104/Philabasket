@@ -21,13 +21,13 @@ const FeaturedCategories = () => {
     { 
       id: 3, 
       name: 'FDC', 
-      image: 'https://res.cloudinary.com/dvsdithxh/image/upload/v1740000000/fdc_category.jpg', 
+      image: 'https://res.cloudinary.com/dvsdithxh/image/upload/v1770219653/stamp_registry/trs6ctcknkumar6wkxqb.jpg', 
       sub: 'Canceled on Day of Issue' 
     },
     { 
       id: 4, 
       name: 'Miniature Sheet', 
-      image: 'https://res.cloudinary.com/dvsdithxh/image/upload/v1740000000/ms_category.jpg', 
+      image: 'https://res.cloudinary.com/dvsdithxh/image/upload/v1770219653/stamp_registry/trs6ctcknkumar6wkxqb.jpg', 
       sub: 'Artistic Philatelic Blocks' 
     },
   ];
