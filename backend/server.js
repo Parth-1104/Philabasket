@@ -14,6 +14,7 @@ import blogRouter from './routes/blogRouter.js';
 import mailRouter from './routes/mailRoute.js';
 import categoryRouter from './routes/categoryRoute.js'
 import exportRouter from './routes/exportRouter.js'
+import feedbackRouter from './routes/feedbackRoute.js'
 
 // App Config
 const app = express()
@@ -47,6 +48,8 @@ app.use('/api/mail', mailRouter);
 app.use('/api/category', categoryRouter);
 
 app.use('/api/export', exportRouter);
+app.use('/api/feedback', feedbackRouter);
+
 
 app.get('/',(req,res)=>{
     res.send("API Working")

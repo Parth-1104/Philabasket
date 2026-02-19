@@ -8,6 +8,7 @@ import NewsletterBox from '../components/NewsletterBox'
 import NewHero from '../components/NewHero'
 import Banner from '../components/Banner'
 import FeaturedCategories from '../components/FeaturedCategory'
+import Testimonials from '../components/Testimonila'
 
 const Home = () => {
   const latestCollectionRef = useRef(null);
@@ -29,7 +30,12 @@ const Home = () => {
 
       <BestSeller />
 
+
+
       <NewsletterBox />
+
+
+      <Testimonials/>
 
 
       {/* 3. THE PALATE CLEANSER: Breaks the grid pattern and builds authority/trust 

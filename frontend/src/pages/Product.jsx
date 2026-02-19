@@ -19,7 +19,7 @@ const Product = () => {
 
   const getWatermarkedUrl = (url) => {
     if (!url || !url.includes('cloudinary')) return url;
-    const watermarkTransform = 'l_Logo-5_go95bd,fl_relative,w_0.4,c_scale,o_70,a_-45';
+    const watermarkTransform = 'l_Logo-5_tagline_yaxuag,fl_relative,w_0.4,c_scale,o_70,a_-45';
     return url.includes('f_auto,q_auto') 
       ? url.replace('/f_auto,q_auto/', `/f_auto,q_auto,${watermarkTransform}/`)
       : url.replace('/upload/', `/upload/f_auto,q_auto,${watermarkTransform}/`);
@@ -107,7 +107,7 @@ const Product = () => {
                           <div className='w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse'></div>
                           <p className='text-[9px] font-black  tracking-[0.2em] text-gray-400'>Specimen Secured</p>
                       </div>
-                      <h5 className='text-[5px] font-black  tracking-tight text-gray-900 line-clamp-1'>{productData.name}</h5>
+                      <h3 className='text-[5px] font-black  tracking-tight text-gray-900 line-clamp-1'>{productData.name}</h3>
                       <p className='text-[9px] font-bold text-[#BC002D] mt-1'>Quantity: {quantity} • Volume Synced</p>
                   </div>
                   <button onClick={() => setShowPopup(false)} className='p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400'><X size={16} /></button>
@@ -172,11 +172,11 @@ const Product = () => {
         {/* INFO SECTION */}
         <div className='flex-1 lg:max-w-[550px] py-4'>
           <div className='flex items-center gap-4 mb-6'>
-            <span className='text-[#BC002D] text-[10px] font-black tracking-[0.4em] px-4 py-1.5 bg-[#BC002D]/5  rounded-full'>{productData.country}</span>
+            <span className='text-[#BC002D] text-[10px] font-black tracking-[0.4em] uppercase px-4 py-1.5 bg-[#BC002D]/5  rounded-full'>{productData.country}</span>
             <span className='text-gray-400 text-[10px] font-bold tracking-[0.4em] '>{productData.year} ARCHIVE</span>
           </div>
 
-          <h1 className='text-2xl md:text-2xl font-black text-gray-900 tracking-tighter leading-none mb-8 '>{productData.name}</h1>
+          <h1 className='text-2xl md:text-2xl font-black text-gray-900  leading-none mb-8 '>{productData.name}</h1>
           
           <div className='grid grid-cols-2 gap-8 border-y border-black/[0.03] py-8 mb-8'>
               <div className='flex flex-col gap-1'>

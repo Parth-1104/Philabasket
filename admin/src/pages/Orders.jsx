@@ -23,16 +23,16 @@ const [sortBy, setSortBy] = useState("DATE_DESC"); // Default: Newest first
 
 // 2. Update your sortedOrders useMemo block
 const sortedOrders = useMemo(() => {
-  let tempOrders = [...orders];
+  // Ensure orders is an array before spreading
+  let tempOrders = Array.isArray(orders) ? [...orders] : [];
 
   if (sortBy === "DATE_DESC") {
-    tempOrders.sort((a, b) => b.date - a.date);
+    tempOrders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   } 
   else if (sortBy === "DATE_ASC") {
-    tempOrders.sort((a, b) => a.date - b.date);
+    tempOrders.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   } 
   else if (sortBy === "STATUS_PRIORITY") {
-    // Custom workflow priority
     const priority = { 
       "Order Placed": 1, 
       "Packing": 2, 
@@ -41,7 +41,11 @@ const sortedOrders = useMemo(() => {
       "Delivered": 5, 
       "Cancelled": 6 
     };
-    tempOrders.sort((a, b) => (priority[a.status] || 99) - (priority[b.status] || 99));
+    tempOrders.sort((a, b) => {
+      const priorityA = priority[a.status] || 99;
+      const priorityB = priority[b.status] || 99;
+      return priorityA - priorityB;
+    });
   }
 
   return tempOrders;
@@ -79,6 +83,8 @@ const sortedOrders = useMemo(() => {
 
   const fetchAllOrders = useCallback(async (isManual = false) => {
     try {
+
+      if (isManual) setLoading(true);
       const response = await axios.post(backendUrl + '/api/order/list', {}, { headers: { token } });
       if (response.data.success) {
         const incomingOrders = response.data.orders;
@@ -110,6 +116,8 @@ const sortedOrders = useMemo(() => {
       }
     } catch (error) {
       console.error("Fetch error:", error);
+    }finally {
+      setLoading(false); // Stop the loading screen/spinner
     }
   }, [token, backendUrl]);
 
@@ -154,6 +162,24 @@ const sortedOrders = useMemo(() => {
     navigator.clipboard.writeText(text);
     toast.success("Address Copied");
   };
+
+  // --- INITIAL LOADING SCREEN ---
+if (loading && orders.length === 0) {
+  return (
+    <div className='min-h-screen bg-gray-50 flex flex-col items-center justify-center gap-4 animate-fade-in'>
+      <div className='relative'>
+        <RefreshCw className='animate-spin text-blue-600' size={48} />
+        <div className='absolute inset-0 flex items-center justify-center'>
+          <div className='w-2 h-2 bg-blue-600 rounded-full'></div>
+        </div>
+      </div>
+      <div className='text-center'>
+        <h3 className='text-lg font-black uppercase tracking-widest text-gray-900'>Synchronizing Registry</h3>
+        <p className='text-[10px] font-bold text-gray-400 uppercase mt-1'>Fetching latest consignments...</p>
+      </div>
+    </div>
+  );
+}
 
   return (
     <div className='p-6 bg-gray-50 min-h-screen font-sans relative'>

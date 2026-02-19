@@ -4,7 +4,7 @@ import Title from '../components/Title';
 import axios from 'axios';
 import { assets } from '../assets/assets';
 import { toast } from 'react-toastify';
-import { Truck, RefreshCw, Download, PackageCheck, ExternalLink } from 'lucide-react';
+import { Truck, RefreshCw, Download, PackageCheck, ExternalLink, MessageSquare, Camera, X,Star } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -13,6 +13,49 @@ const Orders = () => {
   const [rawOrders, setRawOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
+
+  // Feedback States
+  // --- UPDATED FEEDBACK STATES ---
+const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+const [currentOrder, setCurrentOrder] = useState(null);
+const [feedbackText, setFeedbackText] = useState("");
+const [feedbackImage, setFeedbackImage] = useState(null);
+const [rating, setRating] = useState(5); // Default rating
+const [submitting, setSubmitting] = useState(false);
+const [hoverRating, setHoverRating] = useState(0); // For star hover effect
+
+const handleFeedbackSubmit = async (e) => {
+  e.preventDefault();
+  if (!feedbackText.trim() && !feedbackImage) return toast.error("Please add text or an image");
+
+  setSubmitting(true);
+  const formData = new FormData();
+  formData.append("orderId", currentOrder._id);
+  formData.append("text", feedbackText);
+  formData.append("rating", rating); // Append the rating
+  if (feedbackImage) formData.append("image", feedbackImage);
+
+  try {
+    const response = await axios.post(`${backendUrl}/api/feedback/add`, formData, { 
+      headers: { token } 
+    });
+
+    if (response.data.success) {
+      toast.success("Feedback recorded in the Archive");
+      setShowFeedbackModal(false);
+      setFeedbackText("");
+      setFeedbackImage(null);
+      setRating(5); // Reset rating
+    } else {
+      toast.error(response.data.message || "Archive sync failed.");
+    }
+  } catch (error) {
+    console.error("Feedback Error:", error);
+    toast.error("Submission failed.");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   const loadOrderData = useCallback(async (isManual = false) => {
     try {
@@ -35,7 +78,7 @@ const Orders = () => {
   const downloadInvoice = (order) => {
     try {
         const doc = new jsPDF();
-        const logoImg = assets.og; // Ensure this is a base64 string or valid path
+        const logoImg = assets.og; 
         doc.addImage(logoImg, 'PNG', 10, 10, 20, 20);
 
         doc.setTextColor(0, 0, 0);
@@ -60,17 +103,10 @@ const Orders = () => {
         doc.text(`${addr.street || ''}`, 14, 54);
         doc.text(`${addr.city || ''}, ${addr.state || ''} ${addr.zipcode || ''}`, 14, 58);
 
-        const shipping = 100; // Standard shipping 
-        const totalAmount = order.amount || 0; // Final amount paid by customer 
-        
-        // 1. Sub Total (Tax Inclusive): The value of items before shipping is added 
+        const shipping = 100; 
+        const totalAmount = order.amount || 0; 
         const subtotalWithTax = totalAmount - shipping; 
-        
-        // 2. IGST (5%): Reverse calculate the tax from the inclusive subtotal 
-        // Formula: Tax Inclusive Amount - (Tax Inclusive Amount / 1.05)
         const igst = parseFloat((subtotalWithTax - (subtotalWithTax / 1.05)).toFixed(2));
-        
-        // 3. Sub Total (Without Tax): The base rate before IGST 
         const subtotalWithoutTax = subtotalWithTax - igst;
 
         const tableRows = (order.items || []).map((item, index) => [
@@ -91,49 +127,26 @@ const Orders = () => {
             headStyles: { fillColor: [188, 0, 45] }
         });
 
-        // --- FINANCIAL SUMMARY GRID ---
-       // --- FINANCIAL SUMMARY GRID ---
-const finalY = doc.lastAutoTable.finalY + 10;
+        const finalY = doc.lastAutoTable.finalY + 10;
+        autoTable(doc, {
+            startY: finalY,
+            margin: { left: 110 }, 
+            tableWidth: 85,
+            theme: 'plain', 
+            styles: { fontSize: 9, cellPadding: 2, textColor: [50, 50, 50] },
+            body: [
+                ['Sub Total (Without Tax)', `Rs. ${subtotalWithoutTax.toFixed(2)}`],
+                ['IGST (5%)', `Rs. ${igst.toFixed(2)}`],
+                [{ content: 'Sub Total (Tax Inc.)', styles: { fontStyle: 'bold', borderTop: [0.1, 200, 200, 200] } }, { content: `Rs. ${subtotalWithTax.toFixed(2)}`, styles: { fontStyle: 'bold', borderTop: [0.1, 200, 200, 200] } }],
+                ['Shipping Charge', `Rs. ${shipping.toFixed(2)}`],
+                [{ content: 'Total', styles: { fontStyle: 'bold', fontSize: 11, textColor: [188, 0, 45], borderTop: [0.5, 188, 0, 45] } }, { content: `Rs. ${totalAmount.toFixed(2)}`, styles: { fontStyle: 'bold', fontSize: 11, textColor: [188, 0, 45], borderTop: [0.5, 188, 0, 45] } }]
+            ],
+            columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 35, halign: 'right' } }
+        });
 
-autoTable(doc, {
-    startY: finalY,
-    margin: { left: 110 }, 
-    tableWidth: 85,
-    theme: 'plain', 
-    styles: { fontSize: 9, cellPadding: 2, textColor: [50, 50, 50] },
-    body: [
-        ['Sub Total (Without Tax)', `Rs. ${subtotalWithoutTax.toFixed(2)}`],
-        ['IGST (5%)', `Rs. ${igst.toFixed(2)}`],
-        // Horizontal line effect using border
-        [{ 
-            content: 'Sub Total (Tax Inc.)', 
-            styles: { fontStyle: 'bold', borderTop: [0.1, 200, 200, 200] } 
-        }, 
-        { 
-            content: `Rs. ${subtotalWithTax.toFixed(2)}`, 
-            styles: { fontStyle: 'bold', borderTop: [0.1, 200, 200, 200] } 
-        }],
-        ['Shipping Charge', `Rs. ${shipping.toFixed(2)}`],
-        // Final Total Row
-        [{ 
-            content: 'Total', 
-            styles: { fontStyle: 'bold', fontSize: 11, textColor: [188, 0, 45], borderTop: [0.5, 188, 0, 45] } 
-        }, 
-        { 
-            content: `Rs. ${totalAmount.toFixed(2)}`, 
-            styles: { fontStyle: 'bold', fontSize: 11, textColor: [188, 0, 45], borderTop: [0.5, 188, 0, 45] } 
-        }]
-    ],
-    columnStyles: {
-        0: { cellWidth: 50 },
-        1: { cellWidth: 35, halign: 'right' }
-    }
-});
-
-        // --- BANKING & FOOTER DETAILS ---
         const summaryY = doc.lastAutoTable.finalY + 15;
         doc.setFontSize(8);
-        doc.setTextColor(100); // Subtle gray for bank details
+        doc.setTextColor(100); 
         doc.text("BANKING DETAILS:", 14, summaryY);
         doc.text("Bank: HDFC Bank ltd | Branch: Exhibition Road, Patna", 14, summaryY + 5);
         doc.text(`A/c No: 01868730000112 | IFSC Code: HDFC0000186`, 14, summaryY + 9);
@@ -184,6 +197,78 @@ autoTable(doc, {
         <div className='hidden md:block h-[1px] flex-1 ml-6 bg-gradient-to-r from-[#BC002D]/20 to-transparent'></div>
       </div>
 
+      {/* FEEDBACK MODAL */}
+      {showFeedbackModal && (
+  <div className='fixed inset-0 z-[5000] flex items-center justify-center p-6'>
+    <div className='absolute inset-0 bg-black/60 backdrop-blur-sm' onClick={() => setShowFeedbackModal(false)}></div>
+    <div className='bg-white w-full max-w-lg relative z-10 p-8 rounded-sm shadow-2xl animate-fade-in'>
+       <div className='flex justify-between items-center mb-6'>
+          <h3 className='font-black uppercase tracking-widest text-sm'>Consignment Feedback</h3>
+          <X className='cursor-pointer' onClick={() => setShowFeedbackModal(false)} />
+       </div>
+       
+       <form onSubmit={handleFeedbackSubmit} className='flex flex-col gap-6'>
+          
+          {/* STAR RATING SECTION */}
+          <div className='flex flex-col items-center gap-2 py-4 border-b border-gray-50'>
+             <p className='text-[10px] font-black uppercase tracking-widest text-gray-400'>Specimen Grade</p>
+             <div className='flex items-center gap-2'>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    className='transition-transform hover:scale-125 focus:outline-none'
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    onClick={() => setRating(star)}
+                  >
+                    {/* Ensure Star is imported from lucide-react */}
+                    <Star 
+                      size={24} 
+                      className={`transition-colors duration-200 ${
+                        (hoverRating || rating) >= star 
+                          ? 'fill-[#BC002D] text-[#BC002D]' 
+                          : 'text-gray-200'
+                      }`} 
+                    />
+                  </button>
+                ))}
+             </div>
+             <p className='text-[9px] font-bold text-[#BC002D] uppercase tracking-tighter'>
+                {rating === 5 ? 'Excellent' : rating === 4 ? 'Great' : rating === 3 ? 'Good' : rating === 2 ? 'Fair' : 'Poor'}
+             </p>
+          </div>
+
+          <textarea 
+            className='w-full border border-gray-100 p-4 text-xs font-medium outline-none focus:border-[#BC002D] transition-colors' 
+            rows="4" 
+            placeholder="Describe the specimen quality or service..."
+            value={feedbackText}
+            onChange={(e) => setFeedbackText(e.target.value)}
+          ></textarea>
+
+          <div className='flex items-center gap-4'>
+             <label className='flex-1 border-2 border-dashed border-gray-100 p-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-gray-50 transition-all'>
+                <Camera size={20} className='text-gray-400' />
+                <span className='text-[10px] font-black uppercase text-gray-400 truncate max-w-[200px]'>
+                  {feedbackImage ? feedbackImage.name : "Attach Specimen Photo"}
+                </span>
+                <input type="file" hidden accept="image/*" onChange={(e) => setFeedbackImage(e.target.files[0])} />
+             </label>
+          </div>
+
+          <button 
+            type="submit" 
+            disabled={submitting}
+            className='bg-black text-white py-4 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-[#BC002D] transition-all flex items-center justify-center gap-2 disabled:bg-gray-400'
+          >
+            {submitting ? <RefreshCw className='animate-spin' size={14} /> : "Submit to Archive"}
+          </button>
+       </form>
+    </div>
+  </div>
+)}
+
       <div className='max-w-6xl mx-auto'>
         {processedOrders.length === 0 ? (
           <div className='py-32 text-center bg-white rounded-sm border border-black/5'>
@@ -193,7 +278,6 @@ autoTable(doc, {
           processedOrders.map((order) => (
             <div key={order._id} className='group py-8 border border-black/5 bg-white flex flex-col gap-6 px-8 mb-8 rounded-sm shadow-sm hover:border-[#BC002D]/30 transition-all duration-500'>
               
-              {/* STATUS & METADATA */}
               <div className='flex flex-wrap items-center justify-between gap-4 border-b border-black/5 pb-4'>
                 <div className='flex items-center gap-6'>
                   <div>
@@ -205,12 +289,19 @@ autoTable(doc, {
                     <p className='text-xs font-black tracking-[0.4em] uppercase text-black'>{order.status}</p>
                   </div>
                 </div>
-                <button onClick={() => downloadInvoice(order)} className='flex items-center gap-2 text-[10px] font-black uppercase text-[#BC002D] hover:underline'>
-                  <Download size={14} /> Download Invoice
-                </button>
+                <div className='flex items-center gap-6'>
+                    <button 
+                        onClick={() => { setCurrentOrder(order); setShowFeedbackModal(true); }}
+                        className='flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 hover:text-black transition-colors'
+                    >
+                        <MessageSquare size={14} /> Give Feedback
+                    </button>
+                    <button onClick={() => downloadInvoice(order)} className='flex items-center gap-2 text-[10px] font-black uppercase text-[#BC002D] hover:underline'>
+                        <Download size={14} /> Download Invoice
+                    </button>
+                </div>
               </div>
 
-              {/* ITEMS LIST */}
               <div className='flex flex-col gap-6'>
                 {order.items.map((item, idx) => (
                   <div key={idx} className='flex items-center gap-6'>
@@ -228,7 +319,6 @@ autoTable(doc, {
                 ))}
               </div>
 
-              {/* FINANCIALS & ACTIONS */}
               <div className='bg-[#FCF9F4] p-6 rounded-sm flex flex-col lg:flex-row items-center justify-between gap-6'>
                 <div className='flex flex-wrap items-center gap-8'>
                   <div>

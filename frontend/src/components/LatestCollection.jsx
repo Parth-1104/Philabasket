@@ -37,7 +37,7 @@ const LatestCollection = () => {
             return item.newArrival === true || item.newArrival === "true";
         })
         .sort((a, b) => b.date - a.date)
-        .slice(0, 9);
+        .slice(0, 16);
         
     setLatestProducts(filtered); 
 }, [products]);
@@ -55,6 +55,7 @@ const LatestCollection = () => {
             return { grouped: {}, independent: [] };
         }
 
+        // Filter categories based on search term
         const filteredCategories = dbCategories.filter(cat => 
             cat.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
@@ -78,6 +79,13 @@ const LatestCollection = () => {
                 groupedResult[cat.group].push(item);
             }
         });
+    
+        Object.keys(groupedResult).forEach(group => {
+            groupedResult[group].sort((a, b) => a.name.localeCompare(b.name));
+        });
+
+        // 2. Sort the Independent (General Registry) Alphabetically
+        independentResult.sort((a, b) => a.name.localeCompare(b.name));
     
         return { grouped: groupedResult, independent: independentResult };
     }, [dbCategories, products, searchTerm]);
@@ -116,7 +124,7 @@ const LatestCollection = () => {
 
                 <div className='flex flex-col lg:flex-row gap-12'>
                     {/* --- SIDEBAR --- */}
-                    <div className='w-full lg:w-1/4'>
+                    <div className='w-full lg:w-[25%]'>
                         <div className='lg:sticky lg:top-32'>
                             <div className='bg-[#bd002d] p-6 lg:p-8 rounded-[30px] lg:rounded-[40px] shadow-2xl shadow-[#bd002d]/20 relative overflow-hidden'>
                                 <div className='flex items-center justify-between mb-6 relative z-10'>
@@ -155,7 +163,7 @@ const LatestCollection = () => {
                                                 onClick={() => toggleGroup(groupName)}
                                             >
                                                 <div className='flex items-center gap-3'>
-                                                    <span className="text-amber-400 text-[10px] font-black uppercase tracking-[0.15em] hover:text-white transition-all text-left leading-tight max-w-[140px]">
+                                                    <span className="text-amber-400 text-[10px] font-black  tracking-[0.15em] hover:text-white transition-all text-left leading-tight max-w-[140px]">
                                                         {groupName}
                                                     </span>
                                                     <span className='text-[8px] text-white/40 font-bold tabular-nums'>
@@ -170,7 +178,7 @@ const LatestCollection = () => {
                                                     <button 
                                                         key={cat.name}
                                                         onClick={() => handleCategoryClick(cat.name)}
-                                                        className='text-white/70 hover:text-white text-[9px] font-bold uppercase text-left py-2 flex items-center justify-between group/item border-b border-white/5 last:border-0'
+                                                        className='text-white/70 hover:text-white text-[9px] font-bold  text-left py-2 flex items-center justify-between group/item border-b border-white/5 last:border-0'
                                                     >
                                                         <span className='truncate mr-2 group-hover/item:translate-x-1 transition-transform'>{cat.name}</span>
                                                         <span className='text-[8px] text-amber-400/60 font-mono'>{cat.count}</span>
@@ -215,9 +223,9 @@ const LatestCollection = () => {
 
                     {/* MAIN PRODUCT GRID (Filtered) */}
                     <div className='w-full lg:w-3/4'>
-                        <div className='flex overflow-x-auto lg:grid lg:grid-cols-3 gap-6 md:gap-x-8 gap-y-12 pb-10 lg:pb-0 snap-x snap-mandatory mobile-scrollbar px-2'>
+                        <div className='flex overflow-x-auto lg:grid lg:grid-cols-4 gap-6 md:gap-x-8 gap-y-12 pb-10 lg:pb-0 snap-x snap-mandatory mobile-scrollbar px-2'>
                             {latestProducts.length > 0 ? latestProducts.map((item, index) => (
-                                <div key={index} className="min-w-[85%] sm:min-w-[45vw] lg:min-w-0 snap-center flex flex-col group bg-white border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-br-[40px] md:rounded-br-[60px] overflow-hidden">
+                                <div key={index} className="min-w-[85%] sm:min-w-[45vw] lg:min-w-[20%] snap-center flex flex-col group bg-white border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-br-[40px] md:rounded-br-[60px] overflow-hidden">
                                     <div className="relative p-1 md:p-3 flex-grow cursor-pointer" onClick={() => handleProductClick(item._id)}>
                                         <div className="absolute top-0 right-0 z-20 overflow-hidden w-20 h-20 pointer-events-none">
                                             <div className="absolute top-[20%] -right-[30%] bg-[#bd002d] text-white text-[7px] font-black py-1 w-[140%] text-center transform rotate-45 shadow-sm uppercase tracking-tighter">New</div>
