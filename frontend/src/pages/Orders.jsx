@@ -187,6 +187,35 @@ const handleFeedbackSubmit = async (e) => {
 
   return (
     <div className='bg-[#FCF9F4] min-h-screen pt-24 pb-20 px-6 md:px-16 lg:px-24 text-black select-none animate-fade-in'>
+
+
+<div className='max-w-6xl mx-auto mb-8 grid grid-cols-2 md:grid-cols-4 gap-4'>
+  <div className='bg-white border border-black/5 p-4 rounded-sm'>
+    <p className='text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1'>Total Consignments</p>
+    <p className='text-2xl font-black tracking-tighter'>{processedOrders.length}</p>
+  </div>
+  
+  <div className='bg-white border border-black/5 p-4 rounded-sm'>
+    <p className='text-[8px] text-[#BC002D] font-black uppercase tracking-widest mb-1'>Delivered Units</p>
+    <p className='text-2xl font-black tracking-tighter'>
+      {processedOrders.filter(o => o.status === 'Delivered').length}
+    </p>
+  </div>
+
+  <div className='bg-white border border-black/5 p-4 rounded-sm hidden md:block'>
+    <p className='text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1'>Active Transit</p>
+    <p className='text-2xl font-black tracking-tighter'>
+      {processedOrders.filter(o => o.status !== 'Delivered' && o.status !== 'Cancelled').length}
+    </p>
+  </div>
+
+  <div className='bg-white border border-black/5 p-4 rounded-sm hidden md:block'>
+    <p className='text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1'>Total Ledger Value</p>
+    <p className='text-2xl font-black tracking-tighter'>
+      ₹{processedOrders.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()}
+    </p>
+  </div>
+</div>
       
       {/* SECTION HEADER */}
       <div className='text-3xl mb-12 flex items-center justify-between'>
