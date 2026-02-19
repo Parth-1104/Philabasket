@@ -1,63 +1,136 @@
-import React, { useContext, useEffect, useState, useMemo, useRef, useCallback } from 'react';
+import React, { useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import ProductItem from '../components/ProductItem';
-import { Filter, X, ArrowUpDown, RefreshCw, ShoppingCart, Zap, FolderTree, ChevronRight, LayoutGrid } from 'lucide-react';
+import { X, ArrowUpDown, ChevronRight, LayoutGrid, ChevronLeft, ChevronDown, ListFilter, SlidersHorizontal, Search } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+
+// 1. MOVE SidebarContent OUTSIDE the main component to prevent focus loss
+const SidebarContent = ({ 
+  grouped, 
+  independent, 
+  activeCategory, 
+  handleCategorySelect, 
+  sidebarSearch, 
+  setSidebarSearch, 
+  openGroups, 
+  setOpenGroups, 
+  setShowFilter 
+}) => (
+  <>
+    <div className='flex items-center justify-between mb-6 border-b border-white/10 pb-6'>
+      <h3 className='text-white font-black text-[10px] tracking-[0.3em] uppercase'>Registry Index</h3>
+      <button onClick={() => setShowFilter(false)} className='lg:hidden text-white/60 p-1'><X size={20}/></button>
+    </div>
+
+    <div className='relative mb-8'>
+      <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-white/30' size={14} />
+      <input 
+        type="text" 
+        value={sidebarSearch}
+        onChange={(e) => setSidebarSearch(e.target.value)}
+        placeholder="Search Index..."
+        className='w-full bg-white/10 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-[10px] text-white placeholder:text-white/30 outline-none focus:bg-white/20 transition-all font-bold uppercase tracking-widest'
+      />
+      {sidebarSearch && (
+        <button 
+          type="button"
+          onClick={() => setSidebarSearch("")} 
+          className='absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white'
+        >
+          <X size={12}/>
+        </button>
+      )}
+    </div>
+
+    <div className='flex flex-col gap-3'>
+      {Object.keys(grouped).sort().map(groupName => (
+        <div key={groupName} className='flex flex-col'>
+          <button
+            onClick={() => setOpenGroups(p => ({ ...p, [groupName]: !p[groupName] }))}
+            className='flex items-center justify-between py-3 px-4 rounded-xl text-[9px] font-bold uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/5 transition-all'
+          >
+            {groupName}
+            {openGroups[groupName] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+          </button>
+          {openGroups[groupName] && (
+            <div className='flex flex-col gap-1.5 ml-4 mt-1 mb-2 border-l border-white/10 pl-4'>
+              {grouped[groupName].map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => handleCategorySelect(cat)}
+                  className={`text-left py-2 px-3 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${activeCategory === cat ? 'bg-white text-[#BC002D]' : 'text-white/40 hover:text-white'}`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+      {independent.sort().map(cat => (
+        <button
+          key={cat}
+          onClick={() => handleCategorySelect(cat)}
+          className={`text-left py-3 px-4 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all ${activeCategory === cat ? 'bg-white text-[#BC002D]' : 'text-white/60 hover:bg-white/5 hover:text-white'}`}
+        >
+          {cat}
+        </button>
+      ))}
+      
+      {Object.keys(grouped).length === 0 && independent.length === 0 && (
+        <p className='text-[10px] text-white/30 font-bold uppercase text-center py-4'>No Index Matches</p>
+      )}
+    </div>
+  </>
+);
 
 const Collection = () => {
-  const { search, showSearch, backendUrl, addToCart } = useContext(ShopContext);
-  const [searchParams] = useSearchParams();
+  const { search, showSearch, backendUrl } = useContext(ShopContext);
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  
-  // URL PARAMS
-  const groupParam = searchParams.get('group');
-  const categoryParam = searchParams.get('category');
 
-  const [products, setProducts] = useState([]); 
+  const activeCategory = searchParams.get('category') || "";
+  const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [totalFound, setTotalFound] = useState(0); 
-
-  const [showFilter, setShowFilter] = useState(false); 
-  const [category, setCategory] = useState([]);
-  const [activeGroup, setActiveGroup] = useState("");
+  const [totalFound, setTotalFound] = useState(0);
+  const [showFilter, setShowFilter] = useState(false);
   const [sortType, setSortType] = useState('relevant');
   const [dbCategories, setDbCategories] = useState([]);
   const [openGroups, setOpenGroups] = useState({});
+  const [sidebarSearch, setSidebarSearch] = useState("");
 
-  const observer = useRef();
-
-  const lastElementRef = useCallback(node => {
-    if (loading) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) setPage(prev => prev + 1);
-    });
-    if (node) observer.current.observe(node);
-  }, [loading, hasMore]);
+  // Body scroll lock
+  useEffect(() => {
+    if (showFilter) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }, [showFilter]);
 
   const fetchCategories = async () => {
     try {
       const response = await axios.get(backendUrl + '/api/category/list');
-      if (response.data.success) {
-        setDbCategories(response.data.categories);
-      }
+      if (response.data.success) setDbCategories(response.data.categories);
     } catch (error) { console.error(error); }
   };
 
-  useEffect(() => { if(backendUrl) fetchCategories(); }, [backendUrl]);
-
-  const toggleGroupAccordion = (groupName) => {
-    setOpenGroups(prev => ({ ...prev, [groupName]: !prev[groupName] }));
-  };
+  useEffect(() => { if (backendUrl) fetchCategories(); }, [backendUrl]);
 
   const { grouped, independent } = useMemo(() => {
     const groupedResult = {};
     const independentResult = [];
+    
+    // Use .trim() to handle spaces during multiple word typing
+    const searchLower = sidebarSearch.toLowerCase().trim();
+
     dbCategories.forEach(cat => {
+      const isMatch = cat.name.toLowerCase().includes(searchLower);
+      if (searchLower !== "" && !isMatch) return;
+
       if (!cat.group || ['General', 'Independent', 'none', ''].includes(cat.group.trim())) {
         independentResult.push(cat.name);
       } else {
@@ -67,300 +140,185 @@ const Collection = () => {
       }
     });
     return { grouped: groupedResult, independent: independentResult };
-  }, [dbCategories]);
+  }, [dbCategories, sidebarSearch]);
 
-  useEffect(() => {
-    if (categoryParam) setCategory(categoryParam.split(','));
-    if (groupParam) setActiveGroup(groupParam);
-  }, [categoryParam, groupParam]);
-
-  const fetchFromRegistry = async (currentPage, isNewQuery = false, currentCategory = category, currentGroup = activeGroup) => {
+  const fetchFromRegistry = useCallback(async (targetPage) => {
     if (!backendUrl) return;
     setLoading(true);
     try {
       const response = await axios.get(`${backendUrl}/api/product/list`, {
         params: {
-          page: currentPage,
-          limit: 20,
-          category: currentCategory.join(','), // Use passed value
-          group: currentGroup,                 // Use passed value
+          page: targetPage,
+          limit: 50,
+          category: activeCategory,
           sort: sortType,
           search: showSearch ? search : ''
         }
       });
-
       if (response.data.success) {
-        let newItems = response.data.products;
-        setProducts(prev => isNewQuery ? newItems : [...prev, ...newItems]);
+        setProducts(response.data.products);
         setTotalFound(response.data.total);
-        setHasMore(newItems.length === 20); 
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     } catch (error) {
       toast.error("Registry Sync Failed");
     } finally {
       setLoading(false);
     }
-};
-
-  useEffect(() => { if (page > 1) fetchFromRegistry(page); }, [page]);
+  }, [backendUrl, activeCategory, sortType, search, showSearch]);
 
   useEffect(() => {
     setPage(1);
-    fetchFromRegistry(1, true);
-  }, [category, activeGroup, sortType, search, showSearch, backendUrl]);
+    fetchFromRegistry(1);
+  }, [activeCategory, sortType, search, showSearch, fetchFromRegistry]);
 
-  const toggleCategory = (val) => {
-    const newCategories = category.includes(val) 
-        ? category.filter(i => i !== val) 
-        : [...category, val];
-    
-    setCategory(newCategories);
-    setActiveGroup(""); // Reset group
-    setPage(1);
-    
-    // Call fetch immediately with the new category array
-    fetchFromRegistry(1, true, newCategories, "");
-}
+  useEffect(() => {
+    if (page > 1) fetchFromRegistry(page);
+  }, [page, fetchFromRegistry]);
 
-const selectGroup = (groupName) => {
-    setActiveGroup(groupName);
-    setCategory([]); 
+  const handleCategorySelect = (val) => {
+    if (activeCategory === val) {
+      setSearchParams({});
+    } else {
+      setSearchParams({ category: val });
+    }
     setShowFilter(false);
-    setPage(1);
-    
-    // Call fetch immediately with the new group name
-    fetchFromRegistry(1, true, [], groupName);
-}
-  const handleAddToCart = (e, id) => {
-    e.stopPropagation();
-    addToCart(id, 1);
-    toast.success("Added to Registry");
   };
 
-  const handleBuyNow = async (e, id) => {
-    e.stopPropagation();
-    await addToCart(id, 1);
-    navigate('/cart');
-  };
+  const totalPages = Math.ceil(totalFound / 50);
 
-  const handleSortChange = (e) => {
-    const newSort = e.target.value;
-    setSortType(newSort);
-    setPage(1);
-    fetchFromRegistry(1, true, category, activeGroup);
-};
+  const renderPageNumbers = () => {
+    const pages = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(
+        <button
+          key={i}
+          onClick={() => setPage(i)}
+          className={`w-9 h-9 md:w-12 md:h-12 rounded-xl text-[10px] font-black transition-all duration-300 ${
+            page === i ? 'bg-[#BC002D] text-white shadow-lg' : 'bg-gray-50 text-gray-400 hover:bg-black hover:text-white'
+          }`}
+        >
+          {i}
+        </button>
+      );
+    }
+    return pages;
+  };
 
   return (
-    <div className='bg-white min-h-screen pt-4 pb-20 px-6 md:px-16 lg:px-24 select-none animate-fade-in'>
-      
-      {/* --- TOP BANNER / TITLE --- */}
-      <div className='mb-12'>
-        <div className='flex items-center gap-4 mb-4'>
-            <span className='h-[1px] w-12 bg-[#BC002D]'></span>
-            <p className='text-[10px] tracking-[0.6em] text-[#BC002D] uppercase font-black'>Certified Archive</p>
+    <div className='bg-white min-h-screen pt-4 pb-24 px-4 md:px-16 lg:px-24 select-none animate-fade-in'>
+
+      <div className='mb-8 md:mb-12'>
+        <div className='flex items-center gap-4 mb-3'>
+          <span className='h-[1px] w-8 md:w-12 bg-[#BC002D]'></span>
+          <p className='text-[9px] md:text-[10px] tracking-[0.5em] md:tracking-[0.6em] text-[#BC002D] uppercase font-black'>Certified Archive</p>
         </div>
-        <h2 className='text-4xl md:text-6xl font-bold text-gray-900 tracking-tighter uppercase'>
+        <h2 className='text-3xl md:text-6xl font-bold text-gray-900 tracking-tighter uppercase leading-none'>
           Global <span className='text-[#BC002D]'>Collection.</span>
         </h2>
       </div>
 
-      <div className='flex flex-col lg:flex-row gap-12 relative z-20'>
+      <div className='flex flex-col lg:flex-row gap-8 lg:gap-12 relative z-20'>
 
-        {/* --- SIDEBAR --- */}
-        <aside className={`fixed inset-0 z-[3000] lg:relative lg:z-0 lg:inset-auto lg:w-[20%] lg:block lg:sticky lg:top-10 lg:self-start transition-all duration-700 ${showFilter ? 'opacity-100' : 'opacity-0 pointer-events-none lg:opacity-100 lg:pointer-events-auto'}`}>
-          <div onClick={() => setShowFilter(false)} className='absolute inset-0 bg-black/80 backdrop-blur-sm lg:hidden'></div>
-          
-          <div className='absolute top-0 right-0 h-full w-[85%] overflow-y-auto bg-[#BC002D] p-8 flex flex-col lg:relative lg:w-full lg:h-auto lg:overflow-visible lg:p-10 lg:translate-x-0 lg:rounded-[40px] lg:shadow-2xl transition-transform duration-500'>
-            
-            <div className="flex items-center justify-between mb-10 border-b border-white/10 pb-6">
-                <h3 className='text-white font-black text-[10px] tracking-[0.3em] uppercase'>Registry Index</h3>
-                <X onClick={() => setShowFilter(false)} className="lg:hidden text-white/60 cursor-pointer" size={20} />
+        {/* MOBILE DRAWER */}
+        <div className={`fixed inset-0 z-[500] lg:hidden transition-all duration-500 ${showFilter ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+          <div onClick={() => setShowFilter(false)} className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-400 ${showFilter ? 'opacity-100' : 'opacity-0'}`} />
+          <div className={`absolute bottom-0 left-0 right-0 bg-[#BC002D] rounded-t-[32px] transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] max-h-[85vh] flex flex-col ${showFilter ? 'translate-y-0' : 'translate-y-full'}`}>
+            <div className='flex justify-center pt-4 pb-2 flex-shrink-0'><div className='w-10 h-1 rounded-full bg-white/30'></div></div>
+            <div className='overflow-y-auto flex-1 px-6 py-4 pb-10'>
+              <SidebarContent 
+                grouped={grouped}
+                independent={independent}
+                activeCategory={activeCategory}
+                handleCategorySelect={handleCategorySelect}
+                sidebarSearch={sidebarSearch}
+                setSidebarSearch={setSidebarSearch}
+                openGroups={openGroups}
+                setOpenGroups={setOpenGroups}
+                setShowFilter={setShowFilter}
+              />
             </div>
-            
-            <div className='flex flex-col gap-8'>
-              <div className="space-y-4">
-                {Object.keys(grouped).sort().map(groupName => (
-                  <div key={groupName} className="flex flex-col">
-                    <div className='flex items-center justify-between cursor-pointer py-1' onClick={() => toggleGroupAccordion(groupName)}>
-                        <div className='flex items-center gap-3'>
-                            <FolderTree size={14} className={activeGroup === groupName ? 'text-white' : 'text-white/40'} />
-                            <button onClick={(e) => { e.stopPropagation(); selectGroup(groupName); }} className={`text-[10px] font-black uppercase tracking-widest text-left transition-all ${activeGroup === groupName ? 'text-white' : 'text-white/60 hover:text-white'}`}>
-                                {groupName}
-                            </button>
-                        </div>
-                        <ChevronRight size={12} className={`text-white/40 transition-transform duration-300 ${openGroups[groupName] ? 'rotate-90' : ''}`} />
-                    </div>
+          </div>
+        </div>
 
-                    <div className={`flex flex-col gap-2 ml-6 border-l border-white/10 pl-4 overflow-hidden transition-all duration-500 ${openGroups[groupName] ? 'max-h-[2000px] mt-3 opacity-100 mb-4' : 'max-h-0 opacity-0'}`}>
-                      {grouped[groupName].map(cat => (
-                        <button key={cat} onClick={() => toggleCategory(cat)} className={`text-left py-1 text-[9px] font-bold uppercase tracking-widest transition-all ${category.includes(cat) ? 'text-white translate-x-1' : 'text-white/40 hover:text-white hover:translate-x-1'}`}>
-                          {cat}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {independent.length > 0 && (
-                <div className="pt-8 border-t border-white/20">
-                    <p className='text-[8px] text-white/20 font-black uppercase tracking-widest mb-6 ml-1'>General Archive</p>
-                    <div className='flex flex-col gap-2'>
-                        {independent.sort().map(cat => (
-                            <button key={cat} onClick={() => toggleCategory(cat)} className={`text-left py-2.5 px-4 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all ${category.includes(cat) ? 'bg-white text-[#BC002D]' : 'text-white/60 hover:bg-white/5 hover:text-white'}`}>
-                                {cat}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-              )}
-            </div>
-
-            <button onClick={() => {setCategory([]); setActiveGroup("");}} className="mt-12 pt-6 border-t border-white/10 text-[10px] font-black text-white/40 hover:text-white uppercase tracking-[0.3em] transition-all">
-                Reset Filters
+        {/* DESKTOP SIDEBAR */}
+        <aside className='hidden lg:block lg:w-[20%] lg:sticky lg:top-10 lg:self-start'>
+          <div className='bg-[#BC002D] p-10 rounded-[40px] shadow-2xl shadow-black/50'>
+            <SidebarContent 
+                grouped={grouped}
+                independent={independent}
+                activeCategory={activeCategory}
+                handleCategorySelect={handleCategorySelect}
+                sidebarSearch={sidebarSearch}
+                setSidebarSearch={setSidebarSearch}
+                openGroups={openGroups}
+                setOpenGroups={setOpenGroups}
+                setShowFilter={setShowFilter}
+            />
+            <button onClick={() => { setSearchParams({}); setSidebarSearch(""); }} className="mt-10 pt-6 border-t border-white/10 w-full text-[10px] font-black text-white/40 hover:text-white uppercase tracking-[0.3em] text-left transition-colors">
+                Reset Index
             </button>
           </div>
         </aside>
 
-        {/* --- MAIN DISPLAY --- */}
-        <main className='flex-1'>
-          
-          {/* MOBILE TOGGLES */}
-          <div className='lg:hidden flex gap-4 mb-8'>
-            <button onClick={() => setShowFilter(true)} className='flex-1 bg-black text-white p-5 rounded-xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest'>
-               <Filter size={14} /> Index
-            </button>
-            <div className='flex-1 bg-gray-100 p-5 rounded-xl flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-widest text-gray-900 relative'>
-               <ArrowUpDown size={14} />
-               <select 
-    value={sortType}
-    onChange={handleSortChange} className='absolute inset-0 opacity-0 cursor-pointer'>
-                  <option value="relevant">Relevance</option>
-                        <option value="price-low">Price: Low to High</option>
-                        <option value="price-high">Price: High to Low</option>
-                        <option value="year-new">Year: Recent First</option>
-                        <option value="year-old">Year: Oldest First</option>
-                        <option value="name-asc">Alphabetical: A-Z</option>
-               </select>
-               Sort
-            </div>
-          </div>
-
-          {/* DESKTOP FILTER BAR */}
-          <div className='hidden lg:flex items-center justify-between mb-12 pb-6 border-b border-gray-100'>
-            <div className='flex items-center gap-6'>
-                <div className='flex items-center gap-2'>
-                  <LayoutGrid size={14} className='text-gray-400' />
-                  <p className='text-[10px] font-black uppercase tracking-[0.4em] text-gray-400'>
-                      Registry: <span className='text-black'>{totalFound}</span> Specimens
-                  </p>
-                </div>
-                {category.length > 0 && (
-                  <div className='flex items-center gap-2'>
-                    {category.slice(0, 2).map(cat => (
-                      <span key={cat} className='text-[8px] bg-gray-100 px-3 py-1 rounded-full font-black uppercase text-gray-500'>{cat}</span>
-                    ))}
-                    {category.length > 2 && <span className='text-[8px] font-black text-gray-300'>+{category.length - 2} More</span>}
-                  </div>
-                )}
-            </div>
-
-            <div className='flex items-center gap-8'>
-                <div className='flex items-center gap-3 group'>
-                    <ArrowUpDown size={14} className='text-[#BC002D] group-hover:rotate-180 transition-transform duration-500' />
-                    <select 
-                        value={sortType}
-                        onChange={(e) => setSortType(e.target.value)}
-                        className='text-[10px] font-black uppercase tracking-[0.2em] text-gray-700 outline-none bg-transparent cursor-pointer hover:text-[#BC002D] transition-colors'
-                    >
-                        <option value="relevant">Relevance</option>
-                        <option value="price-low">Price: Low to High</option>
-                        <option value="price-high">Price: High to Low</option>
-                        <option value="year-new">Year: Recent First</option>
-                        <option value="year-old">Year: Oldest First</option>
-                        <option value="name-asc">Alphabetical: A-Z</option>
-                    </select>
-                </div>
-            </div>
-          </div>
-
-          {/* ACTIVE TAGS */}
-          {category.length > 0 && (
-            <div className='flex flex-wrap gap-3 mb-12'>
-              {category.map(cat => (
-                <div key={cat} className='flex items-center gap-3 bg-black text-white px-5 py-2.5 rounded-full text-[9px] font-black tracking-widest uppercase animate-slide-down'>
-                  {cat}
-                  <X size={12} onClick={() => toggleCategory(cat)} className='cursor-pointer text-[#BC002D] hover:rotate-90 transition-transform' />
-                </div>
-              ))}
-              <button onClick={() => setCategory([])} className='text-[9px] font-black tracking-widest uppercase text-[#BC002D] border-b-2 border-[#BC002D]/20 hover:border-[#BC002D] transition-all ml-2'>Clear All</button>
-            </div>
-          )}
-
-          {/* GRID */}
-          <div className='grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 md:gap-x-8 gap-y-16'>
-            {products.map((item, index) => (
-              <div 
-                key={`${item._id}-${index}`} 
-                className="flex flex-col group bg-white border border-gray-100 shadow-sm hover:shadow-2xl transition-all duration-500 rounded-br-[40px] lg:rounded-br-[60px] overflow-hidden h-full"
-              >
-                <div className="flex-grow">
-                  <ProductItem id={item._id} _id={item._id} {...item} image={item.image} />
-                </div>
-
-                <div className="flex flex-col gap-2 p-3 lg:p-5 mt-auto border-t border-gray-50 bg-white group-hover:bg-gray-50/50 transition-colors">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <button onClick={(e) => handleAddToCart(e, item._id)} className="w-full bg-gray-100 text-gray-900 py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:bg-black hover:text-white transition-all duration-300">
-                      <ShoppingCart size={13} />
-                      <span className="text-[8px] lg:text-[9px] font-black uppercase tracking-widest">Add</span>
-                    </button>
-                    <button onClick={(e) => handleBuyNow(e, item._id)} className="w-full bg-black text-white py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:bg-[#BC002D] transition-all duration-300 shadow-lg shadow-black/5">
-                      <Zap size={13} className="fill-amber-400 text-amber-400" />
-                      <span className="text-[8px] lg:text-[9px] font-black uppercase tracking-widest">Buy Now</span>
-                    </button>
-                  </div>
-                </div>
+        {/* MAIN DISPLAY */}
+        <main className='flex-1 min-w-0'>
+          {/* Header bar remains same */}
+          <div className='flex items-center justify-between mb-6 md:mb-10 pb-5 border-b border-gray-100 gap-3'>
+            <div className='flex flex-col gap-1.5 min-w-0'>
+              <div className='flex items-center gap-2'>
+                <LayoutGrid size={12} className='text-gray-400 flex-shrink-0' />
+                <p className='text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-gray-400 whitespace-nowrap'>
+                  <span className='text-black'>{totalFound}</span> Specimens
+                </p>
               </div>
+              {activeCategory && (
+                <div className='flex items-center gap-1.5 animate-fade-in'>
+                  <span className='text-[9px] font-black uppercase tracking-widest text-[#BC002D] truncate max-w-[120px]'>{activeCategory}</span>
+                  <button onClick={() => setSearchParams({})} className='p-0.5 rounded-full bg-gray-100 hover:bg-black hover:text-white transition-colors flex-shrink-0'><X size={10} /></button>
+                </div>
+              )}
+            </div>
+
+            <div className='flex items-center gap-2 flex-shrink-0'>
+              <button onClick={() => setShowFilter(true)} className='lg:hidden flex items-center gap-1.5 bg-black text-white py-2.5 px-3.5 rounded-xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-transform'><SlidersHorizontal size={12} /><span>Filter</span></button>
+              <div className='flex items-center gap-1.5 bg-gray-50 py-2.5 px-3.5 rounded-xl'>
+                <ArrowUpDown size={12} className='text-gray-900 flex-shrink-0' />
+                <select value={sortType} onChange={(e) => setSortType(e.target.value)} className='text-[9px] md:text-[10px] font-black text-gray-900 uppercase tracking-[0.15em] outline-none bg-transparent cursor-pointer max-w-[90px] md:max-w-none'>
+                  <option value="relevant">Relevance</option>
+                  <option value="price-low">↑ Price</option>
+                  <option value="price-high">↓ Price</option>
+                  <option value="year-new">Newest</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Grid remains same */}
+          <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-3 md:gap-x-6 gap-y-8 md:gap-y-12'>
+            {products.map((item) => (
+              <ProductItem key={item._id} id={item._id} {...item} />
             ))}
           </div>
 
-          {/* LOADER */}
-          <div ref={lastElementRef} className='py-32 flex flex-col items-center justify-center gap-4'>
-            {loading && (
-              <div className='flex flex-col items-center gap-3'>
-                <RefreshCw size={28} className='animate-spin text-[#BC002D]' />
-                <p className='text-[9px] font-black uppercase tracking-[0.3em] text-gray-400'>Updating Registry...</p>
-              </div>
-            )}
-            {!hasMore && products.length > 0 && (
-              <div className='flex flex-col items-center gap-4'>
-                <div className='h-[1px] w-20 bg-gray-100'></div>
-                <p className='text-[9px] font-black uppercase tracking-[0.5em] text-gray-300'>End of Archive</p>
-              </div>
-            )}
-          </div>
-
-          {!loading && products.length === 0 && (
-            <div className='py-40 text-center bg-gray-50 rounded-[60px] border border-dashed border-gray-200 animate-fade-in'>
-               <h3 className='text-3xl font-bold text-gray-900 uppercase tracking-tighter mb-2'>Specimen Not Found</h3>
-               <p className='text-[10px] text-gray-400 uppercase tracking-widest mb-8'>Try adjusting your filters or checking a different era.</p>
-               <button onClick={() => {setCategory([]); setActiveGroup("");}} className='bg-[#BC002D] text-white px-12 py-5 text-[10px] font-black uppercase tracking-[0.5em] rounded-full hover:bg-black transition-colors'>Reset Index</button>
+          {/* Pagination remains same */}
+          {totalPages > 1 && (
+            <div className='flex flex-wrap items-center justify-center gap-2 mt-16 mb-6'>
+              <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className='p-2.5 md:p-3 rounded-xl bg-gray-50 text-gray-500 hover:bg-black hover:text-white disabled:opacity-30 transition-all active:scale-95'><ChevronLeft size={16} /></button>
+              <div className='flex items-center gap-1.5'>{renderPageNumbers()}</div>
+              <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} className='p-2.5 md:p-3 rounded-xl bg-gray-50 text-gray-500 hover:bg-black hover:text-white disabled:opacity-30 transition-all active:scale-95'><ChevronRight size={16} /></button>
             </div>
           )}
         </main>
       </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #f3f4f6; border-radius: 10px; }
-        .animate-fade-in { animation: fadeIn 0.8s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-slide-down { animation: slideDown 0.4s ease-out forwards; }
-      `}} />
     </div>
-  )
-}
+  );
+};
 
 export default Collection;

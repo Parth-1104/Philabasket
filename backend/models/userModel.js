@@ -33,6 +33,16 @@ userSchema.pre('save', function (next) {
     next();
 });
 
+userSchema.virtual('orders', {
+    ref: 'order',           // The model to use
+    localField: '_id',      // Find orders where 'userId'
+    foreignField: 'userId'  // matches this user's '_id'
+});
+
+// Ensure virtuals are included in JSON/Object output
+userSchema.set('toObject', { virtuals: true });
+userSchema.set('toJSON', { virtuals: true });
+
 const userModel = mongoose.models.user || mongoose.model('user', userSchema);
 
 export default userModel;

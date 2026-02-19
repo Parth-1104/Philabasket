@@ -1,40 +1,48 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { ShopContext } from '../context/ShopContext';
-import { 
-  Gift, Users, ArrowRight 
-} from 'lucide-react';
+import { Gift, Users, ArrowRight } from 'lucide-react';
 
 const UtilityBar = () => {
     const { currency, toggleCurrency, userPoints, navigate } = useContext(ShopContext);
 
-    const [isExpanded, setIsExpanded] = useState(false); // Controls the Reward Panel
-    const [isCollapsed, setIsCollapsed] = useState(true); // Default to a small bubble
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [isCollapsed, setIsCollapsed] = useState(true);
+    const [filterOpen, setFilterOpen] = useState(false);
+
+    // Watch for the filter drawer being open (set by Collection via body attribute)
+    useEffect(() => {
+        const observer = new MutationObserver(() => {
+            setFilterOpen(document.body.hasAttribute('data-filter-open'));
+        });
+        observer.observe(document.body, { attributes: true, attributeFilter: ['data-filter-open'] });
+        return () => observer.disconnect();
+    }, []);
 
     const calculateValue = () => {
         const inrValue = (userPoints || 0) / 10;
         return currency === 'INR' ? inrValue : inrValue / 83;
     };
 
-    // Toggle Logic: Use the Logo to manage everything
     const handleLogoToggle = () => {
         if (isCollapsed) {
             setIsCollapsed(false);
         } else {
-            // If already open, toggle it closed back to a bubble
             setIsCollapsed(true);
             setIsExpanded(false);
         }
     };
 
+    // Hide entirely when filter drawer is open
+    if (filterOpen) return null;
+
     return (
-        <div className='fixed bottom-20 left-6 z-[4000] select-none flex flex-col items-start'>
-            
-            {/* --- 1. DETAIL PANEL (REWARDS) --- */}
+        <div className='fixed bottom-20 left-6 z-[400] select-none flex flex-col items-start'>
+
+            {/* DETAIL PANEL (REWARDS) */}
             {!isCollapsed && isExpanded && (
                 <div className='mb-4 bg-black/95 backdrop-blur-2xl border border-white/10 rounded-[30px] shadow-2xl w-[280px] p-6 animate-in fade-in zoom-in slide-in-from-bottom-4 duration-300'>
                     <div className='flex justify-between items-center mb-6'>
                         <h3 className='text-[10px] font-black text-white uppercase tracking-[0.3em]'>Archive Rewards</h3>
-                        {/* Panel closes when clicking the main logo again */}
                     </div>
                     <div className='bg-[#BC002D] p-4 rounded-2xl flex items-center justify-between cursor-pointer hover:scale-[1.02] transition-transform' onClick={() => navigate('/referral')}>
                         <div className='flex items-center gap-3'>
@@ -46,20 +54,18 @@ const UtilityBar = () => {
                 </div>
             )}
 
-            {/* --- 2. MAIN INTERACTION AREA --- */}
+            {/* MAIN INTERACTION AREA */}
             <div className={`flex items-center gap-4 transition-all duration-500 ease-out ${isCollapsed ? 'w-14 h-14' : 'bg-black/90 backdrop-blur-xl border border-white/10 rounded-full pl-2 pr-6 py-2 shadow-2xl'}`}>
-                
-                {/* THE GIFT LOGO (Master Toggle) */}
+
+                {/* GIFT LOGO (Master Toggle) */}
                 <div className='relative shrink-0'>
-                    <button 
+                    <button
                         onClick={handleLogoToggle}
                         className={`transition-all duration-300 rounded-full flex items-center justify-center shadow-lg relative overflow-hidden
                             ${isCollapsed ? 'w-14 h-14 bg-[#BC002D]' : 'w-10 h-10 bg-[#BC002D] hover:scale-110 active:scale-95'}
                             ${isExpanded ? 'bg-white text-[#BC002D]' : 'text-white'}`}
                     >
                         <Gift size={isCollapsed ? 29 : 20} />
-                        
-                        {/* Points Badge (Visible when collapsed) */}
                         {isCollapsed && (
                             <span className='absolute -top-1 right-3 bg-black text-white text-[8px] px-1.5 py-1 rounded-full font-black border border-white/20'>
                                 {userPoints || 0}
@@ -68,13 +74,12 @@ const UtilityBar = () => {
                     </button>
                 </div>
 
-                {/* --- UTILITY CONTENT --- */}
+                {/* UTILITY CONTENT */}
                 {!isCollapsed && (
                     <div className='flex items-center gap-4 animate-in fade-in slide-in-from-left-4 duration-500'>
-                        
-                        {/* POINTS SECTION (Now triggers the Reward Panel) */}
-                        <div 
-                            onClick={() => setIsExpanded(!isExpanded)} 
+
+                        <div
+                            onClick={() => setIsExpanded(!isExpanded)}
                             className={`flex flex-col cursor-pointer hover:opacity-70 transition-opacity group ${isExpanded ? 'scale-110' : ''}`}
                         >
                             <p className='text-[7px] font-black text-[#BC002D] uppercase leading-none mb-1 group-hover:underline'>Invite & Earn</p>
@@ -83,18 +88,16 @@ const UtilityBar = () => {
 
                         <div className='h-8 w-[1px] bg-white/10'></div>
 
-                        {/* VALUE DISPLAY */}
                         <div className='flex flex-col'>
                             <p className='text-[7px] font-black text-green-500 uppercase leading-none mb-1'>Value</p>
                             <p className='text-[10px] font-black text-white tabular-nums'>{currency} {calculateValue().toFixed(2)}</p>
                         </div>
 
-                        {/* CURRENCY SWITCHER */}
                         <div className='flex items-center bg-white/5 rounded-full p-1 border border-white/5'>
                             {['INR', 'USD'].map((curr) => (
-                                <button 
-                                    key={curr} 
-                                    onClick={() => toggleCurrency(curr)} 
+                                <button
+                                    key={curr}
+                                    onClick={() => toggleCurrency(curr)}
                                     className={`px-2 py-1 rounded-full text-[8px] font-black transition-all ${currency === curr ? 'bg-[#BC002D] text-white' : 'text-gray-500 hover:text-white'}`}
                                 >
                                     {curr}

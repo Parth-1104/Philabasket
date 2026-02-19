@@ -2,17 +2,17 @@ import React, { useContext, useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { ShopContext } from '../context/ShopContext';
 import RelatedProducts from '../components/RelatedProducts';
-import { Heart, Loader2, Minus, Plus, PlayCircle, X, Zap, Globe, CreditCard, Layers, ShoppingBag } from 'lucide-react';
+import { Heart, Loader2, Minus, Plus, PlayCircle, X, Zap, Globe, CreditCard, Layers, ShoppingBag, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 
 const Product = () => {
   const { productId } = useParams();
   const { products, addToCart, formatPrice, currency, navigate, wishlist, toggleWishlist, backendUrl } = useContext(ShopContext);
-  
+
   const [productData, setProductData] = useState(false);
-  const [image, setImage] = useState('');
-  const [activeVideo, setActiveVideo] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeVideo, setActiveVideo] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [showPopup, setShowPopup] = useState(false);
   const [isMainLoaded, setIsMainLoaded] = useState(false);
@@ -20,7 +20,7 @@ const Product = () => {
   const getWatermarkedUrl = (url) => {
     if (!url || !url.includes('cloudinary')) return url;
     const watermarkTransform = 'l_Logo-5_tagline_yaxuag,fl_relative,w_0.4,c_scale,o_70,a_-45';
-    return url.includes('f_auto,q_auto') 
+    return url.includes('f_auto,q_auto')
       ? url.replace('/f_auto,q_auto/', `/f_auto,q_auto,${watermarkTransform}/`)
       : url.replace('/upload/', `/upload/f_auto,q_auto,${watermarkTransform}/`);
   };
@@ -36,34 +36,46 @@ const Product = () => {
   const fetchProductData = useCallback(async () => {
     let item = products.find((item) => item._id === productId);
     if (item) {
-        setProductData(item);
-        setImage(getWatermarkedUrl(item.image[0]));
+      setProductData(item);
     } else {
-        try {
-            const response = await axios.get(`${backendUrl}/api/product/single`, { params: { productId } });
-            if (response.data.success) {
-                const fetchedItem = response.data.product;
-                setProductData(fetchedItem);
-                setImage(getWatermarkedUrl(fetchedItem.image[0]));
-            } else {
-                toast.error("Specimen not found");
-                navigate('/collection');
-            }
-        } catch (error) {
-            console.error("Archive Sync Error:", error);
+      try {
+        const response = await axios.get(`${backendUrl}/api/product/single`, { params: { productId } });
+        if (response.data.success) {
+          setProductData(response.data.product);
+        } else {
+          toast.error("Specimen not found");
+          navigate('/collection');
         }
+      } catch (error) {
+        console.error("Archive Sync Error:", error);
+      }
     }
   }, [productId, products, backendUrl, navigate]);
 
   useEffect(() => {
     setProductData(false);
+    setActiveIndex(0);
+    setActiveVideo(false);
     fetchProductData();
   }, [productId, products, fetchProductData]);
 
-  useEffect(() => {
-    if (!image) return;
+  const allImages = productData ? productData.image.map(getWatermarkedUrl) : [];
+  const hasVideo = productData && productData.youtubeUrl;
+  const totalMedia = allImages.length + (hasVideo ? 1 : 0);
+  const isVideoActive = hasVideo && activeIndex === allImages.length;
+
+  const goTo = (index) => {
+    setActiveIndex(index);
     setIsMainLoaded(false);
-  }, [image]);
+    if (hasVideo && index === allImages.length) {
+      setActiveVideo(true);
+    } else {
+      setActiveVideo(false);
+    }
+
+  };
+  const prev = () => goTo((activeIndex - 1 + totalMedia) % totalMedia);
+  const next = () => goTo((activeIndex + 1) % totalMedia);
 
   const updateQuantity = (val) => {
     if (val < 1) return;
@@ -75,7 +87,7 @@ const Product = () => {
   };
 
   const handleAddToCart = () => {
-    addToCart(productData._id, quantity); 
+    addToCart(productData._id, quantity);
     setShowPopup(true);
     toast.success("Registry Updated", { position: "bottom-right", autoClose: 2000, hideProgressBar: true });
     setTimeout(() => setShowPopup(false), 4000);
@@ -92,212 +104,272 @@ const Product = () => {
   };
 
   const valuationSymbol = currency === 'USD' ? '$' : '₹';
+  const discount = productData && productData.marketPrice > productData.price
+    ? Math.round(100 - (productData.price / productData.marketPrice) * 100)
+    : 0;
 
-  return productData ? (
-    <div className='bg-white min-h-screen pt-24 pb-12 px-6 md:px-16 lg:px-24 select-none animate-fade-in relative'>
-      {/* POPUP LOGIC */}
+  if (!productData) return (
+    <div className='min-h-screen flex flex-col items-center justify-center bg-white'>
+      <Loader2 size={40} className='text-[#BC002D] animate-spin mb-5' />
+      <p className='text-[10px] font-black tracking-[0.6em] text-gray-300 uppercase'>Initializing Archive...</p>
+    </div>
+  );
+
+  return (
+    <div className='bg-white min-h-screen pt-4 md:pt-10 pb-16 select-none animate-fade-in relative overflow-x-hidden'>
+
+      {/* ── ADD TO CART POPUP ──────────────────────────── */}
       {showPopup && (
-          <div className='fixed top-10 left-1/2 -translate-x-1/2 z-[2000] w-[90vw] max-w-md animate-slide-down'>
-              <div className='bg-white/80 backdrop-blur-xl border border-black/5 shadow-[0_20px_50px_rgba(0,0,0,0.1)] rounded-2xl p-4 flex items-center gap-4'>
-                  <div className='w-16 h-16 bg-[#F9F9F9] rounded-xl flex items-center justify-center p-2 border border-black/5'>
-                      <img src={productData.image[0]} className='w-full h-full object-contain' alt="Success preview" />
-                  </div>
-                  <div className='flex-1'>
-                      <div className='flex items-center gap-2 mb-1'>
-                          <div className='w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse'></div>
-                          <p className='text-[9px] font-black  tracking-[0.2em] text-gray-400'>Specimen Secured</p>
-                      </div>
-                      <h3 className='text-[5px] font-black  tracking-tight text-gray-900 line-clamp-1'>{productData.name}</h3>
-                      <p className='text-[9px] font-bold text-[#BC002D] mt-1'>Quantity: {quantity} • Volume Synced</p>
-                  </div>
-                  <button onClick={() => setShowPopup(false)} className='p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-400'><X size={16} /></button>
-              </div>
-          </div>
-      )}
-      
-      <div className="absolute -right-[10vw] top-0 h-[50vh] w-[40vw] bg-[#BC002D]/5 rounded-bl-[600px] pointer-events-none z-0"></div>
-
-      <div className='relative z-10 flex gap-12 flex-col lg:flex-row items-start'>
-        
-        {/* --- REFACTORED MEDIA SECTION --- */}
-        <div className='flex-1 flex flex-col w-full lg:sticky lg:top-32'>
-          {/* Main Display Area */}
-          <div className='w-full relative bg-[#F9F9F9] flex items-center justify-center border border-black/5 p-8 h-[400px] md:h-[500px] overflow-hidden rounded-br-[80px]'>
-              {activeVideo ? (
-                <div className='absolute inset-0 z-30 bg-black animate-fade-in'>
-                  <button onClick={() => setActiveVideo('')} className='absolute top-6 right-6 z-40 bg-white/20 backdrop-blur-md text-white p-3 rounded-full hover:bg-[#BC002D] transition-colors'>
-                    <X size={20} />
-                  </button>
-                  <iframe className='w-full h-full' src={activeVideo} frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen></iframe>
-                </div>
-              ) : (
-                <img 
-                  onLoad={() => setIsMainLoaded(true)}
-                  className={`max-w-full max-h-full object-contain drop-shadow-2xl transition-all duration-1000 ${isMainLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} 
-                  src={image} 
-                  alt="" 
-                />
-              )}
-          </div>
-
-          {/* Conditional Small Preview Grid: Hidden if only one image and no video */}
-          {(productData.image.length > 1 || productData.youtubeUrl) && (
-            <div className='flex flex-row overflow-x-auto w-full hide-scrollbar gap-3 mt-4'>
-                {productData.image.map((item, index) => {
-                    const thumb = getWatermarkedUrl(item);
-                    return (
-                      <div
-                        key={index}
-                        onClick={() => { setImage(thumb); setActiveVideo(''); }}
-                        className={`w-20 md:w-24 aspect-square cursor-pointer border-2 transition-all p-1.5 bg-[#F9F9F9] rounded-xl ${image === thumb && !activeVideo ? 'border-[#BC002D]' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                      >
-                        <img src={thumb} className="w-full h-full object-contain" alt="" />
-                      </div>
-                    );
-                })}
-
-                {productData.youtubeUrl && (
-                  <div 
-                    onClick={() => setActiveVideo(getEmbedUrl(productData.youtubeUrl))}
-                    className={`w-20 md:w-24 aspect-square flex flex-col items-center justify-center cursor-pointer border-2 p-1.5 bg-black text-white transition-all rounded-xl ${activeVideo ? 'border-[#BC002D]' : 'border-transparent opacity-60 hover:opacity-100'}`}
-                  >
-                    <PlayCircle size={20} />
-                    <span className='text-[7px] font-black uppercase mt-1'>Video</span>
-                  </div>
-                )}
+        <div className='fixed top-6 left-1/2 -translate-x-1/2 z-[2000] w-[90vw] max-w-sm animate-slide-down'>
+          <div className='bg-white/90 backdrop-blur-xl border border-black/5 shadow-2xl rounded-2xl p-4 flex items-center gap-4'>
+            <div className='w-14 h-14 bg-[#F5F5F5] rounded-xl flex items-center justify-center p-2 shrink-0'>
+              <img src={productData.image[0]} className='w-full h-full object-contain' alt="" />
             </div>
-          )}
+            <div className='flex-1 min-w-0'>
+              <div className='flex items-center gap-2 mb-1'>
+                <div className='w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shrink-0'></div>
+                <p className='text-[9px] font-black tracking-[0.2em] text-gray-400 uppercase'>Specimen Secured</p>
+              </div>
+              <p className='text-[11px] font-black text-gray-900 truncate'>{productData.name}</p>
+              <p className='text-[9px] font-bold text-[#BC002D] mt-0.5'>Qty: {quantity} • Synced</p>
+            </div>
+            <button onClick={() => setShowPopup(false)} className='p-1.5 hover:bg-gray-100 rounded-full shrink-0 transition-colors text-gray-400'>
+              <X size={14} />
+            </button>
+          </div>
         </div>
+      )}
 
-        {/* INFO SECTION */}
-        <div className='flex-1 lg:max-w-[550px] py-4'>
-          <div className='flex items-center gap-4 mb-6'>
-            <span className='text-[#BC002D] text-[10px] font-black tracking-[0.4em] uppercase px-4 py-1.5 bg-[#BC002D]/5  rounded-full'>{productData.country}</span>
-            <span className='text-gray-400 text-[10px] font-bold tracking-[0.4em] '>{productData.year} ARCHIVE</span>
-          </div>
+      <div className='relative z-10 max-w-[1400px] mx-auto px-4 md:px-12 lg:px-16'>
 
-          <h1 className='text-2xl md:text-2xl font-black text-gray-900  leading-none mb-8 '>{productData.name}</h1>
-          
-          <div className='grid grid-cols-2 gap-8 border-y border-black/[0.03] py-8 mb-8'>
-              <div className='flex flex-col gap-1'>
-                  <p className='text-[9px] font-black text-gray-400  tracking-widest'>Certified Condition</p>
-                  <p className='text-xs font-black  text-gray-900'>{productData.condition || 'Mint State'}</p>
+        {/* ── MAIN PRODUCT AREA ─────────────────────────── */}
+        {/* Changed flex-col to flex-col-reverse is NOT needed because image section is placed before info section in JSX */}
+        <div className='flex flex-col lg:flex-row gap-10 lg:gap-16 items-start'>
+
+          {/* ════════════════════════════════════════════
+              IMAGE SECTION — NOW PLACED FIRST IN SOURCE
+              ════════════════════════════════════════════ */}
+          <div className='w-full lg:w-[48%] lg:sticky lg:top-28 flex flex-col gap-4'>
+
+            {/* MAIN VIEWER */}
+            <div className='relative w-full bg-[#F7F7F7] rounded-3xl overflow-hidden group shadow-sm' style={{ paddingBottom: '100%' }}>
+              <div className='absolute inset-0 flex items-center justify-center p-4 md:p-10'>
+
+                {isVideoActive && activeVideo ? (
+                  <div className='absolute inset-0 bg-black z-20 animate-fade-in'>
+                    <button onClick={() => { setActiveVideo(false); }} className='absolute top-4 right-4 z-30 bg-white/20 backdrop-blur-md text-white p-2.5 rounded-full hover:bg-[#BC002D] transition-colors'>
+                      <X size={18} />
+                    </button>
+                    <iframe className='w-full h-full' src={getEmbedUrl(productData.youtubeUrl)} frameBorder="0" allow="autoplay; encrypted-media" allowFullScreen></iframe>
+                  </div>
+                ) : isVideoActive ? (
+                  <div onClick={() => setActiveVideo(true)} className='absolute inset-0 flex flex-col items-center justify-center gap-3 bg-gray-900 cursor-pointer group/vid'>
+                    <div className='w-16 h-16 rounded-full bg-[#BC002D] flex items-center justify-center shadow-2xl group-hover/vid:scale-110 transition-transform'>
+                      <PlayCircle size={32} className='text-white' />
+                    </div>
+                    <p className='text-[10px] font-black text-white/60 uppercase tracking-widest'>Play Archive Film</p>
+                  </div>
+                ) : (
+                  <>
+                    {!isMainLoaded && (
+                      <div className='absolute inset-0 flex items-center justify-center'>
+                        <div className='w-8 h-8 border-2 border-[#BC002D]/30 border-t-[#BC002D] rounded-full animate-spin'></div>
+                      </div>
+                    )}
+                    <img
+                      key={allImages[activeIndex]}
+                      onLoad={() => setIsMainLoaded(true)}
+                      className={`max-w-full max-h-full w-full h-full object-contain drop-shadow-xl transition-all duration-700 ${isMainLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-[0.97]'}`}
+                      src={allImages[activeIndex]}
+                      alt={productData.name}
+                    />
+                  </>
+                )}
+
+                <span className='absolute top-4 left-4 w-5 h-5 border-t-2 border-l-2 border-[#BC002D]/10 rounded-tl-lg pointer-events-none'></span>
+                <span className='absolute top-4 right-4 w-5 h-5 border-t-2 border-r-2 border-[#BC002D]/10 rounded-tr-lg pointer-events-none'></span>
+                <span className='absolute bottom-4 left-4 w-5 h-5 border-b-2 border-l-2 border-[#BC002D]/10 rounded-bl-lg pointer-events-none'></span>
+                <span className='absolute bottom-4 right-4 w-5 h-5 border-b-2 border-r-2 border-[#BC002D]/10 rounded-br-lg pointer-events-none'></span>
               </div>
-              <div className='flex flex-col gap-1'>
-                  <p className='text-[9px] font-black text-gray-400  tracking-widest'>Availability</p>
-                  <p className={`text-xs font-black  ${productData.stock < 5 ? 'text-[#BC002D]' : 'text-green-600'}`}>
-                    {productData.stock > 0 ? `${productData.stock} Specimens Left` : 'Registry Exhausted'}
-                  </p>
+
+              {totalMedia > 1 && (
+                <>
+                  <button onClick={prev} className='absolute left-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white active:scale-95'>
+                    <ChevronLeft size={16} className='text-gray-800' />
+                  </button>
+                  <button onClick={next} className='absolute right-3 top-1/2 -translate-y-1/2 z-10 w-9 h-9 bg-white/80 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white active:scale-95'>
+                    <ChevronRight size={16} className='text-gray-800' />
+                  </button>
+                </>
+              )}
+
+              {discount > 0 && (
+                <div className='absolute top-4 left-4 bg-[#BC002D] text-white text-[9px] font-black px-2.5 py-1.5 rounded-full tracking-widest z-10'>
+                  -{discount}% Discount
+                </div>
+              )}
+            </div>
+
+            {/* THUMBNAIL STRIP */}
+            {totalMedia > 1 && (
+              <div className='flex gap-2.5 overflow-x-auto hide-scrollbar pb-1'>
+                {allImages.map((img, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goTo(i)}
+                    className={`shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-2xl border-2 transition-all duration-200 bg-[#F7F7F7] overflow-hidden p-1.5 ${activeIndex === i ? 'border-[#BC002D] shadow-md shadow-[#BC002D]/20' : 'border-transparent opacity-50 hover:opacity-90'}`}
+                  >
+                    <img src={img} className='w-full h-full object-contain' alt="" />
+                  </button>
+                ))}
+                
+                {/* VIDEO THUMBNAIL - Direct Play onClick */}
+                {hasVideo && (
+                  <button
+                    onClick={() => goTo(allImages.length)}
+                    className={`shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-2xl border-2 transition-all duration-200 overflow-hidden flex flex-col items-center justify-center gap-1 ${isVideoActive ? 'border-[#BC002D] bg-gray-900 shadow-md shadow-[#BC002D]/20' : 'border-transparent bg-gray-900 opacity-50 hover:opacity-90'}`}
+                  >
+                    <PlayCircle size={18} className='text-white' />
+                    <span className='text-[7px] font-black text-white/70 uppercase'>Video</span>
+                  </button>
+                )}
               </div>
+            )}
           </div>
 
-         
+          {/* ════════════════════════════════════════════
+              INFO SECTION
+              ════════════════════════════════════════════ */}
+          <div className='w-full lg:w-[52%] flex flex-col gap-0'>
 
-          {/* TECHNICAL SPECIFICATIONS GRID */}
-          <div className='bg-gray-50/50 rounded-3xl p-6 border border-black/[0.03] mb-10 grid grid-cols-2 gap-y-8 gap-x-4'>
-                <div className='flex items-start gap-3'>
-                    <div className='p-2 bg-white rounded-lg shadow-sm text-[#BC002D]'><Globe size={14}/></div>
-                    <div>
-                        <p className='text-[8px] font-black text-gray-400  tracking-widest mb-1'>Place of Origin</p>
-                        <p className='text-[10px] font-bold text-gray-900 '>{productData.country}</p>
-                    </div>
-                </div>
-                <div className='flex items-start gap-3'>
-                    <div className='p-2 bg-white rounded-lg shadow-sm text-[#BC002D]'><CreditCard size={14}/></div>
-                    <div>
-                        <p className='text-[8px] font-black text-gray-400  tracking-widest mb-1'>Payment Terms</p>
-                        <p className='text-[10px] font-bold text-gray-900 '>Sovereign Settlement</p>
-                    </div>
-                </div>
-                <div className='flex items-start gap-3'>
-                    <div className='p-2 bg-white rounded-lg shadow-sm text-[#BC002D]'><Layers size={14}/></div>
-                    <div>
-                        <p className='text-[8px] font-black text-gray-400  tracking-widest mb-1'>Produced Count</p>
-                        <p className='text-[10px] font-bold text-gray-900 '>{productData.producedCount || 'Limited Edition'}</p>
-                    </div>
-                </div>
-                <div className='flex items-start gap-3'>
-                    <div className='p-2 bg-white rounded-lg shadow-sm text-[#BC002D]'><ShoppingBag size={14}/></div>
-                    <div>
-                        <p className='text-[8px] font-black text-gray-400  tracking-widest mb-1'>Min. Order Qty</p>
-                        <p className='text-[10px] font-bold text-gray-900 '>01 Specimen</p>
-                    </div>
-                </div>
-          </div>
-          <div className='p-7 '>
-          <h5 className='text-[10px] font-black text-[#BC002D]  tracking-[0.3em] mb-3'>
-            Specimen Description
-        </h5>
-          <p className='text-sm md:text-base text-gray-500 leading-relaxed font-medium italic mb-10'>
-            {productData.description}
-          </p>
-          </div>
+            {/* Country + Year tags */}
+            <div className='flex items-center gap-2.5 flex-wrap mb-5'>
+              <span className='text-[#BC002D] text-[9px] font-black tracking-[0.4em] uppercase px-3.5 py-1.5 bg-[#BC002D]/8 rounded-full border border-[#BC002D]/10'>
+                {productData.country}
+              </span>
+              <span className='text-gray-400 text-[9px] font-bold tracking-[0.4em] uppercase px-3.5 py-1.5 bg-gray-50 rounded-full'>
+                {productData.year} Archive
+              </span>
+            </div>
 
-          <div className='flex flex-col gap-2 mb-12'>
-              <div className='flex items-baseline gap-2'>
-                  <span className='text-3xl font-serif text-[#BC002D]'>{valuationSymbol}</span>
-                  <p className='text-6xl md:text-7xl font-black text-gray-900 tracking-tighter tabular-nums leading-none'>
-                      {String(formatPrice(productData.price * quantity)).replace(/[₹$]/g, '').trim()}
-                  </p>
+            {/* Product Name */}
+            <h1 className='text-xl md:text-2xl lg:text-3xl font-black text-gray-900 leading-tight mb-6 capitalize tracking-tight'>
+              {productData.name}
+            </h1>
+
+            {/* Price Block */}
+            <div className='flex items-end gap-4 mb-6 pb-6 border-b border-gray-100'>
+              <div className='flex items-baseline gap-1.5'>
+                <span className='text-2xl font-serif text-[#BC002D] leading-none'>{valuationSymbol}</span>
+                <p className='text-5xl md:text-6xl font-black text-gray-900 tracking-tighter tabular-nums leading-none'>
+                  {String(formatPrice(productData.price * quantity)).replace(/[₹$]/g, '').trim()}
+                </p>
               </div>
               {productData.marketPrice > productData.price && (
-                  <div className='flex items-baseline gap-2 opacity-30'>
-                      <span className='text-sm font-serif text-gray-500'>{valuationSymbol}</span>
-                      <p className='text-2xl font-bold text-gray-500 line-through decoration-[#BC002D] tabular-nums'>
-                          {String(formatPrice(productData.marketPrice * quantity)).replace(/[₹$]/g, '').trim()}
-                      </p>
-                  </div>
+                <div className='flex items-baseline gap-1 mb-1 opacity-40'>
+                  <span className='text-sm font-serif text-gray-500'>{valuationSymbol}</span>
+                  <p className='text-xl font-bold text-gray-500 line-through tabular-nums'>
+                    {String(formatPrice(productData.marketPrice * quantity)).replace(/[₹$]/g, '').trim()}
+                  </p>
+                </div>
               )}
-          </div>
+            </div>
 
-          <div className='flex flex-col gap-8'>
-              <div className='flex items-center gap-6'>
-                  <p className='text-[10px] font-black text-gray-900  tracking-widest'>Volume:</p>
-                  <div className='flex items-center bg-gray-50 rounded-xl p-1 border border-black/5'>
-                    <button onClick={() => updateQuantity(quantity - 1)} className='p-3 text-black hover:text-[#BC002D] transition-colors'>
-                        <Minus size={14} strokeWidth={3} />
+            {/* Condition + Availability */}
+            <div className='grid grid-cols-2 gap-4 mb-6'>
+              <div className='bg-gray-50 rounded-2xl p-4'>
+                <p className='text-[8px] font-black text-gray-400 tracking-widest uppercase mb-1.5'>Condition</p>
+                <p className='text-[11px] font-black text-gray-900'>{productData.condition || 'Mint State'}</p>
+              </div>
+              <div className='bg-gray-50 rounded-2xl p-4'>
+                <p className='text-[8px] font-black text-gray-400 tracking-widest uppercase mb-1.5'>Stock</p>
+                <p className={`text-[11px] font-black ${productData.stock < 5 ? 'text-[#BC002D]' : 'text-green-600'}`}>
+                  {productData.stock > 0 ? `${productData.stock} Specimens` : 'Exhausted'}
+                </p>
+              </div>
+              <div className='bg-gray-50 rounded-2xl p-4'>
+                <p className='text-[8px] font-black text-gray-400 tracking-widest uppercase mb-1.5'>Origin</p>
+                <p className='text-[11px] font-black text-gray-900 capitalize'>{productData.country || INDIA}</p>
+              </div>
+              <div className='bg-gray-50 rounded-2xl p-4'>
+                <p className='text-[8px] font-black text-gray-400 tracking-widest uppercase mb-1.5'>Edition</p>
+                <p className='text-[11px] font-black text-gray-900 '>{productData.producedCount || 'Limited'}</p>
+              </div>
+              
+            </div>
+
+            {/* Specs */}
+
+
+            {/* Description */}
+            <div className='mb-8'>
+              <p className='text-[9px] font-black text-[#BC002D] tracking-[0.3em] uppercase mb-3'>Description</p>
+              <p className='text-[13px] text-gray-500 leading-relaxed font-medium italic'>
+                {productData.description}
+              </p>
+            </div>
+
+            {/* Quantity */}
+            <div className='flex items-center gap-5 mb-6'>
+              <p className='text-[9px] font-black text-gray-900 tracking-widest uppercase'>Volume:</p>
+              <div className='flex items-center bg-gray-50 rounded-xl border border-gray-100 overflow-hidden'>
+                <button onClick={() => updateQuantity(quantity - 1)} className='px-4 py-3 text-gray-500 hover:text-[#BC002D] hover:bg-gray-100 transition-colors active:scale-90'>
+                  <Minus size={13} strokeWidth={3} />
+                </button>
+                <span className='w-10 text-center text-sm font-black text-gray-900 tabular-nums'>{quantity}</span>
+                <button onClick={() => updateQuantity(quantity + 1)} className='px-4 py-3 text-gray-500 hover:text-[#BC002D] hover:bg-gray-100 transition-colors active:scale-90'>
+                  <Plus size={13} strokeWidth={3} />
+                </button>
+              </div>
+            </div>
+
+            {/* CTA Buttons */}
+            <div className='flex flex-col sm:flex-row gap-3 items-stretch'>
+              {productData.stock > 0 ? (
+                <>
+                  <div className='flex gap-3 flex-1'>
+                    <button
+                        onClick={() => toggleWishlist(productData._id)}
+                        className='w-14 h-14 shrink-0 border border-gray-100 rounded-2xl flex items-center justify-center hover:border-[#BC002D]/30 hover:bg-[#BC002D]/5 transition-all active:scale-95'
+                    >
+                        <Heart size={20} className={wishlist.includes(productData._id) ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-300'} />
                     </button>
-                    <span className='w-12 text-center text-sm font-black text-black tabular-nums'>{quantity}</span>
-                    <button onClick={() => updateQuantity(quantity + 1)} className='p-3 text-black hover:text-[#BC002D] transition-colors'>
-                        <Plus size={14} strokeWidth={3} />
+                    <button
+                        onClick={handleAddToCart}
+                        className='flex-1 bg-gray-900 text-white py-4 rounded-2xl text-[9px] font-black tracking-[0.4em] uppercase hover:bg-black transition-all active:scale-[0.98] shadow-lg'
+                    >
+                        Add to Cart
                     </button>
                   </div>
-              </div>
-
-              <div className='flex flex-col sm:flex-row gap-4'>
-                {productData.stock > 0 ? (
-                  <>
-                    <button onClick={() => toggleWishlist(productData._id)} className='p-5 border border-black/5 rounded-2xl hover:bg-gray-50 transition-all'>
-                        <Heart size={24} className={wishlist.includes(productData._id) ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-300'} />
-                    </button>
-                    <button onClick={handleAddToCart} className='flex-1 bg-gray-900 text-white py-5 rounded-2xl text-[10px] font-black  tracking-[0.4em] hover:bg-black transition-all shadow-xl'>Add to Cart</button>
-                    <button onClick={handleInstantCheckout} className='flex-1 bg-[#BC002D] text-white py-5 rounded-2xl text-[10px] font-black  tracking-[0.4em] hover:scale-105 transition-all flex items-center justify-center gap-3 shadow-xl'>
-                      <Zap size={16} fill="white" /> Buy Now
-                    </button>
-                  </>
-                ) : (
-                  <button disabled className='w-full bg-gray-100 text-gray-400 py-6 rounded-2xl text-[10px] font-black  tracking-[0.5em]'>Archive Fully Acquired</button>
-                )}
-              </div>
+                  <button
+                    onClick={handleInstantCheckout}
+                    className='flex-1 bg-[#BC002D] text-white py-4 rounded-2xl text-[9px] font-black tracking-[0.4em] uppercase hover:bg-[#a00025] transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-[#BC002D]/25'
+                  >
+                    <Zap size={14} fill="white" />
+                    Buy Now
+                  </button>
+                </>
+              ) : (
+                <button disabled className='w-full bg-gray-100 text-gray-400 py-5 rounded-2xl text-[10px] font-black tracking-[0.5em] uppercase cursor-not-allowed'>
+                  Archive Fully Acquired
+                </button>
+              )}
+            </div>
           </div>
         </div>
-      </div>
-      
-      <div className='mt-32 border-t border-black/[0.03] pt-20'>
-         <RelatedProducts category={productData.category[0]} />
+
+        {/* ── RELATED PRODUCTS ──────────────────────────── */}
+        <div className='mt-24 md:mt-32 pt-16 border-t border-gray-100'>
+          <RelatedProducts category={productData.category[0]} />
+        </div>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in { animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
       `}} />
-    </div>
-  ) : (
-    <div className='min-h-screen flex flex-col items-center justify-center bg-white'>
-        <Loader2 size={48} className='text-[#BC002D] animate-spin mb-6' />
-        <p className='text-[10px] font-black  tracking-[0.6em] text-gray-400'>Initializing Sovereign Archive...</p>
     </div>
   );
 };

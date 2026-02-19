@@ -234,7 +234,7 @@ const LatestCollection = () => {
                                             <ProductItem id={item._id} _id={item._id} image={item.image} name={item.name} price={item.price} marketPrice={item.marketPrice} category={item.category[0]} linkToFilter={true} />
                                         </div>
                                     </div>
-                                    <div className="flex flex-col gap-2 p-4 pt-0">
+                                    {/* <div className="flex flex-col gap-2 p-4 pt-0">
                                         <div className="grid grid-cols-2 gap-2">
                                             <button onClick={(e) => onAddToCart(e, item._id)} className="bg-gray-100 text-gray-900 py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-black hover:text-white transition-all duration-300">
                                                 <ShoppingCart size={14} />
@@ -245,7 +245,7 @@ const LatestCollection = () => {
                                                 <span className="text-[8px] font-black uppercase tracking-widest">Buy Now</span>
                                             </button>
                                         </div>
-                                    </div>
+                                    </div> */}
                                 </div>
                             )) : (
                                 <div className='col-span-3 py-20 text-center'>

@@ -88,143 +88,140 @@ const listMedia = async (req, res) => {
 // import categoryModel from '../models/categoryModel.js';
 
 
+
+
+
 const bulkAddProducts = async (req, res) => {
     try {
         if (!req.file) return res.json({ success: false, message: "Please upload a CSV file" });
 
         const stamps = [];
         const usedImageNames = [];
-        const discoveredCategories = new Set(); 
+        const discoveredCategories = new Map();
         let rowsProcessed = 0;
-        let skippedEmpty = 0;
-        let skippedDuplicate = 0;
-        let skippedNoImage = 0;
 
+        // --- STEP 1: PRE-PROCESS MEDIA INTO A VARIANT MAP ---
         const [existingStamps, allMedia] = await Promise.all([
             productModel.find({}, 'name').lean(),
             mediaModel.find({}, 'originalName imageUrl').lean()
         ]);
 
         const existingNames = new Set(existingStamps.map(s => s.name.toLowerCase().trim()));
-        
+
+        // Helper: Extracts base BK-ID (e.g., "BK04" from any string)
         const extractBkId = (name) => {
             if (!name) return null;
-            const match = String(name).match(/#?BK\d+/i);
-            return match ? match[0].toUpperCase().replace('#', '') : null;
+            const match = String(name).match(/BK\d+/i);
+            return match ? match[0].toUpperCase() : null;
         };
 
+        // Create a Grouped Map: { "BK04": ["url1", "url2", "url3"], "BK05": [...] }
+        const mediaVariantMap = new Map();
+        allMedia.forEach(m => {
+            const bid = extractBkId(m.originalName);
+            if (bid) {
+                if (!mediaVariantMap.has(bid)) mediaVariantMap.set(bid, []);
+                
+                // Ensure Cloudinary optimization
+                let url = m.imageUrl;
+                if (url.includes('cloudinary.com') && !url.includes('f_auto')) {
+                    url = url.replace('/upload/', '/upload/f_auto,q_auto/');
+                }
+                
+                mediaVariantMap.get(bid).push({
+                    url: url,
+                    originalName: m.originalName
+                });
+            }
+        });
+
+        // --- STEP 2: PROCESS CSV STREAM ---
         const stream = Readable.from(req.file.buffer);
 
         stream.pipe(csv({
             mapHeaders: ({ header }) => header.trim().replace(/^["']|["']$/g, ''), 
-            skipLines: 0,
             strict: false 
         }))
         .on('data', (row) => {
             rowsProcessed++;
             try {
                 const clean = (val) => val ? String(val).trim().replace(/^["'\[]|["'\]]$/g, '').trim() : "";
+                const nameTrimmed = clean(row.name || Object.values(row)[0]);
 
-                const rawName = row.name || row['"name"'] || Object.values(row)[0]; 
-                const nameTrimmed = clean(rawName);
+                if (!nameTrimmed || existingNames.has(nameTrimmed.toLowerCase())) return;
 
-                if (!nameTrimmed) { skippedEmpty++; return; }
-                if (existingNames.has(nameTrimmed.toLowerCase())) { skippedDuplicate++; return; }
+                // --- SMART IMAGE BUNDLING ---
+                // We take whatever is in imageName1 (even the long description) and find the BK ID
+                const primaryCsvImg = clean(row.imageName1);
+                const baseId = extractBkId(primaryCsvImg);
+                
+                let productImages = [];
+                if (baseId && mediaVariantMap.has(baseId)) {
+                    const variants = mediaVariantMap.get(baseId);
+                    
+                    // Sort variants so the one without "(1)" or "-" comes first
+                    variants.sort((a, b) => {
+                        const isA_Var = a.originalName.includes('(') || a.originalName.includes('-');
+                        const isB_Var = b.originalName.includes('(') || b.originalName.includes('-');
+                        if (!isA_Var && isB_Var) return -1;
+                        if (isA_Var && !isB_Var) return 1;
+                        return a.originalName.length - b.originalName.length;
+                    });
 
-                // --- SMART IMAGE SYNC ---
-                const productImages = [];
-                for (let i = 1; i <= 4; i++) {
-                    const csvImgInput = clean(row[`imageName${i}`] || row[`"imageName${i}"`]);
-                    if (csvImgInput) {
-                        const searchId = extractBkId(csvImgInput);
-                        if (searchId) {
-                            const foundEntry = allMedia.find(m => extractBkId(m.originalName) === searchId);
-                            if (foundEntry) {
-                                let imageUrl = foundEntry.imageUrl;
-                                if (imageUrl.includes('cloudinary.com') && !imageUrl.includes('f_auto')) {
-                                    imageUrl = imageUrl.replace('/upload/', '/upload/f_auto,q_auto/');
-                                }
-                                productImages.push(imageUrl);
-                                usedImageNames.push(foundEntry.originalName); 
-                            }
-                        }
-                    }
+                    productImages = variants.map(v => v.url);
+                    variants.forEach(v => usedImageNames.push(v.originalName));
                 }
 
-                if (productImages.length === 0) { skippedNoImage++; return; }
+                if (productImages.length === 0) return;
 
-                // --- CATEGORY PARSING ---
+                // --- CATEGORY & MAPPING ---
                 let parsedCategory = [];
-                const rawCat = clean(row.category || row['"category"']);
+                const rawCat = clean(row.category);
                 if (rawCat) {
-                    parsedCategory = rawCat
-                        .split(',')
-                        .map(c => c.trim().replace(/^["']|["']$/g, ''))
-                        .filter(c => c !== "");
+                    parsedCategory = rawCat.split(',').map(c => c.trim()).filter(c => c !== "");
+                    parsedCategory.forEach(cat => {
+                        discoveredCategories.set(cat, (discoveredCategories.get(cat) || 0) + 1);
+                    });
                 }
-
-                // --- NEW FIELD MAPPING & NORMALIZATION ---
-                // --- NEW FIELD MAPPING & NORMALIZATION ---
-                const rawMarketPrice = Number(String(row.marketPrice || 0).replace(/[^0-9.]/g, '')) || 0;
-                const rawPrice = Number(String(row.price || 0).replace(/[^0-9.]/g, '')) || 0;
-                const sellingPrice = rawPrice > 0 ? rawPrice : rawMarketPrice;
-
-                // Produced Count (New Field) - Sanitized to Number
-                const producedCount = Number(String(row.producedCount || 0).replace(/[^0-9]/g, '')) || 0;
-
-                // Boolean Logic: DEFAULT IS FALSE
-                // Only sets to true if the CSV cell explicitly contains 'true'
-                const isBestseller = String(row.bestseller || '').toLowerCase().trim() === 'true';
-                const isNewArrival = String(row.newArrival || '').toLowerCase().trim() === 'true';
 
                 stamps.push({
                     name: nameTrimmed,
                     description: clean(row.description) || "Historical philatelic specimen.",
-                    marketPrice: rawMarketPrice,
-                    price: sellingPrice,
-                    image: productImages,
-                    youtubeUrl: clean(row.youtubeUrl).split('&')[0],
+                    marketPrice: Number(String(row.marketPrice || 0).replace(/[^0-9.]/g, '')) || 0,
+                    price: Number(String(row.price || 0).replace(/[^0-9.]/g, '')) || 0,
+                    image: productImages, // This now contains all 1, 2, 3... images
+                    youtubeUrl: clean(row.youtubeUrl),
                     category: parsedCategory,
                     year: Number(row.year) || 0,
                     country: clean(row.country) || "India",
-                    producedCount: producedCount, 
+                    producedCount: Number(String(row.producedCount || 0).replace(/[^0-9]/g, '')) || 0, 
                     condition: clean(row.condition) || "Mint",
                     stock: Number(row.stock) || 1,
-                    bestseller: isBestseller, // Default False
-                    newArrival: isNewArrival, // Default False
+                    bestseller: String(row.bestseller || '').toLowerCase().trim() === 'true',
+                    newArrival: String(row.newArrival || '').toLowerCase().trim() === 'true',
                     isActive: true,
                     date: Date.now()
                 });
 
-                parsedCategory.forEach(cat => discoveredCategories.add(cat));
-
-            } catch (err) {
-                console.error(`Error processing row ${rowsProcessed}:`, err);
-            }
+            } catch (err) { console.error(`Processing Error:`, err); }
         })
         .on('end', async () => {
             try {
-                if (stamps.length === 0) {
-                    return res.json({ 
-                        success: false, 
-                        message: `Zero items synced. Processed: ${rowsProcessed}, Duplicates: ${skippedDuplicate}, No Image Match: ${skippedNoImage}` 
-                    });
-                }
+                if (stamps.length === 0) return res.json({ success: false, message: "No items added." });
 
-                // Atomic Category Sync
-                const categoryArray = Array.from(discoveredCategories);
-                if (categoryArray.length > 0) {
-                    const existingCatsInDB = await categoryModel.find({ name: { $in: categoryArray } }).lean();
-                    const existingCatNames = new Set(existingCatsInDB.map(c => c.name));
-                    const newCats = categoryArray
-                        .filter(n => !existingCatNames.has(n))
-                        .map(name => ({ name, group: "Independent" }));
-                    
-                    if (newCats.length > 0) {
-                        await categoryModel.insertMany(newCats, { ordered: false });
+                // Update category counts with $inc (forces the field to exist)
+                const categoryOps = Array.from(discoveredCategories).map(([name, count]) => ({
+                    updateOne: {
+                        filter: { name },
+                        update: { 
+                            $inc: { productCount: count },
+                            $setOnInsert: { group: "Independent" } 
+                        },
+                        upsert: true 
                     }
-                }
+                }));
 
+                if (categoryOps.length > 0) await categoryModel.bulkWrite(categoryOps);
                 await productModel.insertMany(stamps, { ordered: false });
                 
                 if (usedImageNames.length > 0) {
@@ -234,22 +231,13 @@ const bulkAddProducts = async (req, res) => {
                     );
                 }
                 
-                res.json({ 
-                    success: true, 
-                    message: `Sync Complete. Added: ${stamps.length} | New Arrivals: ${stamps.filter(s => s.newArrival).length}` 
-                });
-            } catch (dbErr) {
-                console.error("Final Database Operation Error:", dbErr);
-                res.json({ success: false, message: "Registry update failed." });
-            }
+                res.json({ success: true, message: `Registry Updated. Added ${stamps.length} Specimens.` });
+            } catch (dbErr) { res.json({ success: false, message: dbErr.message }); }
         });
     } catch (error) {
-        console.error("Fatal Controller Error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
-
 // --- CORE CRUD (Upgraded for 100k+ Items) ---
 // const listProducts = async (req, res) => {
 //     try {
@@ -306,13 +294,29 @@ const listProducts = async (req, res) => {
         const limit = parseInt(req.query.limit) || 20;
         const skip = (page - 1) * limit;
 
-        const { category, group, sort, search, includeHidden, bestseller, newArrival } = req.query;
+        const { 
+            category, 
+            group, 
+            sort, 
+            search, 
+            includeHidden, 
+            onlyHidden, // New parameter for Trash view
+            bestseller, 
+            newArrival 
+        } = req.query;
         
         // --- 1. BASE QUERY ---
         let query = {};
 
-        // Visibility check
-        if (includeHidden !== 'true') {
+        /**
+         * VISIBILITY LOGIC
+         * - onlyHidden: returns only items in Trash (isActive: false)
+         * - includeHidden != true: returns only Active items (isActive: true)
+         * - includeHidden == true: returns everything
+         */
+        if (onlyHidden === 'true') {
+            query.isActive = false;
+        } else if (includeHidden !== 'true') {
             query.isActive = true;
         }
 
@@ -324,64 +328,67 @@ const listProducts = async (req, res) => {
             query.newArrival = true;
         }
 
-        // --- 2. LAYERED FILTERS ---
-        
-        // Search Logic
+        // --- 2. LAYERED FILTERS (Search & Categories) ---
         if (search) {
             const searchRegex = new RegExp(search, 'i');
             query.$or = [
                 { name: { $regex: searchRegex } },
                 { country: { $regex: searchRegex } },
-                { category: { $regex: searchRegex } },
-                { description: { $regex: searchRegex } }
+                { category: { $regex: searchRegex } }
             ];
         }
 
-        // Category & Group Logic (Merged into one filter)
         let categoryFilter = [];
-
         if (category && category !== "") {
-            // If specific categories are provided, use them
             categoryFilter = category.split(',');
         } else if (group && group !== "") {
-            // If only a group is provided, find all categories in that group
             const categoriesInGroup = await categoryModel.find({ group: group }).select('name').lean();
             categoryFilter = categoriesInGroup.map(cat => cat.name);
         }
 
-        // Apply category filter if either condition above was met
         if (categoryFilter.length > 0) {
             query.category = { $in: categoryFilter };
         }
 
-        // --- 3. SORT LOGIC (Updated to match Frontend) ---
-        let sortOrder = { date: -1 }; // Default: Relevance/Latest
-
+        // --- 3. SORT LOGIC ---
+        let sortOrder = { date: -1 };
         if (sort === 'price-low') sortOrder = { price: 1 };
         if (sort === 'price-high') sortOrder = { price: -1 };
         if (sort === 'year-new') sortOrder = { year: -1 };
-        if (sort === 'year-old') sortOrder = { year: 1 };
-        if (sort === 'name-asc') sortOrder = { name: 1 };
 
         // --- 4. EXECUTION ---
-        // --- 4. EXECUTION ---
-const [products, total] = await Promise.all([
-    productModel.find(query)
-        // ADD newArrival and producedCount to the select string below
-        .select('name price marketPrice image category country year stock date bestseller description youtubeUrl isActive isLatest newArrival producedCount')
-        .sort(sortOrder)
-        .skip(skip)
-        .limit(limit)
-        .lean(), 
-    productModel.countDocuments(query)
-]);
+        // countDocuments(query) now accurately reflects the current tab (Active or Trash)
+        const [products, total] = await Promise.all([
+            productModel.find(query)
+                .select('name price marketPrice image category country year stock date bestseller description youtubeUrl isActive isLatest newArrival producedCount')
+                .sort(sortOrder)
+                .skip(skip)
+                .limit(limit)
+                .lean(), 
+            productModel.countDocuments(query)
+        ]);
 
-        res.json({ 
-            success: true, 
-            products, 
-            total,
-            hasMore: total > (skip + products.length) 
-        });
+        // Inside your listProducts controller
+const totalActive = await productModel.countDocuments({ isActive: true });
+const totalTrash = await productModel.countDocuments({ isActive: false });
+
+res.json({ 
+    success: true, 
+    products, 
+    total, // Count for the current filtered view (for pagination)
+    stats: {
+        active: totalActive,
+        trash: totalTrash
+    },
+    hasMore: total > (skip + products.length) 
+});
+
+        // res.json({ 
+        //     success: true, 
+        //     products, 
+        //     total, // This is the total for the specific filter/view
+        //     hasMore: total > (skip + products.length) 
+        // });
 
     } catch (error) {
         console.error("Registry Query Error:", error);
@@ -515,17 +522,73 @@ export const bulkUpdateStatus = async (req, res) => {
 
 const removeProduct = async (req, res) => {
     try {
-        await productModel.findByIdAndDelete(req.body.id);
-        res.json({ success: true, message: "Stamp Removed" });
-    } catch (error) { res.json({ success: false, message: error.message }); }
+        const productId = req.body.id;
+
+        // 1. Find the product to get its categories
+        const product = await productModel.findById(productId);
+        if (!product) return res.json({ success: false, message: "Specimen not found" });
+
+        const categories = product.category || [];
+
+        // 2. Decrement the count for each category this product belongs to
+        if (categories.length > 0) {
+            await categoryModel.updateMany(
+                { name: { $in: categories } },
+                { $inc: { productCount: -1 } }
+            );
+        }
+
+        // 3. Delete the product
+        await productModel.findByIdAndDelete(productId);
+
+        res.json({ success: true, message: "Stamp Removed and Registry Updated" });
+    } catch (error) { 
+        res.json({ success: false, message: error.message }); 
+    }
 };
 
 const removeBulkProducts = async (req, res) => {
     try {
         const { ids } = req.body;
+
+        // 1. Find all products being deleted to gather their categories
+        const productsToDelete = await productModel.find({ _id: { $in: ids } }, 'category');
+        
+        const categoryFreqMap = new Map();
+
+        // 2. Count occurrences of each category in the deletion set
+        productsToDelete.forEach(product => {
+            if (product.category && Array.isArray(product.category)) {
+                product.category.forEach(cat => {
+                    categoryFreqMap.set(cat, (categoryFreqMap.get(cat) || 0) + 1);
+                });
+            }
+        });
+
+        // 3. Prepare bulk operations to decrement category counts
+        const categoryOps = [];
+        categoryFreqMap.forEach((count, name) => {
+            categoryOps.push({
+                updateOne: {
+                    filter: { name },
+                    update: { $inc: { productCount: -count } }
+                }
+            });
+        });
+
+        // 4. Execute category updates and product deletions
+        if (categoryOps.length > 0) {
+            await categoryModel.bulkWrite(categoryOps);
+        }
         await productModel.deleteMany({ _id: { $in: ids } });
-        res.json({ success: true, message: `${ids.length} Stamps removed` });
-    } catch (error) { res.json({ success: false, message: error.message }); }
+
+        res.json({ 
+            success: true, 
+            message: `${ids.length} Stamps removed and Registry counts adjusted` 
+        });
+    } catch (error) { 
+        res.json({ success: false, message: error.message }); 
+    }
 };
 
 // controllers/productController.js

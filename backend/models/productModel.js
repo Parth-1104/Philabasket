@@ -18,12 +18,12 @@ const productSchema = new mongoose.Schema({
     image: { 
         type: [String], 
         required: true,
-        validate: [val => val.length <= 4, '{PATH} exceeds the limit of 4 images']
+        // validation cap removed to allow unlimited variants (BK04, BK04 (1), BK04 (2), etc.)
     },
     
     youtubeUrl: { 
         type: String, 
-        default: "" 
+        default: "" // Cap/limit removed
     },
     
     category: { 

@@ -1,5 +1,5 @@
 import express from 'express';
-import { loginUser, registerUser, adminLogin, getUserProfile ,googleLogin, forgotPassword, resetPassword, listUsers, updateAddress } from '../controllers/userController.js';
+import { loginUser, registerUser, adminLogin, getUserProfile ,googleLogin, forgotPassword, resetPassword, listUsers, updateAddress, getPhilatelistDetail, getTopPhilatelists } from '../controllers/userController.js';
 import { toggleWishlist, getWishlist } from '../controllers/wishlistController.js';
 
 
@@ -27,5 +27,7 @@ userRouter.get('/list', adminAuth, listUsers);
 // NEW: This is the route the Navbar and ShopContext call to get points
 userRouter.get('/profile', authUser, getUserProfile);
 userRouter.post('/update-address', authUser, updateAddress);
+userRouter.get('/detail/:userId', adminAuth, getPhilatelistDetail);
+userRouter.get('/top-philatelists', adminAuth,getTopPhilatelists);
 
 export default userRouter;

@@ -113,7 +113,7 @@ const BestSeller = () => {
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-col gap-2 p-3 lg:p-4 bg-white border-t border-gray-50" onClick={(e) => e.stopPropagation()}>
+                                        {/* <div className="flex flex-col gap-2 p-3 lg:p-4 bg-white border-t border-gray-50" onClick={(e) => e.stopPropagation()}>
                                             <div className="grid grid-cols-2 gap-2">
                                                 <button onClick={(e) => onAddToCart(e, item._id)} className="bg-gray-50 text-gray-900 py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-black hover:text-white transition-all duration-300">
                                                     <ShoppingCart size={14} />
@@ -124,7 +124,7 @@ const BestSeller = () => {
                                                     <span className="text-[8px] font-black uppercase tracking-widest">Buy Now</span>
                                                 </button>
                                             </div>
-                                        </div>
+                                        </div> */}
                                     </div>
                                 </div>
                             </div>

@@ -4,483 +4,900 @@ import { backendUrl } from '../App';
 import { toast } from 'react-toastify';
 import { 
   Search, Trash2, Edit3, X, Image as ImageIcon, Video, 
-  Layers, Tag, Save, Eye, Youtube, Pin, Power, PowerOff, CheckSquare, Square, EyeOff, Star, Zap, Filter
+  Layers, Tag, Save, Eye, Youtube, Pin, Power, PowerOff, 
+  CheckSquare, Square, EyeOff, Star, Zap, Filter,
+  ChevronLeft, ChevronRight, RotateCcw, AlertTriangle,
+  Package
 } from 'lucide-react';
 
+const ITEMS_PER_PAGE = 80;
+
+// ─── Small reusable badge ─────────────────────────────────────────────────────
+const Badge = ({ children, color = "gray" }) => {
+  const map = {
+    amber: "bg-amber-100 text-amber-700",
+    blue:  "bg-blue-100 text-blue-700",
+    red:   "bg-red-100 text-red-700",
+    gray:  "bg-gray-100 text-gray-500",
+    green: "bg-emerald-100 text-emerald-700",
+  };
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wide ${map[color]}`}>
+      {children}
+    </span>
+  );
+};
+
+// ─── Tab button ────────────────────────────────────────────────────────────────
+const Tab = ({ active, onClick, children, count, color = "black" }) => {
+  const activeMap = { black: "bg-black text-white", red: "bg-[#BC002D] text-white" };
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wide transition-all
+        ${active ? activeMap[color] : "bg-white text-gray-500 border border-gray-200 hover:border-gray-300"}`}
+    >
+      {children}
+      {count !== undefined && (
+        <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-black ${active ? "bg-white/20 text-white" : "bg-gray-100 text-gray-600"}`}>
+          {count}
+        </span>
+      )}
+    </button>
+  );
+};
+
 const List = ({ token }) => {
+  // ── View mode: "active" | "trash" ──────────────────────────────────────────
+  const [viewMode, setViewMode] = useState("active");
+
+  // ── Active list state ───────────────────────────────────────────────────────
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedIds, setSelectedIds] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editFormData, setEditFormData] = useState(null);
-
-  // --- NEW FILTER STATES ---
   const [filterBestseller, setFilterBestseller] = useState(false);
   const [filterNewArrival, setFilterNewArrival] = useState(false);
 
-  const handleBulkAttributeUpdate = async (field, value) => {
-    try {
-      setLoading(true);
-      const res = await axios.post(`${backendUrl}/api/product/bulk-update-attributes`, 
-        { ids: selectedIds, field, value }, 
-        { headers: { token } }
-      );
-      if (res.data.success) {
-        toast.success(`${selectedIds.length} specimens updated`);
-        setSelectedIds([]);
-        fetchList(page, true); // Refresh current view
-      }
-    } catch (error) {
-      toast.error("Bulk update failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // ── Trash list state ────────────────────────────────────────────────────────
+  const [trashList, setTrashList] = useState([]);
+  const [trashLoading, setTrashLoading] = useState(false);
+  const [trashTotal, setTrashTotal] = useState(0);
+  const [trashPage, setTrashPage] = useState(1);
+  const [trashTotalPages, setTrashTotalPages] = useState(1);
+  const [trashSearch, setTrashSearch] = useState("");
+  const [trashSelectedIds, setTrashSelectedIds] = useState([]);
 
-  // --- REGISTRY DATA FETCHING ---
-  const fetchList = useCallback(async (targetPage, isReset = false) => {
+  // ── Modal state ─────────────────────────────────────────────────────────────
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editFormData, setEditFormData] = useState(null);
+
+  // ── Fetch active products (paginated) ──────────────────────────────────────
+  const fetchList = useCallback(async (page = 1) => {
     try {
       setLoading(true);
-      const response = await axios.get(`${backendUrl}/api/product/list`, {
-        params: { 
-          page: targetPage, 
-          limit: 30, 
-          search: searchTerm, 
-          includeHidden: 'true',
-          // Pass new filters to backend
+      const res = await axios.get(`${backendUrl}/api/product/list`, {
+        params: {
+          page,
+          limit: ITEMS_PER_PAGE,
+          search: searchTerm,
+          includeHidden: 'false', // Backend must use this to filter the count
           bestseller: filterBestseller ? 'true' : undefined,
-          newArrival: filterNewArrival ? 'true' : undefined
+          newArrival: filterNewArrival ? 'true' : undefined,
         }
       });
-      if (response.data.success) {
-        const fetchedProducts = response.data.products;
-        setList(prev => isReset ? fetchedProducts : [...prev, ...fetchedProducts]);
-        setTotalCount(response.data.total);
-        setHasMore(fetchedProducts.length === 30);
+      if (res.data.success) {
+        setList(res.data.products);
+        // Use the total from the backend which respects the 'includeHidden: false' filter
+        setTotalCount(res.data.total); 
+        setTotalPages(Math.max(1, Math.ceil(res.data.total / ITEMS_PER_PAGE)));
+        setCurrentPage(page);
       }
-    } catch (error) {
-      toast.error("Registry connection failed");
-    } finally {
-      setLoading(false);
+    } catch { 
+      toast.error("Failed to load products"); 
+    } finally { 
+      setLoading(false); 
     }
-  }, [searchTerm, filterBestseller, filterNewArrival, backendUrl]); 
+  }, [searchTerm, filterBestseller, filterNewArrival]);
 
+  // ── Fetch trash (inactive products) ────────────────────────────────────────
+  // ── Fetch trash (inactive products) ────────────────────────────────────────
+  const fetchTrash = useCallback(async (page = 1) => {
+    try {
+      setTrashLoading(true);
+      const res = await axios.get(`${backendUrl}/api/product/list`, {
+        params: {
+          page,
+          limit: ITEMS_PER_PAGE,
+          search: trashSearch,
+          includeHidden: 'true',
+          onlyHidden: 'true',   
+        }
+      });
+  
+      if (res.data.success) {
+        // Filter for inactive products
+        const inactiveItems = res.data.products.filter(p => p.isActive === false);
+        setTrashList(inactiveItems);
+  
+        // Handle total count: prioritize a specific trash count from backend if available
+        // otherwise fallback to the total returned when 'onlyHidden' is active.
+        const accurateTrashTotal = res.data.trashTotal || res.data.total;
+        
+        setTrashTotal(accurateTrashTotal);
+        setTrashTotalPages(Math.max(1, Math.ceil(accurateTrashTotal / ITEMS_PER_PAGE)));
+        setTrashPage(page);
+      }
+    } catch (err) { 
+      toast.error("Failed to load trash"); 
+    } finally { 
+      setTrashLoading(false); 
+    }
+  }, [trashSearch]);
+
+
+  // Add a dedicated function to fetch counts for the badges
+const fetchStats = useCallback(async () => {
+  try {
+      const [activeRes, trashRes] = await Promise.all([
+          axios.get(`${backendUrl}/api/product/list`, { params: { limit: 1, includeHidden: 'false' } }),
+          axios.get(`${backendUrl}/api/product/list`, { params: { limit: 1, onlyHidden: 'true' } })
+      ]);
+
+      if (activeRes.data.success) setTotalCount(activeRes.data.total);
+      if (trashRes.data.success) setTrashTotal(trashRes.data.total);
+  } catch (err) {
+      console.error("Stats sync error", err);
+  }
+}, [token]);
+
+// Trigger this on mount
+useEffect(() => {
+  fetchStats();
+  fetchList(1); // Load the first page of active items
+}, []);
+  // ── Debounced refetch on filter/search changes ──────────────────────────────
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      setPage(1);
+    const t = setTimeout(() => {
       setSelectedIds([]);
-      fetchList(1, true);
-    }, 500);
-    return () => clearTimeout(delayDebounceFn);
+      setCurrentPage(1);
+      fetchList(1);
+    }, 400);
+    return () => clearTimeout(t);
   }, [searchTerm, filterBestseller, filterNewArrival, fetchList]);
 
-  const handleLoadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchList(nextPage, false);
-  };
+  useEffect(() => {
+    if (viewMode === "trash") fetchTrash(1);
+  }, [viewMode, trashSearch, fetchTrash]);
 
-  // ... (handleBulkStatusUpdate, toggleSelect, toggleSelectAll, removeBulkProducts remain same)
-
-  const handleBulkStatusUpdate = async (isActive) => {
-    try {
-      setLoading(true);
-      const res = await axios.post(`${backendUrl}/api/product/bulk-status`, 
-        { ids: selectedIds, isActive }, 
-        { headers: { token } }
-      );
-      if (res.data.success) {
-        toast.success(res.data.message);
-        setSelectedIds([]);
-        fetchList(1, true);
-        setPage(1);
-      }
-    } catch (error) {
-      toast.error("Bulk status update failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleSelect = (id) => {
+  // ── Selection helpers ────────────────────────────────────────────────────────
+  const toggleSelect = (id) =>
     setSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
-  };
 
-  const toggleSelectAll = () => {
-    if (selectedIds.length === list.length && list.length > 0) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(list.map(item => item._id));
-    }
-  };
+  const toggleSelectAll = () =>
+    setSelectedIds(selectedIds.length === list.length && list.length > 0 ? [] : list.map(i => i._id));
 
-  const removeBulkProducts = async () => {
-    if (!window.confirm(`Purge ${selectedIds.length} specimens from registry?`)) return;
+  const toggleTrashSelect = (id) =>
+    setTrashSelectedIds(prev => prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]);
+
+  const toggleTrashSelectAll = () =>
+    setTrashSelectedIds(trashSelectedIds.length === trashList.length && trashList.length > 0
+      ? [] : trashList.map(i => i._id));
+
+  // ── Soft delete (move to trash = set isActive: false) ──────────────────────
+  const softDelete = async (ids) => {
+    const idArray = Array.isArray(ids) ? ids : [ids];
+    if (!window.confirm(`Move ${idArray.length} product(s) to trash?`)) return;
     try {
       setLoading(true);
-      const res = await axios.post(`${backendUrl}/api/product/remove-bulk`, { ids: selectedIds }, { headers: { token } });
-      if (res.data.success) {
-        toast.success(res.data.message);
-        setSelectedIds([]);
-        setPage(1);
-        fetchList(1, true);
-      }
-    } catch (error) {
-      toast.error("Bulk removal failed");
-    } finally {
-      setLoading(false);
-    }
+      await axios.post(`${backendUrl}/api/product/bulk-status`, { ids: idArray, isActive: false }, { headers: { token } });
+      toast.success(`${idArray.length} product(s) moved to trash`);
+      setSelectedIds([]);
+      fetchList(currentPage);
+    } catch { toast.error("Failed to move to trash"); }
+    finally { setLoading(false); }
   };
 
-  // --- MODAL & IMAGE MANAGEMENT ---
+  // ── Restore from trash ──────────────────────────────────────────────────────
+  const restoreFromTrash = async (ids) => {
+    const idArray = Array.isArray(ids) ? ids : [ids];
+    try {
+      setTrashLoading(true);
+      await axios.post(`${backendUrl}/api/product/bulk-status`, { ids: idArray, isActive: true }, { headers: { token } });
+      toast.success(`${idArray.length} product(s) restored`);
+      setTrashSelectedIds([]);
+      fetchTrash(trashPage);
+    } catch { toast.error("Restore failed"); }
+    finally { setTrashLoading(false); }
+  };
+
+  // ── Permanent delete ────────────────────────────────────────────────────────
+  const permanentDelete = async (ids) => {
+    const idArray = Array.isArray(ids) ? ids : [ids];
+    if (!window.confirm(`Permanently delete ${idArray.length} product(s)? This CANNOT be undone.`)) return;
+    try {
+      setTrashLoading(true);
+      await axios.post(`${backendUrl}/api/product/remove-bulk`, { ids: idArray }, { headers: { token } });
+      toast.success(`${idArray.length} product(s) permanently deleted`);
+      setTrashSelectedIds([]);
+      fetchTrash(trashPage);
+    } catch { toast.error("Permanent delete failed"); }
+    finally { setTrashLoading(false); }
+  };
+
+  // ── Bulk attribute update (bestseller / newArrival) ─────────────────────────
+  const bulkAttribute = async (field, value) => {
+    try {
+      setLoading(true);
+      await axios.post(`${backendUrl}/api/product/bulk-update-attributes`,
+        { ids: selectedIds, field, value }, { headers: { token } }
+      );
+      toast.success(`${selectedIds.length} products updated`);
+      setSelectedIds([]);
+      fetchList(currentPage);
+    } catch { toast.error("Bulk update failed"); }
+    finally { setLoading(false); }
+  };
+
+  // ── Edit modal ──────────────────────────────────────────────────────────────
   const openEditModal = (item) => {
-    setEditFormData({ 
-      ...item, 
-      description: item.description || "", 
+    setEditFormData({
+      ...item,
+      description: item.description || "",
       youtubeUrl: item.youtubeUrl || "",
       isLatest: item.isLatest || false,
       isActive: item.isActive !== undefined ? item.isActive : true,
       bestseller: item.bestseller || false,
       newArrival: item.newArrival || false,
-      producedCount: item.producedCount || 0
+      producedCount: item.producedCount || 0,
     });
     setIsModalOpen(true);
-  };
-
-  const addImageSlot = () => {
-    if (editFormData.image.length < 4) {
-      setEditFormData({ ...editFormData, image: [...editFormData.image, ""] });
-    } else {
-      toast.info("Maximum 4 visual records allowed");
-    }
-  };
-
-  const removeImageSlot = (index) => {
-    const newImgs = editFormData.image.filter((_, i) => i !== index);
-    setEditFormData({ ...editFormData, image: newImgs });
   };
 
   const handleUpdate = async (e) => {
     e.preventDefault();
     try {
-        const payload = {
-            id: editFormData._id,
-            name: editFormData.name,
-            description: editFormData.description,
-            price: Number(editFormData.price),
-            marketPrice: Number(editFormData.marketPrice),
-            image: editFormData.image,
-            youtubeUrl: editFormData.youtubeUrl,
-            stock: Number(editFormData.stock),
-            producedCount: Number(editFormData.producedCount),
-            condition: editFormData.condition,
-            isActive: editFormData.isActive,
-            isLatest: editFormData.isLatest,
-            bestseller: editFormData.bestseller,
-            newArrival: editFormData.newArrival 
-          };
-
-      const res = await axios.post(`${backendUrl}/api/product/update`, payload, { headers: { token } });
+      const res = await axios.post(`${backendUrl}/api/product/update`, {
+        id: editFormData._id,
+        name: editFormData.name,
+        description: editFormData.description,
+        price: Number(editFormData.price),
+        marketPrice: Number(editFormData.marketPrice),
+        image: editFormData.image,
+        youtubeUrl: editFormData.youtubeUrl,
+        stock: Number(editFormData.stock),
+        producedCount: Number(editFormData.producedCount),
+        condition: editFormData.condition,
+        isActive: editFormData.isActive,
+        isLatest: editFormData.isLatest,
+        bestseller: editFormData.bestseller,
+        newArrival: editFormData.newArrival,
+      }, { headers: { token } });
       if (res.data.success) {
-        toast.success("Registry Synchronized");
+        toast.success("Product updated");
         setIsModalOpen(false);
-        fetchList(page, true);
+        fetchList(currentPage);
       }
-    } catch (error) {
-      toast.error("Sync Failed");
-    }
+    } catch { toast.error("Update failed"); }
   };
 
-  const removeProduct = async (id) => {
-    if (!window.confirm("Purge specimen?")) return;
-    try {
-      const res = await axios.post(`${backendUrl}/api/product/remove`, { id }, { headers: { token } });
-      if (res.data.success) {
-        toast.success("Specimen Purged");
-        fetchList(1, true);
-        setPage(1);
-      }
-    } catch (error) {
-      toast.error("Removal failed");
-    }
+  const addImageSlot = () => {
+    if (editFormData.image.length < 4) setEditFormData({ ...editFormData, image: [...editFormData.image, ""] });
+    else toast.info("Maximum 4 images");
   };
+  const removeImageSlot = (i) =>
+    setEditFormData({ ...editFormData, image: editFormData.image.filter((_, idx) => idx !== i) });
 
-  return (
-    <div className='max-w-7xl mx-auto p-4 lg:p-10 bg-gray-50 min-h-screen select-none'>
-      
-      {/* HEADER */}
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6'>
-        <div>
-          <h2 className='text-4xl font-black text-gray-900 uppercase tracking-tighter'>Management <span className='text-[#BC002D]'>Console</span></h2>
-          <p className='text-[10px] text-gray-400 font-bold uppercase tracking-[0.3em] mt-2'>Archive Registry: {totalCount} Specimens</p>
+  // ── Pagination component ────────────────────────────────────────────────────
+  const Pagination = ({ page, total, onPage }) => {
+    const start = Math.max(1, page - 2);
+    const end   = Math.min(total, start + 4);
+    return (
+      <div className='flex items-center justify-between bg-white border border-gray-200 rounded-2xl px-5 py-3 mt-4'>
+        <span className='text-xs text-gray-400 font-medium'>Page {page} of {total}</span>
+        <div className='flex items-center gap-1'>
+          <button disabled={page === 1} onClick={() => onPage(page - 1)}
+            className='p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed text-gray-500 transition-colors'>
+            <ChevronLeft size={15}/>
+          </button>
+          {Array.from({ length: end - start + 1 }, (_, i) => start + i).map(p => (
+            <button key={p} onClick={() => onPage(p)}
+              className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors
+                ${p === page ? "bg-black text-white" : "text-gray-500 hover:bg-gray-100"}`}>
+              {p}
+            </button>
+          ))}
+          <button disabled={page === total} onClick={() => onPage(page + 1)}
+            className='p-2 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed text-gray-500 transition-colors'>
+            <ChevronRight size={15}/>
+          </button>
         </div>
-        <div className='relative w-full md:w-96'>
-          <Search className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-400' size={16} />
-          <input 
-            type="text" 
-            placeholder="Search Registry..."
-            className='w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-2xl text-xs font-bold outline-none shadow-sm'
-            onChange={(e) => setSearchTerm(e.target.value)}
+      </div>
+    );
+  };
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  return (
+    <div className='max-w-7xl mx-auto p-4 lg:p-8 bg-gray-50 min-h-screen' style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+        .row-enter { animation: rowIn 0.15s ease; }
+        @keyframes rowIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+        .cmd-bar { animation: barIn 0.2s ease; }
+        @keyframes barIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+      `}} />
+
+      {/* ── Header ─────────────────────────────────────────────────────────── */}
+      <div className='flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4'>
+        <div>
+          <h2 className='text-3xl font-black text-gray-900 uppercase tracking-tighter leading-tight'>
+            Management <span className='text-[#BC002D]'>Console</span>
+          </h2>
+          <p className='text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1'>
+            {viewMode === "active" ? `${totalCount} Active Specimens` : `${trashTotal} Archived Specimens`}
+          </p>
+        </div>
+
+        {/* Search */}
+        <div className='relative w-full md:w-80'>
+          <Search className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-400' size={14}/>
+          <input
+            type="text"
+            placeholder={viewMode === "active" ? "Search products…" : "Search trash…"}
+            value={viewMode === "active" ? searchTerm : trashSearch}
+            onChange={(e) => viewMode === "active"
+              ? setSearchTerm(e.target.value)
+              : setTrashSearch(e.target.value)}
+            className='w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 placeholder:text-gray-400 transition-all'
           />
         </div>
       </div>
 
-      {/* QUICK FILTERS BAR */}
-      <div className='mb-6 flex items-center gap-4'>
-        <div className='flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-100 shadow-sm'>
-            <Filter size={14} className='text-gray-400' />
-            <span className='text-[10px] font-black uppercase text-gray-400 mr-2'>Quick Filters:</span>
-            
-            <button 
-                onClick={() => setFilterBestseller(!filterBestseller)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${filterBestseller ? 'bg-amber-100 text-amber-700 border-amber-200 border' : 'bg-gray-50 text-gray-400 border-transparent border'}`}
-            >
-                <Star size={12} className={filterBestseller ? 'fill-amber-500' : ''} /> Bestsellers
-            </button>
-
-            <button 
-                onClick={() => setFilterNewArrival(!filterNewArrival)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${filterNewArrival ? 'bg-blue-100 text-blue-700 border-blue-200 border' : 'bg-gray-50 text-gray-400 border-transparent border'}`}
-            >
-                <Zap size={12} className={filterNewArrival ? 'fill-blue-500' : ''} /> New Arrivals
-            </button>
-
-            {(filterBestseller || filterNewArrival || searchTerm) && (
-                <button 
-                    onClick={() => {setFilterBestseller(false); setFilterNewArrival(false); setSearchTerm("")}}
-                    className='text-[9px] font-black uppercase text-[#BC002D] ml-2 hover:underline'
-                >
-                    Reset
-                </button>
-            )}
-        </div>
+      {/* ── Tabs ───────────────────────────────────────────────────────────── */}
+      <div className='flex items-center gap-3 mb-6'>
+        <Tab active={viewMode === "active"} onClick={() => { setViewMode("active"); setTrashSelectedIds([]); }} count={totalCount}>
+          <Package size={13}/> Active
+        </Tab>
+        <Tab active={viewMode === "trash"} onClick={() => { setViewMode("trash"); setSelectedIds([]); }} count={trashTotal} color="red">
+          <Trash2 size={13}/> Trash
+        </Tab>
       </div>
 
-      {/* COMMAND BAR */}
-      {list.length > 0 && selectedIds.length > 0 && (
-        <div className='mb-6 flex flex-wrap items-center justify-between bg-black p-4 rounded-2xl shadow-2xl animate-in slide-in-from-top duration-300 gap-4'>
-          <div className='flex items-center gap-4'>
-            <span className='text-[10px] font-black text-white bg-[#BC002D] px-4 py-2 rounded-full'>
-              {selectedIds.length} SPECIMENS SELECTED
-            </span>
-          </div>
-          
-          <div className='flex items-center gap-2 flex-wrap'>
-            {/* Bulk Bestseller Toggles */}
-            <button onClick={() => handleBulkAttributeUpdate('bestseller', true)} className='flex items-center gap-2 bg-amber-500 text-black px-4 py-2.5 rounded-xl text-[10px] font-black uppercase hover:bg-amber-400 transition-all'>
-              <Star size={14} className="fill-black"/> + Bestseller
-            </button>
-            
-            {/* Bulk New Arrival Toggles */}
-            <button onClick={() => handleBulkAttributeUpdate('newArrival', true)} className='flex items-center gap-2 bg-blue-500 text-white px-4 py-2.5 rounded-xl text-[10px] font-black uppercase hover:bg-blue-400 transition-all'>
-              <Zap size={14} className="fill-white"/> + New Arrival
-            </button>
+      {/* ══════════════════════════════════════════════════════════════════════
+          ACTIVE VIEW
+      ══════════════════════════════════════════════════════════════════════ */}
+      {viewMode === "active" && (
+        <>
+          {/* Filter bar */}
+          <div className='flex flex-wrap items-center gap-3 mb-5'>
+            <div className='flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm'>
+              <Filter size={13} className='text-gray-400'/>
+              <span className='text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1'>Filter:</span>
 
-            <div className='w-[1px] h-8 bg-white/20 mx-2'></div>
-
-            {/* Bulk Visibility */}
-            <button onClick={() => handleBulkStatusUpdate(true)} className='p-2.5 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-all'>
-              <Power size={14}/>
-            </button>
-            <button onClick={removeBulkProducts} className='p-2.5 bg-[#BC002D] text-white rounded-xl hover:scale-110 transition-all'>
-              <Trash2 size={14}/>
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* TABLE LIST */}
-      <div className='space-y-4 pb-10'>
-        {list.map((item) => (
-          <div key={item._id} className={`bg-white p-4 rounded-2xl border flex items-center justify-between hover:shadow-xl transition-all ${selectedIds.includes(item._id) ? 'border-[#BC002D] bg-[#BC002D]/5' : 'border-gray-100'} ${!item.isActive ? 'opacity-60 grayscale-[0.5] border-dashed bg-gray-50/50' : ''}`}>
-            <div className='flex items-center gap-4'>
-              <button onClick={() => toggleSelect(item._id)} className='p-1 text-gray-300 hover:text-[#BC002D] transition-colors'>
-                {selectedIds.includes(item._id) ? <CheckSquare size={20} className='text-[#BC002D]'/> : <Square size={20}/>}
+              <button
+                onClick={() => setFilterBestseller(!filterBestseller)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all
+                  ${filterBestseller ? "bg-amber-100 text-amber-700 border border-amber-200" : "bg-gray-50 text-gray-400 border border-transparent hover:bg-gray-100"}`}
+              >
+                <Star size={11} className={filterBestseller ? "fill-amber-500 text-amber-500" : ""}/>
+                Bestsellers
               </button>
-              <div className='flex items-center gap-6 cursor-pointer' onClick={() => openEditModal(item)}>
-                <div className='w-14 h-16 bg-gray-50 rounded-lg p-1 border relative'>
-                  <img src={item.image[0]} className='w-full h-full object-contain' alt="" />
-                  {item.isLatest && <Pin size={10} className='absolute -top-2 -right-2 text-[#BC002D] fill-[#BC002D]'/>}
-                  {!item.isActive && <EyeOff size={10} className='absolute -bottom-1 -right-1 text-gray-400' />}
-                </div>
-                <div>
-                  <div className='flex items-center gap-2'>
-                    <h4 className='text-sm font-black text-gray-900 uppercase'>{item.name}</h4>
-                    {item.bestseller && <Star size={12} className='text-amber-500 fill-amber-500' />}
-                    {item.newArrival && <Zap size={12} className='text-blue-500 fill-blue-500' />}
-                  </div>
-                  <p className='text-[9px] font-bold text-gray-400 uppercase tracking-widest'>{item.country} • {item.year} { !item.isActive && '• ARCHIVED' }</p>
-                </div>
+
+              <button
+                onClick={() => setFilterNewArrival(!filterNewArrival)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all
+                  ${filterNewArrival ? "bg-blue-100 text-blue-700 border border-blue-200" : "bg-gray-50 text-gray-400 border border-transparent hover:bg-gray-100"}`}
+              >
+                <Zap size={11} className={filterNewArrival ? "fill-blue-500 text-blue-500" : ""}/>
+                New Arrivals
+              </button>
+
+              {(filterBestseller || filterNewArrival || searchTerm) && (
+                <button
+                  onClick={() => { setFilterBestseller(false); setFilterNewArrival(false); setSearchTerm(""); }}
+                  className='text-[10px] font-bold text-[#BC002D] hover:underline ml-1 uppercase'
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+
+            {/* Select all on page */}
+            <button onClick={toggleSelectAll}
+              className='flex items-center gap-2 bg-white border border-gray-200 px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-500 hover:border-gray-300 transition-colors shadow-sm'>
+              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors flex-shrink-0
+                ${selectedIds.length === list.length && list.length > 0 ? "bg-black border-black" : "border-gray-300"}`}>
+                {selectedIds.length === list.length && list.length > 0 &&
+                  <svg viewBox="0 0 12 12" className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M1.5 6l3 3 6-6"/>
+                  </svg>}
+              </div>
+              {selectedIds.length > 0 ? `${selectedIds.length} selected` : "Select all"}
+            </button>
+          </div>
+
+          {/* ── Command bar (shows when items selected) ─────────────────────── */}
+          {selectedIds.length > 0 && (
+            <div className='cmd-bar mb-5 bg-gray-900 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xl'>
+              <span className='text-xs font-black text-white bg-[#BC002D] px-4 py-2 rounded-xl uppercase tracking-wide'>
+                {selectedIds.length} Selected
+              </span>
+
+              <div className='flex items-center gap-2 flex-wrap'>
+                {/* Bulk bestseller */}
+                <button onClick={() => bulkAttribute('bestseller', true)}
+                  className='flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-black px-3.5 py-2 rounded-xl text-[10px] font-black uppercase transition-all'>
+                  <Star size={12} className="fill-black"/> +&nbsp;Bestseller
+                </button>
+                <button onClick={() => bulkAttribute('bestseller', false)}
+                  className='flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-amber-300 border border-amber-400/30 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase transition-all'>
+                  <Star size={12}/> −&nbsp;Bestseller
+                </button>
+
+                <div className='w-px h-7 bg-white/20'/>
+
+                {/* Bulk new arrival */}
+                <button onClick={() => bulkAttribute('newArrival', true)}
+                  className='flex items-center gap-1.5 bg-blue-500 hover:bg-blue-400 text-white px-3.5 py-2 rounded-xl text-[10px] font-black uppercase transition-all'>
+                  <Zap size={12} className="fill-white"/> +&nbsp;New
+                </button>
+                <button onClick={() => bulkAttribute('newArrival', false)}
+                  className='flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-blue-300 border border-blue-400/30 px-3.5 py-2 rounded-xl text-[10px] font-black uppercase transition-all'>
+                  <Zap size={12}/> −&nbsp;New
+                </button>
+
+                <div className='w-px h-7 bg-white/20'/>
+
+                {/* Bulk move to trash */}
+                <button onClick={() => softDelete(selectedIds)}
+                  className='flex items-center gap-1.5 bg-red-600 hover:bg-red-500 text-white px-3.5 py-2 rounded-xl text-[10px] font-black uppercase transition-all'>
+                  <Trash2 size={12}/> Move to Trash
+                </button>
+
+                <button onClick={() => setSelectedIds([])}
+                  className='p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/60 transition-colors'>
+                  <X size={14}/>
+                </button>
               </div>
             </div>
-            <div className='flex items-center gap-3 pr-4'>
-                <button onClick={() => openEditModal(item)} className='p-3 bg-gray-50 rounded-xl hover:bg-black hover:text-white transition-all'><Edit3 size={16}/></button>
-                <button onClick={() => removeProduct(item._id)} className='p-3 bg-gray-50 rounded-xl hover:bg-[#BC002D] hover:text-white transition-all'><Trash2 size={16}/></button>
-            </div>
-          </div>
-        ))}
-        {list.length === 0 && !loading && (
-            <div className='py-20 text-center bg-white rounded-3xl border border-dashed border-gray-200'>
-                <p className='text-xs font-black uppercase tracking-[0.3em] text-gray-400'>No specimens matching these criteria</p>
-            </div>
-        )}
-      </div>
+          )}
 
-      {/* PAGINATION */}
-      {hasMore && (
-        <div className='mt-8 flex flex-col items-center pb-20'>
-           <button onClick={handleLoadMore} disabled={loading} className='px-12 py-5 bg-white border-2 border-black rounded-full text-[10px] font-black uppercase tracking-[0.5em] hover:bg-black hover:text-white transition-all'>
-             {loading ? 'Consulting Archive...' : 'Access More Records'}
-           </button>
-        </div>
+          {/* ── Product list ─────────────────────────────────────────────────── */}
+          <div className='space-y-2.5'>
+            {loading && list.length === 0 ? (
+              // Loading skeletons
+              Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className='bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-4 animate-pulse'>
+                  <div className='w-4 h-4 rounded bg-gray-100'/>
+                  <div className='w-12 h-14 rounded-lg bg-gray-100'/>
+                  <div className='flex-1 space-y-2'>
+                    <div className='h-3 bg-gray-100 rounded w-48'/>
+                    <div className='h-2 bg-gray-50 rounded w-32'/>
+                  </div>
+                  <div className='h-5 bg-gray-100 rounded-full w-16'/>
+                  <div className='h-5 bg-gray-100 rounded-full w-16'/>
+                  <div className='h-8 bg-gray-100 rounded-xl w-20'/>
+                </div>
+              ))
+            ) : list.length === 0 ? (
+              <div className='py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200'>
+                <Package size={36} className='mx-auto text-gray-200 mb-3'/>
+                <p className='text-sm font-bold text-gray-400 uppercase tracking-widest'>No products found</p>
+              </div>
+            ) : (
+              list.map((item) => {
+                const isSelected = selectedIds.includes(item._id);
+                return (
+                  <div key={item._id}
+                    className={`row-enter bg-white rounded-2xl border-2 flex items-center justify-between gap-3 p-3.5 transition-all hover:shadow-md
+                      ${isSelected ? "border-black bg-gray-50" : "border-gray-100 hover:border-gray-200"}`}
+                  >
+                    {/* Left: checkbox + image + info */}
+                    <div className='flex items-center gap-3 min-w-0'>
+                      <button onClick={() => toggleSelect(item._id)}
+                        className='flex-shrink-0 p-1 text-gray-300 hover:text-black transition-colors'>
+                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors
+                          ${isSelected ? "bg-black border-black" : "border-gray-300"}`}>
+                          {isSelected &&
+                            <svg viewBox="0 0 12 12" className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path d="M1.5 6l3 3 6-6"/>
+                            </svg>}
+                        </div>
+                      </button>
+
+                      {/* Thumbnail */}
+                      <div className='flex-shrink-0 w-12 h-14 bg-gray-50 rounded-xl border border-gray-100 flex items-center justify-center overflow-hidden p-1 relative cursor-pointer'
+                        onClick={() => openEditModal(item)}>
+                        <img src={item.image[0]} className='w-full h-full object-contain' alt="" loading="lazy"/>
+                        {item.isLatest && <Pin size={9} className='absolute -top-1 -right-1 text-[#BC002D] fill-[#BC002D]'/>}
+                      </div>
+
+                      {/* Name + meta */}
+                      <div className='min-w-0 cursor-pointer' onClick={() => openEditModal(item)}>
+                        <div className='flex items-center gap-2 flex-wrap'>
+                          <span className='text-sm font-bold text-gray-900 truncate max-w-[200px]'>{item.name}</span>
+                          {item.bestseller && <Badge color="amber"><Star size={9} className="fill-amber-500"/> Bestseller</Badge>}
+                          {item.newArrival && <Badge color="blue"><Zap size={9} className="fill-blue-500"/> New</Badge>}
+                        </div>
+                        <p className='text-[10px] text-gray-400 font-semibold uppercase tracking-wide mt-0.5'>
+                          {item.country} • {item.year} • {item.condition}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Right: price + actions */}
+                    <div className='flex items-center gap-2 flex-shrink-0'>
+                      <span className='text-sm font-black text-gray-800 hidden sm:block'>₹{item.price}</span>
+                      <span className='text-[10px] font-semibold text-gray-400 hidden md:block bg-gray-50 px-2 py-1 rounded-lg'>
+                        Stk: {item.stock ?? "—"}
+                      </span>
+
+                      <button onClick={() => openEditModal(item)}
+                        className='p-2.5 rounded-xl bg-gray-50 hover:bg-black hover:text-white transition-all text-gray-500'>
+                        <Edit3 size={14}/>
+                      </button>
+                      <button onClick={() => softDelete(item._id)}
+                        className='p-2.5 rounded-xl bg-gray-50 hover:bg-red-600 hover:text-white transition-all text-gray-400'
+                        title="Move to trash">
+                        <Trash2 size={14}/>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Pagination page={currentPage} total={totalPages} onPage={(p) => { setSelectedIds([]); fetchList(p); }}/>
+          )}
+        </>
       )}
 
-      {/* EDIT MODAL REMAINS SAME AS PREVIOUS VERSION */}
+      {/* ══════════════════════════════════════════════════════════════════════
+          TRASH VIEW
+      ══════════════════════════════════════════════════════════════════════ */}
+      {viewMode === "trash" && (
+        <>
+          {/* Trash info banner */}
+          <div className='flex items-center gap-3 bg-red-50 border border-red-100 rounded-2xl px-5 py-3.5 mb-5'>
+            <AlertTriangle size={16} className='text-red-500 flex-shrink-0'/>
+            <p className='text-xs text-red-600 font-semibold'>
+              Items in trash are hidden from the storefront. You can restore them or permanently delete them.
+            </p>
+          </div>
+
+          {/* Trash select all + bulk actions */}
+          <div className='flex flex-wrap items-center gap-3 mb-5'>
+            <button onClick={toggleTrashSelectAll}
+              className='flex items-center gap-2 bg-white border border-gray-200 px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-500 hover:border-gray-300 transition-colors shadow-sm'>
+              <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors flex-shrink-0
+                ${trashSelectedIds.length === trashList.length && trashList.length > 0 ? "bg-black border-black" : "border-gray-300"}`}>
+                {trashSelectedIds.length === trashList.length && trashList.length > 0 &&
+                  <svg viewBox="0 0 12 12" className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M1.5 6l3 3 6-6"/>
+                  </svg>}
+              </div>
+              {trashSelectedIds.length > 0 ? `${trashSelectedIds.length} selected` : "Select all"}
+            </button>
+          </div>
+
+          {/* Trash command bar */}
+          {trashSelectedIds.length > 0 && (
+            <div className='cmd-bar mb-5 bg-gray-900 rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-3 shadow-xl'>
+              <span className='text-xs font-black text-white bg-[#BC002D] px-4 py-2 rounded-xl uppercase tracking-wide'>
+                {trashSelectedIds.length} Selected
+              </span>
+              <div className='flex items-center gap-2'>
+                <button onClick={() => restoreFromTrash(trashSelectedIds)}
+                  className='flex items-center gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all'>
+                  <RotateCcw size={12}/> Restore
+                </button>
+                <button onClick={() => permanentDelete(trashSelectedIds)}
+                  className='flex items-center gap-1.5 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all'>
+                  <Trash2 size={12}/> Delete Forever
+                </button>
+                <button onClick={() => setTrashSelectedIds([])}
+                  className='p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white/60 transition-colors'>
+                  <X size={14}/>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Trash list */}
+          <div className='space-y-2.5'>
+            {trashLoading && trashList.length === 0 ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className='bg-white rounded-2xl border border-dashed border-gray-200 p-4 flex items-center gap-4 animate-pulse'>
+                  <div className='w-12 h-14 rounded-lg bg-gray-100'/>
+                  <div className='flex-1 space-y-2'>
+                    <div className='h-3 bg-gray-100 rounded w-48'/>
+                    <div className='h-2 bg-gray-50 rounded w-32'/>
+                  </div>
+                </div>
+              ))
+            ) : trashList.length === 0 ? (
+              <div className='py-20 text-center bg-white rounded-2xl border border-dashed border-gray-200'>
+                <Trash2 size={36} className='mx-auto text-gray-200 mb-3'/>
+                <p className='text-sm font-bold text-gray-400 uppercase tracking-widest'>Trash is empty</p>
+              </div>
+            ) : (
+              trashList.map((item) => {
+                const isSelected = trashSelectedIds.includes(item._id);
+                return (
+                  <div key={item._id}
+                    className={`row-enter bg-white rounded-2xl border-2 flex items-center justify-between gap-3 p-3.5 transition-all opacity-75
+                      ${isSelected ? "border-red-400 bg-red-50/40 opacity-100" : "border-dashed border-gray-200 hover:opacity-90"}`}
+                  >
+                    <div className='flex items-center gap-3 min-w-0'>
+                      <button onClick={() => toggleTrashSelect(item._id)}
+                        className='flex-shrink-0 p-1'>
+                        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors
+                          ${isSelected ? "bg-red-600 border-red-600" : "border-gray-300"}`}>
+                          {isSelected &&
+                            <svg viewBox="0 0 12 12" className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path d="M1.5 6l3 3 6-6"/>
+                            </svg>}
+                        </div>
+                      </button>
+
+                      <div className='flex-shrink-0 w-12 h-14 bg-gray-50 rounded-xl border border-dashed border-gray-200 flex items-center justify-center overflow-hidden p-1 grayscale'>
+                        <img src={item.image[0]} className='w-full h-full object-contain' alt="" loading="lazy"/>
+                      </div>
+
+                      <div className='min-w-0'>
+                        <div className='flex items-center gap-2'>
+                          <span className='text-sm font-bold text-gray-500 truncate max-w-[200px] line-through decoration-gray-300'>{item.name}</span>
+                          <Badge color="gray"><EyeOff size={9}/> Hidden</Badge>
+                        </div>
+                        <p className='text-[10px] text-gray-400 font-semibold uppercase tracking-wide mt-0.5'>
+                          {item.country} • {item.year} • ₹{item.price}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className='flex items-center gap-2 flex-shrink-0'>
+                      <button onClick={() => restoreFromTrash(item._id)}
+                        className='flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-500 hover:text-white text-emerald-700 text-[10px] font-bold uppercase transition-all'>
+                        <RotateCcw size={12}/> Restore
+                      </button>
+                      <button onClick={() => permanentDelete(item._id)}
+                        className='flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-50 hover:bg-red-600 hover:text-white text-red-600 text-[10px] font-bold uppercase transition-all'>
+                        <Trash2 size={12}/> Delete
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {trashTotalPages > 1 && (
+            <Pagination page={trashPage} total={trashTotalPages} onPage={(p) => { setTrashSelectedIds([]); fetchTrash(p); }}/>
+          )}
+        </>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════════
+          EDIT MODAL
+      ══════════════════════════════════════════════════════════════════════ */}
       {isModalOpen && editFormData && (
         <div className='fixed inset-0 z-[2000] flex items-center justify-center p-4 md:p-10'>
-          <div className='absolute inset-0 bg-black/80 backdrop-blur-sm' onClick={() => setIsModalOpen(false)}></div>
-          <div className='relative bg-white w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-[40px] shadow-2xl animate-in fade-in zoom-in duration-300'>
-            
-            <div className='sticky top-0 bg-white z-20 px-8 py-6 border-b border-gray-100 flex justify-between items-center'>
-                <h3 className='text-xl font-black uppercase tracking-tighter'>Specimen Sync</h3>
-                <div className='flex items-center gap-4'>
-                   <button 
-                    type="button" 
-                    onClick={() => setEditFormData({...editFormData, isActive: !editFormData.isActive})}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-[9px] font-black uppercase transition-all ${editFormData.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}
-                   >
-                    {editFormData.isActive ? <><Power size={12}/> Active</> : <><PowerOff size={12}/> Hidden</>}
-                   </button>
-                   <button type="button" onClick={() => setIsModalOpen(false)} className='p-3 bg-gray-50 rounded-full hover:bg-black hover:text-white transition-all'><X size={20}/></button>
-                </div>
+          <div className='absolute inset-0 bg-black/75 backdrop-blur-sm' onClick={() => setIsModalOpen(false)}/>
+          <div className='relative bg-white w-full max-w-6xl max-h-[90vh] overflow-y-auto rounded-[32px] shadow-2xl'
+            style={{ animation: "rowIn 0.2s ease" }}>
+
+            {/* Modal header */}
+            <div className='sticky top-0 bg-white z-20 px-8 py-5 border-b border-gray-100 flex justify-between items-center rounded-t-[32px]'>
+              <div>
+                <h3 className='text-xl font-black uppercase tracking-tighter'>Edit Product</h3>
+                <p className='text-xs text-gray-400 font-medium truncate max-w-sm'>{editFormData.name}</p>
+              </div>
+              <div className='flex items-center gap-3'>
+                <button type="button"
+                  onClick={() => setEditFormData({ ...editFormData, isActive: !editFormData.isActive })}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase transition-all
+                    ${editFormData.isActive ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-500"}`}>
+                  {editFormData.isActive ? <><Power size={11}/> Active</> : <><PowerOff size={11}/> Hidden</>}
+                </button>
+                <button onClick={() => setIsModalOpen(false)}
+                  className='p-2.5 bg-gray-100 rounded-full hover:bg-black hover:text-white transition-all'>
+                  <X size={18}/>
+                </button>
+              </div>
             </div>
 
-            <div className='grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-0'>
-                <form onSubmit={handleUpdate} className='p-8 grid grid-cols-1 md:grid-cols-2 gap-12 border-r border-gray-100'>
-                    <div className='space-y-8'>
-                        <div className='space-y-6'>
-                            <h5 className='text-[10px] font-black text-[#BC002D] uppercase tracking-[0.3em] flex items-center gap-2'><Tag size={12}/> Primary Identity</h5>
-                            <input className='w-full p-4 bg-gray-50 border rounded-2xl text-xs font-bold outline-none' value={editFormData.name} onChange={(e)=>setEditFormData({...editFormData, name: e.target.value})} />
-                            <div className='grid grid-cols-2 gap-4'>
-                                <input type="number" placeholder="Price" className='p-4 bg-gray-50 border rounded-2xl text-xs font-bold outline-none' value={editFormData.price} onChange={(e)=>setEditFormData({...editFormData, price: e.target.value})} />
-                                <input type="number" placeholder="Market Price" className='p-4 bg-gray-50 border rounded-2xl text-xs font-bold outline-none' value={editFormData.marketPrice} onChange={(e)=>setEditFormData({...editFormData, marketPrice: e.target.value})} />
-                            </div>
-                            <textarea rows={5} placeholder="Archive Description" className='w-full p-4 bg-gray-50 border rounded-2xl text-xs font-bold outline-none resize-none focus:border-[#BC002D]' value={editFormData.description} onChange={(e)=>setEditFormData({...editFormData, description: e.target.value})} />
-                        </div>
+            <div className='grid grid-cols-1 lg:grid-cols-[1fr_340px]'>
+              <form onSubmit={handleUpdate} className='p-8 grid grid-cols-1 md:grid-cols-2 gap-10 border-r border-gray-100'>
 
-                        <div className='space-y-6'>
-                            <div className='flex justify-between items-center'>
-                                <h5 className='text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]'><ImageIcon size={12}/> Visual Records</h5>
-                                {editFormData.image.length < 4 && <button type="button" onClick={addImageSlot} className='text-[8px] font-black bg-[#BC002D] text-white px-2 py-1 rounded-full'>+ Add Image</button>}
-                            </div>
-                            <div className='grid grid-cols-1 gap-3'>
-                                {editFormData.image.map((img, idx) => (
-                                    <div key={idx} className='flex items-center gap-2'>
-                                        <input className='flex-1 p-3 bg-white border rounded-xl text-[9px] font-bold outline-none focus:border-[#BC002D]' value={img} onChange={(e)=>{
-                                            const n = [...editFormData.image]; n[idx] = e.target.value; setEditFormData({...editFormData, image: n});
-                                        }} />
-                                        <button type="button" onClick={()=>removeImageSlot(idx)} className='text-red-500'><Trash2 size={14}/></button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
+                {/* Left column */}
+                <div className='space-y-8'>
+                  <div className='space-y-5'>
+                    <h5 className='text-[10px] font-black text-[#BC002D] uppercase tracking-widest flex items-center gap-2'>
+                      <Tag size={11}/> Identity
+                    </h5>
+                    <input className='w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition-all'
+                      value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}/>
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div className='space-y-1'>
+                        <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Price</label>
+                        <input type="number" className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-black/10 transition-all'
+                          value={editFormData.price} onChange={(e) => setEditFormData({ ...editFormData, price: e.target.value })}/>
+                      </div>
+                      <div className='space-y-1'>
+                        <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Market Price</label>
+                        <input type="number" className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-black/10 transition-all'
+                          value={editFormData.marketPrice} onChange={(e) => setEditFormData({ ...editFormData, marketPrice: e.target.value })}/>
+                      </div>
                     </div>
+                    <textarea rows={4} placeholder="Description…"
+                      className='w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm outline-none resize-none focus:ring-2 focus:ring-black/10 focus:border-gray-400 transition-all'
+                      value={editFormData.description}
+                      onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}/>
+                  </div>
 
-                    <div className='space-y-8'>
-                        <div className='space-y-6'>
-                            <h5 className='text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] flex items-center gap-2'><Video size={12}/> Video Registry</h5>
-                            <div className='relative'>
-                                <Youtube className='absolute left-4 top-1/2 -translate-y-1/2 text-red-600' size={16} />
-                                <input placeholder="YouTube URL" className='w-full pl-12 p-4 bg-gray-50 border rounded-2xl text-xs font-bold outline-none focus:border-[#BC002D]' value={editFormData.youtubeUrl} onChange={(e)=>setEditFormData({...editFormData, youtubeUrl: e.target.value})} />
-                            </div>
-                        </div>
-
-                        <div className='space-y-6'>
-                            <h5 className='text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]'><Layers size={12}/> Registry Control</h5>
-                            
-                            {/* HOME PAGE FEATURE TOGGLES */}
-                            <div className='grid grid-cols-2 gap-3'>
-                                <div 
-                                    onClick={() => setEditFormData({...editFormData, bestseller: !editFormData.bestseller})}
-                                    className={`flex items-center justify-between p-4 border rounded-2xl cursor-pointer transition-all ${editFormData.bestseller ? 'bg-amber-50 border-amber-200' : 'bg-gray-50 border-gray-100'}`}
-                                >
-                                    <div className='flex flex-col'>
-                                        <span className='text-[8px] font-black uppercase text-gray-400'>Bestseller</span>
-                                        <span className={`text-[9px] font-black uppercase ${editFormData.bestseller ? 'text-amber-600' : 'text-gray-400'}`}>{editFormData.bestseller ? "Active" : "Disabled"}</span>
-                                    </div>
-                                    {editFormData.bestseller ? <Star size={16} className='text-amber-500 fill-amber-500'/> : <Star size={16} className='text-gray-300'/>}
-                                </div>
-
-                                <div 
-                                    onClick={() => setEditFormData({...editFormData, newArrival: !editFormData.newArrival})}
-                                    className={`flex items-center justify-between p-4 border rounded-2xl cursor-pointer transition-all ${editFormData.newArrival ? 'bg-blue-50 border-blue-200' : 'bg-gray-50 border-gray-100'}`}
-                                >
-                                    <div className='flex flex-col'>
-                                        <span className='text-[8px] font-black uppercase text-gray-400'>New Arrival</span>
-                                        <span className={`text-[9px] font-black uppercase ${editFormData.newArrival ? 'text-blue-600' : 'text-gray-400'}`}>{editFormData.newArrival ? "Active" : "Disabled"}</span>
-                                    </div>
-                                    {editFormData.newArrival ? <Zap size={16} className='text-blue-500 fill-blue-500'/> : <Zap size={16} className='text-gray-300'/>}
-                                </div>
-                            </div>
-
-                            <div className='flex items-center justify-between p-4 bg-gray-50 border rounded-2xl'>
-                                <label className='text-[9px] font-black text-gray-400 uppercase'>Feature on Home (Pin)</label>
-                                <input type="checkbox" checked={editFormData.isLatest} onChange={(e)=>setEditFormData({...editFormData, isLatest: e.target.checked})} className='accent-[#BC002D]' />
-                            </div>
-
-                            <div className='grid grid-cols-2 gap-4'>
-                                <div className='space-y-1'>
-                                    <label className='text-[8px] font-black text-gray-400 uppercase ml-2'>Stock</label>
-                                    <input type="number" className='w-full p-4 bg-gray-50 border rounded-2xl text-xs font-bold outline-none' value={editFormData.stock} onChange={(e)=>setEditFormData({...editFormData, stock: e.target.value})} />
-                                </div>
-                                <div className='space-y-1'>
-                                    <label className='text-[8px] font-black text-gray-400 uppercase ml-2'>Mintage (Produced)</label>
-                                    <input type="number" className='w-full p-4 bg-gray-50 border rounded-2xl text-xs font-bold outline-none' value={editFormData.producedCount} onChange={(e)=>setEditFormData({...editFormData, producedCount: e.target.value})} />
-                                </div>
-                            </div>
-                            <div className='space-y-1'>
-                                <label className='text-[8px] font-black text-gray-400 uppercase ml-2'>Condition</label>
-                                <select className='w-full p-4 bg-gray-50 border rounded-2xl text-xs font-bold outline-none' value={editFormData.condition} onChange={(e)=>setEditFormData({...editFormData, condition: e.target.value})}>
-                                    <option value="Mint">Mint</option>
-                                    <option value="Used">Used</option>
-                                    <option value="Fine">Fine</option>
-                                    <option value="Near Mint">Near Mint</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div className='bg-black p-8 rounded-[40px]'>
-                            <h4 className='text-white text-3xl font-black mb-8'>₹{editFormData.price}</h4>
-                            <button type="submit" className='w-full py-5 bg-[#BC002D] text-white text-[10px] font-black uppercase tracking-[0.4em] rounded-full hover:scale-105 transition-all shadow-xl'>
-                                <Save size={16} className='inline mr-2'/> Push Update
-                            </button>
-                        </div>
+                  <div className='space-y-4'>
+                    <div className='flex justify-between items-center'>
+                      <h5 className='text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2'>
+                        <ImageIcon size={11}/> Images
+                      </h5>
+                      {editFormData.image.length < 4 &&
+                        <button type="button" onClick={addImageSlot}
+                          className='text-[9px] font-black bg-black text-white px-3 py-1.5 rounded-full hover:bg-gray-800'>
+                          + Add
+                        </button>}
                     </div>
-                </form>
-
-                <div className='bg-gray-50 p-10 flex flex-col items-center border-l border-gray-100'>
-                    <h5 className='text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] mb-10'><Eye size={12} className='inline mr-2'/> Live Preview</h5>
-                    <div className={`w-full max-w-[280px] bg-white rounded-br-[60px] p-4 shadow-2xl border ${!editFormData.isActive ? 'grayscale' : ''} relative`}>
-                        <div className='aspect-[3/4] bg-[#f8f8f8] rounded-br-[30px] flex items-center justify-center p-4 relative mb-4 overflow-hidden'>
-                            <img src={editFormData.image[0] || "https://placehold.co/400x600?text=No+Image"} className='w-full h-full object-contain filter drop-shadow-md' alt="" />
-                            
-                            {editFormData.newArrival && (
-                                <div className="absolute top-0 right-0 z-20 overflow-hidden w-16 h-16 pointer-events-none">
-                                    <div className="absolute top-[15%] -right-[30%] bg-[#BC002D] text-white text-[6px] font-black py-1 w-[140%] text-center transform rotate-45 shadow-sm uppercase tracking-tighter">New</div>
-                                </div>
-                            )}
-
-                            {editFormData.isLatest && <Pin size={14} className='absolute top-2 left-2 text-[#BC002D] fill-[#BC002D]'/>}
-                            {editFormData.bestseller && <Star size={14} className='absolute bottom-2 right-2 text-amber-500 fill-amber-500'/>}
+                    <div className='space-y-2'>
+                      {editFormData.image.map((img, idx) => (
+                        <div key={idx} className='flex items-center gap-2'>
+                          <input className='flex-1 p-3 bg-white border border-gray-200 rounded-xl text-xs font-medium outline-none focus:ring-2 focus:ring-black/10 transition-all'
+                            value={img} onChange={(e) => {
+                              const n = [...editFormData.image]; n[idx] = e.target.value;
+                              setEditFormData({ ...editFormData, image: n });
+                            }}/>
+                          <button type="button" onClick={() => removeImageSlot(idx)}
+                            className='p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors'>
+                            <Trash2 size={13}/>
+                          </button>
                         </div>
-                        <h4 className='text-[11px] font-black uppercase truncate'>{editFormData.name || "Specimen"}</h4>
-                        <p className='text-[10px] text-[#BC002D] font-black'>₹{editFormData.price}</p>
+                      ))}
                     </div>
+                  </div>
                 </div>
+
+                {/* Right column */}
+                <div className='space-y-8'>
+                  <div className='space-y-4'>
+                    <h5 className='text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2'>
+                      <Video size={11}/> YouTube
+                    </h5>
+                    <div className='relative'>
+                      <Youtube className='absolute left-4 top-1/2 -translate-y-1/2 text-red-500' size={15}/>
+                      <input placeholder="YouTube URL"
+                        className='w-full pl-11 p-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-black/10 transition-all'
+                        value={editFormData.youtubeUrl}
+                        onChange={(e) => setEditFormData({ ...editFormData, youtubeUrl: e.target.value })}/>
+                    </div>
+                  </div>
+
+                  <div className='space-y-4'>
+                    <h5 className='text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2'>
+                      <Layers size={11}/> Attributes
+                    </h5>
+
+                    {/* Bestseller + New Arrival toggles */}
+                    <div className='grid grid-cols-2 gap-3'>
+                      <button type="button"
+                        onClick={() => setEditFormData({ ...editFormData, bestseller: !editFormData.bestseller })}
+                        className={`flex items-center justify-between p-4 border-2 rounded-2xl transition-all
+                          ${editFormData.bestseller ? "bg-amber-50 border-amber-300" : "bg-gray-50 border-gray-100 hover:border-gray-200"}`}>
+                        <div className='text-left'>
+                          <p className='text-[8px] font-black text-gray-400 uppercase'>Bestseller</p>
+                          <p className={`text-[10px] font-black uppercase ${editFormData.bestseller ? "text-amber-600" : "text-gray-400"}`}>
+                            {editFormData.bestseller ? "On" : "Off"}
+                          </p>
+                        </div>
+                        <Star size={18} className={editFormData.bestseller ? "text-amber-500 fill-amber-500" : "text-gray-200"}/>
+                      </button>
+
+                      <button type="button"
+                        onClick={() => setEditFormData({ ...editFormData, newArrival: !editFormData.newArrival })}
+                        className={`flex items-center justify-between p-4 border-2 rounded-2xl transition-all
+                          ${editFormData.newArrival ? "bg-blue-50 border-blue-300" : "bg-gray-50 border-gray-100 hover:border-gray-200"}`}>
+                        <div className='text-left'>
+                          <p className='text-[8px] font-black text-gray-400 uppercase'>New Arrival</p>
+                          <p className={`text-[10px] font-black uppercase ${editFormData.newArrival ? "text-blue-600" : "text-gray-400"}`}>
+                            {editFormData.newArrival ? "On" : "Off"}
+                          </p>
+                        </div>
+                        <Zap size={18} className={editFormData.newArrival ? "text-blue-500 fill-blue-500" : "text-gray-200"}/>
+                      </button>
+                    </div>
+
+                    {/* Pin to home */}
+                    <div className='flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-2xl'>
+                      <div>
+                        <p className='text-[9px] font-black text-gray-400 uppercase'>Feature on Homepage</p>
+                        <p className='text-[10px] font-semibold text-gray-500'>Show as pinned item</p>
+                      </div>
+                      <button type="button"
+                        onClick={() => setEditFormData({ ...editFormData, isLatest: !editFormData.isLatest })}
+                        className={`w-10 h-6 rounded-full transition-colors flex items-center px-1
+                          ${editFormData.isLatest ? "bg-[#BC002D]" : "bg-gray-200"}`}>
+                        <div className={`w-4 h-4 rounded-full bg-white shadow transition-transform ${editFormData.isLatest ? "translate-x-4" : "translate-x-0"}`}/>
+                      </button>
+                    </div>
+
+                    <div className='grid grid-cols-2 gap-3'>
+                      <div className='space-y-1'>
+                        <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Stock</label>
+                        <input type="number" className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-black/10 transition-all'
+                          value={editFormData.stock}
+                          onChange={(e) => setEditFormData({ ...editFormData, stock: e.target.value })}/>
+                      </div>
+                      <div className='space-y-1'>
+                        <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Mintage</label>
+                        <input type="number" className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-black/10 transition-all'
+                          value={editFormData.producedCount}
+                          onChange={(e) => setEditFormData({ ...editFormData, producedCount: e.target.value })}/>
+                      </div>
+                    </div>
+
+                    <div className='space-y-1'>
+                      <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Condition</label>
+                      <select className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none focus:ring-2 focus:ring-black/10 transition-all appearance-none'
+                        value={editFormData.condition}
+                        onChange={(e) => setEditFormData({ ...editFormData, condition: e.target.value })}>
+                        <option value="Mint">Mint</option>
+                        <option value="Near Mint">Near Mint</option>
+                        <option value="Fine">Fine</option>
+                        <option value="Used">Used</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className='bg-gray-900 p-6 rounded-[28px]'>
+                    <p className='text-white/50 text-[10px] uppercase font-bold mb-1'>Selling Price</p>
+                    <p className='text-white text-3xl font-black mb-5'>₹{editFormData.price}</p>
+                    <button type="submit"
+                      className='w-full py-4 bg-[#BC002D] hover:bg-red-700 text-white text-xs font-black uppercase tracking-widest rounded-2xl transition-all shadow-lg active:scale-95'>
+                      <Save size={14} className='inline mr-2'/> Save Changes
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              {/* Live preview panel */}
+              <div className='bg-gray-50 p-8 flex flex-col items-center border-l border-gray-100'>
+                <h5 className='text-[10px] font-black text-gray-400 uppercase tracking-widest mb-6 flex items-center gap-2'>
+                  <Eye size={11}/> Live Preview
+                </h5>
+                <div className={`w-full max-w-[240px] bg-white rounded-3xl p-4 shadow-xl border border-gray-100 ${!editFormData.isActive ? "grayscale" : ""} relative overflow-hidden`}>
+                  {editFormData.newArrival && (
+                    <div className="absolute top-0 right-0 z-20 overflow-hidden w-16 h-16 pointer-events-none">
+                      <div className="absolute top-[15%] -right-[30%] bg-[#BC002D] text-white text-[6px] font-black py-1 w-[140%] text-center transform rotate-45 shadow uppercase">New</div>
+                    </div>
+                  )}
+                  <div className='aspect-[3/4] bg-gray-50 rounded-2xl flex items-center justify-center p-4 mb-4 relative'>
+                    <img src={editFormData.image[0] || "https://placehold.co/300x400?text=No+Image"}
+                      className='w-full h-full object-contain drop-shadow-md' alt=""/>
+                    {editFormData.isLatest && <Pin size={12} className='absolute top-2 left-2 text-[#BC002D] fill-[#BC002D]'/>}
+                    {editFormData.bestseller && <Star size={12} className='absolute bottom-2 right-2 text-amber-500 fill-amber-500'/>}
+                  </div>
+                  <p className='text-xs font-black uppercase truncate mb-1'>{editFormData.name || "Product name"}</p>
+                  <p className='text-sm font-black text-[#BC002D]'>₹{editFormData.price}</p>
+                  {!editFormData.isActive && (
+                    <div className='mt-2 flex items-center gap-1 text-[9px] font-bold text-gray-400 uppercase'>
+                      <EyeOff size={9}/> Hidden from store
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

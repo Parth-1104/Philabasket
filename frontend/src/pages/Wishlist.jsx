@@ -66,28 +66,7 @@ const Wishlist = () => {
                         </div>
 
                         {/* --- FIXED ACTIONS SECTION --- */}
-                        <div className='flex flex-col gap-2 p-3 lg:p-4 mt-auto border-t border-gray-50 bg-white'>
-                            <div className='grid grid-cols-1 sm:grid-cols-2 gap-2'>
-                                <button 
-                                    onClick={() => {
-                                        addToCart(item._id, 1);
-                                        toast.success("Moved to Registry");
-                                    }}
-                                    className='w-full bg-gray-50 text-gray-900 py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-black hover:text-white transition-all duration-300'
-                                >
-                                    <ShoppingBag size={12} />
-                                    <span className='text-[8px] lg:text-[9px] font-black uppercase tracking-widest'>Add</span>
-                                </button>
-                                
-                                <button 
-                                    onClick={() => handleBuyNow(item._id)}
-                                    className='w-full bg-black text-white py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#BC002D] transition-all duration-300 shadow-lg shadow-black/5'
-                                >
-                                    <Zap size={12} className='fill-amber-400 text-amber-400' />
-                                    <span className='text-[8px] lg:text-[9px] font-black uppercase tracking-widest'>Buy Now</span>
-                                </button>
-                            </div>
-                        </div>
+
                     </div>
                 ))}
             </div>

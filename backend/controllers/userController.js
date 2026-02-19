@@ -6,7 +6,7 @@ import userModel from "../models/userModel.js";
 import { OAuth2Client } from 'google-auth-library';
 import crypto from 'crypto';
 import nodemailer from 'nodemailer';
-
+import orderModel from "../models/orderModel.js";
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const createToken = (id) => {
@@ -248,6 +248,62 @@ const updateAddress = async (req, res) => {
     }
 }
 
+// controllers/userController.js
+export const getTopPhilatelists = async (req, res) => {
+    try {
+        const topUsers = await orderModel.aggregate([
+            { $match: { payment: true } }, // Only count paid orders
+            {
+                $group: {
+                    _id: "$userId",
+                    totalSpent: { $sum: "$amount" },
+                    orderCount: { $sum: 1 }
+                }
+            },
+            { $sort: { totalSpent: -1 } },
+            { $limit: 100 },
+            {
+                $lookup: {
+                    from: "users", // the name of the user collection
+                    localField: "_id",
+                    foreignField: "_id",
+                    as: "userDetails"
+                }
+            },
+            { $unwind: "$userDetails" }
+        ]);
+
+        res.json({ success: true, topUsers });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+};
+
+
+export const getPhilatelistDetail = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const user = await userModel.findById(userId).populate('orders');
+
+        if (!user) return res.json({ success: false, message: "User not found" });
+
+        // Calculate total spent from the populated orders
+        const totalSpent = user.orders
+            .filter(order => order.payment === true)
+            .reduce((acc, order) => acc + (order.amount || 0), 0);
+
+        res.json({ 
+            success: true, 
+            user: { 
+                ...user._doc, 
+                orders: user.orders, 
+                totalSpent // Now the frontend will see this!
+            } 
+        });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+};
 // Remember to add updateAddress to your exports at the bottom of the file
 
 const getUserProfile = async (req, res) => {
