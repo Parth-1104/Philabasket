@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState, useMemo } from 'react'
 import { ShopContext } from '../context/ShopContext'
 import { useNavigate } from 'react-router-dom'
-import { Heart, ShoppingCart, Zap } from 'lucide-react' 
+import { Heart, ShoppingCart, Zap, Award } from 'lucide-react' 
 import { toast } from 'react-toastify'
 
 const ProductItem = ({ id, _id, image, name, price, marketPrice, category, isPriorityMode = false }) => {
@@ -11,6 +11,9 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, isPri
   const navigate = useNavigate();
   const productId = _id || id;
   
+  // Calculate potential points (1 point per 100 units of currency)
+  const potentialPoints = Math.floor(price / 10);
+
   const createSeoSlug = (text) => {
     return text.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '').replace(/--+/g, '-').trim();
   };
@@ -26,11 +29,7 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, isPri
   }, [image]);
 
   const handleNavigation = (e) => {
-    // If priority mode is on, we DON'T stop propagation or prevent default.
-    // We let the click "bubble up" to the parent div in LatestCollection.
     if (isPriorityMode) return; 
-
-    // Standard navigation for Shop/Collection pages
     if (e) {
         e.preventDefault();
         e.stopPropagation(); 
@@ -41,18 +40,18 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, isPri
   };
 
   const onToggleWishlist = (e) => {
-    e.stopPropagation(); // ALWAYS stop propagation for buttons
+    e.stopPropagation(); 
     toggleWishlist(productId);
   };
 
   const handleAddToCart = (e) => {
-    e.stopPropagation(); // ALWAYS stop propagation for buttons
+    e.stopPropagation(); 
     addToCart(productId, 1);
     toast.success("Added to Registry", { position: "bottom-right", autoClose: 1500 });
   };
 
   const handleBuyNow = async (e) => {
-    e.stopPropagation(); // ALWAYS stop propagation for buttons
+    e.stopPropagation(); 
     await addToCart(productId, 1);
     navigate('/cart');
     window.scrollTo(0,0);
@@ -65,6 +64,12 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, isPri
           {/* IMAGE CONTAINER */}
           <div className='relative aspect-square overflow-hidden bg-[#FDFDFD] border border-black/[0.03] group-hover:border-[#BC002D]/40 transition-all duration-500' onClick={handleNavigation}>
               
+              {/* POINTS BADGE */}
+              <div className='absolute top-2 left-2 z-30 flex items-center gap-1 bg-black/80 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10'>
+                <Award size={10} className='text-amber-400' />
+                <span className='text-[8px] font-black text-white uppercase tracking-tighter'>Earn {potentialPoints} PTS</span>
+              </div>
+
               <button 
                 onClick={onToggleWishlist}
                 className='absolute top-2 right-2 z-30 p-1.5 bg-white/80 backdrop-blur-md rounded-full border border-black/10 hover:bg-[#BC002D] hover:text-white transition-all shadow-sm'
@@ -106,6 +111,13 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, isPri
                             {formatPrice(price)}
                         </p>
                     </div>
+                </div>
+
+                {/* --- REWARD INFO --- */}
+                <div className='flex items-center justify-center py-1.5 border-y border-gray-50 bg-gray-50/50 rounded-lg'>
+                   <p className='text-[8px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5'>
+                     Purchase and earn <span className='text-[#BC002D] font-black'>{potentialPoints} Rewards Points</span>
+                   </p>
                 </div>
 
                 {/* --- ACTION BUTTONS --- */}

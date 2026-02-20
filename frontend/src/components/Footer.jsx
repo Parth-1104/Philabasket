@@ -63,7 +63,7 @@ const Footer = () => {
               title: 'Registry Index',
               links: [
                 {label: 'Membership', path: '/referral'}, 
-                {label: 'Reward', path: '/reward'}, 
+                {label: 'Reward', path: '/rewards'}, 
                 {label: 'Blogs', path: '/blogs'}
               ]
             },
