@@ -115,6 +115,8 @@ const Product = () => {
     </div>
   );
 
+  const potentialPoints = Math.floor(productData.price * quantity * 0.1);
+
   return (
     <div className='bg-white min-h-screen pt-4 md:pt-10 pb-16 select-none animate-fade-in relative overflow-x-hidden'>
 
@@ -209,6 +211,12 @@ const Product = () => {
                 </div>
               )}
             </div>
+
+            <div className='flex items-center justify-center py-1.5 border-y border-gray-50 bg-gray-50/50 rounded-lg'>
+                   <p className='text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5'>
+                     Purchase and earn <span className='text-[#BC002D] font-black'>{potentialPoints} Rewards Points</span>
+                   </p>
+                </div>
 
             {/* THUMBNAIL STRIP */}
             {totalMedia > 1 && (
@@ -308,6 +316,9 @@ const Product = () => {
                 {productData.description}
               </p>
             </div>
+
+
+            
 
             {/* Quantity */}
             <div className='flex items-center gap-5 mb-6'>
