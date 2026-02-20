@@ -47,7 +47,10 @@ const UtilityBar = () => {
                         {/* INVITE BUTTON */}
                         <div 
                             className='bg-[#BC002D] p-4 rounded-2xl flex items-center justify-between cursor-pointer hover:scale-[1.02] transition-transform shadow-lg shadow-[#BC002D]/20' 
-                            onClick={() => navigate('/referral')}
+                            onClick={() => {navigate('/referral');
+                                window.scrollTo(0, 0);
+                            }
+                            }
                         >
                             <div className='flex items-center gap-3'>
                                 <Users size={18} className='text-white' />
@@ -58,9 +61,12 @@ const UtilityBar = () => {
 
                         {/* --- NEW REDEEM BUTTON --- */}
                         <div 
-                            className='bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center justify-between cursor-pointer hover:bg-white/10 hover:scale-[1.02] transition-all' 
-                            onClick={() => navigate('/rewards')}
-                        >
+    className='bg-white/5 border border-white/10 p-4 rounded-2xl flex items-center justify-between cursor-pointer hover:bg-white/10 hover:scale-[1.02] transition-all' 
+    onClick={() => {
+        navigate('/rewards');
+        window.scrollTo(0, 0);
+    }}
+>
                             <div className='flex items-center gap-3'>
                                 <Award size={18} className='text-amber-400' />
                                 <div className='flex flex-col'>
