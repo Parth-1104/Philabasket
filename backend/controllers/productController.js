@@ -91,16 +91,18 @@ const listMedia = async (req, res) => {
 
 
 
+
+
 const bulkAddProducts = async (req, res) => {
     try {
         if (!req.file) return res.json({ success: false, message: "Please upload a CSV file" });
 
         const stamps = [];
         const usedImageNames = [];
-        const discoveredCategories = new Map();
-        let rowsProcessed = 0;
+        // Map to track counts: { "Stamps": 5, "Block of Four": 2 }
+        const discoveredCategories = new Map(); 
 
-        // --- STEP 1: PRE-PROCESS MEDIA INTO A VARIANT MAP ---
+        // --- STEP 1: PRE-PROCESS MEDIA AND EXISTING RECORDS ---
         const [existingStamps, allMedia] = await Promise.all([
             productModel.find({}, 'name').lean(),
             mediaModel.find({}, 'originalName imageUrl').lean()
@@ -108,30 +110,22 @@ const bulkAddProducts = async (req, res) => {
 
         const existingNames = new Set(existingStamps.map(s => s.name.toLowerCase().trim()));
 
-        // Helper: Extracts base BK-ID (e.g., "BK04" from any string)
         const extractBkId = (name) => {
             if (!name) return null;
             const match = String(name).match(/BK\d+/i);
             return match ? match[0].toUpperCase() : null;
         };
 
-        // Create a Grouped Map: { "BK04": ["url1", "url2", "url3"], "BK05": [...] }
         const mediaVariantMap = new Map();
         allMedia.forEach(m => {
             const bid = extractBkId(m.originalName);
             if (bid) {
                 if (!mediaVariantMap.has(bid)) mediaVariantMap.set(bid, []);
-                
-                // Ensure Cloudinary optimization
                 let url = m.imageUrl;
                 if (url.includes('cloudinary.com') && !url.includes('f_auto')) {
                     url = url.replace('/upload/', '/upload/f_auto,q_auto/');
                 }
-                
-                mediaVariantMap.get(bid).push({
-                    url: url,
-                    originalName: m.originalName
-                });
+                mediaVariantMap.get(bid).push({ url: url, originalName: m.originalName });
             }
         });
 
@@ -143,23 +137,20 @@ const bulkAddProducts = async (req, res) => {
             strict: false 
         }))
         .on('data', (row) => {
-            rowsProcessed++;
             try {
                 const clean = (val) => val ? String(val).trim().replace(/^["'\[]|["'\]]$/g, '').trim() : "";
                 const nameTrimmed = clean(row.name || Object.values(row)[0]);
 
+                // Skip duplicates or empty names
                 if (!nameTrimmed || existingNames.has(nameTrimmed.toLowerCase())) return;
 
-                // --- SMART IMAGE BUNDLING ---
-                // We take whatever is in imageName1 (even the long description) and find the BK ID
+                // --- IMAGE BUNDLING ---
                 const primaryCsvImg = clean(row.imageName1);
                 const baseId = extractBkId(primaryCsvImg);
                 
                 let productImages = [];
                 if (baseId && mediaVariantMap.has(baseId)) {
                     const variants = mediaVariantMap.get(baseId);
-                    
-                    // Sort variants so the one without "(1)" or "-" comes first
                     variants.sort((a, b) => {
                         const isA_Var = a.originalName.includes('(') || a.originalName.includes('-');
                         const isB_Var = b.originalName.includes('(') || b.originalName.includes('-');
@@ -167,29 +158,36 @@ const bulkAddProducts = async (req, res) => {
                         if (isA_Var && !isB_Var) return 1;
                         return a.originalName.length - b.originalName.length;
                     });
-
                     productImages = variants.map(v => v.url);
                     variants.forEach(v => usedImageNames.push(v.originalName));
                 }
 
                 if (productImages.length === 0) return;
 
-                // --- CATEGORY & MAPPING ---
+                // --- CATEGORY COUNTING ---
                 let parsedCategory = [];
                 const rawCat = clean(row.category);
                 if (rawCat) {
+                    // Split multi-category strings like "Stamps, India, Mint"
                     parsedCategory = rawCat.split(',').map(c => c.trim()).filter(c => c !== "");
+                    
+                    // Increment the local counter for each category found in this row
                     parsedCategory.forEach(cat => {
                         discoveredCategories.set(cat, (discoveredCategories.get(cat) || 0) + 1);
                     });
                 }
+                const mPrice = Number(String(row.marketPrice || 0).replace(/[^0-9.]/g, '')) || 0;
+
+// 2. Calculate price, defaulting to mPrice if row.price is falsy or 0
+const rowPrice = Number(String(row.price || 0).replace(/[^0-9.]/g, ''));
+const finalPrice = rowPrice || mPrice;
 
                 stamps.push({
                     name: nameTrimmed,
                     description: clean(row.description) || "Historical philatelic specimen.",
-                    marketPrice: Number(String(row.marketPrice || 0).replace(/[^0-9.]/g, '')) || 0,
-                    price: Number(String(row.price || 0).replace(/[^0-9.]/g, '')) || 0,
-                    image: productImages, // This now contains all 1, 2, 3... images
+                    marketPrice: mPrice,
+                    price: finalPrice,
+                    image: productImages,
                     youtubeUrl: clean(row.youtubeUrl),
                     category: parsedCategory,
                     year: Number(row.year) || 0,
@@ -203,27 +201,29 @@ const bulkAddProducts = async (req, res) => {
                     date: Date.now()
                 });
 
-            } catch (err) { console.error(`Processing Error:`, err); }
+            } catch (err) { console.error(`Row Processing Error:`, err); }
         })
         .on('end', async () => {
             try {
-                if (stamps.length === 0) return res.json({ success: false, message: "No items added." });
+                if (stamps.length === 0) return res.json({ success: false, message: "No new items to add." });
 
-                // Update category counts with $inc (forces the field to exist)
+                // --- STEP 3: ATOMIC SYNC OF CATEGORY REGISTRY ---
                 const categoryOps = Array.from(discoveredCategories).map(([name, count]) => ({
                     updateOne: {
                         filter: { name },
                         update: { 
-                            $inc: { productCount: count },
+                            $inc: { productCount: count }, // Add the new items to the existing count
                             $setOnInsert: { group: "Independent" } 
                         },
                         upsert: true 
                     }
                 }));
 
+                // Update category counts and insert products
                 if (categoryOps.length > 0) await categoryModel.bulkWrite(categoryOps);
                 await productModel.insertMany(stamps, { ordered: false });
                 
+                // Mark images as assigned
                 if (usedImageNames.length > 0) {
                     await mediaModel.updateMany(
                         { originalName: { $in: usedImageNames } }, 
@@ -231,13 +231,15 @@ const bulkAddProducts = async (req, res) => {
                     );
                 }
                 
-                res.json({ success: true, message: `Registry Updated. Added ${stamps.length} Specimens.` });
+                res.json({ success: true, message: `Registry Synced. Added ${stamps.length} Specimens.` });
             } catch (dbErr) { res.json({ success: false, message: dbErr.message }); }
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+
 // --- CORE CRUD (Upgraded for 100k+ Items) ---
 // const listProducts = async (req, res) => {
 //     try {
@@ -771,6 +773,19 @@ export const uploadSingleImage = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 }
+
+export const getRecentlyUpdated = async (req, res) => {
+    try {
+        // Fetch products updated in the last 7 days, sorted by updatedAt
+        const products = await productModel.find({})
+            .sort({ updatedAt: -1 }) // Newest updates first
+            .limit(30); // Limit to top 20 recent changes
+
+        res.json({ success: true, products });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+};
 
 export { 
     listProducts, addProduct, removeProduct, singleProduct, 

@@ -1,10 +1,10 @@
 import React, { useContext, useEffect, useState, useMemo } from 'react'
 import { ShopContext } from '../context/ShopContext'
 import { useNavigate } from 'react-router-dom'
-import { Heart, ShoppingCart, Zap } from 'lucide-react' // Added ShoppingCart and Zap
+import { Heart, ShoppingCart, Zap } from 'lucide-react' 
 import { toast } from 'react-toastify'
 
-const ProductItem = ({ id, _id, image, name, price, marketPrice, category, linkToFilter = false }) => {
+const ProductItem = ({ id, _id, image, name, price, marketPrice, category, isPriorityMode = false }) => {
     
   const { formatPrice, currency, addToCart, wishlist, toggleWishlist } = useContext(ShopContext);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -18,42 +18,50 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, linkT
   const optimizedImage = useMemo(() => {
     const rawUrl = image && image[0] ? image[0] : "";
     if (!rawUrl || !rawUrl.includes('cloudinary')) return rawUrl;
-    const watermarkTransform = 'l_Logo-5_tagline_yaxuag,fl_relative,w_0.5,c_scale,o_70,a_-45';
+    const watermarkTransform = 'l_Logo-5_go95bd,fl_relative,w_0.5,c_scale,o_70,a_-45';
     if (rawUrl.includes('f_auto,q_auto')) {
-        return rawUrl.replace('/f_auto,q_auto/', `/f_auto,q_auto,w_800,c_limit,${watermarkTransform}/`);
+        return rawUrl.replace('/f_auto,q_auto/', `/f_auto,q_auto,${watermarkTransform}/`);
     }
-    return rawUrl.replace('/upload/', `/upload/f_auto,q_auto,w_800,c_limit,${watermarkTransform}/`);
+    return rawUrl.replace('/upload/', `/upload/f_auto,q_auto,w_600,${watermarkTransform}/`);
   }, [image]);
 
   const handleNavigation = (e) => {
-    if (e) e.preventDefault();
+    // If priority mode is on, we DON'T stop propagation or prevent default.
+    // We let the click "bubble up" to the parent div in LatestCollection.
+    if (isPriorityMode) return; 
+
+    // Standard navigation for Shop/Collection pages
+    if (e) {
+        e.preventDefault();
+        e.stopPropagation(); 
+    }
     const slug = createSeoSlug(name || "specimen");
     navigate(`/product/${productId}/${slug}`);
     window.scrollTo(0,0);
   };
 
   const onToggleWishlist = (e) => {
-    e.stopPropagation(); 
+    e.stopPropagation(); // ALWAYS stop propagation for buttons
     toggleWishlist(productId);
   };
 
-  // --- NEW HANDLERS ---
   const handleAddToCart = (e) => {
-    e.stopPropagation();
+    e.stopPropagation(); // ALWAYS stop propagation for buttons
     addToCart(productId, 1);
-    toast.success("Added to Registry", { position: "bottom-right", autoClose: 2000 });
+    toast.success("Added to Registry", { position: "bottom-right", autoClose: 1500 });
   };
 
   const handleBuyNow = async (e) => {
-    e.stopPropagation();
+    e.stopPropagation(); // ALWAYS stop propagation for buttons
     await addToCart(productId, 1);
     navigate('/cart');
+    window.scrollTo(0,0);
   };
 
   const symbol = currency === 'USD' ? '$' : '₹';
 
   return (
-      <div className='relative block group select-none transition-all duration-700 cursor-pointer w-full bg-white'>
+      <div className='relative block group select-none transition-all duration-700 w-full bg-white'>
           {/* IMAGE CONTAINER */}
           <div className='relative aspect-square overflow-hidden bg-[#FDFDFD] border border-black/[0.03] group-hover:border-[#BC002D]/40 transition-all duration-500' onClick={handleNavigation}>
               
@@ -81,9 +89,9 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, linkT
           </div>
           
           <div className='py-4 px-1'>
-            <div className='flex flex-col gap-3'> {/* Increased gap to accommodate buttons */}
+            <div className='flex flex-col gap-3'>
                 <div className='flex justify-between items-start gap-4'>
-                    <p className='text-[10px] lg:text-[13px] font-semibold tracking-tight text-gray-900 group-hover:text-[#BC002D] transition-colors leading-[1.2] line-clamp-4 min-h-[2.4em] overflow-hidden' onClick={handleNavigation}>
+                    <p className='text-[10px] lg:text-[13px] font-semibold tracking-tight text-gray-900 group-hover:text-[#BC002D] transition-colors leading-[1.2] line-clamp-4 min-h-[2.4em] overflow-hidden cursor-pointer' onClick={handleNavigation}>
                         {name || "Untitled Specimen"}
                     </p>
                   

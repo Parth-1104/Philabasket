@@ -10,6 +10,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import UtilityBar from './components/UtilityBar';
 import ChatBot from './components/ChatBot';
+import Updates from './pages/Update';
 // import Rewards from './pages/Rewards';
 const Rewards=lazy(()=>import('./pages/Rewards'))
 
@@ -72,6 +73,8 @@ const App = () => {
           <Route path='/terms' element={<Terms/>} />
           <Route path='/faq' element={<FAQ/>} />
           <Route path='/ship' element={<Shipping/>} />
+          <Route path='/update' element={<Updates/>} />
+
 
 
 

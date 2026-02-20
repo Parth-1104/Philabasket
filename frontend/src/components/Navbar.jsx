@@ -83,7 +83,7 @@ const Navbar = () => {
             {/* DESKTOP NAVIGATION */}
             <nav className='hidden xl:flex items-center gap-10 mr-5'>
                 {Object.values(CATEGORY_GROUPS).map((group, index) => <MegaMenu key={index} menuData={group} />)}
-                <NavLink to='/blogs' className='group flex items-center gap-1.5'><p className='text-[10px] font-black tracking-[0.4em] text-gray-900 uppercase'>Blogs</p></NavLink>
+                <NavLink to='/update' className='group flex items-center gap-1.5'><p className='text-[10px] font-black tracking-[0.4em] text-gray-900 uppercase'>Updates</p></NavLink>
             </nav>
 
             {/* UTILITIES */}

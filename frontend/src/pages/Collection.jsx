@@ -4,12 +4,11 @@ import ProductItem from '../components/ProductItem';
 import { X, ArrowUpDown, ChevronRight, LayoutGrid, ChevronLeft, ChevronDown, ListFilter, SlidersHorizontal, Search } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 
-// 1. MOVE SidebarContent OUTSIDE the main component to prevent focus loss
+// 1. UPDATED SidebarContent: Unified design with direct productCount display
 const SidebarContent = ({ 
-  grouped, 
-  independent, 
+  unifiedIndex, 
   activeCategory, 
   handleCategorySelect, 
   sidebarSearch, 
@@ -21,7 +20,7 @@ const SidebarContent = ({
   <>
     <div className='flex items-center justify-between mb-6 border-b border-white/10 pb-6'>
       <h3 className='text-white font-black text-[10px] tracking-[0.3em] uppercase'>Registry Index</h3>
-      <button onClick={() => setShowFilter(false)} className='lg:hidden text-white/60 p-1'><X size={20}/></button>
+      <button onClick={() => setShowFilter(false)} className='lg:hidden text-white/60 p-1 hover:text-white transition-colors'><X size={20}/></button>
     </div>
 
     <div className='relative mb-8'>
@@ -44,42 +43,50 @@ const SidebarContent = ({
       )}
     </div>
 
-    <div className='flex flex-col gap-3'>
-      {Object.keys(grouped).sort().map(groupName => (
-        <div key={groupName} className='flex flex-col'>
-          <button
-            onClick={() => setOpenGroups(p => ({ ...p, [groupName]: !p[groupName] }))}
-            className='flex items-center justify-between py-3 px-4 rounded-xl text-[9px] font-bold uppercase tracking-widest text-white/60 hover:text-white hover:bg-white/5 transition-all'
-          >
-            {groupName}
-            {openGroups[groupName] ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          </button>
-          {openGroups[groupName] && (
-            <div className='flex flex-col gap-1.5 ml-4 mt-1 mb-2 border-l border-white/10 pl-4'>
-              {grouped[groupName].map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => handleCategorySelect(cat)}
-                  className={`text-left py-2 px-3 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all ${activeCategory === cat ? 'bg-white text-[#BC002D]' : 'text-white/40 hover:text-white'}`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
+    <div className='flex flex-col gap-2 overflow-y-auto max-h-[60vh] lg:max-h-[70vh] hide-scrollbar pr-1'>
+      {unifiedIndex.map((entry) => (
+        <div key={entry.name} className='flex flex-col'>
+          {entry.type === 'group' ? (
+            <>
+              <button
+                onClick={() => setOpenGroups(p => ({ ...p, [entry.name]: !p[entry.name] }))}
+                className='flex items-center justify-between py-3 px-4 rounded-xl text-[9px] font-bold uppercase tracking-widest text-white/80 hover:text-amber-400 hover:bg-white/5 transition-all group'
+              >
+                <div className='flex items-center gap-2'>
+                  <span className='truncate'>{entry.name}</span>
+                  <span className='text-[8px] opacity-40 font-mono'>({entry.totalCount})</span>
+                </div>
+                <ChevronDown 
+                  size={14} 
+                  className={`transition-transform duration-300 ${openGroups[entry.name] ? 'rotate-180 text-amber-400' : 'opacity-40 group-hover:opacity-100'}`} 
+                />
+              </button>
+              <div className={`flex flex-col gap-1 ml-4 border-l border-white/10 pl-4 transition-all duration-500 overflow-hidden ${openGroups[entry.name] ? 'max-h-[1000px] mt-1 mb-3 opacity-100' : 'max-h-0 opacity-0'}`}>
+                {entry.items.map(subCat => (
+                  <button
+                    key={subCat.name}
+                    onClick={() => handleCategorySelect(subCat.name)}
+                    className={`flex items-center justify-between py-2.5 px-3 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all group/item ${activeCategory === subCat.name ? 'bg-white text-[#BC002D]' : 'text-white/40 hover:text-white'}`}
+                  >
+                    <span className='truncate mr-2 group-hover/item:translate-x-1 transition-transform'>{subCat.name}</span>
+                    <span className={`text-[8px] font-mono ${activeCategory === subCat.name ? 'text-[#BC002D]' : 'text-amber-400/60'}`}>{subCat.count}</span>
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <button
+              onClick={() => handleCategorySelect(entry.name)}
+              className={`flex items-center justify-between py-3 px-4 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all ${activeCategory === entry.name ? 'bg-white text-[#BC002D]' : 'text-white/80 hover:bg-white/5 hover:text-amber-400'}`}
+            >
+              <span className='truncate'>{entry.name}</span>
+              <span className={`text-[8px] font-mono ${activeCategory === entry.name ? 'text-[#BC002D]' : 'opacity-40'}`}>{entry.count}</span>
+            </button>
           )}
         </div>
       ))}
-      {independent.sort().map(cat => (
-        <button
-          key={cat}
-          onClick={() => handleCategorySelect(cat)}
-          className={`text-left py-3 px-4 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all ${activeCategory === cat ? 'bg-white text-[#BC002D]' : 'text-white/60 hover:bg-white/5 hover:text-white'}`}
-        >
-          {cat}
-        </button>
-      ))}
       
-      {Object.keys(grouped).length === 0 && independent.length === 0 && (
+      {unifiedIndex.length === 0 && (
         <p className='text-[10px] text-white/30 font-bold uppercase text-center py-4'>No Index Matches</p>
       )}
     </div>
@@ -101,8 +108,8 @@ const Collection = () => {
   const [dbCategories, setDbCategories] = useState([]);
   const [openGroups, setOpenGroups] = useState({});
   const [sidebarSearch, setSidebarSearch] = useState("");
+  const location = useLocation();
 
-  // Body scroll lock
   useEffect(() => {
     if (showFilter) {
       document.body.style.overflow = 'hidden';
@@ -120,26 +127,39 @@ const Collection = () => {
 
   useEffect(() => { if (backendUrl) fetchCategories(); }, [backendUrl]);
 
-  const { grouped, independent } = useMemo(() => {
-    const groupedResult = {};
-    const independentResult = [];
-    
-    // Use .trim() to handle spaces during multiple word typing
+  // UPDATED useMemo: Alphabetical Unified Index logic
+  const unifiedIndex = useMemo(() => {
+    if (!dbCategories.length) return [];
+
+    const groupsMap = {};
+    const independentList = [];
     const searchLower = sidebarSearch.toLowerCase().trim();
 
-    dbCategories.forEach(cat => {
-      const isMatch = cat.name.toLowerCase().includes(searchLower);
-      if (searchLower !== "" && !isMatch) return;
+    const filtered = dbCategories.filter(cat => 
+      cat.name.toLowerCase().includes(searchLower)
+    );
 
+    filtered.forEach(cat => {
+      const item = { name: cat.name, count: cat.productCount || 0 };
+      
       if (!cat.group || ['General', 'Independent', 'none', ''].includes(cat.group.trim())) {
-        independentResult.push(cat.name);
+        independentList.push({ ...item, type: 'independent' });
       } else {
-        const groupName = cat.group.trim();
-        if (!groupedResult[groupName]) groupedResult[groupName] = [];
-        groupedResult[groupName].push(cat.name);
+        const gName = cat.group.trim();
+        if (!groupsMap[gName]) {
+          groupsMap[gName] = { name: gName, type: 'group', items: [], totalCount: 0 };
+        }
+        groupsMap[gName].items.push(item);
+        groupsMap[gName].totalCount += item.count;
       }
     });
-    return { grouped: groupedResult, independent: independentResult };
+
+    const combined = [
+      ...Object.values(groupsMap),
+      ...independentList
+    ];
+
+    return combined.sort((a, b) => a.name.localeCompare(b.name));
   }, [dbCategories, sidebarSearch]);
 
   const fetchFromRegistry = useCallback(async (targetPage) => {
@@ -155,8 +175,20 @@ const Collection = () => {
           search: showSearch ? search : ''
         }
       });
+  
       if (response.data.success) {
-        setProducts(response.data.products);
+        let fetchedProducts = response.data.products;
+  
+        if (location.state && location.state.priorityId) {
+          const priorityId = location.state.priorityId;
+          const priorityIndex = fetchedProducts.findIndex(p => p._id === priorityId);
+          if (priorityIndex > -1) {
+            const [priorityItem] = fetchedProducts.splice(priorityIndex, 1);
+            fetchedProducts.unshift(priorityItem);
+          }
+        }
+  
+        setProducts(fetchedProducts);
         setTotalFound(response.data.total);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
@@ -165,7 +197,7 @@ const Collection = () => {
     } finally {
       setLoading(false);
     }
-  }, [backendUrl, activeCategory, sortType, search, showSearch]);
+  }, [backendUrl, activeCategory, sortType, search, showSearch, location.state]);
 
   useEffect(() => {
     setPage(1);
@@ -213,7 +245,7 @@ const Collection = () => {
 
   return (
     <div className='bg-white min-h-screen pt-4 pb-24 px-4 md:px-16 lg:px-24 select-none animate-fade-in'>
-
+      
       <div className='mb-8 md:mb-12'>
         <div className='flex items-center gap-4 mb-3'>
           <span className='h-[1px] w-8 md:w-12 bg-[#BC002D]'></span>
@@ -231,10 +263,9 @@ const Collection = () => {
           <div onClick={() => setShowFilter(false)} className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-400 ${showFilter ? 'opacity-100' : 'opacity-0'}`} />
           <div className={`absolute bottom-0 left-0 right-0 bg-[#BC002D] rounded-t-[32px] transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] max-h-[85vh] flex flex-col ${showFilter ? 'translate-y-0' : 'translate-y-full'}`}>
             <div className='flex justify-center pt-4 pb-2 flex-shrink-0'><div className='w-10 h-1 rounded-full bg-white/30'></div></div>
-            <div className='overflow-y-auto flex-1 px-6 py-4 pb-10'>
+            <div className='overflow-y-auto flex-1 px-6 py-6 pb-12'>
               <SidebarContent 
-                grouped={grouped}
-                independent={independent}
+                unifiedIndex={unifiedIndex}
                 activeCategory={activeCategory}
                 handleCategorySelect={handleCategorySelect}
                 sidebarSearch={sidebarSearch}
@@ -251,8 +282,7 @@ const Collection = () => {
         <aside className='hidden lg:block lg:w-[20%] lg:sticky lg:top-10 lg:self-start'>
           <div className='bg-[#BC002D] p-10 rounded-[40px] shadow-2xl shadow-black/50'>
             <SidebarContent 
-                grouped={grouped}
-                independent={independent}
+                unifiedIndex={unifiedIndex}
                 activeCategory={activeCategory}
                 handleCategorySelect={handleCategorySelect}
                 sidebarSearch={sidebarSearch}
@@ -269,13 +299,12 @@ const Collection = () => {
 
         {/* MAIN DISPLAY */}
         <main className='flex-1 min-w-0'>
-          {/* Header bar remains same */}
           <div className='flex items-center justify-between mb-6 md:mb-10 pb-5 border-b border-gray-100 gap-3'>
             <div className='flex flex-col gap-1.5 min-w-0'>
               <div className='flex items-center gap-2'>
                 <LayoutGrid size={12} className='text-gray-400 flex-shrink-0' />
                 <p className='text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-gray-400 whitespace-nowrap'>
-                  <span className='text-black'>{totalFound}</span> Specimens
+                  <span className='text-black font-mono'>{totalFound}</span> Specimens
                 </p>
               </div>
               {activeCategory && (
@@ -287,7 +316,7 @@ const Collection = () => {
             </div>
 
             <div className='flex items-center gap-2 flex-shrink-0'>
-              <button onClick={() => setShowFilter(true)} className='lg:hidden flex items-center gap-1.5 bg-black text-white py-2.5 px-3.5 rounded-xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-transform'><SlidersHorizontal size={12} /><span>Filter</span></button>
+              <button onClick={() => setShowFilter(true)} className='lg:hidden flex items-center gap-1.5 bg-black text-white py-2.5 px-3.5 rounded-xl text-[9px] font-black uppercase tracking-widest active:scale-95 transition-transform shadow-lg'><SlidersHorizontal size={12} /><span>Filter</span></button>
               <div className='flex items-center gap-1.5 bg-gray-50 py-2.5 px-3.5 rounded-xl'>
                 <ArrowUpDown size={12} className='text-gray-900 flex-shrink-0' />
                 <select value={sortType} onChange={(e) => setSortType(e.target.value)} className='text-[9px] md:text-[10px] font-black text-gray-900 uppercase tracking-[0.15em] outline-none bg-transparent cursor-pointer max-w-[90px] md:max-w-none'>
@@ -300,14 +329,18 @@ const Collection = () => {
             </div>
           </div>
 
-          {/* Grid remains same */}
           <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-3 md:gap-x-6 gap-y-8 md:gap-y-12'>
-            {products.map((item) => (
-              <ProductItem key={item._id} id={item._id} {...item} />
-            ))}
+            {loading ? (
+              [...Array(10)].map((_, i) => (
+                <div key={i} className='aspect-[3/4] bg-gray-50 animate-pulse rounded-br-[40px]'></div>
+              ))
+            ) : (
+              products.map((item) => (
+                <ProductItem key={item._id} id={item._id} {...item} />
+              ))
+            )}
           </div>
 
-          {/* Pagination remains same */}
           {totalPages > 1 && (
             <div className='flex flex-wrap items-center justify-center gap-2 mt-16 mb-6'>
               <button disabled={page === 1} onClick={() => setPage(p => p - 1)} className='p-2.5 md:p-3 rounded-xl bg-gray-50 text-gray-500 hover:bg-black hover:text-white disabled:opacity-30 transition-all active:scale-95'><ChevronLeft size={16} /></button>

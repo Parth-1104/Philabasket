@@ -14,7 +14,8 @@ import {
     deleteMedia,
     updateMediaName,
     bulkUpdateStatus,
-    bulkUpdateAttributes
+    bulkUpdateAttributes,
+    getRecentlyUpdated
 } from '../controllers/productController.js'
 import upload from '../middleware/multer.js';
 import adminAuth from '../middleware/adminAuth.js';
@@ -60,8 +61,9 @@ productRouter.post('/delete-media', adminAuth, deleteMedia);
 productRouter.post('/query', chatWithRegistry);
 productRouter.post('/bulk-status', adminAuth, bulkUpdateStatus);
 
-productRouter.post('/bulk-update-attributes', adminAuth, bulkUpdateAttributes);
 
+productRouter.post('/bulk-update-attributes', adminAuth, bulkUpdateAttributes);
+productRouter.get('/latest-updates', getRecentlyUpdated);
 
 
 

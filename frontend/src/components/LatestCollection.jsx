@@ -4,14 +4,13 @@ import ProductItem from './ProductItem';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { ShoppingCart, Zap, ChevronDown, Plus, Minus, Search, X } from 'lucide-react'; 
+import { Search, ChevronDown, X } from 'lucide-react'; 
 
 const LatestCollection = () => {
-    const { products, backendUrl, addToCart } = useContext(ShopContext);
+    const { products, backendUrl } = useContext(ShopContext);
     const [latestProducts, setLatestProducts] = useState([]);
     const [dbCategories, setDbCategories] = useState([]);
     const [openGroups, setOpenGroups] = useState({}); 
-    const [showAllIndependent, setShowAllIndependent] = useState(false);
     const [searchTerm, setSearchTerm] = useState(""); 
     const navigate = useNavigate();
 
@@ -26,82 +25,71 @@ const LatestCollection = () => {
         }
     };
 
-    // --- UPDATED LOGIC: Filter by newArrival flag ---
-   // --- UPDATED LOGIC: Filter by newArrival flag ---
-   useEffect(() => {
-    if (!products) return;
-
-    const filtered = products
-        .filter(item => {
-            // Handle cases where it might be a string "true" or boolean true
-            return item.newArrival === true || item.newArrival === "true";
-        })
-        .sort((a, b) => b.date - a.date)
-        .slice(0, 16);
-        
-    setLatestProducts(filtered); 
-}, [products]);
+    // Filter by newArrival flag and slice for top 16 arrivals
+    useEffect(() => {
+        if (!products) return;
+        const filtered = products
+            .filter(item => item.newArrival === true || item.newArrival === "true")
+            .sort((a, b) => b.date - a.date)
+            .slice(0, 16);
+        setLatestProducts(filtered); 
+    }, [products]);
 
     useEffect(() => {
         if (backendUrl) fetchCategories();
     }, [backendUrl]);
 
-    // ... (Memoized Category Logic remains the same)
-    const { grouped, independent } = useMemo(() => {
-        const groupedResult = {};
-        const independentResult = [];
-    
-        if (!dbCategories.length || !products.length) {
-            return { grouped: {}, independent: [] };
-        }
+    // --- UNIFIED ALPHABETICAL INDEX LOGIC ---
+    const unifiedIndex = useMemo(() => {
+        if (!dbCategories.length) return [];
+
+        const groupsMap = {};
+        const independentList = [];
 
         // Filter categories based on search term
-        const filteredCategories = dbCategories.filter(cat => 
+        const filtered = dbCategories.filter(cat => 
             cat.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
-    
-        filteredCategories.forEach(cat => {
-            const count = products.filter(p => {
-                if (p.category && Array.isArray(p.category)) {
-                    return p.category.some(item => 
-                        item.trim().toLowerCase() === cat.name.trim().toLowerCase()
-                    );
-                }
-                return p.category === cat.name;
-            }).length;
-    
-            const item = { name: cat.name, count };
-    
-            if (!cat.group || ['General', 'Independent', 'none', ''].includes(cat.group)) {
-                independentResult.push(item);
+
+        filtered.forEach(cat => {
+            const item = { name: cat.name, count: cat.productCount || 0 };
+            
+            // Check if the category belongs to a group
+            if (!cat.group || ['General', 'Independent', 'none', ''].includes(cat.group.trim())) {
+                independentList.push({ ...item, type: 'independent' });
             } else {
-                if (!groupedResult[cat.group]) groupedResult[cat.group] = [];
-                groupedResult[cat.group].push(item);
+                const gName = cat.group.trim();
+                if (!groupsMap[gName]) {
+                    groupsMap[gName] = { name: gName, type: 'group', items: [], totalCount: 0 };
+                }
+                groupsMap[gName].items.push(item);
+                groupsMap[gName].totalCount += item.count;
             }
         });
-    
-        Object.keys(groupedResult).forEach(group => {
-            groupedResult[group].sort((a, b) => a.name.localeCompare(b.name));
-        });
 
-        // 2. Sort the Independent (General Registry) Alphabetically
-        independentResult.sort((a, b) => a.name.localeCompare(b.name));
-    
-        return { grouped: groupedResult, independent: independentResult };
-    }, [dbCategories, products, searchTerm]);
+        // Combine Groups and Independent items into one master list
+        const combined = [
+            ...Object.values(groupsMap),
+            ...independentList
+        ];
 
-    const toggleGroup = (groupName) => {
-        setOpenGroups(prev => ({ ...prev, [groupName]: !prev[groupName] }));
-    };
+        // Sort the entire unified registry alphabetically by name
+        return combined.sort((a, b) => a.name.localeCompare(b.name));
+    }, [dbCategories, searchTerm]);
+
+    const toggleGroup = (groupName) => setOpenGroups(prev => ({ ...prev, [groupName]: !prev[groupName] }));
 
     const handleCategoryClick = (catName) => {
-        navigate(`/collection?category=${encodeURIComponent(catName)}`);
+        // replace: true swaps the current history entry to prevent back-button loops
+        navigate(`/collection?category=${encodeURIComponent(catName)}`, { replace: true });
         window.scrollTo(0, 0);
     };
 
-    const handleProductClick = (productId) => { navigate('/collection', { state: { priorityId: productId } }); window.scrollTo(0, 0); };
-    const onAddToCart = (e, productId) => { e.stopPropagation(); addToCart(productId, 1); toast.success("Added to Registry", { position: "bottom-right", autoClose: 1000 }); };
-    const onBuyNow = async (e, productId) => { e.stopPropagation(); await addToCart(productId, 1); navigate('/cart'); window.scrollTo(0, 0); };
+    const handleProductClick = (productId) => { 
+        // Sends priorityId state so Collection page moves this item to index 0
+        navigate('/collection', { state: { priorityId: productId } }); 
+        window.scrollTo(0, 0); 
+    };
 
     return (
         <div className='bg-white py-12 md:py-32 overflow-hidden select-none relative'>
@@ -127,26 +115,16 @@ const LatestCollection = () => {
                     <div className='w-full lg:w-[25%]'>
                         <div className='lg:sticky lg:top-32'>
                             <div className='bg-[#bd002d] p-6 lg:p-8 rounded-[30px] lg:rounded-[40px] shadow-2xl shadow-[#bd002d]/20 relative overflow-hidden'>
-                                <div className='flex items-center justify-between mb-6 relative z-10'>
-                                    <h3 className='text-white font-black text-[9px] lg:text-xs tracking-[0.3em] uppercase'>Registry Index</h3>
-                                    <button 
-                                        onClick={() => setShowAllIndependent(!showAllIndependent)} 
-                                        className='text-amber-400 text-[8px] lg:hidden font-black uppercase tracking-widest bg-white/10 px-3 py-1 rounded-full'
-                                    >
-                                        {showAllIndependent ? 'View Less' : 'View All'}
-                                    </button>
-                                </div>
+                                <h3 className='text-white font-black text-[9px] lg:text-xs tracking-[0.3em] uppercase mb-6'>Registry Index</h3>
 
-                                <div className='relative z-10 mb-6 group'>
-                                    <div className='absolute left-3 top-1/2 -translate-y-1/2 text-white/40 group-focus-within:text-amber-400 transition-colors'>
-                                        <Search size={12} />
-                                    </div>
+                                <div className='relative z-10 mb-6'>
+                                    <Search size={12} className='absolute left-3 top-1/2 -translate-y-1/2 text-white/40' />
                                     <input 
                                         type="text"
                                         placeholder="Search Registry..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full bg-white/10 border border-white/20 rounded-xl pl-9 pr-8 py-2.5 text-[10px] text-white placeholder:text-white/40 outline-none focus:border-amber-400/50 transition-all font-bold uppercase tracking-widest"
+                                        className="w-full bg-white/10 border border-white/20 rounded-xl pl-9 pr-8 py-2.5 text-[10px] text-white outline-none font-bold uppercase tracking-widest"
                                     />
                                     {searchTerm && (
                                         <button onClick={() => setSearchTerm("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors">
@@ -156,104 +134,85 @@ const LatestCollection = () => {
                                 </div>
 
                                 <div className='flex flex-col gap-2 overflow-y-auto max-h-[180vh] hide-scrollbar relative z-10 pr-2'>
-                                    {Object.keys(grouped).sort().map((groupName) => (
-                                        <div key={groupName} className="flex flex-col mb-1">
-                                            <div 
-                                                className='flex items-center justify-between cursor-pointer py-3 border-b border-white/10 hover:bg-white/5 px-2 rounded-lg transition-all' 
-                                                onClick={() => toggleGroup(groupName)}
-                                            >
-                                                <div className='flex items-center gap-3'>
-                                                    <span className="text-amber-400 text-[10px] font-black  tracking-[0.15em] hover:text-white transition-all text-left leading-tight max-w-[140px]">
-                                                        {groupName}
-                                                    </span>
-                                                    <span className='text-[8px] text-white/40 font-bold tabular-nums'>
-                                                        ({grouped[groupName].reduce((sum, c) => sum + c.count, 0)})
-                                                    </span>
-                                                </div>
-                                                <ChevronDown size={14} className={`text-amber-400 transition-transform duration-300 ${openGroups[groupName] ? 'rotate-180' : ''}`} />
-                                            </div>
-                                            
-                                            <div className={`flex flex-col gap-0.5 ml-3 border-l-2 border-amber-400/20 pl-4 transition-all duration-500 overflow-hidden ${openGroups[groupName] ? 'max-h-[800px] mt-2 opacity-100 mb-4' : 'max-h-0 opacity-0'}`}>
-                                                {grouped[groupName].map((cat) => (
+                                    {unifiedIndex.map((entry) => (
+                                        <div key={entry.name} className="flex flex-col">
+                                            {entry.type === 'group' ? (
+                                                <>
                                                     <button 
-                                                        key={cat.name}
-                                                        onClick={() => handleCategoryClick(cat.name)}
-                                                        className='text-white/70 hover:text-white text-[9px] font-bold  text-left py-2 flex items-center justify-between group/item border-b border-white/5 last:border-0'
+                                                        onClick={() => toggleGroup(entry.name)}
+                                                        className='text-white/80 hover:text-amber-400 text-[10px] font-black tracking-widest uppercase w-full py-3 px-3 hover:bg-white/5 rounded-xl transition-all flex items-center justify-between group'
                                                     >
-                                                        <span className='truncate mr-2 group-hover/item:translate-x-1 transition-transform'>{cat.name}</span>
-                                                        <span className='text-[8px] text-amber-400/60 font-mono'>{cat.count}</span>
+                                                        <div className='flex items-center gap-2'>
+                                                            <span className='truncate'>{entry.name}</span>
+                                                            <span className='text-[8px] opacity-40 font-mono'>({entry.totalCount})</span>
+                                                        </div>
+                                                        <ChevronDown 
+                                                            size={14} 
+                                                            className={`transition-transform duration-300 ${openGroups[entry.name] ? 'rotate-180 text-amber-400' : 'opacity-40 group-hover:opacity-100'}`} 
+                                                        />
                                                     </button>
-                                                ))}
-                                            </div>
+                                                    <div className={`flex flex-col gap-1 ml-4 border-l border-white/10 pl-4 transition-all duration-500 overflow-hidden ${openGroups[entry.name] ? 'max-h-[1000px] mt-2 mb-4 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                                        {entry.items.sort((a, b) => a.name.localeCompare(b.name)).map((sub) => (
+                                                            <button 
+                                                                key={sub.name} 
+                                                                onClick={() => handleCategoryClick(sub.name)} 
+                                                                className='text-white/60 hover:text-white text-[9px] font-bold py-2.5 flex justify-between uppercase border-b border-white/5 last:border-0'
+                                                            >
+                                                                <span>{sub.name}</span>
+                                                                <span className='text-amber-400/60 font-mono'>{sub.count}</span>
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <button 
+                                                    onClick={() => handleCategoryClick(entry.name)} 
+                                                    className='text-white/80 hover:text-amber-400 text-[10px] font-black tracking-widest uppercase w-full py-3 px-3 hover:bg-white/5 rounded-xl transition-all flex items-center justify-between group'
+                                                >
+                                                    <span className='truncate'>{entry.name}</span>
+                                                    <span className='text-[8px] opacity-40 font-mono'>{entry.count}</span>
+                                                </button>
+                                            )}
                                         </div>
                                     ))}
-
-                                    {independent.length > 0 && (
-                                        <div className="mt-4 pt-4 border-t border-white/20">
-                                            <p className='text-[8px] text-white/30 font-black uppercase tracking-widest mb-4 ml-2'>General Registry</p>
-                                            <div className='flex flex-col gap-1'>
-                                                {independent
-                                                    .slice(0, (!showAllIndependent && window.innerWidth < 1024) ? 4 : independent.length)
-                                                    .map((cat) => (
-                                                    <button 
-                                                        key={cat.name}
-                                                        onClick={() => handleCategoryClick(cat.name)}
-                                                        className='text-white/80 hover:text-amber-400 text-[10px] font-black tracking-widest uppercase text-left py-3 px-3 hover:bg-white/5 rounded-xl transition-all flex items-center justify-between group'
-                                                    >
-                                                        <span className='truncate'>{cat.name}</span>
-                                                        <span className='text-[8px] opacity-40 group-hover:opacity-100 font-mono'>{cat.count}</span>
-                                                    </button>
-                                                ))}
-
-                                                {independent.length > 4 && (
-                                                    <button 
-                                                        onClick={() => setShowAllIndependent(!showAllIndependent)}
-                                                        className='lg:hidden mt-2 text-center py-2 text-amber-400 text-[9px] font-black uppercase tracking-widest bg-white/5 rounded-lg border border-white/10 flex items-center justify-center gap-2'
-                                                    >
-                                                        {showAllIndependent ? <><Minus size={10}/> View Less</> : <><Plus size={10}/> View All ({independent.length})</>}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* MAIN PRODUCT GRID (Filtered) */}
-                    <div className='w-full lg:w-3/4'>
-                        <div className='flex overflow-x-auto lg:grid lg:grid-cols-4 gap-6 md:gap-x-8 gap-y-12 pb-10 lg:pb-0 snap-x snap-mandatory mobile-scrollbar px-2'>
-                            {latestProducts.length > 0 ? latestProducts.map((item, index) => (
-                                <div key={index} className="min-w-[85%] sm:min-w-[45vw] lg:min-w-[20%] snap-center flex flex-col group bg-white border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-br-[40px] md:rounded-br-[60px] overflow-hidden">
-                                    <div className="relative p-1 md:p-3 flex-grow cursor-pointer" onClick={() => handleProductClick(item._id)}>
-                                        <div className="absolute top-0 right-0 z-20 overflow-hidden w-20 h-20 pointer-events-none">
-                                            <div className="absolute top-[20%] -right-[30%] bg-[#bd002d] text-white text-[7px] font-black py-1 w-[140%] text-center transform rotate-45 shadow-sm uppercase tracking-tighter">New</div>
-                                        </div>
-                                        <div className="w-full bg-[#f8f8f8] rounded-br-[35px] md:rounded-br-[45px] p-2">
-                                            <ProductItem id={item._id} _id={item._id} image={item.image} name={item.name} price={item.price} marketPrice={item.marketPrice} category={item.category[0]} linkToFilter={true} />
-                                        </div>
-                                    </div>
-                                    {/* <div className="flex flex-col gap-2 p-4 pt-0">
-                                        <div className="grid grid-cols-2 gap-2">
-                                            <button onClick={(e) => onAddToCart(e, item._id)} className="bg-gray-100 text-gray-900 py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-black hover:text-white transition-all duration-300">
-                                                <ShoppingCart size={14} />
-                                                <span className="text-[8px] font-black uppercase tracking-widest">Add</span>
-                                            </button>
-                                            <button onClick={(e) => onBuyNow(e, item._id)} className="bg-black text-white py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-[#bd002d] transition-all duration-300 shadow-lg shadow-black/10">
-                                                <Zap size={14} className="fill-amber-400 text-amber-400" />
-                                                <span className="text-[8px] font-black uppercase tracking-widest">Buy Now</span>
-                                            </button>
-                                        </div>
-                                    </div> */}
-                                </div>
-                            )) : (
-                                <div className='col-span-3 py-20 text-center'>
-                                    <p className='text-xs font-black uppercase tracking-[0.3em] text-gray-400'>No New Specimens in Registry</p>
-                                </div>
-                            )}
-                        </div>
+                    {/* MAIN PRODUCT GRID */}
+                    {/* MAIN PRODUCT GRID */}
+<div className='w-full lg:w-3/4'>
+    <div className='flex overflow-x-auto lg:grid lg:grid-cols-4 gap-6 md:gap-x-8 gap-y-12 snap-x snap-mandatory px-2'>
+        {latestProducts.map((item, index) => (
+            <div 
+                key={item._id || index} 
+                onClick={() => handleProductClick(item._id)} 
+                className="min-w-[85%] sm:min-w-[45vw] lg:min-w-[20%] snap-center flex flex-col group bg-white border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-br-[40px] md:rounded-br-[60px] overflow-hidden cursor-pointer"
+            >
+                {/* REMOVED pointer-events-none so buttons work */}
+                <div className="relative p-1 md:p-3 flex-grow">
+                    <div className="absolute top-0 right-0 z-20 overflow-hidden w-20 h-20 pointer-events-none">
+                        <div className="absolute top-[20%] -right-[30%] bg-[#bd002d] text-white text-[7px] font-black py-1 w-[140%] text-center transform rotate-45 shadow-sm uppercase tracking-tighter">New</div>
                     </div>
+                    
+                    <div className="w-full bg-[#f8f8f8] rounded-br-[35px] md:rounded-br-[45px] p-2">
+                        <ProductItem 
+                            id={item._id} 
+                            _id={item._id} 
+                            image={item.image} 
+                            name={item.name} 
+                            price={item.price} 
+                            marketPrice={item.marketPrice} 
+                            category={item.category ? item.category[0] : ""} 
+                            isPriorityMode={true} 
+                        />
+                    </div>
+                </div>
+            </div>
+        ))}
+    </div>
+</div>
                 </div>
             </div>
         </div>
