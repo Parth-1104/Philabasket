@@ -69,7 +69,7 @@ const SidebarContent = ({
                     className={`flex items-center justify-between py-2.5 px-3 rounded-lg text-[9px] font-bold uppercase tracking-widest transition-all group/item ${activeCategory === subCat.name ? 'bg-white text-[#BC002D]' : 'text-white/40 hover:text-white'}`}
                   >
                     <span className='truncate mr-2 group-hover/item:translate-x-1 transition-transform'>{subCat.name}</span>
-                    <span className={`text-[8px] font-mono ${activeCategory === subCat.name ? 'text-[#BC002D]' : 'text-amber-400/60'}`}>{subCat.count}</span>
+                    <span className={`text-[8px] font-mono ${activeCategory === subCat.name ? 'text-[#BC002D]' : 'text-amber-400 font-mono font-black'}`}>{subCat.count}</span>
                   </button>
                 ))}
               </div>
@@ -80,7 +80,7 @@ const SidebarContent = ({
               className={`flex items-center justify-between py-3 px-4 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all ${activeCategory === entry.name ? 'bg-white text-[#BC002D]' : 'text-white/80 hover:bg-white/5 hover:text-amber-400'}`}
             >
               <span className='truncate'>{entry.name}</span>
-              <span className={`text-[8px] font-mono ${activeCategory === entry.name ? 'text-[#BC002D]' : 'opacity-40'}`}>{entry.count}</span>
+              <span className={`text-[10px] text-white font-mono font-black ${activeCategory === entry.name ? 'text-[#BC002D]' : 'opacity-80'}`}>{entry.count}</span>
             </button>
           )}
         </div>
@@ -320,26 +320,30 @@ const Collection = () => {
               <div className='flex items-center gap-1.5 bg-gray-50 py-2.5 px-3.5 rounded-xl'>
                 <ArrowUpDown size={12} className='text-gray-900 flex-shrink-0' />
                 <select value={sortType} onChange={(e) => setSortType(e.target.value)} className='text-[9px] md:text-[10px] font-black text-gray-900 uppercase tracking-[0.15em] outline-none bg-transparent cursor-pointer max-w-[90px] md:max-w-none'>
-                  <option value="relevant">Relevance</option>
-                  <option value="price-low">↑ Price</option>
-                  <option value="price-high">↓ Price</option>
-                  <option value="year-new">Newest</option>
+                <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="year-new">Year: Recent First</option>
+                        <option value="year-old">Year: Oldest First</option>
+                        <option value="name-asc">Alphabetical: A-Z</option>
                 </select>
               </div>
             </div>
           </div>
 
-          <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-3 md:gap-x-6 gap-y-8 md:gap-y-12'>
-            {loading ? (
-              [...Array(10)].map((_, i) => (
-                <div key={i} className='aspect-[3/4] bg-gray-50 animate-pulse rounded-br-[40px]'></div>
-              ))
-            ) : (
-              products.map((item) => (
-                <ProductItem key={item._id} id={item._id} {...item} />
-              ))
-            )}
-          </div>
+         {/* --- UPDATED GRID CONTAINER --- */}
+<div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-x-3 md:gap-x-6 gap-y-8 md:gap-y-12 items-stretch'>
+  {loading ? (
+    [...Array(10)].map((_, i) => (
+      <div key={i} className='aspect-[3/4] bg-gray-50 animate-pulse rounded-br-[40px]'></div>
+    ))
+  ) : (
+    products.map((item) => (
+      <div key={item._id} className="flex flex-col h-full"> {/* Wrapper to force full height */}
+        <ProductItem id={item._id} {...item} />
+      </div>
+    ))
+  )}
+</div>
 
           {totalPages > 1 && (
             <div className='flex flex-wrap items-center justify-center gap-2 mt-16 mb-6'>

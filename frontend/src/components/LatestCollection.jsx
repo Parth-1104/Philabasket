@@ -4,7 +4,7 @@ import ProductItem from './ProductItem';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { Search, ChevronDown, X } from 'lucide-react'; 
+import { Search, ChevronDown, X, Plus, Minus } from 'lucide-react'; 
 
 const LatestCollection = () => {
     const { products, backendUrl } = useContext(ShopContext);
@@ -12,6 +12,7 @@ const LatestCollection = () => {
     const [dbCategories, setDbCategories] = useState([]);
     const [openGroups, setOpenGroups] = useState({}); 
     const [searchTerm, setSearchTerm] = useState(""); 
+    const [showAllMobile, setShowAllMobile] = useState(false); // Mobile toggle state
     const navigate = useNavigate();
 
     const fetchCategories = async () => {
@@ -25,7 +26,6 @@ const LatestCollection = () => {
         }
     };
 
-    // Filter by newArrival flag and slice for top 16 arrivals
     useEffect(() => {
         if (!products) return;
         const filtered = products
@@ -39,22 +39,17 @@ const LatestCollection = () => {
         if (backendUrl) fetchCategories();
     }, [backendUrl]);
 
-    // --- UNIFIED ALPHABETICAL INDEX LOGIC ---
     const unifiedIndex = useMemo(() => {
         if (!dbCategories.length) return [];
-
         const groupsMap = {};
         const independentList = [];
 
-        // Filter categories based on search term
         const filtered = dbCategories.filter(cat => 
             cat.name.toLowerCase().includes(searchTerm.toLowerCase())
         );
 
         filtered.forEach(cat => {
             const item = { name: cat.name, count: cat.productCount || 0 };
-            
-            // Check if the category belongs to a group
             if (!cat.group || ['General', 'Independent', 'none', ''].includes(cat.group.trim())) {
                 independentList.push({ ...item, type: 'independent' });
             } else {
@@ -67,26 +62,26 @@ const LatestCollection = () => {
             }
         });
 
-        // Combine Groups and Independent items into one master list
-        const combined = [
-            ...Object.values(groupsMap),
-            ...independentList
-        ];
-
-        // Sort the entire unified registry alphabetically by name
+        const combined = [...Object.values(groupsMap), ...independentList];
         return combined.sort((a, b) => a.name.localeCompare(b.name));
     }, [dbCategories, searchTerm]);
+
+    // Logic to slice the index for mobile view
+    const displayedIndex = useMemo(() => {
+        if (showAllMobile || window.innerWidth >= 1024) {
+            return unifiedIndex;
+        }
+        return unifiedIndex.slice(0, 5);
+    }, [unifiedIndex, showAllMobile]);
 
     const toggleGroup = (groupName) => setOpenGroups(prev => ({ ...prev, [groupName]: !prev[groupName] }));
 
     const handleCategoryClick = (catName) => {
-        // replace: true swaps the current history entry to prevent back-button loops
         navigate(`/collection?category=${encodeURIComponent(catName)}`, { replace: true });
         window.scrollTo(0, 0);
     };
 
     const handleProductClick = (productId) => { 
-        // Sends priorityId state so Collection page moves this item to index 0
         navigate('/collection', { state: { priorityId: productId } }); 
         window.scrollTo(0, 0); 
     };
@@ -114,8 +109,37 @@ const LatestCollection = () => {
                     {/* --- SIDEBAR --- */}
                     <div className='w-full lg:w-[25%]'>
                         <div className='lg:sticky lg:top-32'>
-                            <div className='bg-[#bd002d] p-6 lg:p-8 rounded-[30px] lg:rounded-[40px] shadow-2xl shadow-[#bd002d]/20 relative overflow-hidden'>
-                                <h3 className='text-white font-black text-[9px] lg:text-xs tracking-[0.3em] uppercase mb-6'>Registry Index</h3>
+                        <div className='bg-[#bd002d] p-6 lg:p-8 rounded-[30px] lg:rounded-[40px] shadow-2xl shadow-[#bd002d]/20 relative overflow-hidden'>
+    
+    {/* HEADER ROW */}
+    <div className='flex items-center justify-between mb-6'>
+        <h3 className='text-white font-black text-[9px] lg:text-xs tracking-[0.3em] uppercase'>
+            Registry Index
+        </h3>
+
+        {/* COMPACT TOGGLE BUTTON (Mobile Only) */}
+        {unifiedIndex.length > 5 && (
+            <button 
+                onClick={() => setShowAllMobile(!showAllMobile)}
+                className={`
+                    lg:hidden flex items-center gap-2 py-1.5 px-3 rounded-full border transition-all duration-500
+                    ${showAllMobile 
+                        ? 'bg-white border-white text-[#bd002d]' 
+                        : 'bg-white/5 border-white/20 text-white hover:bg-white/10'
+                    }
+                `}
+            >
+                <span className='text-[8px] font-black uppercase tracking-widest'>
+                    {showAllMobile ? 'Less' : `All (${unifiedIndex.length})`}
+                </span>
+                {showAllMobile ? (
+                    <Minus size={10} strokeWidth={3} className="transition-transform" />
+                ) : (
+                    <Plus size={10} strokeWidth={3} className="transition-transform" />
+                )}
+            </button>
+        )}
+        </div>
 
                                 <div className='relative z-10 mb-6'>
                                     <Search size={12} className='absolute left-3 top-1/2 -translate-y-1/2 text-white/40' />
@@ -134,7 +158,7 @@ const LatestCollection = () => {
                                 </div>
 
                                 <div className='flex flex-col gap-2 overflow-y-auto max-h-[180vh] hide-scrollbar relative z-10 pr-2'>
-                                    {unifiedIndex.map((entry) => (
+                                    {displayedIndex.map((entry) => (
                                         <div key={entry.name} className="flex flex-col">
                                             {entry.type === 'group' ? (
                                                 <>
@@ -144,11 +168,12 @@ const LatestCollection = () => {
                                                     >
                                                         <div className='flex items-center gap-2'>
                                                             <span className='truncate'>{entry.name}</span>
-                                                            <span className='text-[8px] opacity-40 font-mono'>({entry.totalCount})</span>
+                                                            {/* BRIGHT COUNT: Changed to white/100 */}
+                                                            <span className='text-[10px] text-white font-mono font-black'>({entry.totalCount})</span>
                                                         </div>
                                                         <ChevronDown 
                                                             size={14} 
-                                                            className={`transition-transform duration-300 ${openGroups[entry.name] ? 'rotate-180 text-amber-400' : 'opacity-40 group-hover:opacity-100'}`} 
+                                                            className={`transition-transform duration-300 ${openGroups[entry.name] ? 'rotate-180 text-amber-400' : 'text-white transition-opacity'}`} 
                                                         />
                                                     </button>
                                                     <div className={`flex flex-col gap-1 ml-4 border-l border-white/10 pl-4 transition-all duration-500 overflow-hidden ${openGroups[entry.name] ? 'max-h-[1000px] mt-2 mb-4 opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -156,10 +181,11 @@ const LatestCollection = () => {
                                                             <button 
                                                                 key={sub.name} 
                                                                 onClick={() => handleCategoryClick(sub.name)} 
-                                                                className='text-white/60 hover:text-white text-[9px] font-bold py-2.5 flex justify-between uppercase border-b border-white/5 last:border-0'
+                                                                className='text-white/70 hover:text-white text-[10px] font-bold py-2.5 flex justify-between uppercase border-b border-white/5 last:border-0'
                                                             >
                                                                 <span>{sub.name}</span>
-                                                                <span className='text-amber-400/60 font-mono'>{sub.count}</span>
+                                                                {/* BRIGHT COUNT */}
+                                                                <span className='text-amber-400 font-mono font-black'>{sub.count}</span>
                                                             </button>
                                                         ))}
                                                     </div>
@@ -170,49 +196,61 @@ const LatestCollection = () => {
                                                     className='text-white/80 hover:text-amber-400 text-[10px] font-black tracking-widest uppercase w-full py-3 px-3 hover:bg-white/5 rounded-xl transition-all flex items-center justify-between group'
                                                 >
                                                     <span className='truncate'>{entry.name}</span>
-                                                    <span className='text-[8px] opacity-40 font-mono'>{entry.count}</span>
+                                                    {/* BRIGHT COUNT */}
+                                                    <span className='text-[10px] text-white font-mono font-black'>{entry.count}</span>
                                                 </button>
                                             )}
                                         </div>
                                     ))}
+
+                                    {/* MOBILE VIEW MORE / LESS BUTTON */}
+                                    {unifiedIndex.length > 5 && (
+                                        <button 
+                                            onClick={() => setShowAllMobile(!showAllMobile)}
+                                            className='lg:hidden mt-4 flex items-center justify-center gap-2 py-3 px-4 bg-white/10 rounded-xl text-white text-[9px] font-black uppercase tracking-widest hover:bg-white/20 transition-all border border-white/10'
+                                        >
+                                            {showAllMobile ? (
+                                                <><Minus size={14} /> View Less Index</>
+                                            ) : (
+                                                <><Plus size={14} /> View All Registry ({unifiedIndex.length})</>
+                                            )}
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* MAIN PRODUCT GRID */}
-                    {/* MAIN PRODUCT GRID */}
-<div className='w-full lg:w-3/4'>
-    <div className='flex overflow-x-auto lg:grid lg:grid-cols-4 gap-6 md:gap-x-8 gap-y-12 snap-x snap-mandatory px-2'>
-        {latestProducts.map((item, index) => (
-            <div 
-                key={item._id || index} 
-                onClick={() => handleProductClick(item._id)} 
-                className="min-w-[85%] sm:min-w-[45vw] lg:min-w-[20%] snap-center flex flex-col group bg-white border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-br-[40px] md:rounded-br-[60px] overflow-hidden cursor-pointer"
-            >
-                {/* REMOVED pointer-events-none so buttons work */}
-                <div className="relative p-1 md:p-3 flex-grow">
-                    <div className="absolute top-0 right-0 z-20 overflow-hidden w-20 h-20 pointer-events-none">
-                        <div className="absolute top-[20%] -right-[30%] bg-[#bd002d] text-white text-[7px] font-black py-1 w-[140%] text-center transform rotate-45 shadow-sm uppercase tracking-tighter">New</div>
+                    <div className='w-full lg:w-3/4'>
+                        <div className='flex overflow-x-auto lg:grid lg:grid-cols-4 gap-6 md:gap-x-8 gap-y-12 snap-x snap-mandatory px-2'>
+                            {latestProducts.map((item, index) => (
+                                <div 
+                                    key={item._id || index} 
+                                    onClick={() => handleProductClick(item._id)} 
+                                    className="min-w-[85%] sm:min-w-[45vw] lg:min-w-[20%] snap-center flex flex-col group bg-white border border-gray-100 shadow-lg hover:shadow-2xl transition-all duration-500 rounded-br-[40px] md:rounded-br-[60px] overflow-hidden cursor-pointer"
+                                >
+                                    <div className="relative p-1 md:p-3 flex-grow">
+                                        <div className="absolute top-0 right-0 z-20 overflow-hidden w-20 h-20 pointer-events-none">
+                                            <div className="absolute top-[20%] -right-[30%] bg-[#bd002d] text-white text-[7px] font-black py-1 w-[140%] text-center transform rotate-45 shadow-sm uppercase tracking-tighter">New</div>
+                                        </div>
+                                        <div className="w-full bg-[#f8f8f8] rounded-br-[35px] md:rounded-br-[45px] p-2">
+                                            <ProductItem 
+                                                id={item._id} 
+                                                _id={item._id} 
+                                                image={item.image} 
+                                                name={item.name} 
+                                                price={item.price} 
+                                                marketPrice={item.marketPrice} 
+                                                category={item.category ? item.category[0] : ""} 
+                                                isPriorityMode={true} 
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </div>
-                    
-                    <div className="w-full bg-[#f8f8f8] rounded-br-[35px] md:rounded-br-[45px] p-2">
-                        <ProductItem 
-                            id={item._id} 
-                            _id={item._id} 
-                            image={item.image} 
-                            name={item.name} 
-                            price={item.price} 
-                            marketPrice={item.marketPrice} 
-                            category={item.category ? item.category[0] : ""} 
-                            isPriorityMode={true} 
-                        />
-                    </div>
-                </div>
-            </div>
-        ))}
-    </div>
-</div>
                 </div>
             </div>
         </div>

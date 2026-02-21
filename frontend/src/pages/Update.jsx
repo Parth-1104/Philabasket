@@ -105,13 +105,13 @@ const Updates = () => {
                                         <ProductItem {...item} />
                                         
                                         {/* Hover Overlay for specific update info */}
-                                        <div className='absolute inset-0 bg-[#BC002D]/90 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-br-[40px] md:rounded-br-[60px] z-20 flex flex-col items-center justify-center p-6 text-center pointer-events-none'>
+                                        {/* <div className='absolute inset-0 bg-[#BC002D]/90 opacity-0 group-hover:opacity-100 transition-all duration-500 rounded-br-[40px] md:rounded-br-[60px] z-20 flex flex-col items-center justify-center p-6 text-center pointer-events-none'>
                                             <p className='text-white text-[10px] font-black uppercase tracking-[0.3em] mb-2'>Status</p>
                                             <p className='text-white/80 text-[11px] font-medium italic leading-relaxed'>
                                                 {isNew ? 'Specimen officially cataloged into the global archive.' : 'Stock availability and market valuation adjusted.'}
                                             </p>
                                             <div className='mt-6 w-8 h-[1px] bg-white/30'></div>
-                                        </div>
+                                        </div> */}
                                     </div>
                                 </div>
                             );

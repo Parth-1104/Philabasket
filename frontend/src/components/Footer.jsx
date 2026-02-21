@@ -38,12 +38,35 @@ const Footer = () => {
                     <p className="text-[11px] font-semibold text-gray-400">Settlement protocols</p>
                     <Lock size={10} className="text-gray-300" />
                 </div>
-                <div className="flex flex-wrap gap-x-5 gap-y-4 items-center grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" className="h-2.5 w-auto" alt="Visa" />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/ mastercard-logo.svg" className="h-4 w-auto" alt="Mastercard" />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/89/Razorpay_logo.svg" className="h-2.5 w-auto" alt="Razorpay" />
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" className="h-3.5 w-auto" alt="Stripe" />
-                </div>
+                <div className="flex flex-wrap gap-x-5 gap-y-4 items-center opacity-100 transition-all duration-500">
+    {/* Visa */}
+    <img 
+        src="https://upload.wikimedia.org/wikipedia/commons/5/5e/Visa_Inc._logo.svg" 
+        className="h-2.5 w-auto" 
+        alt="Visa" 
+    />
+    
+    {/* Mastercard - Fixed missing path */}
+    <img 
+        src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg" 
+        className="h-4 w-auto" 
+        alt="Mastercard" 
+    />
+    
+    {/* Razorpay */}
+    <img 
+        src="https://upload.wikimedia.org/wikipedia/commons/8/89/Razorpay_logo.svg" 
+        className="h-2.5 w-auto" 
+        alt="Razorpay" 
+    />
+    
+    {/* Stripe */}
+    <img 
+        src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" 
+        className="h-3.5 w-auto" 
+        alt="Stripe" 
+    />
+</div>
             </div>
           </div>
 
@@ -85,7 +108,7 @@ const Footer = () => {
                     <Link 
                       to={link.path || "#"}
                       onClick={() => window.scrollTo(0, 0)}
-                      className="text-gray-600 hover:text-[#BC002D] text-[13px] font-medium transition-all duration-300 flex items-center gap-1 group w-fit"
+                      className="text-gray-600  text-[13px] font-medium transition-all duration-300 flex items-center gap-1 group w-fit"
                     >
                       {link.label}
                       {link.path && <ArrowUpRight size={10} className="opacity-0 group-hover:opacity-100 transition-all" />}
@@ -118,7 +141,7 @@ const Footer = () => {
             {['Privacy', 'Terms', 'Security'].map((legal) => (
               <span 
                 key={legal}
-                className="text-[12px] font-semibold text-gray-500 hover:text-white transition-colors cursor-pointer"
+                className="text-[12px] font-semibold text-gray-900 hover:text-white transition-colors cursor-pointer"
               >
                 {legal}
               </span>

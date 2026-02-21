@@ -464,10 +464,30 @@ export const bulkUpdateAttributes = async (req, res) => {
     try {
         const { ids, field, value } = req.body;
 
-        // Security: Only allow updating specific UI flags
         const allowedFields = ['bestseller', 'newArrival', 'isActive', 'isLatest'];
         if (!allowedFields.includes(field)) {
             return res.json({ success: false, message: "Invalid attribute update" });
+        }
+
+        // --- NEW: Sync counts if field is isActive ---
+        if (field === 'isActive') {
+            const affectedProducts = await productModel.find({ _id: { $in: ids } }, 'category isActive').lean();
+            const categoryFreqMap = new Map();
+
+            affectedProducts.forEach(p => {
+                if (p.isActive !== value && p.category) {
+                    p.category.forEach(cat => categoryFreqMap.set(cat, (categoryFreqMap.get(cat) || 0) + 1));
+                }
+            });
+
+            const categoryOps = Array.from(categoryFreqMap).map(([name, count]) => ({
+                updateOne: {
+                    filter: { name },
+                    update: { $inc: { productCount: value ? count : -count } }
+                }
+            }));
+
+            if (categoryOps.length > 0) await categoryModel.bulkWrite(categoryOps);
         }
 
         await productModel.updateMany(
@@ -475,11 +495,7 @@ export const bulkUpdateAttributes = async (req, res) => {
             { $set: { [field]: value } }
         );
 
-        res.json({ 
-            success: true, 
-            message: `Registry updated: ${field} set to ${value}` 
-        });
-
+        res.json({ success: true, message: `Registry updated: ${field} set to ${value}` });
     } catch (error) {
         res.json({ success: false, message: error.message });
     }
@@ -506,16 +522,49 @@ const singleProduct1 = async (req, res) => {
 
 // Ensure you export it
 // Bulk toggle visibility (isActive)
+// Bulk toggle visibility (isActive)
 export const bulkUpdateStatus = async (req, res) => {
     try {
         const { ids, isActive } = req.body;
+
+        // 1. Find the products to see which categories are affected
+        const affectedProducts = await productModel.find({ _id: { $in: ids } }, 'category isActive').lean();
+        
+        const categoryFreqMap = new Map();
+        affectedProducts.forEach(product => {
+            // Only update counts if the status is actually changing
+            if (product.isActive !== isActive && product.category) {
+                product.category.forEach(cat => {
+                    categoryFreqMap.set(cat, (categoryFreqMap.get(cat) || 0) + 1);
+                });
+            }
+        });
+
+        // 2. Prepare Category Operations
+        const categoryOps = [];
+        categoryFreqMap.forEach((count, name) => {
+            categoryOps.push({
+                updateOne: {
+                    filter: { name },
+                    // If moving to active, increment. If moving to trash, decrement.
+                    update: { $inc: { productCount: isActive ? count : -count } }
+                }
+            });
+        });
+
+        // 3. Execute Updates
+        if (categoryOps.length > 0) {
+            await categoryModel.bulkWrite(categoryOps);
+        }
+
         await productModel.updateMany(
             { _id: { $in: ids } },
             { $set: { isActive: isActive } }
         );
+
         res.json({ 
             success: true, 
-            message: `${ids.length} Specimens updated to ${isActive ? 'Active' : 'Hidden'}` 
+            message: `${ids.length} Specimens moved to ${isActive ? 'Active' : 'Trash'}` 
         });
     } catch (error) {
         res.json({ success: false, message: error.message });
@@ -599,7 +648,13 @@ const updateProduct = async (req, res) => {
     try {
         const { id, ...updateData } = req.body;
 
-        // 1. Strict Boolean Sanitization for Registry Flags
+        // 1. Fetch the OLD record first to compare status
+        const oldProduct = await productModel.findById(id).lean();
+        if (!oldProduct) {
+            return res.json({ success: false, message: "Specimen not found in registry" });
+        }
+
+        // 2. Strict Boolean Sanitization
         if (updateData.isLatest !== undefined) {
             updateData.isLatest = updateData.isLatest === true || updateData.isLatest === 'true';
         }
@@ -613,27 +668,37 @@ const updateProduct = async (req, res) => {
             updateData.newArrival = updateData.newArrival === true || updateData.newArrival === 'true';
         }
 
-        // 2. Numerical Normalization
+        // 3. Numerical Normalization
         if (updateData.price) updateData.price = Number(updateData.price);
         if (updateData.marketPrice) updateData.marketPrice = Number(updateData.marketPrice);
         if (updateData.producedCount) updateData.producedCount = Number(updateData.producedCount);
         if (updateData.stock) updateData.stock = Number(updateData.stock);
 
-        // 3. Recalculate Reward Points if price has changed
+        // 4. Recalculate Reward Points if price has changed
         if (updateData.price) {
             updateData.rewardPoints = Math.floor(updateData.price * 0.10);
         }
 
-        // 4. Update the Registry
+        // 5. Sync Category Counts if Visibility (isActive) changes
+        if (updateData.isActive !== undefined) {
+            const newStatus = updateData.isActive; // Already sanitized to boolean above
+            
+            // Only update counts if the status is actually flipping
+            if (oldProduct.isActive !== newStatus) {
+                const countChange = newStatus ? 1 : -1;
+                await categoryModel.updateMany(
+                    { name: { $in: oldProduct.category } },
+                    { $inc: { productCount: countChange } }
+                );
+            }
+        }
+
+        // 6. Perform the actual update
         const updatedProduct = await productModel.findByIdAndUpdate(
             id, 
             { $set: updateData }, 
             { new: true, runValidators: true }
         );
-
-        if (!updatedProduct) {
-            return res.json({ success: false, message: "Specimen not found in registry" });
-        }
 
         res.json({ 
             success: true, 
@@ -642,10 +707,10 @@ const updateProduct = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Update Error:", error);
+        console.error("Update Product Error:", error);
         res.json({ success: false, message: error.message });
     }
-}
+};
 
 export const updateProductImages = async (req, res) => {
     try {

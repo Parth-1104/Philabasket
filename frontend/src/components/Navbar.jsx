@@ -39,13 +39,13 @@ const Navbar = () => {
     const MegaMenu = ({ menuData }) => (
         <div className='group relative flex flex-col items-center gap-1 cursor-pointer '>
             <div className='flex items-center gap-1.5 px-2 transition-all duration-500'>
-                <p className='text-[10px] font-black tracking-[0.4em] uppercase text-black group-hover:text-[#BC002D] transition-colors'>{menuData.title}</p>
+                <p className='text-[10px] font-black tracking-[0.4em]  text-black group-hover:text-[#BC002D] transition-colors'>{menuData.title}</p>
             </div>
             <div className='absolute top-full left-1/2 -translate-x-1/2 pt-8 hidden group-hover:block z-[110]'>
                 <div className='bg-white border-t-2 border-[#BC002D] p-10 flex gap-16 w-max shadow-2xl rounded-br-[40px]'>
                     {Object.entries(menuData.items).map(([groupName, items], idx) => (
                         <div key={idx} className='flex flex-col min-w-[160px]'>
-                            <h3 className='text-[9px] font-black text-[#BC002D] mb-6 tracking-[0.3em] uppercase border-b border-gray-100 pb-3'>{groupName}</h3>
+                            <h3 className='text-[9px] font-black text-[#BC002D] mb-6 tracking-[0.3em]  border-b border-gray-100 pb-3'>{groupName}</h3>
                             <div className='flex flex-col gap-4'>
                                 {items.map((item, i) => (
                                     <Link key={i} onClick={() => { window.scrollTo(0,0); setVisible(false); }} to={`/collection?category=${encodeURIComponent(item)}`} className='text-[10px] text-gray-400 hover:text-[#BC002D] font-bold uppercase tracking-[0.2em] transition-all hover:translate-x-1'>{item}</Link>
@@ -83,7 +83,7 @@ const Navbar = () => {
             {/* DESKTOP NAVIGATION */}
             <nav className='hidden xl:flex items-center gap-10 mr-5'>
                 {Object.values(CATEGORY_GROUPS).map((group, index) => <MegaMenu key={index} menuData={group} />)}
-                <NavLink to='/update' className='group flex items-center gap-1.5'><p className='text-[10px] font-black tracking-[0.4em] text-gray-900 uppercase'>Updates</p></NavLink>
+                <NavLink to='/updates' className='group flex items-center gap-1.5'><p className='text-[10px] font-black tracking-[0.4em] text-gray-900 uppercase'>Updates</p></NavLink>
             </nav>
 
             {/* UTILITIES */}
@@ -276,7 +276,7 @@ const Navbar = () => {
 
                             <div className='flex flex-col gap-6'>
                                 <p className='text-[8px] font-black text-[#BC002D] uppercase tracking-[0.6em]'>Registry Map</p>
-                                {['Home', 'Collection', 'Orders', 'Blogs'].map((item, idx) => (
+                                {['Home', 'Collection', 'Orders', 'Blogs','Updates'].map((item, idx) => (
                                     <NavLink key={idx} onClick={() => setVisible(false)} to={item === 'Home' ? '/' : `/${item.toLowerCase()}`} className='text-4xl font-bold tracking-tighter text-gray-900 flex items-center justify-between group'>
                                         {item} <ChevronRight size={20} className='text-gray-200 group-active:text-[#BC002D]' />
                                     </NavLink>

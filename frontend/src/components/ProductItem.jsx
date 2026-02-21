@@ -96,7 +96,7 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, isPri
           <div className='py-4 px-1'>
             <div className='flex flex-col gap-3'>
                 <div className='flex justify-between items-start gap-4'>
-                    <p className='text-[10px] lg:text-[13px] font-semibold tracking-tight text-gray-900 group-hover:text-[#BC002D] transition-colors leading-[1.2] line-clamp-4 min-h-[2.4em] overflow-hidden cursor-pointer' onClick={handleNavigation}>
+                    <p className='text-[10px] lg:text-[13px] font-semibold tracking-tight text-gray-900 group-hover:text-[#BC002D] transition-colors leading-[1.2] line-clamp-3 min-h-[2.4em] overflow-hidden cursor-pointer' onClick={handleNavigation}>
                         {name || "Untitled Specimen"}
                     </p>
                   

@@ -516,9 +516,11 @@ useEffect(() => {
                       </div>
 
                       {/* Name + meta */}
-                      <div className='min-w-0 cursor-pointer' onClick={() => openEditModal(item)}>
+                      <div className=' cursor-pointer' onClick={() => openEditModal(item)}>
                         <div className='flex items-center gap-2 flex-wrap'>
-                          <span className='text-sm font-bold text-gray-900 truncate max-w-[200px]'>{item.name}</span>
+                        <span className='text-sm font-bold text-gray-900 line-clamp-3 md:line-clamp-1 min-w-0 md:min-w-[500px] leading-tight'>
+    {item.name}
+</span>
                           {item.bestseller && <Badge color="amber"><Star size={9} className="fill-amber-500"/> Bestseller</Badge>}
                           {item.newArrival && <Badge color="blue"><Zap size={9} className="fill-blue-500"/> New</Badge>}
                         </div>
