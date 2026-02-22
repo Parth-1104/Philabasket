@@ -92,17 +92,17 @@ const listMedia = async (req, res) => {
 
 
 
-
 const bulkAddProducts = async (req, res) => {
     try {
         if (!req.file) return res.json({ success: false, message: "Please upload a CSV file" });
 
         const stamps = [];
         const usedImageNames = [];
-        // Map to track counts: { "Stamps": 5, "Block of Four": 2 }
         const discoveredCategories = new Map(); 
+        
+        // Fallback Image URL
+        const DEFAULT_IMAGE = "https://res.cloudinary.com/dvsdithxh/image/upload/v1770344955/Logo-5_nqnyl4.png";
 
-        // --- STEP 1: PRE-PROCESS MEDIA AND EXISTING RECORDS ---
         const [existingStamps, allMedia] = await Promise.all([
             productModel.find({}, 'name').lean(),
             mediaModel.find({}, 'originalName imageUrl').lean()
@@ -129,7 +129,6 @@ const bulkAddProducts = async (req, res) => {
             }
         });
 
-        // --- STEP 2: PROCESS CSV STREAM ---
         const stream = Readable.from(req.file.buffer);
 
         stream.pipe(csv({
@@ -141,7 +140,7 @@ const bulkAddProducts = async (req, res) => {
                 const clean = (val) => val ? String(val).trim().replace(/^["'\[]|["'\]]$/g, '').trim() : "";
                 const nameTrimmed = clean(row.name || Object.values(row)[0]);
 
-                // Skip duplicates or empty names
+                // Skip only if the name is completely empty or already exists
                 if (!nameTrimmed || existingNames.has(nameTrimmed.toLowerCase())) return;
 
                 // --- IMAGE BUNDLING ---
@@ -149,6 +148,8 @@ const bulkAddProducts = async (req, res) => {
                 const baseId = extractBkId(primaryCsvImg);
                 
                 let productImages = [];
+                
+                // Attempt to find matching images in Media Registry
                 if (baseId && mediaVariantMap.has(baseId)) {
                     const variants = mediaVariantMap.get(baseId);
                     variants.sort((a, b) => {
@@ -162,25 +163,24 @@ const bulkAddProducts = async (req, res) => {
                     variants.forEach(v => usedImageNames.push(v.originalName));
                 }
 
-                if (productImages.length === 0) return;
+                // FIX: If no images were found, use the Cloudinary fallback instead of returning
+                if (productImages.length === 0) {
+                    productImages = [DEFAULT_IMAGE];
+                }
 
                 // --- CATEGORY COUNTING ---
                 let parsedCategory = [];
                 const rawCat = clean(row.category);
                 if (rawCat) {
-                    // Split multi-category strings like "Stamps, India, Mint"
                     parsedCategory = rawCat.split(',').map(c => c.trim()).filter(c => c !== "");
-                    
-                    // Increment the local counter for each category found in this row
                     parsedCategory.forEach(cat => {
                         discoveredCategories.set(cat, (discoveredCategories.get(cat) || 0) + 1);
                     });
                 }
-                const mPrice = Number(String(row.marketPrice || 0).replace(/[^0-9.]/g, '')) || 0;
 
-// 2. Calculate price, defaulting to mPrice if row.price is falsy or 0
-const rowPrice = Number(String(row.price || 0).replace(/[^0-9.]/g, ''));
-const finalPrice = rowPrice || mPrice;
+                const mPrice = Number(String(row.marketPrice || 0).replace(/[^0-9.]/g, '')) || 0;
+                const rowPrice = Number(String(row.price || 0).replace(/[^0-9.]/g, ''));
+                const finalPrice = rowPrice || mPrice;
 
                 stamps.push({
                     name: nameTrimmed,
@@ -207,23 +207,22 @@ const finalPrice = rowPrice || mPrice;
             try {
                 if (stamps.length === 0) return res.json({ success: false, message: "No new items to add." });
 
-                // --- STEP 3: ATOMIC SYNC OF CATEGORY REGISTRY ---
                 const categoryOps = Array.from(discoveredCategories).map(([name, count]) => ({
                     updateOne: {
                         filter: { name },
                         update: { 
-                            $inc: { productCount: count }, // Add the new items to the existing count
+                            $inc: { productCount: count }, 
                             $setOnInsert: { group: "Independent" } 
                         },
                         upsert: true 
                     }
                 }));
 
-                // Update category counts and insert products
                 if (categoryOps.length > 0) await categoryModel.bulkWrite(categoryOps);
+                
+                // insertMany with ordered:false ensures that if one row fails, others still upload
                 await productModel.insertMany(stamps, { ordered: false });
                 
-                // Mark images as assigned
                 if (usedImageNames.length > 0) {
                     await mediaModel.updateMany(
                         { originalName: { $in: usedImageNames } }, 
@@ -232,13 +231,14 @@ const finalPrice = rowPrice || mPrice;
                 }
                 
                 res.json({ success: true, message: `Registry Synced. Added ${stamps.length} Specimens.` });
-            } catch (dbErr) { res.json({ success: false, message: dbErr.message }); }
+            } catch (dbErr) { 
+                res.json({ success: false, message: "Partial sync or DB error: " + dbErr.message }); 
+            }
         });
     } catch (error) {
         res.status(500).json({ success: false, message: error.message });
     }
 };
-
 
 // --- CORE CRUD (Upgraded for 100k+ Items) ---
 // const listProducts = async (req, res) => {
