@@ -5,6 +5,7 @@ import { toggleWishlist, getWishlist } from '../controllers/wishlistController.j
 
 import authUser from '../middleware/auth.js';
 import adminAuth from '../middleware/adminAuth.js';
+import { getUnifiedHistory } from '../controllers/rewardController.js';
 
 
 const userRouter = express.Router();
@@ -29,5 +30,7 @@ userRouter.get('/profile', authUser, getUserProfile);
 userRouter.post('/update-address', authUser, updateAddress);
 userRouter.get('/detail/:userId', adminAuth, getPhilatelistDetail);
 userRouter.get('/top-philatelists', adminAuth,getTopPhilatelists);
+
+userRouter.get('/reward-history', authUser, getUnifiedHistory);
 
 export default userRouter;

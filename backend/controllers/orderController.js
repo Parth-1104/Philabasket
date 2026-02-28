@@ -7,11 +7,32 @@ import { sendEmail } from "../config/email.js";
 import twilio from 'twilio';
 import 'dotenv/config';
 import axios from 'axios';
+import rewardTransactionModel from "../models/rewardTranscationModel.js";
 
+const recordRewardActivity = async (userId, userEmail, amount, type, orderId = null) => {
+    try {
+        // 1. Update the User's live balance
+        await userModel.findByIdAndUpdate(userId, { 
+            $inc: { totalRewardPoints: amount } 
+        });
+
+        // 2. Create the Archive Ledger Entry
+        const transaction = new rewardTransactionModel({
+            userEmail: userEmail,
+            actionType: type, // 'earn_point' or 'redeem_point'
+            rewardAmount: Math.abs(amount),
+            orderId: orderId,
+            createdAt: new Date()
+        });
+        await transaction.save();
+    } catch (error) {
+        console.error("Ledger Sync Failed:", error);
+    }
+};
 
 
 // --- CONFIGURATION ---
-const deliveryCharge = 10;
+const deliveryCharge = 100;
 const stripe = process.env.STRIPE_SECRET_KEY ? new Stripe(process.env.STRIPE_SECRET_KEY) : null;
 const razorpayInstance = (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) 
     ? new razorpay({ key_id: process.env.RAZORPAY_KEY_ID, key_secret: process.env.RAZORPAY_KEY_SECRET }) 
@@ -82,14 +103,55 @@ const updateStock = async (items, type = "reduce") => {
 const placeOrder = async (req, res) => {
     try {
         const { userId, items, amount, address, currency, pointsUsed } = req.body;
-        const orderData = { userId, items, address, amount, currency: currency || 'INR', paymentMethod: "COD", payment: false, date: Date.now(), pointsUsed: pointsUsed || 0 };
+        
+        const orderData = { 
+            userId, items, address, amount, 
+            currency: currency || 'INR', 
+            paymentMethod: "COD", payment: false, 
+            date: Date.now(), 
+            pointsUsed: pointsUsed || 0 
+        };
+
         const newOrder = new orderModel(orderData);
         await newOrder.save();
+
         await updateStock(items, "reduce");
+
+        // --- NEW: Record the Point Spend in the Ledger ---
+        if (pointsUsed > 0) {
+            await recordRewardActivity(userId, address.email, -pointsUsed, 'redeem_point', newOrder._id);
+        }
+
+        // Clean cart
+        await userModel.findByIdAndUpdate(userId, { $set: { cartData: {} } });
+
         await sendEmail(address.email, "PhilaBasket - Order Confirmed", getOrderHtmlTemplate(address.firstName, items, amount, currency));
-        await userModel.findByIdAndUpdate(userId, { $set: { cartData: {} }, $inc: { totalRewardPoints: -Math.abs(pointsUsed || 0) } });
         await sendWhatsAppAlert(orderData);
+        
         res.json({ success: true, message: "Order Placed" });
+    } catch (error) { res.json({ success: false, message: error.message }); }
+};
+
+
+const cancelOrder = async (req, res) => {
+    try {
+        const { orderId, userId } = req.body;
+        const order = await orderModel.findById(orderId);
+        
+        if (!order || ['Shipped', 'Out for delivery', 'Delivered'].includes(order.status)) {
+            return res.json({ success: false, message: "Cannot cancel order" });
+        }
+
+        await orderModel.findByIdAndUpdate(orderId, { status: 'Cancelled' });
+        await updateStock(order.items, "restore");
+
+        // --- NEW: Refund points and record as a positive adjustment ---
+        if (order.pointsUsed > 0) {
+            const user = await userModel.findById(userId);
+            await recordRewardActivity(userId, user.email, order.pointsUsed, 'earn_point', orderId);
+        }
+
+        res.json({ success: true, message: "Order cancelled & Points Refunded" });
     } catch (error) { res.json({ success: false, message: error.message }); }
 };
 
@@ -103,63 +165,59 @@ const updateSoldCount = async (items) => {
 };
 
 
-const cancelOrder = async (req, res) => {
-    try {
-        const { orderId, userId } = req.body;
-        const order = await orderModel.findById(orderId);
-        if (!order || ['Shipped', 'Out for delivery', 'Delivered'].includes(order.status)) {
-            return res.json({ success: false, message: "Cannot cancel order in current status" });
-        }
-        await orderModel.findByIdAndUpdate(orderId, { status: 'Cancelled' });
-        await updateStock(order.items, "restore");
-        if (order.pointsUsed > 0) await userModel.findByIdAndUpdate(userId, { $inc: { totalRewardPoints: order.pointsUsed } });
-        res.json({ success: true, message: "Order cancelled" });
-    } catch (error) { res.json({ success: false, message: error.message }); }
-};
-
 const updateStatus = async (req, res) => {
     try {
         const { orderId, status, trackingNumber } = req.body;
         
-        // 1. Fetch the current state of the order from the DB first
         const currentOrder = await orderModel.findById(orderId);
         if (!currentOrder) {
             return res.json({ success: false, message: "Order not found" });
         }
 
+        // Logic for auto-shipping if tracking number is added
         let finalStatus = (trackingNumber && (status === 'Order Placed' || status === 'Packing')) ? 'Shipped' : status;
+        
         const updateFields = { status: finalStatus };
         if (trackingNumber) updateFields.trackingNumber = trackingNumber;
 
-        // 2. STRICTURE: Only award points if status is changing TO Delivered for the FIRST time
+        // --- REWARD LOGIC: TRIGGER ONLY ONCE ---
         if (finalStatus === 'Delivered' && currentOrder.status !== 'Delivered') {
             updateFields.payment = true;
 
-            // Award points (10% of amount)
             const earnedPoints = Math.floor(currentOrder.amount * 0.10);
-            await userModel.findByIdAndUpdate(currentOrder.userId, { 
-                $inc: { totalRewardPoints: earnedPoints } 
-            });
 
-            // Update soldCount for ranking
+            // Record points and create ledger entry
+            await recordRewardActivity(
+                currentOrder.userId, 
+                currentOrder.address.email, 
+                earnedPoints, 
+                'earn_point', 
+                currentOrder._id
+            );
+
             await updateSoldCount(currentOrder.items);
-            
-            console.log(`Points awarded to ${currentOrder.userId}: ${earnedPoints}`);
-        } 
-        // 3. Optional: Prevent re-delivery if already delivered
-        else if (finalStatus === 'Delivered' && currentOrder.status === 'Delivered') {
-            return res.json({ success: false, message: "Order already marked as Delivered. Points not re-awarded." });
+            console.log(`Registry Ledger Updated: ${earnedPoints} points awarded.`);
         }
 
+        // --- THE FIX: REMOVED THE 'RETURN' BLOCK ---
+        // Instead of returning an error if already delivered, we simply 
+        // skip the reward logic above and proceed to save the status.
+        
         await orderModel.findByIdAndUpdate(orderId, updateFields);
         
         // Handle Email logic for shipping...
         if (finalStatus === 'Shipped' && trackingNumber) {
-            await sendEmail(currentOrder.address.email, "Items Shipped", getOrderHtmlTemplate(currentOrder.address.firstName, currentOrder.items, currentOrder.amount, currentOrder.currency, trackingNumber));
+            await sendEmail(
+                currentOrder.address.email, 
+                "Items Shipped", 
+                getOrderHtmlTemplate(currentOrder.address.firstName, currentOrder.items, currentOrder.amount, currentOrder.currency, trackingNumber)
+            );
         }
 
-        res.json({ success: true, currentStatus: finalStatus });
+        res.json({ success: true, message: "Status Updated", currentStatus: finalStatus });
+
     } catch (error) { 
+        console.error("Status Update Error:", error);
         res.json({ success: false, message: error.message }); 
     }
 };

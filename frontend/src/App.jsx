@@ -11,6 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import UtilityBar from './components/UtilityBar';
 import ChatBot from './components/ChatBot';
 import Updates from './pages/Update';
+import RewardHistory from './pages/RewardHistory';
 // import Rewards from './pages/Rewards';
 const Rewards=lazy(()=>import('./pages/Rewards'))
 
@@ -74,7 +75,7 @@ const App = () => {
           <Route path='/faq' element={<FAQ/>} />
           <Route path='/ship' element={<Shipping/>} />
           <Route path='/updates' element={<Updates/>} />
-
+          <Route path='/history' element={<RewardHistory/>}/>
 
 
 
