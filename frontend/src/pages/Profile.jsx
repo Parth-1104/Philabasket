@@ -2,12 +2,11 @@ import React, { useState, useEffect, useContext } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { User, MapPin, Save, ShieldCheck, Loader2, Edit3, X } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Loader2, Edit3, X, History, ArrowRight, Wallet } from 'lucide-react';
 
 const Profile = () => {
-    const { token, backendUrl, userData, fetchUserData } = useContext(ShopContext);
+    const { token, backendUrl, userData, fetchUserData, navigate } = useContext(ShopContext);
     
-    // Identity and Address states
     const [name, setName] = useState('');
     const [isEditingName, setIsEditingName] = useState(false);
     const [address, setAddress] = useState({ 
@@ -88,7 +87,7 @@ const Profile = () => {
 
             <div className='grid grid-cols-1 lg:grid-cols-3 gap-12'>
                 
-                {/* --- Identity & Vault Stats --- */}
+                {/* --- Identity & Vault Card --- */}
                 <div className='lg:col-span-1 space-y-6'>
                     <div className='bg-black p-8 rounded-sm text-white shadow-2xl relative overflow-hidden'>
                         <div className='absolute top-0 right-0 w-32 h-32 bg-[#BC002D] blur-[80px] opacity-20'></div>
@@ -105,7 +104,7 @@ const Profile = () => {
                                         <input 
                                             value={name} 
                                             onChange={(e) => setName(e.target.value)}
-                                            className='bg-transparent border-b border-[#BC002D] text-center text-xl font-bold tracking-tight outline-none w-full transition-all'
+                                            className='bg-transparent border-b border-[#BC002D] text-center text-xl font-bold tracking-tight outline-none w-full transition-all text-white'
                                             autoFocus
                                         />
                                         <X size={16} className='cursor-pointer text-gray-500 hover:text-white' onClick={() => {setIsEditingName(false); setName(userData.name)}} />
@@ -119,12 +118,22 @@ const Profile = () => {
                             </div>
                         </div>
 
-                        <div className='relative z-10 space-y-5 pt-6 border-t border-white/10'>
-                            <div className='flex justify-between items-center'>
-                                <span className='text-[9px] font-black uppercase tracking-widest text-gray-500'>Vault Balance</span>
-                                <span className='font-mono text-[#BC002D] text-sm'>{userData?.totalRewardPoints} PTS</span>
+                        <div className='relative z-10 space-y-4 pt-6 border-t border-white/10'>
+                            <div className='flex justify-between items-center bg-white/5 p-4 rounded-sm border border-white/5'>
+                                <div>
+                                    <p className='text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1'>Vault Balance</p>
+                                    <p className='font-mono text-[#BC002D] text-lg font-bold'>{userData?.totalRewardPoints || 0} PTS</p>
+                                </div>
+                                <button 
+                                    onClick={() => navigate('/rewards')}
+                                    className='p-3 bg-[#BC002D] hover:bg-white hover:text-black transition-all rounded-sm group'
+                                    title="View Rewards History"
+                                >
+                                    <History size={16} />
+                                </button>
                             </div>
-                            <div className='flex justify-between items-center'>
+
+                            <div className='flex justify-between items-center px-2'>
                                 <span className='text-[9px] font-black uppercase tracking-widest text-gray-500'>Referral ID</span>
                                 <span className='font-mono text-[10px] bg-white/5 px-2 py-1 rounded'>{userData?.referralCode || 'NOT_GEN'}</span>
                             </div>
@@ -132,41 +141,68 @@ const Profile = () => {
                     </div>
                 </div>
 
-                {/* --- Verified Shipping Credentials --- */}
+                {/* --- Shipping Credentials Form --- */}
                 <div className='lg:col-span-2'>
                     <div className='bg-white p-8 border border-black/5 rounded-sm shadow-sm'>
                         <div className='flex items-center gap-3 mb-8'>
                             <MapPin size={18} className='text-[#BC002D]' />
                             <h4 className='text-[10px] font-black uppercase tracking-[0.3em] text-black'>
-                                {userData?.defaultAddress?.street ? "Registered Shipping Address" : "Deploy Shipping Credentials"}
+                                Shipping Registry
                             </h4>
                         </div>
 
                         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                             <div className='md:col-span-2'>
                                 <p className='text-[9px] uppercase font-bold text-gray-400 mb-2 ml-1'>Street & Landmark</p>
-                                <input value={address.street} onChange={(e)=>setAddress({...address, street: e.target.value})} className='w-full p-4 bg-gray-50 border border-black/5 rounded-sm text-sm outline-none focus:border-[#BC002D]/30 transition-all' placeholder="Add street address to registry..." />
+                                <input 
+                                    value={address.street} 
+                                    onChange={(e)=>setAddress({...address, street: e.target.value})} 
+                                    className='w-full p-4 bg-gray-50 border border-black/5 rounded-sm text-sm text-black font-medium outline-none focus:border-[#BC002D]/30 transition-all placeholder-gray-400' 
+                                    placeholder="Enter street address..." 
+                                />
                             </div>
 
                             <div className='relative'>
                                 <p className='text-[9px] uppercase font-bold text-gray-400 mb-2 ml-1'>Postal Pincode</p>
-                                <input value={address.zipCode} onChange={handlePincodeChange} className='w-full p-4 bg-white border border-[#BC002D]/20 rounded-sm text-sm font-mono outline-none focus:border-[#BC002D] transition-all' placeholder="Enter 6-digit code" type="number" />
+                                <input 
+                                    value={address.zipCode} 
+                                    onChange={handlePincodeChange} 
+                                    className='w-full p-4 bg-white border border-[#BC002D]/20 rounded-sm text-sm text-black font-mono font-bold outline-none focus:border-[#BC002D] transition-all placeholder-gray-400' 
+                                    placeholder="6-digit code" 
+                                    type="number" 
+                                />
                                 {isVerifying && <Loader2 size={16} className='absolute right-4 bottom-4 animate-spin text-[#BC002D]' />}
                             </div>
 
                             <div>
                                 <p className='text-[9px] uppercase font-bold text-gray-400 mb-2 ml-1'>Contact Number</p>
-                                <input value={address.phone} onChange={(e)=>setAddress({...address, phone: e.target.value})} className='w-full p-4 bg-gray-50 border border-black/5 rounded-sm text-sm outline-none focus:border-[#BC002D]/30 transition-all' placeholder="Primary phone number" type="number" />
+                                <input 
+                                    value={address.phone} 
+                                    onChange={(e)=>setAddress({...address, phone: e.target.value})} 
+                                    className='w-full p-4 bg-gray-50 border border-black/5 rounded-sm text-sm text-black font-medium outline-none focus:border-[#BC002D]/30 transition-all placeholder-gray-400' 
+                                    placeholder="Phone number" 
+                                    type="number" 
+                                />
                             </div>
 
                             <div>
                                 <p className='text-[9px] uppercase font-bold text-gray-400 mb-2 ml-1'>City (Verified)</p>
-                                <input readOnly value={address.city} className='w-full p-4 bg-gray-100 border border-black/5 rounded-sm text-sm text-gray-400 outline-none cursor-not-allowed' placeholder="Verified via Pincode" />
+                                <input 
+                                    readOnly 
+                                    value={address.city} 
+                                    className='w-full p-4 bg-gray-100 border border-black/5 rounded-sm text-sm text-black font-bold outline-none cursor-not-allowed' 
+                                    placeholder="Verified City" 
+                                />
                             </div>
 
                             <div>
                                 <p className='text-[9px] uppercase font-bold text-gray-400 mb-2 ml-1'>State (Verified)</p>
-                                <input readOnly value={address.state} className='w-full p-4 bg-gray-100 border border-black/5 rounded-sm text-sm text-gray-400 outline-none cursor-not-allowed' placeholder="Verified via Pincode" />
+                                <input 
+                                    readOnly 
+                                    value={address.state} 
+                                    className='w-full p-4 bg-gray-100 border border-black/5 rounded-sm text-sm text-black font-bold outline-none cursor-not-allowed' 
+                                    placeholder="Verified State" 
+                                />
                             </div>
                         </div>
 
@@ -178,7 +214,7 @@ const Profile = () => {
                             }`}
                         >
                             {loading ? <Loader2 size={14} className='animate-spin' /> : <ShieldCheck size={14} />}
-                            {loading ? 'Synchronizing...' : (userData?.defaultAddress?.street || isEditingName) ? 'Update Registry' : 'Save Credentials'}
+                            {loading ? 'Synchronizing...' : 'Save Registry Changes'}
                         </button>
                     </div>
                 </div>

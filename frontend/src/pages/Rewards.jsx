@@ -1,16 +1,34 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { ShopContext } from '../context/ShopContext';
-import { Trophy, History, Zap, ShieldCheck, Wallet, ArrowUpRight, Star } from 'lucide-react';
+import { Trophy, History, Zap, Wallet, ArrowUpRight, ArrowDownLeft, Ticket, Loader2, Star } from 'lucide-react';
+import axios from 'axios';
 
 const Rewards = () => {
-    // Pulling userPoints and rewardHistory from Context
-    const { userPoints, currency, rewardHistory } = useContext(ShopContext);
+    const { userPoints, currency, token, backendUrl } = useContext(ShopContext);
+    const [history, setHistory] = useState([]);
+    const [loading, setLoading] = useState(true);
     
     const conversionRate = 10; 
     const cashValue = (userPoints / conversionRate).toFixed(2);
 
-    // Sorting history to show most recent first
-    const sortedHistory = [...(rewardHistory || [])].sort((a, b) => new Date(b.date) - new Date(a.date));
+    // --- FETCH DATA FROM THE NEW REGISTRY ROUTE ---
+    useEffect(() => {
+        const fetchHistory = async () => {
+            try {
+                const res = await axios.get(backendUrl + '/api/user/reward-history', { 
+                    headers: { token } 
+                });
+                if (res.data.success) {
+                    setHistory(res.data.history);
+                }
+            } catch (err) {
+                console.error("Ledger Sync Error:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        if (token) fetchHistory();
+    }, [token, backendUrl]);
 
     return (
         <div className='bg-white min-h-screen pt-10 pb-20 px-6 md:px-16 lg:px-24 select-none animate-fade-in'>
@@ -50,7 +68,6 @@ const Rewards = () => {
                         </div>
                     </div>
                     
-                    {/* STATS TILES TO FILL SPACE */}
                     <div className='grid grid-cols-2 gap-4'>
                         <div className='bg-gray-50 p-6 rounded-3xl border border-gray-100'>
                             <Star className='text-amber-500 mb-3' size={20} />
@@ -58,73 +75,70 @@ const Rewards = () => {
                             <p className='text-lg font-bold text-gray-900 uppercase'>Elite</p>
                         </div>
                         <div className='bg-gray-50 p-6 rounded-3xl border border-gray-100'>
-                            <ArrowUpRight className='text-[#BC002D] mb-3' size={20} />
-                            <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Growth</p>
-                            <p className='text-lg font-bold text-gray-900 uppercase'>+12%</p>
+                            <Zap className='text-[#BC002D] mb-3' size={20} />
+                            <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Multiplier</p>
+                            <p className='text-lg font-bold text-gray-900 uppercase'>1.2x</p>
                         </div>
                     </div>
                 </div>
 
-                {/* --- RIGHT: CONVERSION & ACTIVITY --- */}
+                {/* --- RIGHT: DYNAMIC REGISTRY LEDGER --- */}
                 <div className='lg:col-span-2 space-y-12'>
                     
-                    {/* CONVERSION INDEX */}
-                    <div className='bg-white border border-gray-100 rounded-[40px] p-8 md:p-12 shadow-sm relative overflow-hidden'>
-                        <div className='flex items-center justify-between mb-10'>
-                            <h4 className='text-sm font-black uppercase tracking-[0.3em] text-gray-900'>Conversion Index</h4>
-                            <div className='px-4 py-2 bg-gray-50 rounded-full text-[9px] font-black text-gray-400 uppercase tracking-widest'>
-                                Fixed Rate 10:1
-                            </div>
-                        </div>
-
-                        <div className='grid grid-cols-2 md:grid-cols-4 gap-8'>
-                            {[100, 500, 1000, 5000].map((val) => (
-                                <div key={val} className='group'>
-                                    <p className='text-gray-400 text-[9px] font-black uppercase tracking-widest mb-2 group-hover:text-[#BC002D] transition-colors'>{val} Points</p>
-                                    <p className='text-2xl font-bold text-gray-900 tracking-tighter'>{currency}{(val/conversionRate).toLocaleString()}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* DYNAMIC ACTIVITY LOG */}
                     <div className='bg-gray-50/50 border border-gray-100 rounded-[40px] p-8 md:p-12'>
                         <div className='flex items-center justify-between mb-8'>
                             <div className='flex items-center gap-4'>
                                 <History size={18} className='text-gray-900' />
-                                <h4 className='text-sm font-black uppercase tracking-[0.3em] text-gray-900'>Activity Log</h4>
+                                <h4 className='text-sm font-black uppercase tracking-[0.3em] text-gray-900'>Registry Ledger</h4>
                             </div>
-                            <span className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>{sortedHistory.length} Entries</span>
+                            <span className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>{history.length} Entries</span>
                         </div>
 
                         <div className='space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar'>
-                            {sortedHistory.length > 0 ? (
-                                sortedHistory.map((item, index) => (
+                            {loading ? (
+                                <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-[#BC002D]" /></div>
+                            ) : history.length > 0 ? (
+                                history.map((item, index) => (
                                     <div key={index} className='flex items-center justify-between bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:border-[#BC002D]/30 transition-all group'>
                                         <div className='flex items-center gap-4'>
-                                            <div className={`w-1 h-8 rounded-full ${item.type === 'earn' ? 'bg-green-500' : 'bg-red-500'}`}></div>
+                                            {/* TYPE ICON MAPPING */}
+                                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                                                item.type === 'CASHBACK' ? 'bg-green-100 text-green-600' : 
+                                                item.type === 'VOUCHER' ? 'bg-blue-100 text-blue-600' : 'bg-red-100 text-[#BC002D]'
+                                            }`}>
+                                                {item.type === 'CASHBACK' ? <ArrowDownLeft size={16}/> : 
+                                                 item.type === 'VOUCHER' ? <Ticket size={16}/> : <ArrowUpRight size={16}/>}
+                                            </div>
+                                            
                                             <div>
                                                 <p className='text-[10px] font-black text-gray-900 uppercase tracking-widest group-hover:text-[#BC002D] transition-colors'>
-                                                    {item.description}
+                                                    {item.title}
                                                 </p>
                                                 <p className='text-[8px] font-bold text-gray-400 uppercase mt-1'>
-                                                    {new Date(item.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                    {item.description} • {new Date(item.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                                                 </p>
                                             </div>
                                         </div>
+
                                         <div className='text-right'>
-                                            <p className={`text-sm font-black tabular-nums ${item.type === 'earn' ? 'text-green-600' : 'text-red-500'}`}>
-                                                {item.type === 'earn' ? '+' : '-'} {item.amount}
+                                            <p className={`text-sm font-black tabular-nums ${!item.isNegative ? 'text-green-600' : 'text-gray-900'}`}>
+                                                {item.isNegative ? '-' : '+'}{item.amount}
                                             </p>
-                                            <p className='text-[7px] font-bold text-gray-300 uppercase tracking-tighter mt-1'>Applied</p>
+                                            {item.status && (
+                                                <span className={`text-[7px] font-black px-2 py-0.5 rounded-full uppercase ${
+                                                    item.status === 'active' ? 'bg-green-500 text-white' : 'bg-gray-100 text-gray-400'
+                                                }`}>
+                                                    {item.status}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 ))
                             ) : (
                                 <div className='py-20 text-center bg-white rounded-3xl border border-dashed border-gray-200'>
                                     <Trophy size={32} className='mx-auto text-gray-200 mb-4' />
-                                    <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>No transactions recorded.</p>
-                                    <p className='text-[9px] text-gray-300 uppercase mt-1'>Complete your first order to earn points.</p>
+                                    <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Registry Archive Empty.</p>
+                                    <p className='text-[9px] text-gray-300 uppercase mt-1'>Complete an order to begin your history.</p>
                                 </div>
                             )}
                         </div>
