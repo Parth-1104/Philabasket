@@ -34,6 +34,8 @@ const navSections = [
       { to: '/add', icon: PlusCircle, label: 'Add Product' },
       { to: '/category', icon: Layers, label: 'Categories' },
       { to: '/list', icon: ClipboardList, label: 'All Products' },
+      { to: '/coupon', icon: ClipboardList, label: 'Generate Coupon' },
+
     ]
   },
   {

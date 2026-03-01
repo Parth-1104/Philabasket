@@ -14,6 +14,8 @@ const ORDERS_PER_PAGE = 10;
 
 const STATUS_CONFIG = {
   "Order Placed":    { color: "bg-blue-100 text-blue-700",   dot: "bg-blue-500",   icon: ShoppingBag  },
+  "On Hold":         { color: "bg-gray-100 text-gray-700",   dot: "bg-gray-400",   icon: Clock        }, // New: For Cheque/Bank initial state
+  "Money Received":  { color: "bg-cyan-100 text-cyan-700",   dot: "bg-cyan-500",   icon: CreditCard   }, // New: Clearance status
   "Packing":         { color: "bg-amber-100 text-amber-700", dot: "bg-amber-400",  icon: Package      },
   "Shipped":         { color: "bg-purple-100 text-purple-700", dot: "bg-purple-500", icon: Truck      },
   "Out for delivery":{ color: "bg-orange-100 text-orange-700", dot: "bg-orange-400", icon: Truck      },
@@ -101,7 +103,16 @@ const Orders = ({ token }) => {
 
   // ── sort + filter + paginate ──────────────────────────────────────────────
   const processed = useMemo(() => {
-    const priority = { "Order Placed":1, "Packing":2, "Shipped":3, "Out for delivery":4, "Delivered":5, "Cancelled":6 };
+    const priority = { 
+      "Order Placed": 1, 
+      "On Hold": 2, 
+      "Money Received": 3, 
+      "Packing": 4, 
+      "Shipped": 5, 
+      "Out for delivery": 6, 
+      "Delivered": 7, 
+      "Cancelled": 8 
+    };
     let list = Array.isArray(orders) ? [...orders] : [];
     if (filterStatus !== "ALL") list = list.filter(o => o.status === filterStatus);
     if (sortBy === "DATE_DESC")      list.sort((a,b) => new Date(b.date)-new Date(a.date));
@@ -122,6 +133,8 @@ const Orders = ({ token }) => {
   const stats = useMemo(() => ({
     total:     orders.length,
     new:       orders.filter(o => o.status === "Order Placed").length,
+    onHold:    orders.filter(o => o.status === "On Hold").length, // Tracking Cheque/Bank pending
+    received:  orders.filter(o => o.status === "Money Received").length, // Tracking Payment Cleared
     packing:   orders.filter(o => o.status === "Packing").length,
     shipped:   orders.filter(o => o.status === "Shipped" || o.status === "Out for delivery").length,
     delivered: orders.filter(o => o.status === "Delivered").length,
@@ -273,60 +286,75 @@ const Orders = ({ token }) => {
         </div>
 
         {/* ── STATS ROW ────────────────────────────────────────────────── */}
-        <div className='grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3'>
-          {[
-            { label:"Total",     value: stats.total,     color:"text-gray-900",  bg:"bg-white" },
-            { label:"New",       value: stats.new,       color:"text-blue-600",  bg:"bg-blue-50" },
-            { label:"Packing",   value: stats.packing,   color:"text-amber-600", bg:"bg-amber-50" },
-            { label:"In Transit",value: stats.shipped,   color:"text-purple-600",bg:"bg-purple-50" },
-            { label:"Delivered", value: stats.delivered, color:"text-green-600", bg:"bg-green-50" },
-            { label:"Cancelled", value: stats.cancelled, color:"text-red-600",   bg:"bg-red-50" },
-            { label:"Revenue",   value: `₹${(stats.revenue/1000).toFixed(1)}k`, color:"text-gray-900", bg:"bg-white" },
-          ].map(s => (
-            <div key={s.label} className={`${s.bg} rounded-2xl p-4 border border-white shadow-sm text-center`}>
-              <p className={`text-lg font-black ${s.color}`}>{s.value}</p>
-              <p className='text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-0.5'>{s.label}</p>
-            </div>
-          ))}
-        </div>
+        <div className='grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-3'> {/* Adjusted grid cols */}
+  {[
+    { label:"Total",     value: stats.total,     color:"text-gray-900",  bg:"bg-white" },
+    { label:"New",       value: stats.new,       color:"text-blue-600",  bg:"bg-blue-50" },
+    { label:"On Hold",   value: stats.onHold,    color:"text-gray-600",  bg:"bg-gray-100" }, // Added
+    { label:"Paid",      value: stats.received,  color:"text-cyan-600",  bg:"bg-cyan-50" },  // Added
+    { label:"Packing",   value: stats.packing,   color:"text-amber-600", bg:"bg-amber-50" },
+    { label:"In Transit",value: stats.shipped,   color:"text-purple-600",bg:"bg-purple-50" },
+    { label:"Delivered", value: stats.delivered, color:"text-green-600", bg:"bg-green-50" },
+    { label:"Cancelled", value: stats.cancelled, color:"text-red-600",   bg:"bg-red-50" },
+    { label:"Revenue",   value: `₹${(stats.revenue/1000).toFixed(1)}k`, color:"text-gray-900", bg:"bg-white" },
+  ].map(s => (
+    <div key={s.label} className={`${s.bg} rounded-2xl p-4 border border-white shadow-sm text-center`}>
+      <p className={`text-lg font-black ${s.color}`}>{s.value}</p>
+      <p className='text-[9px] font-bold text-gray-400 uppercase tracking-wider mt-0.5'>{s.label}</p>
+    </div>
+  ))}
+</div>
 
         {/* ── CONTROLS ─────────────────────────────────────────────────── */}
         <div className='bg-white rounded-2xl border border-gray-200 p-4 flex flex-wrap items-center gap-3 shadow-sm'>
-          {/* Status filter tabs */}
-          <div className='flex flex-wrap gap-1.5'>
-            {["ALL","Order Placed","Packing","Shipped","Out for delivery","Delivered","Cancelled"].map(s => (
-              <button key={s} onClick={() => setFilterStatus(s)}
+    {/* Corrected Filter Tabs Section */}
+    <div className='flex flex-wrap gap-1.5'>
+        {["ALL", "Order Placed", "On Hold", "Money Received", "Packing", "Shipped", "Out for delivery", "Delivered", "Cancelled"].map(s => (
+            <button 
+                key={s} 
+                onClick={() => setFilterStatus(s)}
                 className={`px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all
-                  ${filterStatus === s ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}>
+                ${filterStatus === s ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
+            >
                 {s === "ALL" ? "All" : s}
+                {/* Re-adding the dynamic count helper */}
                 {s !== "ALL" && (
-                  <span className='ml-1 opacity-60'>{orders.filter(o=>o.status===s).length}</span>
+                    <span className='ml-1 opacity-60'>{orders.filter(o => o.status === s).length}</span>
                 )}
-              </button>
-            ))}
-          </div>
+            </button>
+        ))}
+    </div>
 
-          <div className='flex items-center gap-3 ml-auto'>
-            <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-              className='bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-[11px] font-bold outline-none cursor-pointer'>
-              <option value="DATE_DESC">Newest First</option>
-              <option value="DATE_ASC">Oldest First</option>
-              <option value="STATUS_PRIORITY">Workflow Priority</option>
-              <option value="AMOUNT">Highest Amount</option>
-            </select>
+    {/* Dropdown should NOT be here - it belongs inside the table map() only */}
 
-            <div className='flex gap-1.5'>
-              <button onClick={() => downloadCSV(orders.filter(o=>new Date(o.date).toDateString()===new Date().toDateString()), "Today")}
-                className='flex items-center gap-1.5 px-3 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-[10px] font-bold hover:bg-amber-100 transition-all'>
+    <div className='flex items-center gap-3 ml-auto'>
+        <select 
+            value={sortBy} 
+            onChange={e => setSortBy(e.target.value)}
+            className='bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-[11px] font-bold outline-none cursor-pointer'
+        >
+            <option value="DATE_DESC">Newest First</option>
+            <option value="DATE_ASC">Oldest First</option>
+            <option value="STATUS_PRIORITY">Workflow Priority</option>
+            <option value="AMOUNT">Highest Amount</option>
+        </select>
+
+        <div className='flex gap-1.5'>
+            <button 
+                onClick={() => downloadCSV(orders.filter(o => new Date(o.date).toDateString() === new Date().toDateString()), "Today")}
+                className='flex items-center gap-1.5 px-3 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded-xl text-[10px] font-bold hover:bg-amber-100 transition-all'
+            >
                 <Download size={12}/> Today
-              </button>
-              <button onClick={() => downloadCSV(processed, "Filtered")}
-                className='flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-[10px] font-bold hover:bg-blue-100 transition-all'>
+            </button>
+            <button 
+                onClick={() => downloadCSV(processed, "Filtered")}
+                className='flex items-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl text-[10px] font-bold hover:bg-blue-100 transition-all'
+            >
                 <Download size={12}/> Export
-              </button>
-            </div>
-          </div>
+            </button>
         </div>
+    </div>
+</div>
 
         {/* ── ORDERS TABLE ─────────────────────────────────────────────── */}
         <div className='space-y-2'>
@@ -405,7 +433,7 @@ const Orders = ({ token }) => {
                       }}
                       className='text-[10px] font-bold border border-gray-200 rounded-lg px-2 py-1.5 bg-gray-50 outline-none cursor-pointer'
                     >
-                      {["Order Placed","Packing","Shipped","Out for delivery","Delivered","Cancelled"].map(s =>
+                      {["On Hold","Money Received","Order Placed","Packing","Shipped","Out for delivery","Delivered","Cancelled"].map(s =>
                         <option key={s} value={s}>{s}</option>
                       )}
                     </select>

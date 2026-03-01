@@ -5,7 +5,7 @@ const userRewardSchema = new mongoose.Schema({
     name: { type: String, default: "Point Conversion" },
     description: { type: String },
     discountValue: { type: Number, required: true },
-    discountCode: { type: String, unique: true },
+    discountCode: { type: String },
     pointsUsed: { type: Number, required: true }, // Mapped from 'require_point'
     status: { type: String, enum: ['active', 'used', 'expired'], default: 'active' },
     createdAt: { type: Date, default: Date.now },

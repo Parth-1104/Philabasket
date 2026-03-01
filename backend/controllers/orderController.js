@@ -8,6 +8,8 @@ import twilio from 'twilio';
 import 'dotenv/config';
 import axios from 'axios';
 import rewardTransactionModel from "../models/rewardTranscationModel.js";
+import userRewardModel from "../models/userRewardModel.js";
+
 
 const recordRewardActivity = async (userId, userEmail, amount, type, orderId = null) => {
     try {
@@ -101,13 +103,39 @@ const updateStock = async (items, type = "reduce") => {
 // --- CONTROLLERS ---
 
 
+// import userRewardModel from "../models/userRewardModel.js"; // Ensure this path is correct
+
+
+
+
+
+
+
 const placeOrder = async (req, res) => {
     try {
         const { 
             userId, items, amount, address, billingAddress, 
-            currency, pointsUsed, couponUsed, couponDiscount,discountAmount
+            currency, pointsUsed, couponUsed, discountAmount, 
+            paymentMethod, status 
         } = req.body;
 
+        // 1. BLOCK DOUBLE COUPON USAGE
+        if (couponUsed) {
+            const alreadyUsed = await userRewardModel.findOne({ 
+                discountCode: couponUsed, 
+                email: address.email, 
+                status: 'used' 
+            });
+
+            if (alreadyUsed) {
+                return res.json({ 
+                    success: false, 
+                    message: `Security Alert: Coupon ${couponUsed} has already been recorded in your Archive.` 
+                });
+            }
+        }
+
+        // 2. CONSTRUCT ORDER DATA
         const orderData = {
             userId,
             items,
@@ -118,40 +146,73 @@ const placeOrder = async (req, res) => {
             couponUsed: couponUsed || null,
             discountAmount: discountAmount || 0,
             currency: currency || 'INR',
-            paymentMethod: "COD",
+            // Set method to 'Cheque' if selected, otherwise default to provided or COD
+            paymentMethod: paymentMethod || "COD", 
             payment: false,
-            date: Date.now()
+            date: Date.now(),
+            // Initial status for Cheque is 'Cheque on Hold'
+            status: status || (paymentMethod === 'Cheque' ? 'Cheque on Hold' : 'Order Placed')
         };
 
+        // 3. SAVE ORDER TO DATABASE
         const newOrder = new orderModel(orderData);
         await newOrder.save(); 
 
-        // --- FIXED: Single Source of Truth for Rewards ---
+        // 4. RECORD USAGE IN USER REWARD TABLE
+        if (couponUsed) {
+            const usedEntry = new userRewardModel({
+                email: address.email,
+                rewardName: "Coupon Redeemed",
+                description: `Acquisition Discount via ${couponUsed}`,
+                discountValue: discountAmount,
+                discountCode: couponUsed,
+                pointsUsed: discountAmount,
+                status: 'used',
+                createdAt: new Date()
+            });
+            await usedEntry.save();
+        }
+
+        // 5. DEDUCT REWARD POINTS
         if (pointsUsed > 0) {
-            // ONLY call the helper. 
-            // Ensure recordRewardActivity uses $inc to update the userModel.
             await recordRewardActivity(
                 userId, 
                 address.email, 
-                -Math.abs(pointsUsed), // Ensure it's negative
+                -Math.abs(pointsUsed), 
                 'redeem_point', 
                 newOrder._id
             );
         }
 
-        // Clean User Cart Registry
+        // 6. UPDATE INVENTORY (Deduct Stock)
+        for (const item of items) {
+            await productModel.findByIdAndUpdate(item._id, { 
+                $inc: { stock: -item.quantity } 
+            });
+        }
+
+        // 7. CLEAN USER CART REGISTRY
         await userModel.findByIdAndUpdate(userId, { $set: { cartData: {} } });
 
+        // 8. FINAL SUCCESS RESPONSE
         res.json({ 
             success: true, 
-            message: "Order Placed", 
+            message: paymentMethod === 'Cheque' 
+                ? "Acquisition secured. Order is 'On Hold' awaiting cheque clearance." 
+                : "Order Placed & Reward Logged.", 
             orderNo: newOrder.orderNo 
         });
 
     } catch (error) {
+        console.error("Order Placement Error:", error.message);
         res.json({ success: false, message: error.message });
     }
 };
+
+
+        
+
+
 
 
 const cancelOrder = async (req, res) => {

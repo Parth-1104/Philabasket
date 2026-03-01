@@ -5,7 +5,10 @@ import CartTotal from '../components/CartTotal';
 import { assets } from '../assets/assets';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { Ticket, CheckCircle, Loader2, X, ShieldCheck, Globe, Info } from 'lucide-react';
+import { 
+    Ticket, CheckCircle, Loader2, X, ShieldCheck, 
+    Globe, Info, Landmark, FileText, Smartphone, Mail, MapPin
+} from 'lucide-react';
 
 const PlaceOrder = () => {
     const [method, setMethod] = useState('cod');
@@ -21,13 +24,18 @@ const PlaceOrder = () => {
     const [isVerifying, setIsVerifying] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false); 
 
-    // --- NEW FUNCTIONAL STATES ---
     const [countries, setCountries] = useState([]);
     const [showTerms, setShowTerms] = useState(false);
     const [agreedToTerms, setAgreedToTerms] = useState(false);
     const [couponCode, setCouponCode] = useState('');
     const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [isApplying, setIsApplying] = useState(false);
+
+    // --- PAYMENT MODAL STATES ---
+    const [showChequeModal, setShowChequeModal] = useState(false);
+    const [agreedToCheque, setAgreedToCheque] = useState(false);
+    const [showBankModal, setShowBankModal] = useState(false);
+    const [agreedToBankTransfer, setAgreedToBankTransfer] = useState(false);
 
     const [sameAsShipping, setSameAsShipping] = useState(true);
     const [formData, setFormData] = useState({
@@ -39,7 +47,6 @@ const PlaceOrder = () => {
         firstName: '', lastName: '', street: '', city: '', state: '', zipcode: '', country: 'India'
     });
 
-    // --- FETCH COUNTRIES & DIAL CODES ---
     useEffect(() => {
         const fetchCountries = async () => {
             try {
@@ -55,7 +62,6 @@ const PlaceOrder = () => {
         fetchCountries();
     }, []);
 
-    // Sync Dial Code when country changes
     const handleCountryChange = (e) => {
         const countryName = e.target.value;
         const selected = countries.find(c => c.name === countryName);
@@ -112,7 +118,7 @@ const PlaceOrder = () => {
             const res = await axios.post(
                 backendUrl + '/api/coupon/validate', 
                 { code: couponCode, amount: getCartAmount() },
-                { headers: { token } } // THIS WAS MISSING
+                { headers: { token } }
             );
             if (res.data.success) {
                 setAppliedCoupon(res.data.coupon);
@@ -147,8 +153,18 @@ const PlaceOrder = () => {
     }, [cartItems, userPoints, usePoints, appliedCoupon, delivery_fee, getCartAmount]);
 
     const onSubmitHandler = async (e) => {
-        e.preventDefault();
+        if (e) e.preventDefault();
         if (!agreedToTerms) return toast.error("Please acknowledge the Acquisition Terms.");
+
+        if (method === 'cheque' && !agreedToCheque) {
+            setShowChequeModal(true);
+            return;
+        }
+        if (method === 'bank' && !agreedToBankTransfer) {
+            setShowBankModal(true);
+            return;
+        }
+
         if (loading) return;
 
         try {
@@ -163,7 +179,9 @@ const PlaceOrder = () => {
                 pointsUsed: Math.round(calculation.pointsDeducted),
                 couponUsed: appliedCoupon ? appliedCoupon.code : null,
                 discountAmount: calculation.couponDeducted,
-                phone: `${formData.countryCode}${formData.phone}`
+                phone: `${formData.countryCode}${formData.phone}`,
+                paymentMethod: method === 'cheque' ? 'Cheque' : method === 'bank' ? 'Direct Bank Transfer' : method.toUpperCase(),
+                status: (method === 'cheque' || method === 'bank') ? 'On Hold' : 'Order Placed'
             };
 
             const response = await axios.post(backendUrl + '/api/order/place', orderData, { headers: { token } });
@@ -185,6 +203,118 @@ const PlaceOrder = () => {
 
     return (
         <div className='relative'>
+            {/* --- DIRECT BANK TRANSFER MODAL --- */}
+            {showBankModal && (
+                <div className='fixed inset-0 z-[500] flex items-center justify-center p-6'>
+                    <div className='absolute inset-0 bg-black/60 backdrop-blur-sm' onClick={() => setShowBankModal(false)}></div>
+                    <div className='bg-white w-full max-w-xl relative z-10 p-8 rounded-sm shadow-2xl animate-fade-in overflow-y-auto max-h-[90vh]'>
+                        <div className='flex items-center justify-between mb-6 border-b border-black/5 pb-4'>
+                            <div className='flex items-center gap-3'>
+                                <Landmark size={20} className='text-[#BC002D]' />
+                                <h3 className='font-black uppercase tracking-widest text-sm'>Direct Bank Transfer</h3>
+                            </div>
+                            <X className='cursor-pointer' onClick={() => setShowBankModal(false)} />
+                        </div>
+                        
+                        <div className='bg-[#FCF9F4] p-5 rounded-sm border border-black/5 mb-6'>
+                            <p className='text-[11px] font-bold text-gray-700 leading-relaxed uppercase'>
+                                Make your payment directly into our bank account. Please use your Order ID as the payment reference. Your order will be shipped after the funds have cleared in our account. You can Use NEFT / IMPS / RTGS for payment Directly from your bank account.
+                            </p>
+                        </div>
+
+                        <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'>
+                            <div className='space-y-4'>
+                                <p className='text-[10px] font-black uppercase text-[#BC002D]'>Our Bank Details</p>
+                                <div className='text-[11px] font-bold space-y-2 uppercase'>
+                                    <p className='text-gray-400'>A/C Name: <span className='text-black'>PhilaBasket.com</span></p>
+                                    <p className='text-gray-400'>Bank: <span className='text-black'>ICICI Bank</span></p>
+                                    <p className='text-gray-400'>A/C Number: <span className='text-black'>072105001250</span></p>
+                                    <p className='text-gray-400'>IFSC: <span className='text-black'>ICIC0000721</span></p>
+                                </div>
+                            </div>
+                            <div className='space-y-4'>
+                                <p className='text-[10px] font-black uppercase text-[#BC002D]'>Mobile Payments</p>
+                                <div className='text-[11px] font-bold space-y-2 uppercase'>
+                                    <p className='text-gray-400'>Google Pay: <span className='text-black'>9999167799</span></p>
+                                    <p className='text-gray-400'>PhonePe: <span className='text-black'>9999167799</span></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className='flex items-start gap-3 mb-8'>
+                            <input type="checkbox" id="bankAgree" checked={agreedToBankTransfer} onChange={() => setAgreedToBankTransfer(!agreedToBankTransfer)} className='mt-1 w-4 h-4 accent-black' />
+                            <label htmlFor="bankAgree" className='text-[10px] text-gray-500 font-bold uppercase cursor-pointer leading-normal'>
+                                I understand my order will be <span className='text-[#BC002D]'>ON HOLD</span> until funds are cleared.
+                            </label>
+                        </div>
+
+                        <button onClick={() => agreedToBankTransfer ? (setShowBankModal(false), onSubmitHandler()) : toast.error("Please acknowledge the protocol.")} className='w-full bg-black text-white py-4 text-[10px] font-black uppercase tracking-widest hover:bg-[#BC002D]'>
+                            Confirm Bank Transfer
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* --- CHEQUE VERIFICATION MODAL --- */}
+            {showChequeModal && (
+                <div className='fixed inset-0 z-[500] flex items-center justify-center p-6'>
+                    <div className='absolute inset-0 bg-black/60 backdrop-blur-sm' onClick={() => setShowChequeModal(false)}></div>
+                    <div className='bg-white w-full max-w-xl relative z-10 p-8 rounded-sm shadow-2xl animate-fade-in overflow-y-auto max-h-[90vh]'>
+                        <div className='flex items-center justify-between mb-6 border-b border-black/5 pb-4'>
+                            <div className='flex items-center gap-3'>
+                                <FileText size={20} className='text-[#BC002D]' />
+                                <h3 className='font-black uppercase tracking-widest text-sm'>Cheque Protocol</h3>
+                            </div>
+                            <X className='cursor-pointer' onClick={() => setShowChequeModal(false)} />
+                        </div>
+                        
+                        <div className='grid grid-cols-1 md:grid-cols-2 gap-8 mb-8'>
+                            <div className='space-y-4'>
+                                <div className='flex items-center gap-2 mb-2'>
+                                    <MapPin size={14} className='text-[#BC002D]' />
+                                    <p className='text-[10px] font-black uppercase text-gray-400'>Mailing Address</p>
+                                </div>
+                                <div className='text-[11px] font-bold space-y-1 uppercase leading-relaxed'>
+                                    <p>PhilaBasket.com</p>
+                                    <p>C/O Bhavyansh Prakhar Rastogi</p>
+                                    <p>S – 606/607 School Block – 2,</p>
+                                    <p>Park End Apartment,</p>
+                                    <p>ShakarPur -110092</p>
+                                    <p>Delhi (India)</p>
+                                </div>
+                            </div>
+                            <div className='space-y-6'>
+                                <div className='space-y-2'>
+                                    <p className='text-[10px] font-black uppercase text-gray-400'>Verification Contact</p>
+                                    <div className='flex items-center gap-3 text-[11px] font-bold'>
+                                        <Smartphone size={14} className='text-[#BC002D]' />
+                                        <span>+91 9999167799</span>
+                                    </div>
+                                    <div className='flex items-center gap-3 text-[11px] font-bold lowercase'>
+                                        <Mail size={14} className='text-[#BC002D]' />
+                                        <span>admin@philabasket.com</span>
+                                    </div>
+                                </div>
+                                <p className='text-[9px] font-bold text-gray-400 uppercase italic leading-tight'>
+                                    Please send Cheque Details to our Mobile no - 9999167799 or email - admin@philabasket.com.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className='flex items-start gap-3 mb-8'>
+                            <input type="checkbox" id="chequeAgree" checked={agreedToCheque} onChange={() => setAgreedToCheque(!agreedToCheque)} className='mt-1 w-4 h-4 accent-black' />
+                            <label htmlFor="chequeAgree" className='text-[10px] text-gray-500 font-bold uppercase leading-normal cursor-pointer'>
+                                I confirm that I will dispatch the physical cheque for <span className='text-black'>₹{calculation.totalPayable.toFixed(2)}</span> to the address above. I understand the order remains <span className='text-[#BC002D]'>ON HOLD</span> until the cheque is cashed.
+                            </label>
+                        </div>
+
+                        <button onClick={() => agreedToCheque ? (setShowChequeModal(false), onSubmitHandler()) : toast.error("Please accept the cheque terms.")} className='w-full bg-black text-white py-4 text-[10px] font-black uppercase tracking-widest hover:bg-[#BC002D]'>
+                            Confirm Cheque Acquisition
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* --- TERMS & CONDITIONS MODAL --- */}
             {showTerms && (
                 <div className='fixed inset-0 z-[300] flex items-center justify-center p-6'>
@@ -230,12 +360,7 @@ const PlaceOrder = () => {
                     
                     <div className='flex flex-col gap-2'>
                         <p className='text-[9px] font-black uppercase text-gray-400 ml-1'>Acquisition Region</p>
-                        <select 
-                            required 
-                            value={formData.country} 
-                            onChange={handleCountryChange}
-                            className='w-full bg-white border border-black/5 rounded-sm py-4 px-5 text-sm outline-none focus:border-[#BC002D]/30'
-                        >
+                        <select required value={formData.country} onChange={handleCountryChange} className='w-full bg-white border border-black/5 rounded-sm py-4 px-5 text-sm outline-none focus:border-[#BC002D]/30'>
                             {countries.map(c => <option key={c.code} value={c.name}>{c.name}</option>)}
                         </select>
                     </div>
@@ -282,7 +407,6 @@ const PlaceOrder = () => {
                         )}
                     </div>
 
-                    {/* TERMS CHECKBOX */}
                     <div className='mt-8 flex items-start gap-3 p-5 bg-white border border-black/5 rounded-sm'>
                         <input required type="checkbox" checked={agreedToTerms} onChange={() => setAgreedToTerms(!agreedToTerms)} className='mt-1 w-4 h-4 accent-black' />
                         <p className='text-[10px] text-gray-500 font-bold uppercase tracking-tight leading-relaxed cursor-pointer'>
@@ -292,33 +416,32 @@ const PlaceOrder = () => {
                 </div>
 
                 <div className='flex flex-col gap-6 w-full lg:max-w-[400px]'>
-    <div className='mb-4'>
-        <Title text1={'SPECIMEN'} text2={'OVERVIEW'} />
-        <p className='text-[10px] text-gray-400 tracking-[0.3em] uppercase mt-2 font-black'>Inventory Verification</p>
-    </div>
-    
-    <div className='space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar'>
-        {products.filter(p => cartItems[p._id] > 0).map((item, index) => (
-            <div key={index} className='flex items-center gap-4 bg-white p-4 border border-black/5 rounded-sm group'>
-                <div className='w-16 h-16 bg-gray-50 rounded-sm flex-shrink-0 overflow-hidden'>
-                    <img src={item.image[0]} className='w-full h-full object-contain p-1 group-hover:scale-110 transition-transform' alt="" />
+                    <div className='mb-4'>
+                        <Title text1={'SPECIMEN'} text2={'OVERVIEW'} />
+                        <p className='text-[10px] text-gray-400 tracking-[0.3em] uppercase mt-2 font-black'>Inventory Verification</p>
+                    </div>
+                    
+                    <div className='space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar'>
+                        {products.filter(p => cartItems[p._id] > 0).map((item, index) => (
+                            <div key={index} className='flex items-center gap-4 bg-white p-4 border border-black/5 rounded-sm group'>
+                                <div className='w-16 h-16 bg-gray-50 rounded-sm flex-shrink-0 overflow-hidden'>
+                                    <img src={item.image[0]} className='w-full h-full object-contain p-1 group-hover:scale-110 transition-transform' alt="" />
+                                </div>
+                                <div className='flex-1'>
+                                    <p className='text-[10px] font-black uppercase text-black truncate max-w-[150px]'>{item.name}</p>
+                                    <p className='text-[9px] text-gray-400 font-bold uppercase'>Qty: {cartItems[item._id]}</p>
+                                </div>
+                                <p className='text-xs font-black text-black'>{currency === 'INR' ? '₹' : '$'}{item.price}</p>
+                            </div>
+                        ))}
+                    </div>
                 </div>
-                <div className='flex-1'>
-                    <p className='text-[10px] font-black uppercase text-black truncate max-w-[150px]'>{item.name}</p>
-                    <p className='text-[9px] text-gray-400 font-bold uppercase'>Qty: {cartItems[item._id]}</p>
-                </div>
-                <p className='text-xs font-black text-black'>{currency === 'INR' ? '₹' : '$'}{item.price}</p>
-            </div>
-        ))}
-    </div>
-</div>
 
                 {/* RIGHT: LEDGER SUMMARY */}
                 <div className='lg:w-[450px]'>
                     <div className='bg-white border border-black/5 p-8 rounded-sm shadow-xl'>
                         <CartTotal />
                         
-                        {/* COUPON INPUT */}
                         <div className='mt-8 flex gap-2'>
                             <input value={couponCode} onChange={(e) => setCouponCode(e.target.value.toUpperCase())} placeholder="ENTER COUPON" className='flex-1 border border-black/5 bg-[#F9F9F9] p-4 text-[10px] font-black outline-none focus:border-black placeholder-black' />
                             <button type="button" onClick={applyCoupon} className='bg-black text-white px-6 py-4 text-[9px] font-black uppercase tracking-widest hover:bg-[#BC002D] transition-all'>
@@ -326,7 +449,6 @@ const PlaceOrder = () => {
                             </button>
                         </div>
 
-                        {/* REWARD POINTS */}
                         <div className='mt-6 p-4 border border-[#BC002D]/10 bg-[#BC002D]/5 rounded-sm flex items-center justify-between'>
                             <div className='flex items-center gap-3'>
                                 <input type="checkbox" checked={usePoints} onChange={() => setUsePoints(!usePoints)} className='w-4 h-4 accent-[#BC002D]' />
@@ -355,10 +477,15 @@ const PlaceOrder = () => {
                     <div className='mt-12'>
                         <Title text1={'PAYMENT'} text2={'PROTOCOL'} />
                         <div className='flex flex-col gap-4 mt-6'>
-                            {['stripe', 'razorpay', 'cod'].map((m) => (
+                            {['stripe', 'razorpay', 'cod', 'bank', 'cheque'].map((m) => (
                                 <div key={m} onClick={() => setMethod(m)} className={`flex items-center gap-4 border p-5 cursor-pointer rounded-sm ${method === m ? 'border-[#BC002D] bg-[#BC002D]/5 shadow-sm' : 'border-black/5 bg-white opacity-60'}`}>
                                     <div className={`w-3 h-3 border rounded-full ${method === m ? 'bg-[#BC002D] border-[#BC002D]' : 'border-black/10'}`}></div>
-                                    <p className='text-[10px] tracking-[0.3em] uppercase font-black'>{m === 'cod' ? 'Cash on Delivery' : m.toUpperCase()}</p>
+                                    <div className='flex items-center gap-2'>
+                                        {m === 'cheque' ? <FileText size={14} className='text-gray-400' /> : m === 'bank' ? <Landmark size={14} className='text-gray-400' /> : null}
+                                        <p className='text-[10px] tracking-[0.3em] uppercase font-black'>
+                                            {m === 'cod' ? 'Cash on Delivery' : m === 'cheque' ? 'Cheque Payment' : m === 'bank' ? 'Direct Bank Transfer' : m.toUpperCase()}
+                                        </p>
+                                    </div>
                                 </div>
                             ))}
                         </div>

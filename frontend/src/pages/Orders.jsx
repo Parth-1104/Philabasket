@@ -81,9 +81,10 @@ const handleFeedbackSubmit = async (e) => {
         const logoImg = assets.og; 
         doc.addImage(logoImg, 'PNG', 10, 10, 20, 20);
 
+        // Header Section
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(16);
-        doc.text("Phila Art", 35, 18);
+        doc.text("Phila Basket", 35, 18);
         doc.setFontSize(8);
         doc.text("G-3, Prakash Kunj Apartment, Kavi Raman Path, Boring Road", 35, 23);
         doc.text("Patna 800001 Bihar India | philapragya@gmail.com", 35, 27);
@@ -92,14 +93,35 @@ const handleFeedbackSubmit = async (e) => {
         doc.setFontSize(14);
         doc.text("TAX INVOICE", 140, 18);
         doc.setFontSize(9);
-        // Displaying Order Number instead of slice ID
         doc.text(`Order #: ${order.orderNo || 'N/A'}`, 140, 25);
         doc.text(`Date: ${new Date(order.date).toLocaleDateString()}`, 140, 30);
+        // Added Payment Status
+        let displayStatus = order.status.toUpperCase();
+        const method = (order.paymentMethod || "").toUpperCase();
 
-        // --- DUAL ADDRESS SECTION ---
+        // 1. Instant Payment methods are always marked as PAID
+        if (method === 'RAZORPAY' || method === 'STRIPE' || method === 'UPI') {
+            displayStatus = "PAID";
+        } 
+        // 2. Manual transfers stay ON HOLD until you change the status to 'Money Received'
+        else if (method === 'DIRECT BANK TRANSFER' || method === 'CHEQUE') {
+            if (order.status === 'Money Received') {
+                displayStatus = "PAID (BANK CLEARED)";
+            } else {
+                displayStatus = "ON HOLD (AWAITING CLEARANCE)";
+            }
+        }
+        // 3. Cash on Delivery handling
+        else if (method === 'COD') {
+            displayStatus = order.status === 'Delivered' ? "PAID (CASH)" : "PENDING (COD)";
+        }
+
+        doc.setFontSize(9);
+        doc.text(`Status: ${displayStatus}`, 140, 35);
+
+        // Dual Address Section
         const addr = order.address || {};
         const billAddr = order.billingAddress || addr;
-
         doc.setFontSize(10);
         doc.text("BILL TO:", 14, 45);
         doc.setFontSize(8);
@@ -114,29 +136,45 @@ const handleFeedbackSubmit = async (e) => {
         doc.text(`${addr.street || ''}`, 110, 54);
         doc.text(`${addr.city || ''}, ${addr.state || ''} ${addr.zipcode || ''}`, 110, 58);
 
-        const tableRows = (order.items || []).map((item, index) => [
-            index + 1,
-            item.name || 'Specimen',
-            "9704",
-            item.quantity || 1,
-            (item.price || 0).toFixed(2),
-            "5%",
-            ((item.price || 0) * (item.quantity || 1)).toFixed(2)
-        ]);
+        // Table Calculations
+        let totalBaseAmount = 0;
+        let totalGSTAmount = 0;
+
+        const tableRows = (order.items || []).map((item, index) => {
+            const itemPrice = item.price || 0;
+            // Reverse calculate 5% GST to show "Price reduced by 5%"
+            const basePrice = itemPrice / 1.05; 
+            const gstAmount = itemPrice - basePrice;
+            const rowTotal = itemPrice * (item.quantity || 1);
+            
+            totalBaseAmount += basePrice * (item.quantity || 1);
+            totalGSTAmount += gstAmount * (item.quantity || 1);
+
+            return [
+                index + 1,
+                item.name || 'Specimen',
+                "9704",
+                item.quantity || 1,
+                basePrice.toFixed(2),
+                "5%",
+                rowTotal.toFixed(2)
+            ];
+        });
 
         autoTable(doc, {
             startY: 70,
-            head: [['#', 'Item & Description', 'HSN', 'Qty', 'Rate', 'IGST', 'Amount']],
+            head: [['#', 'Item & Description', 'HSN', 'Qty', 'Rate (Excl.)', 'IGST', 'Amount (Incl.)']],
             body: tableRows,
             theme: 'grid',
             headStyles: { fillColor: [188, 0, 45] }
         });
 
-        // --- UPDATED CALCULATIONS WITH COUPONS & POINTS ---
+        // Summary Calculations
         const finalY = doc.lastAutoTable.finalY + 10;
-        const totalAmount = order.amount || 0;
+        const shippingCharge = 100;
         const discountAmount = order.discountAmount || 0;
-        const pointsWorth = (order.pointsUsed || 0) / 10; // Assuming 10 pts = 1 INR
+        const pointsWorth = (order.pointsUsed || 0) / 10;
+        const finalPayable = order.amount || 0;
 
         autoTable(doc, {
             startY: finalY,
@@ -145,11 +183,14 @@ const handleFeedbackSubmit = async (e) => {
             theme: 'plain', 
             styles: { fontSize: 8, cellPadding: 2 },
             body: [
-                ['Registry Total (Items)', `Rs. ${(totalAmount + discountAmount + pointsWorth).toFixed(2)}`],
+                ['Sub-Total (Base Items)', `Rs. ${totalBaseAmount.toFixed(2)}`],
+                ['IGST (5%)', `Rs. ${totalGSTAmount.toFixed(2)}`],
+                ['Shipping Charge', `Rs. ${shippingCharge.toFixed(2)}`],
+                [{ content: 'Exclusive GST Subsidy (Shop Discount)', styles: { textColor: [0, 128, 0], fontStyle: 'italic' } }, `Rs. -${totalGSTAmount.toFixed(2)}`],
                 [`Coupon Discount [${order.couponUsed || 'N/A'}]`, `Rs. -${discountAmount.toFixed(2)}`],
                 [`Archive Credit [${order.pointsUsed || 0} PTS]`, `Rs. -${pointsWorth.toFixed(2)}`],
-                [{ content: 'Final Asset Valuation', styles: { fontStyle: 'bold', fontSize: 10, textColor: [188, 0, 45] } }, 
-                 { content: `Rs. ${totalAmount.toFixed(2)}`, styles: { fontStyle: 'bold', fontSize: 10, textColor: [188, 0, 45] } }]
+                [{ content: 'Final Payable Amount', styles: { fontStyle: 'bold', fontSize: 10, textColor: [188, 0, 45], borderTop: [0.1, 188, 0, 45] } }, 
+                 { content: `Rs. ${finalPayable.toFixed(2)}`, styles: { fontStyle: 'bold', fontSize: 10, textColor: [188, 0, 45], borderTop: [0.1, 188, 0, 45] } }]
             ],
             columnStyles: { 1: { halign: 'right' } }
         });
@@ -157,7 +198,7 @@ const handleFeedbackSubmit = async (e) => {
         const summaryY = doc.lastAutoTable.finalY + 15;
         doc.setFontSize(8);
         doc.text("BANKING DETAILS: HDFC Bank | A/c: 01868730000112 | IFSC: HDFC0000186", 14, summaryY);
-        doc.save(`PhilaArt_Invoice_${order.orderNo}.pdf`);
+        doc.save(`PhilaBasket_Invoice_${order.orderNo}.pdf`);
     } catch (err) {
         toast.error("Invoice generation failed.");
     }

@@ -1,6 +1,6 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useMemo } from 'react';
 import { ShopContext } from '../context/ShopContext';
-import { Trophy, History, Zap, Wallet, ArrowUpRight, ArrowDownLeft, Ticket, Loader2, Star } from 'lucide-react';
+import { Trophy, History, Zap, Wallet, ArrowUpRight, ArrowDownLeft, Ticket, Loader2, Star, TrendingUp, BarChart3 } from 'lucide-react';
 import axios from 'axios';
 
 const Rewards = () => {
@@ -11,7 +11,19 @@ const Rewards = () => {
     const conversionRate = 10; 
     const cashValue = (userPoints / conversionRate).toFixed(2);
 
-    // --- FETCH DATA FROM THE NEW REGISTRY ROUTE ---
+    // --- ANALYTICS CALCULATIONS ---
+    const stats = useMemo(() => {
+        const gained = history
+            .filter(item => !item.isNegative)
+            .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+        
+        const used = history
+            .filter(item => item.isNegative)
+            .reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+
+        return { gained, used };
+    }, [history]);
+
     useEffect(() => {
         const fetchHistory = async () => {
             try {
@@ -34,14 +46,29 @@ const Rewards = () => {
         <div className='bg-white min-h-screen pt-10 pb-20 px-6 md:px-16 lg:px-24 select-none animate-fade-in'>
             
             {/* --- HEADER --- */}
-            <div className='mb-16'>
-                <div className='flex items-center gap-4 mb-4'>
-                    <span className='h-[1.5px] w-12 bg-[#BC002D]'></span>
-                    <p className='text-[10px] tracking-[0.6em] text-[#BC002D] uppercase font-black'>Member Privileges</p>
+            <div className='mb-16 flex flex-col md:flex-row md:items-end justify-between gap-6'>
+                <div>
+                    <div className='flex items-center gap-4 mb-4'>
+                        <span className='h-[1.5px] w-12 bg-[#BC002D]'></span>
+                        <p className='text-[10px] tracking-[0.6em] text-[#BC002D] uppercase font-black'>Member Privileges</p>
+                    </div>
+                    <h2 className='text-4xl md:text-6xl font-bold text-gray-900 tracking-tighter uppercase'>
+                        Collector <span className='text-[#BC002D]'>Rewards.</span>
+                    </h2>
                 </div>
-                <h2 className='text-4xl md:text-6xl font-bold text-gray-900 tracking-tighter uppercase'>
-                    Collector <span className='text-[#BC002D]'>Rewards.</span>
-                </h2>
+
+                {/* --- NEW: ANALYTICS SUMMARY MINI-CARD --- */}
+                <div className='flex items-center gap-8 bg-gray-50 p-6 rounded-3xl border border-gray-100'>
+                    <div className='text-center'>
+                        <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1'>Lifetime Gained</p>
+                        <p className='text-xl font-bold text-green-600 tracking-tighter'>+{stats.gained.toLocaleString()}</p>
+                    </div>
+                    <div className='w-[1px] h-8 bg-gray-200'></div>
+                    <div className='text-center'>
+                        <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1'>Total Redeemed</p>
+                        <p className='text-xl font-bold text-gray-900 tracking-tighter'>-{stats.used.toLocaleString()}</p>
+                    </div>
+                </div>
             </div>
 
             <div className='grid grid-cols-1 lg:grid-cols-3 gap-12'>
@@ -52,7 +79,7 @@ const Rewards = () => {
                         <div className='absolute -right-10 -top-10 w-40 h-40 bg-[#BC002D]/10 rounded-full blur-3xl group-hover:bg-[#BC002D]/30 transition-all duration-700'></div>
                         
                         <div className='relative z-10'>
-                            <p className='text-white/40 text-[10px] font-black uppercase tracking-[0.3em] mb-10'>Current Balance</p>
+                            <p className='text-white/40 text-[10px] font-black uppercase tracking-[0.3em] mb-10'>Current Vault Balance</p>
                             <div className='flex items-end gap-3 mb-2'>
                                 <h3 className='text-white text-7xl font-bold tracking-tighter'>{userPoints || 0}</h3>
                                 <p className='text-amber-400 text-xs font-black uppercase tracking-widest pb-3'>Points</p>
@@ -62,25 +89,35 @@ const Rewards = () => {
                                 <p className='text-[11px] font-bold uppercase tracking-widest'>Valued at ≈ {currency}{cashValue}</p>
                             </div>
 
-                            <button className='w-full bg-[#BC002D] text-white py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all shadow-lg shadow-[#BC002D]/20 active:scale-95'>
-                                Redeem in Checkout
+                            <button onClick={() => navigate('/cart')} className='w-full bg-[#BC002D] text-white py-5 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all shadow-lg shadow-[#BC002D]/20 active:scale-95'>
+                                Apply in Checkout
                             </button>
                         </div>
                     </div>
                     
-                    <div className='grid grid-cols-2 gap-4'>
-                        <div className='bg-gray-50 p-6 rounded-3xl border border-gray-100'>
-                            <Star className='text-amber-500 mb-3' size={20} />
-                            <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Status</p>
-                            <p className='text-lg font-bold text-gray-900 uppercase'>Elite</p>
+                    <div className='bg-gray-50 p-8 rounded-[40px] border border-gray-100'>
+                        <div className='flex items-center gap-3 mb-6'>
+                            <BarChart3 className='text-[#BC002D]' size={18} />
+                            <h4 className='text-[10px] font-black uppercase text-gray-700 tracking-[0.2em]'>Acquisition Stats</h4>
                         </div>
-                        <div className='bg-gray-50 p-6 rounded-3xl border border-gray-100'>
-                            <Zap className='text-[#BC002D] mb-3' size={20} />
-                            <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Multiplier</p>
-                            <p className='text-lg font-bold text-gray-900 uppercase'>1.2x</p>
+                        <div className='space-y-4'>
+                            <div className='flex justify-between items-center'>
+                                <p className='text-[10px] font-bold text-gray-700 uppercase'>Gained from Orders</p>
+                                <p className='text-sm font-black text-green-600'>+{stats.gained}</p>
+                            </div>
+                            <div className='flex justify-between items-center'>
+                                <p className='text-[10px] font-bold text-gray-700 uppercase'>Swapped for Coupons</p>
+                                <p className='text-sm font-black text-gray-900'>-{stats.used}</p>
+                            </div>
+                            <div className='h-[1px] bg-gray-200 w-full my-2'></div>
+                            <div className='flex justify-between items-center'>
+                                <p className='text-[10px] font-black text-black uppercase'>Active Savings</p>
+                                <p className='text-sm font-black text-[#BC002D]'>{userPoints}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
+
 
                 {/* --- RIGHT: DYNAMIC REGISTRY LEDGER --- */}
                 <div className='lg:col-span-2 space-y-12'>
