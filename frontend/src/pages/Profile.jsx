@@ -119,18 +119,21 @@ const Profile = () => {
                         </div>
 
                         <div className='relative z-10 space-y-4 pt-6 border-t border-white/10'>
-                            <div className='flex justify-between items-center bg-white/5 p-4 rounded-sm border border-white/5'>
+                            <div className='flex  justify-between items-center bg-white/5 p-4 rounded-sm border border-white/5'>
                                 <div>
                                     <p className='text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1'>Vault Balance</p>
                                     <p className='font-mono text-[#BC002D] text-lg font-bold'>{userData?.totalRewardPoints || 0} PTS</p>
                                 </div>
                                 <button 
-                                    onClick={() => navigate('/rewards')}
-                                    className='p-3 bg-[#BC002D] hover:bg-white hover:text-black transition-all rounded-sm group'
-                                    title="View Rewards History"
-                                >
-                                    <History size={16} />
-                                </button>
+    onClick={() => navigate('/rewards')}
+    className='px-6 py-3 bg-[#BC002D] hover:bg-white hover:text-black transition-all rounded-sm group flex items-center justify-center gap-3'
+    title="View Rewards History"
+>
+    <History size={16} />
+    <span className='text-[10px] font-black uppercase tracking-widest'>
+        History
+    </span> 
+</button>
                             </div>
 
                             <div className='flex justify-between items-center px-2'>

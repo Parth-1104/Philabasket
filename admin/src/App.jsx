@@ -18,7 +18,7 @@ import MediaLibrary from './pages/MediaLibrary'
 import RegistryExportDesk from './pages/RegistryExportDesk'
 import CategoryManager from './pages/CategoryManager'
 import Feedback from './pages/Feedback'
-
+import AddCoupon from './pages/AddCoupon'
 export const backendUrl = import.meta.env.VITE_BACKEND_URL
 export const currency = '$'
 
@@ -55,6 +55,8 @@ const App = () => {
                 <Route path='/export' element={<RegistryExportDesk token={token}  />} />
                 <Route path='/category' element={<CategoryManager token={token}  />} />
                 <Route path='/feedback' element={<Feedback token={token}  />} />
+                <Route path='/coupon' element={<AddCoupon token={token}  />} />
+
 
 
 

@@ -136,7 +136,14 @@ const forgotPassword = async (req, res) => {
             }
         });
 
-        const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
+        const frontendUrl = process.env.FRONTEND_URL;
+
+        if (!frontendUrl) {
+            console.error("DEPLOYMENT ERROR: FRONTEND_URL is not set in the production dashboard.");
+            return res.json({ success: false, message: "Registry protocol error. Contact Support." });
+        }
+
+        const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
         const mailOptions = {
             to: user.email,

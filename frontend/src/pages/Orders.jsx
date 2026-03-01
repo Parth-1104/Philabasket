@@ -92,22 +92,27 @@ const handleFeedbackSubmit = async (e) => {
         doc.setFontSize(14);
         doc.text("TAX INVOICE", 140, 18);
         doc.setFontSize(9);
-        doc.text(`Invoice #: INV/${order._id ? order._id.slice(-6).toUpperCase() : 'N/A'}`, 140, 25);
+        // Displaying Order Number instead of slice ID
+        doc.text(`Order #: ${order.orderNo || 'N/A'}`, 140, 25);
         doc.text(`Date: ${new Date(order.date).toLocaleDateString()}`, 140, 30);
 
+        // --- DUAL ADDRESS SECTION ---
         const addr = order.address || {};
-        doc.setFontSize(10);
-        doc.text("BILL TO / SHIP TO:", 14, 45);
-        doc.setFontSize(9);
-        doc.text(`${addr.firstName || ''} ${addr.lastName || ''}`, 14, 50);
-        doc.text(`${addr.street || ''}`, 14, 54);
-        doc.text(`${addr.city || ''}, ${addr.state || ''} ${addr.zipcode || ''}`, 14, 58);
+        const billAddr = order.billingAddress || addr;
 
-        const shipping = 100; 
-        const totalAmount = order.amount || 0; 
-        const subtotalWithTax = totalAmount - shipping; 
-        const igst = parseFloat((subtotalWithTax - (subtotalWithTax / 1.05)).toFixed(2));
-        const subtotalWithoutTax = subtotalWithTax - igst;
+        doc.setFontSize(10);
+        doc.text("BILL TO:", 14, 45);
+        doc.setFontSize(8);
+        doc.text(`${billAddr.firstName || ''} ${billAddr.lastName || ''}`, 14, 50);
+        doc.text(`${billAddr.street || ''}`, 14, 54);
+        doc.text(`${billAddr.city || ''}, ${billAddr.state || ''} ${billAddr.zipcode || ''}`, 14, 58);
+
+        doc.setFontSize(10);
+        doc.text("SHIP TO:", 110, 45);
+        doc.setFontSize(8);
+        doc.text(`${addr.firstName || ''} ${addr.lastName || ''}`, 110, 50);
+        doc.text(`${addr.street || ''}`, 110, 54);
+        doc.text(`${addr.city || ''}, ${addr.state || ''} ${addr.zipcode || ''}`, 110, 58);
 
         const tableRows = (order.items || []).map((item, index) => [
             index + 1,
@@ -127,36 +132,58 @@ const handleFeedbackSubmit = async (e) => {
             headStyles: { fillColor: [188, 0, 45] }
         });
 
+        // --- UPDATED CALCULATIONS WITH COUPONS & POINTS ---
         const finalY = doc.lastAutoTable.finalY + 10;
+        const totalAmount = order.amount || 0;
+        const discountAmount = order.discountAmount || 0;
+        const pointsWorth = (order.pointsUsed || 0) / 10; // Assuming 10 pts = 1 INR
+
         autoTable(doc, {
             startY: finalY,
             margin: { left: 110 }, 
             tableWidth: 85,
             theme: 'plain', 
-            styles: { fontSize: 9, cellPadding: 2, textColor: [50, 50, 50] },
+            styles: { fontSize: 8, cellPadding: 2 },
             body: [
-                ['Sub Total (Without Tax)', `Rs. ${subtotalWithoutTax.toFixed(2)}`],
-                ['IGST (5%)', `Rs. ${igst.toFixed(2)}`],
-                [{ content: 'Sub Total (Tax Inc.)', styles: { fontStyle: 'bold', borderTop: [0.1, 200, 200, 200] } }, { content: `Rs. ${subtotalWithTax.toFixed(2)}`, styles: { fontStyle: 'bold', borderTop: [0.1, 200, 200, 200] } }],
-                ['Shipping Charge', `Rs. ${shipping.toFixed(2)}`],
-                [{ content: 'Total', styles: { fontStyle: 'bold', fontSize: 11, textColor: [188, 0, 45], borderTop: [0.5, 188, 0, 45] } }, { content: `Rs. ${totalAmount.toFixed(2)}`, styles: { fontStyle: 'bold', fontSize: 11, textColor: [188, 0, 45], borderTop: [0.5, 188, 0, 45] } }]
+                ['Registry Total (Items)', `Rs. ${(totalAmount + discountAmount + pointsWorth).toFixed(2)}`],
+                [`Coupon Discount [${order.couponUsed || 'N/A'}]`, `Rs. -${discountAmount.toFixed(2)}`],
+                [`Archive Credit [${order.pointsUsed || 0} PTS]`, `Rs. -${pointsWorth.toFixed(2)}`],
+                [{ content: 'Final Asset Valuation', styles: { fontStyle: 'bold', fontSize: 10, textColor: [188, 0, 45] } }, 
+                 { content: `Rs. ${totalAmount.toFixed(2)}`, styles: { fontStyle: 'bold', fontSize: 10, textColor: [188, 0, 45] } }]
             ],
-            columnStyles: { 0: { cellWidth: 50 }, 1: { cellWidth: 35, halign: 'right' } }
+            columnStyles: { 1: { halign: 'right' } }
         });
 
         const summaryY = doc.lastAutoTable.finalY + 15;
         doc.setFontSize(8);
-        doc.setTextColor(100); 
-        doc.text("BANKING DETAILS:", 14, summaryY);
-        doc.text("Bank: HDFC Bank ltd | Branch: Exhibition Road, Patna", 14, summaryY + 5);
-        doc.text(`A/c No: 01868730000112 | IFSC Code: HDFC0000186`, 14, summaryY + 9);
-        doc.text("UPI ID: philapragya@okhdfcbank", 14, summaryY + 13);
-
-        doc.save(`Invoice_PhilaArt_${order._id ? order._id.slice(-6) : 'Order'}.pdf`);
+        doc.text("BANKING DETAILS: HDFC Bank | A/c: 01868730000112 | IFSC: HDFC0000186", 14, summaryY);
+        doc.save(`PhilaArt_Invoice_${order.orderNo}.pdf`);
     } catch (err) {
         toast.error("Invoice generation failed.");
     }
   };
+
+  const cancelOrder = async (orderId) => {
+    if (!window.confirm("Are you sure you want to terminate this acquisition protocol?")) return;
+    
+    try {
+        // Ensure the endpoint matches your router (e.g., /api/order/cancel)
+        const response = await axios.post(`${backendUrl}/api/order/cancel`, 
+            { orderId }, 
+            { headers: { token } }
+        );
+
+        if (response.data.success) {
+            toast.success(response.data.message);
+            loadOrderData(); // Refresh the list to show 'Cancelled' status
+        } else {
+            toast.error(response.data.message);
+        }
+    } catch (error) {
+        console.error("Cancellation Error:", error);
+        toast.error("Registry connection failed.");
+    }
+};
 
   const handleTrackAsset = (trackingNumber) => {
     if (!trackingNumber) return;
@@ -308,28 +335,43 @@ const handleFeedbackSubmit = async (e) => {
             <div key={order._id} className='group py-8 border border-black/5 bg-white flex flex-col gap-6 px-8 mb-8 rounded-sm shadow-sm hover:border-[#BC002D]/30 transition-all duration-500'>
               
               <div className='flex flex-wrap items-center justify-between gap-4 border-b border-black/5 pb-4'>
-                <div className='flex items-center gap-6'>
-                  <div>
-                    <p className='text-[8px] text-gray-400 uppercase tracking-widest font-black'>Sovereign ID</p>
-                    <p className='text-[10px] font-mono font-bold text-[#BC002D]'>#{order._id.slice(-8).toUpperCase()}</p>
-                  </div>
-                  <div className='flex items-center gap-3'>
-                    <div className={`w-2 h-2 rounded-full animate-pulse ${order.status === 'Delivered' ? 'bg-green-500' : 'bg-[#BC002D]'}`}></div>
-                    <p className='text-xs font-black tracking-[0.4em] uppercase text-black'>{order.status}</p>
-                  </div>
-                </div>
-                <div className='flex items-center gap-6'>
-                    <button 
-                        onClick={() => { setCurrentOrder(order); setShowFeedbackModal(true); }}
-                        className='flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 hover:text-black transition-colors'
-                    >
-                        <MessageSquare size={14} /> Give Feedback
-                    </button>
-                    <button onClick={() => downloadInvoice(order)} className='flex items-center gap-2 text-[10px] font-black uppercase text-[#BC002D] hover:underline'>
-                        <Download size={14} /> Download Invoice
-                    </button>
-                </div>
-              </div>
+    <div className='flex items-center gap-6'>
+        <div>
+            <p className='text-[8px] text-gray-400 uppercase tracking-widest font-black'>Registry ID</p>
+            <span className='text-sm font-mono font-bold text-black'>#{order.orderNo}</span>
+        </div>
+        <div className='flex items-center gap-3'>
+            <div className={`w-2 h-2 rounded-full animate-pulse ${
+                order.status === 'Delivered' ? 'bg-green-500' : 
+                order.status === 'Cancelled' ? 'bg-gray-400' : 'bg-[#BC002D]'
+            }`}></div>
+            <p className='text-xs font-black tracking-[0.4em] uppercase text-black'>{order.status}</p>
+        </div>
+    </div>
+    
+    <div className='flex items-center gap-6'>
+        {/* CANCEL BUTTON: Only visible if status is strictly 'Order Placed' */}
+        {order.status === 'Order Placed' && (
+            <button 
+                onClick={() => cancelOrder(order._id)}
+                className='text-[10px] font-black uppercase text-red-500 hover:bg-red-50 px-3 py-2 rounded-sm transition-all'
+            >
+                Cancel Order
+            </button>
+        )}
+        
+        <button 
+            onClick={() => { setCurrentOrder(order); setShowFeedbackModal(true); }}
+            className='flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 hover:text-black transition-colors'
+        >
+            <MessageSquare size={14} /> Give Feedback
+        </button>
+        
+        <button onClick={() => downloadInvoice(order)} className='flex items-center gap-2 text-[10px] font-black uppercase text-[#BC002D] hover:underline'>
+            <Download size={14} /> Download Invoice
+        </button>
+    </div>
+</div>
 
               <div className='flex flex-col gap-6'>
                 {order.items.map((item, idx) => (

@@ -100,59 +100,94 @@ const updateStock = async (items, type = "reduce") => {
 
 // --- CONTROLLERS ---
 
+
 const placeOrder = async (req, res) => {
     try {
-        const { userId, items, amount, address, currency, pointsUsed } = req.body;
-        
-        const orderData = { 
-            userId, items, address, amount, 
-            currency: currency || 'INR', 
-            paymentMethod: "COD", payment: false, 
-            date: Date.now(), 
-            pointsUsed: pointsUsed || 0 
+        const { 
+            userId, items, amount, address, billingAddress, 
+            currency, pointsUsed, couponUsed, couponDiscount,discountAmount
+        } = req.body;
+
+        const orderData = {
+            userId,
+            items,
+            address,
+            billingAddress: billingAddress || address,
+            amount,
+            pointsUsed: pointsUsed || 0,
+            couponUsed: couponUsed || null,
+            discountAmount: discountAmount || 0,
+            currency: currency || 'INR',
+            paymentMethod: "COD",
+            payment: false,
+            date: Date.now()
         };
 
         const newOrder = new orderModel(orderData);
-        await newOrder.save();
+        await newOrder.save(); 
 
-        await updateStock(items, "reduce");
-
-        // --- NEW: Record the Point Spend in the Ledger ---
+        // --- FIXED: Single Source of Truth for Rewards ---
         if (pointsUsed > 0) {
-            await recordRewardActivity(userId, address.email, -pointsUsed, 'redeem_point', newOrder._id);
+            // ONLY call the helper. 
+            // Ensure recordRewardActivity uses $inc to update the userModel.
+            await recordRewardActivity(
+                userId, 
+                address.email, 
+                -Math.abs(pointsUsed), // Ensure it's negative
+                'redeem_point', 
+                newOrder._id
+            );
         }
 
-        // Clean cart
+        // Clean User Cart Registry
         await userModel.findByIdAndUpdate(userId, { $set: { cartData: {} } });
 
-        await sendEmail(address.email, "PhilaBasket - Order Confirmed", getOrderHtmlTemplate(address.firstName, items, amount, currency));
-        await sendWhatsAppAlert(orderData);
-        
-        res.json({ success: true, message: "Order Placed" });
-    } catch (error) { res.json({ success: false, message: error.message }); }
+        res.json({ 
+            success: true, 
+            message: "Order Placed", 
+            orderNo: newOrder.orderNo 
+        });
+
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
 };
 
 
 const cancelOrder = async (req, res) => {
     try {
-        const { orderId, userId } = req.body;
+        // userId comes from the authUser middleware, orderId from the body
+        const { orderId, userId } = req.body; 
+        
         const order = await orderModel.findById(orderId);
         
-        if (!order || ['Shipped', 'Out for delivery', 'Delivered'].includes(order.status)) {
-            return res.json({ success: false, message: "Cannot cancel order" });
+        if (!order) {
+            return res.json({ success: false, message: "Registry Entry not found." });
         }
 
+        // BLOCK: Prevent cancellation if already in transit
+        const blockedStatuses = ['Shipped', 'Out for delivery', 'Delivered', 'Cancelled'];
+        if (blockedStatuses.includes(order.status)) {
+            return res.json({ success: false, message: `Cannot cancel: Order is currently ${order.status}` });
+        }
+
+        // 1. Update Status
         await orderModel.findByIdAndUpdate(orderId, { status: 'Cancelled' });
+        
+        // 2. Restore Stock
         await updateStock(order.items, "restore");
 
-        // --- NEW: Refund points and record as a positive adjustment ---
+        // 3. Refund points (Record as 'earn_point' to show as a positive refund in ledger)
         if (order.pointsUsed > 0) {
             const user = await userModel.findById(userId);
+            // This will increment the user's balance back and add a ledger entry
             await recordRewardActivity(userId, user.email, order.pointsUsed, 'earn_point', orderId);
         }
 
-        res.json({ success: true, message: "Order cancelled & Points Refunded" });
-    } catch (error) { res.json({ success: false, message: error.message }); }
+        res.json({ success: true, message: "Acquisition terminated. Points restored to Vault." });
+    } catch (error) { 
+        res.json({ success: false, message: error.message }); 
+    }
 };
 
 const updateSoldCount = async (items) => {

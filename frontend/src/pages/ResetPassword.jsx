@@ -33,14 +33,14 @@ const ResetPassword = () => {
                 
                 <input 
                     type="password" 
-                    placeholder="New Access Key" 
+                    placeholder="New Password" 
                     className="w-full p-4 bg-[#F9F9F9] border border-black/5 mb-6 outline-none focus:border-[#BC002D] transition-all"
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
                 />
                 
                 <button className="w-full bg-black text-white py-4 font-black uppercase tracking-[0.4em] text-[11px] hover:bg-[#BC002D] transition-all shadow-lg active:scale-95">
-                    Save New Key
+                    Save New Password
                 </button>
             </form>
         </div>

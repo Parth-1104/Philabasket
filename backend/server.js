@@ -15,6 +15,7 @@ import mailRouter from './routes/mailRoute.js';
 import categoryRouter from './routes/categoryRoute.js'
 import exportRouter from './routes/exportRouter.js'
 import feedbackRouter from './routes/feedbackRoute.js'
+import couponRouter from './routes/couponRouter.js'
 
 // App Config
 const app = express()
@@ -49,6 +50,7 @@ app.use('/api/category', categoryRouter);
 
 app.use('/api/export', exportRouter);
 app.use('/api/feedback', feedbackRouter);
+app.use('/api/coupon', couponRouter);
 
 
 app.get('/',(req,res)=>{
