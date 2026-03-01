@@ -114,8 +114,10 @@ const Navbar = () => {
                             {token && (
                             <div className='group-hover:block hidden absolute right-0 pt-5 w-48'>
                                 <div className='bg-white border-t-2 border-[#BC002D] p-5 shadow-2xl rounded-br-[30px]'>
-                                    <p onClick={() => navigate('/profile')} className='text-[9px] font-black text-gray-400 cursor-pointer hover:text-[#BC002D] mb-4 uppercase tracking-[0.2em] flex items-center gap-2'><User size={12} /> Account Profile</p>
-                                    <p onClick={() => navigate('/orders')} className='text-[9px] font-black text-gray-400 cursor-pointer hover:text-[#BC002D] mb-4 uppercase tracking-[0.2em] flex items-center gap-2'><Package size={12} /> MY ORDERS</p>
+                                    <p onClick={() => {navigate('/profile'); window.scrollTo(0,0);}} className='text-[9px] font-black text-gray-400 cursor-pointer hover:text-[#BC002D] mb-4 uppercase tracking-[0.2em] flex items-center gap-2'><User size={12} /> Account Profile</p>
+                                    <p onClick={() => {navigate('/orders')
+                                        window.scrollTo(0,0);
+                                    }} className='text-[9px] font-black text-gray-400 cursor-pointer hover:text-[#BC002D] mb-4 uppercase tracking-[0.2em] flex items-center gap-2'><Package size={12} /> MY ORDERS</p>
                                     <p onClick={logout} className='text-[9px] text-[#BC002D] cursor-pointer font-black uppercase tracking-[0.2em] flex items-center gap-2'><LogOut size={12} /> Sign Out</p>
                                 </div>
                             </div>

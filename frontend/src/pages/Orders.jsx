@@ -4,7 +4,10 @@ import Title from '../components/Title';
 import axios from 'axios';
 import { assets } from '../assets/assets';
 import { toast } from 'react-toastify';
-import { Truck, RefreshCw, Download, PackageCheck, ExternalLink, MessageSquare, Camera, X,Star } from 'lucide-react';
+import { 
+    Truck, RefreshCw, Download, PackageCheck, ExternalLink, 
+    MessageSquare, Camera, X, Star, Landmark, Smartphone, MapPin, Mail 
+} from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -14,48 +17,18 @@ const Orders = () => {
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
 
-  // Feedback States
-  // --- UPDATED FEEDBACK STATES ---
-const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-const [currentOrder, setCurrentOrder] = useState(null);
-const [feedbackText, setFeedbackText] = useState("");
-const [feedbackImage, setFeedbackImage] = useState(null);
-const [rating, setRating] = useState(5); // Default rating
-const [submitting, setSubmitting] = useState(false);
-const [hoverRating, setHoverRating] = useState(0); // For star hover effect
+  // --- FEEDBACK STATES ---
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [currentOrder, setCurrentOrder] = useState(null);
+  const [feedbackText, setFeedbackText] = useState("");
+  const [feedbackImage, setFeedbackImage] = useState(null);
+  const [rating, setRating] = useState(5);
+  const [submitting, setSubmitting] = useState(false);
+  const [hoverRating, setHoverRating] = useState(0);
 
-const handleFeedbackSubmit = async (e) => {
-  e.preventDefault();
-  if (!feedbackText.trim() && !feedbackImage) return toast.error("Please add text or an image");
-
-  setSubmitting(true);
-  const formData = new FormData();
-  formData.append("orderId", currentOrder._id);
-  formData.append("text", feedbackText);
-  formData.append("rating", rating); // Append the rating
-  if (feedbackImage) formData.append("image", feedbackImage);
-
-  try {
-    const response = await axios.post(`${backendUrl}/api/feedback/add`, formData, { 
-      headers: { token } 
-    });
-
-    if (response.data.success) {
-      toast.success("Feedback recorded in the Archive");
-      setShowFeedbackModal(false);
-      setFeedbackText("");
-      setFeedbackImage(null);
-      setRating(5); // Reset rating
-    } else {
-      toast.error(response.data.message || "Archive sync failed.");
-    }
-  } catch (error) {
-    console.error("Feedback Error:", error);
-    toast.error("Submission failed.");
-  } finally {
-    setSubmitting(false);
-  }
-};
+  // --- PAYMENT INFO STATES ---
+  const [showPaymentInfo, setShowPaymentInfo] = useState(false);
+  const [selectedOrderInfo, setSelectedOrderInfo] = useState(null);
 
   const loadOrderData = useCallback(async (isManual = false) => {
     try {
@@ -75,13 +48,50 @@ const handleFeedbackSubmit = async (e) => {
     }
   }, [backendUrl, token, fetchUserData]);
 
+  useEffect(() => {
+    if (token) loadOrderData();
+  }, [token, loadOrderData]);
+
+  // --- FEEDBACK HANDLER ---
+  const handleFeedbackSubmit = async (e) => {
+    e.preventDefault();
+    if (!feedbackText.trim() && !feedbackImage) return toast.error("Please add text or an image");
+
+    setSubmitting(true);
+    const formData = new FormData();
+    formData.append("orderId", currentOrder._id);
+    formData.append("text", feedbackText);
+    formData.append("rating", rating);
+    if (feedbackImage) formData.append("image", feedbackImage);
+
+    try {
+      const response = await axios.post(`${backendUrl}/api/feedback/add`, formData, { 
+        headers: { token } 
+      });
+
+      if (response.data.success) {
+        toast.success("Feedback recorded in the Archive");
+        setShowFeedbackModal(false);
+        setFeedbackText("");
+        setFeedbackImage(null);
+        setRating(5);
+      } else {
+        toast.error(response.data.message || "Archive sync failed.");
+      }
+    } catch (error) {
+      toast.error("Submission failed.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // --- INVOICE GENERATOR ---
   const downloadInvoice = (order) => {
     try {
         const doc = new jsPDF();
         const logoImg = assets.og; 
         doc.addImage(logoImg, 'PNG', 10, 10, 20, 20);
 
-        // Header Section
         doc.setTextColor(0, 0, 0);
         doc.setFontSize(16);
         doc.text("Phila Basket", 35, 18);
@@ -95,31 +105,21 @@ const handleFeedbackSubmit = async (e) => {
         doc.setFontSize(9);
         doc.text(`Order #: ${order.orderNo || 'N/A'}`, 140, 25);
         doc.text(`Date: ${new Date(order.date).toLocaleDateString()}`, 140, 30);
-        // Added Payment Status
+
         let displayStatus = order.status.toUpperCase();
         const method = (order.paymentMethod || "").toUpperCase();
 
-        // 1. Instant Payment methods are always marked as PAID
         if (method === 'RAZORPAY' || method === 'STRIPE' || method === 'UPI') {
             displayStatus = "PAID";
-        } 
-        // 2. Manual transfers stay ON HOLD until you change the status to 'Money Received'
-        else if (method === 'DIRECT BANK TRANSFER' || method === 'CHEQUE') {
-            if (order.status === 'Money Received') {
-                displayStatus = "PAID (BANK CLEARED)";
-            } else {
-                displayStatus = "ON HOLD (AWAITING CLEARANCE)";
-            }
-        }
-        // 3. Cash on Delivery handling
-        else if (method === 'COD') {
+        } else if (method === 'DIRECT BANK TRANSFER' || method === 'CHEQUE') {
+            displayStatus = order.status === 'Money Received' ? "PAID (BANK CLEARED)" : "ON HOLD (AWAITING CLEARANCE)";
+        } else if (method === 'COD') {
             displayStatus = order.status === 'Delivered' ? "PAID (CASH)" : "PENDING (COD)";
         }
 
         doc.setFontSize(9);
         doc.text(`Status: ${displayStatus}`, 140, 35);
 
-        // Dual Address Section
         const addr = order.address || {};
         const billAddr = order.billingAddress || addr;
         doc.setFontSize(10);
@@ -136,29 +136,18 @@ const handleFeedbackSubmit = async (e) => {
         doc.text(`${addr.street || ''}`, 110, 54);
         doc.text(`${addr.city || ''}, ${addr.state || ''} ${addr.zipcode || ''}`, 110, 58);
 
-        // Table Calculations
         let totalBaseAmount = 0;
         let totalGSTAmount = 0;
 
         const tableRows = (order.items || []).map((item, index) => {
             const itemPrice = item.price || 0;
-            // Reverse calculate 5% GST to show "Price reduced by 5%"
             const basePrice = itemPrice / 1.05; 
             const gstAmount = itemPrice - basePrice;
             const rowTotal = itemPrice * (item.quantity || 1);
-            
             totalBaseAmount += basePrice * (item.quantity || 1);
             totalGSTAmount += gstAmount * (item.quantity || 1);
 
-            return [
-                index + 1,
-                item.name || 'Specimen',
-                "9704",
-                item.quantity || 1,
-                basePrice.toFixed(2),
-                "5%",
-                rowTotal.toFixed(2)
-            ];
+            return [index + 1, item.name || 'Specimen', "9704", item.quantity || 1, basePrice.toFixed(2), "5%", rowTotal.toFixed(2)];
         });
 
         autoTable(doc, {
@@ -169,7 +158,6 @@ const handleFeedbackSubmit = async (e) => {
             headStyles: { fillColor: [188, 0, 45] }
         });
 
-        // Summary Calculations
         const finalY = doc.lastAutoTable.finalY + 10;
         const shippingCharge = 100;
         const discountAmount = order.discountAmount || 0;
@@ -206,25 +194,18 @@ const handleFeedbackSubmit = async (e) => {
 
   const cancelOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to terminate this acquisition protocol?")) return;
-    
     try {
-        // Ensure the endpoint matches your router (e.g., /api/order/cancel)
-        const response = await axios.post(`${backendUrl}/api/order/cancel`, 
-            { orderId }, 
-            { headers: { token } }
-        );
-
+        const response = await axios.post(`${backendUrl}/api/order/cancel`, { orderId }, { headers: { token } });
         if (response.data.success) {
             toast.success(response.data.message);
-            loadOrderData(); // Refresh the list to show 'Cancelled' status
+            loadOrderData();
         } else {
             toast.error(response.data.message);
         }
     } catch (error) {
-        console.error("Cancellation Error:", error);
         toast.error("Registry connection failed.");
     }
-};
+  };
 
   const handleTrackAsset = (trackingNumber) => {
     if (!trackingNumber) return;
@@ -243,10 +224,6 @@ const handleFeedbackSubmit = async (e) => {
     }));
   }, [rawOrders]);
 
-  useEffect(() => {
-    if (token) loadOrderData();
-  }, [token, loadOrderData]);
-
   if (loading) return (
     <div className='min-h-screen bg-[#FCF9F4] flex items-center justify-center'>
       <RefreshCw className='animate-spin text-[#BC002D]' size={32} />
@@ -255,209 +232,145 @@ const handleFeedbackSubmit = async (e) => {
 
   return (
     <div className='bg-[#FCF9F4] min-h-screen pt-24 pb-20 px-6 md:px-16 lg:px-24 text-black select-none animate-fade-in'>
-
-
-<div className='max-w-6xl mx-auto mb-8 grid grid-cols-2 md:grid-cols-4 gap-4'>
-  <div className='bg-white border border-black/5 p-4 rounded-sm'>
-    <p className='text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1'>Total Consignments</p>
-    <p className='text-2xl font-black tracking-tighter'>{processedOrders.length}</p>
-  </div>
-  
-  <div className='bg-white border border-black/5 p-4 rounded-sm'>
-    <p className='text-[8px] text-[#BC002D] font-black uppercase tracking-widest mb-1'>Delivered Units</p>
-    <p className='text-2xl font-black tracking-tighter'>
-      {processedOrders.filter(o => o.status === 'Delivered').length}
-    </p>
-  </div>
-
-  <div className='bg-white border border-black/5 p-4 rounded-sm hidden md:block'>
-    <p className='text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1'>Active Transit</p>
-    <p className='text-2xl font-black tracking-tighter'>
-      {processedOrders.filter(o => o.status !== 'Delivered' && o.status !== 'Cancelled').length}
-    </p>
-  </div>
-
-  <div className='bg-white border border-black/5 p-4 rounded-sm hidden md:block'>
-    <p className='text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1'>Total Ledger Value</p>
-    <p className='text-2xl font-black tracking-tighter'>
-      ₹{processedOrders.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()}
-    </p>
-  </div>
-</div>
       
-      {/* SECTION HEADER */}
+      {/* STATS HEADER */}
+      <div className='max-w-6xl mx-auto mb-8 grid grid-cols-2 md:grid-cols-4 gap-4'>
+        <div className='bg-white border border-black/5 p-4 rounded-sm'>
+          <p className='text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1'>Total Consignments</p>
+          <p className='text-2xl font-black tracking-tighter'>{processedOrders.length}</p>
+        </div>
+        <div className='bg-white border border-black/5 p-4 rounded-sm'>
+          <p className='text-[8px] text-[#BC002D] font-black uppercase tracking-widest mb-1'>Delivered Units</p>
+          <p className='text-2xl font-black tracking-tighter'>{processedOrders.filter(o => o.status === 'Delivered').length}</p>
+        </div>
+        <div className='bg-white border border-black/5 p-4 rounded-sm hidden md:block'>
+          <p className='text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1'>Active Transit</p>
+          <p className='text-2xl font-black tracking-tighter'>{processedOrders.filter(o => o.status !== 'Delivered' && o.status !== 'Cancelled').length}</p>
+        </div>
+        <div className='bg-white border border-black/5 p-4 rounded-sm hidden md:block'>
+          <p className='text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1'>Total Ledger Value</p>
+          <p className='text-2xl font-black tracking-tighter'>₹{processedOrders.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()}</p>
+        </div>
+      </div>
+
       <div className='text-3xl mb-12 flex items-center justify-between'>
         <div className='flex items-center gap-4'>
            <Title text1={'CONSIGNMENT'} text2={'LEDGER'} />
            {syncing && <RefreshCw size={16} className='animate-spin text-[#BC002D]' />}
         </div>
-        <div className='hidden md:block h-[1px] flex-1 ml-6 bg-gradient-to-r from-[#BC002D]/20 to-transparent'></div>
       </div>
+
+      {/* --- PAYMENT PROTOCOL MODAL --- */}
+      {showPaymentInfo && (
+        <div className='fixed inset-0 z-[6000] flex items-center justify-center p-6'>
+          <div className='absolute inset-0 bg-black/60 backdrop-blur-sm' onClick={() => setShowPaymentInfo(false)}></div>
+          <div className='bg-white w-full max-w-lg relative z-10 p-8 rounded-sm shadow-2xl animate-fade-in overflow-y-auto max-h-[90vh]'>
+            <div className='flex justify-between items-center mb-6 border-b border-black/5 pb-4'>
+              <h3 className='font-black uppercase tracking-widest text-sm'>Payment Protocol Details</h3>
+              <X className='cursor-pointer' onClick={() => setShowPaymentInfo(false)} />
+            </div>
+            <div className='space-y-6'>
+              <div className='bg-[#FCF9F4] p-5 border border-black/5'>
+                  <div className='flex items-center gap-2 mb-4'>
+                      <Landmark size={16} className='text-[#BC002D]' />
+                      <p className='text-[10px] font-black uppercase text-gray-400 tracking-widest'>Bank Ledger Details</p>
+                  </div>
+                  <div className='text-[11px] font-bold space-y-2 uppercase'>
+                      <p className='flex justify-between'><span>A/C Name:</span> <span className='text-black'>PhilaBasket.com</span></p>
+                      <p className='flex justify-between'><span>Bank:</span> <span className='text-black'>ICICI Bank</span></p>
+                      <p className='flex justify-between'><span>A/C Number:</span> <span className='text-black'>072105001250</span></p>
+                      <p className='flex justify-between'><span>IFSC:</span> <span className='text-black'>ICIC0000721</span></p>
+                  </div>
+              </div>
+              <div className='bg-[#FCF9F4] p-5 border border-black/5'>
+                  <div className='flex items-center gap-2 mb-4'>
+                      <Smartphone size={16} className='text-[#BC002D]' />
+                      <p className='text-[10px] font-black uppercase text-gray-400 tracking-widest'>UPI Protocol</p>
+                  </div>
+                  <p className='text-[11px] font-bold uppercase'>Google Pay / PhonePe: <span className='text-black font-black'>9999167799</span></p>
+              </div>
+              <div className='bg-white p-5 border border-dashed border-gray-200'>
+                  <div className='flex items-center gap-2 mb-4'>
+                      <MapPin size={16} className='text-[#BC002D]' />
+                      <p className='text-[10px] font-black uppercase text-gray-400 tracking-widest'>Mailing Address</p>
+                  </div>
+                  <div className='text-[11px] font-bold space-y-1 uppercase leading-relaxed text-gray-600'>
+                      <p className='text-black'>PhilaBasket.com</p>
+                      <p>C/O Bhavyansh Prakhar Rastogi, S–606/607 School Block–2, Park End Apartment, ShakarPur-110092, Delhi (India)</p>
+                      <p className='mt-2 flex items-center gap-2 font-black italic'><Mail size={12}/> admin@philabasket.com</p>
+                  </div>
+              </div>
+            </div>
+            <button onClick={() => setShowPaymentInfo(false)} className='w-full mt-8 bg-black text-white py-4 text-[10px] font-black uppercase tracking-widest hover:bg-[#BC002D] transition-all'>Acknowledge</button>
+          </div>
+        </div>
+      )}
 
       {/* FEEDBACK MODAL */}
       {showFeedbackModal && (
-  <div className='fixed inset-0 z-[5000] flex items-center justify-center p-6'>
-    <div className='absolute inset-0 bg-black/60 backdrop-blur-sm' onClick={() => setShowFeedbackModal(false)}></div>
-    <div className='bg-white w-full max-w-lg relative z-10 p-8 rounded-sm shadow-2xl animate-fade-in'>
-       <div className='flex justify-between items-center mb-6'>
-          <h3 className='font-black uppercase tracking-widest text-sm'>Consignment Feedback</h3>
-          <X className='cursor-pointer' onClick={() => setShowFeedbackModal(false)} />
-       </div>
-       
-       <form onSubmit={handleFeedbackSubmit} className='flex flex-col gap-6'>
-          
-          {/* STAR RATING SECTION */}
-          <div className='flex flex-col items-center gap-2 py-4 border-b border-gray-50'>
-             <p className='text-[10px] font-black uppercase tracking-widest text-gray-400'>Specimen Grade</p>
-             <div className='flex items-center gap-2'>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    className='transition-transform hover:scale-125 focus:outline-none'
-                    onMouseEnter={() => setHoverRating(star)}
-                    onMouseLeave={() => setHoverRating(0)}
-                    onClick={() => setRating(star)}
-                  >
-                    {/* Ensure Star is imported from lucide-react */}
-                    <Star 
-                      size={24} 
-                      className={`transition-colors duration-200 ${
-                        (hoverRating || rating) >= star 
-                          ? 'fill-[#BC002D] text-[#BC002D]' 
-                          : 'text-gray-200'
-                      }`} 
-                    />
-                  </button>
-                ))}
+        <div className='fixed inset-0 z-[5000] flex items-center justify-center p-6'>
+          <div className='absolute inset-0 bg-black/60 backdrop-blur-sm' onClick={() => setShowFeedbackModal(false)}></div>
+          <div className='bg-white w-full max-w-lg relative z-10 p-8 rounded-sm shadow-2xl animate-fade-in'>
+             <div className='flex justify-between items-center mb-6'>
+                <h3 className='font-black uppercase tracking-widest text-sm'>Consignment Feedback</h3>
+                <X className='cursor-pointer' onClick={() => setShowFeedbackModal(false)} />
              </div>
-             <p className='text-[9px] font-bold text-[#BC002D] uppercase tracking-tighter'>
-                {rating === 5 ? 'Excellent' : rating === 4 ? 'Great' : rating === 3 ? 'Good' : rating === 2 ? 'Fair' : 'Poor'}
-             </p>
+             <form onSubmit={handleFeedbackSubmit} className='flex flex-col gap-6'>
+                <div className='flex flex-col items-center gap-2 py-4 border-b border-gray-50'>
+                   <p className='text-[10px] font-black uppercase tracking-widest text-gray-400'>Specimen Grade</p>
+                   <div className='flex items-center gap-2'>
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button key={star} type="button" className='transition-transform hover:scale-125' onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)} onClick={() => setRating(star)}>
+                          <Star size={24} className={`transition-colors ${(hoverRating || rating) >= star ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-200'}`} />
+                        </button>
+                      ))}
+                   </div>
+                </div>
+                <textarea className='w-full border border-gray-100 p-4 text-xs outline-none focus:border-[#BC002D]' rows="4" placeholder="Describe quality..." value={feedbackText} onChange={(e) => setFeedbackText(e.target.value)}></textarea>
+                <button type="submit" disabled={submitting} className='bg-black text-white py-4 text-[10px] font-black uppercase tracking-widest hover:bg-[#BC002D] transition-all disabled:bg-gray-400'>
+                  {submitting ? <RefreshCw className='animate-spin' size={14} /> : "Submit to Archive"}
+                </button>
+             </form>
           </div>
-
-          <textarea 
-            className='w-full border border-gray-100 p-4 text-xs font-medium outline-none focus:border-[#BC002D] transition-colors' 
-            rows="4" 
-            placeholder="Describe the specimen quality or service..."
-            value={feedbackText}
-            onChange={(e) => setFeedbackText(e.target.value)}
-          ></textarea>
-
-          <div className='flex items-center gap-4'>
-             <label className='flex-1 border-2 border-dashed border-gray-100 p-4 flex flex-col items-center gap-2 cursor-pointer hover:bg-gray-50 transition-all'>
-                <Camera size={20} className='text-gray-400' />
-                <span className='text-[10px] font-black uppercase text-gray-400 truncate max-w-[200px]'>
-                  {feedbackImage ? feedbackImage.name : "Attach Specimen Photo"}
-                </span>
-                <input type="file" hidden accept="image/*" onChange={(e) => setFeedbackImage(e.target.files[0])} />
-             </label>
-          </div>
-
-          <button 
-            type="submit" 
-            disabled={submitting}
-            className='bg-black text-white py-4 text-[10px] font-black uppercase tracking-[0.3em] hover:bg-[#BC002D] transition-all flex items-center justify-center gap-2 disabled:bg-gray-400'
-          >
-            {submitting ? <RefreshCw className='animate-spin' size={14} /> : "Submit to Archive"}
-          </button>
-       </form>
-    </div>
-  </div>
-)}
+        </div>
+      )}
 
       <div className='max-w-6xl mx-auto'>
         {processedOrders.length === 0 ? (
-          <div className='py-32 text-center bg-white rounded-sm border border-black/5'>
-            <p className='text-gray-400 font-serif uppercase tracking-[0.2em]'>Registry is empty</p>
-          </div>
+          <div className='py-32 text-center bg-white border border-black/5'><p className='text-gray-400 font-serif uppercase tracking-[0.2em]'>Registry is empty</p></div>
         ) : (
           processedOrders.map((order) => (
-            <div key={order._id} className='group py-8 border border-black/5 bg-white flex flex-col gap-6 px-8 mb-8 rounded-sm shadow-sm hover:border-[#BC002D]/30 transition-all duration-500'>
-              
+            <div key={order._id} className='py-8 border border-black/5 bg-white flex flex-col gap-6 px-8 mb-8 rounded-sm shadow-sm hover:border-[#BC002D]/30 transition-all duration-500'>
               <div className='flex flex-wrap items-center justify-between gap-4 border-b border-black/5 pb-4'>
-    <div className='flex items-center gap-6'>
-        <div>
-            <p className='text-[8px] text-gray-400 uppercase tracking-widest font-black'>Registry ID</p>
-            <span className='text-sm font-mono font-bold text-black'>#{order.orderNo}</span>
-        </div>
-        <div className='flex items-center gap-3'>
-            <div className={`w-2 h-2 rounded-full animate-pulse ${
-                order.status === 'Delivered' ? 'bg-green-500' : 
-                order.status === 'Cancelled' ? 'bg-gray-400' : 'bg-[#BC002D]'
-            }`}></div>
-            <p className='text-xs font-black tracking-[0.4em] uppercase text-black'>{order.status}</p>
-        </div>
-    </div>
-    
-    <div className='flex items-center gap-6'>
-        {/* CANCEL BUTTON: Only visible if status is strictly 'Order Placed' */}
-        {order.status === 'Order Placed' && (
-            <button 
-                onClick={() => cancelOrder(order._id)}
-                className='text-[10px] font-black uppercase text-red-500 hover:bg-red-50 px-3 py-2 rounded-sm transition-all'
-            >
-                Cancel Order
-            </button>
-        )}
-        
-        <button 
-            onClick={() => { setCurrentOrder(order); setShowFeedbackModal(true); }}
-            className='flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 hover:text-black transition-colors'
-        >
-            <MessageSquare size={14} /> Give Feedback
-        </button>
-        
-        <button onClick={() => downloadInvoice(order)} className='flex items-center gap-2 text-[10px] font-black uppercase text-[#BC002D] hover:underline'>
-            <Download size={14} /> Download Invoice
-        </button>
-    </div>
-</div>
-
+                <div className='flex items-center gap-6'>
+                    <div><p className='text-[8px] text-gray-400 uppercase tracking-widest font-black'>Registry ID</p><span className='text-sm font-mono font-bold text-black'>#{order.orderNo}</span></div>
+                    <div className='flex items-center gap-3'><div className={`w-2 h-2 rounded-full animate-pulse ${order.status === 'Delivered' ? 'bg-green-500' : order.status === 'Cancelled' ? 'bg-gray-400' : 'bg-[#BC002D]'}`}></div><p className='text-xs font-black tracking-[0.4em] uppercase text-black'>{order.status}</p></div>
+                </div>
+                <div className='flex flex-wrap items-center gap-6'>
+                    {(order.paymentMethod === 'Direct Bank Transfer' || order.paymentMethod === 'Cheque' || order.status === 'On Hold') && (
+                        <button onClick={() => { setSelectedOrderInfo(order); setShowPaymentInfo(true); }} className='flex items-center gap-2 text-[10px] font-black uppercase text-amber-600 hover:underline'><Landmark size={14} /> Payment Info</button>
+                    )}
+                    {order.status === 'Order Placed' && <button onClick={() => cancelOrder(order._id)} className='text-[10px] font-black uppercase text-red-500 hover:bg-red-50 px-3 py-2'>Cancel Order</button>}
+                    <button onClick={() => { setCurrentOrder(order); setShowFeedbackModal(true); }} className='flex items-center gap-2 text-[10px] font-black uppercase text-gray-400'><MessageSquare size={14} /> Feedback</button>
+                    <button onClick={() => downloadInvoice(order)} className='flex items-center gap-2 text-[10px] font-black uppercase text-[#BC002D]'><Download size={14} /> Invoice</button>
+                </div>
+              </div>
               <div className='flex flex-col gap-6'>
                 {order.items.map((item, idx) => (
                   <div key={idx} className='flex items-center gap-6'>
-                    <div className='w-16 h-20 bg-[#F9F9F9] border border-black/5 flex items-center justify-center overflow-hidden shrink-0'>
-                      <img src={item.image?.[0] || assets.logo} alt="" className='w-full h-full object-contain p-1' />
-                    </div>
-                    <div className='flex-1'>
-                      <p className='text-md font-serif text-black tracking-tight'>{item.name}</p>
-                      <div className='flex items-center gap-4 mt-1'>
-                        <p className='text-[10px] text-gray-400 uppercase font-black'>Quantity: {item.quantity}</p>
-                        <p className='text-[10px] text-gray-400 uppercase font-black'>{order.formattedDate}</p>
-                      </div>
-                    </div>
+                    <div className='w-16 h-20 bg-[#F9F9F9] border border-black/5 flex items-center justify-center shrink-0'><img src={item.image?.[0] || assets.logo} alt="" className='w-full h-full object-contain p-1' /></div>
+                    <div className='flex-1'><p className='text-md font-serif text-black tracking-tight'>{item.name}</p><div className='flex items-center gap-4 mt-1'><p className='text-[10px] text-gray-400 uppercase font-black'>Quantity: {item.quantity}</p><p className='text-[10px] text-gray-400 uppercase font-black'>{order.formattedDate}</p></div></div>
                   </div>
                 ))}
               </div>
-
               <div className='bg-[#FCF9F4] p-6 rounded-sm flex flex-col lg:flex-row items-center justify-between gap-6'>
                 <div className='flex flex-wrap items-center gap-8'>
-                  <div>
-                    <p className='text-[8px] text-[#BC002D] font-black uppercase tracking-[0.3em] mb-1'>Ledger Value</p>
-                    <p className='text-xl font-black tracking-tighter'>₹{order.amount.toFixed(2)}</p>
-                  </div>
-                  <div className={`flex items-center gap-2 py-2 px-4 border rounded-sm ${order.status === 'Delivered' ? 'border-green-100 bg-green-50' : 'border-[#BC002D]/10 bg-white'}`}>
-                    <PackageCheck size={14} className={order.status === 'Delivered' ? 'text-green-600' : 'text-[#BC002D]'} />
-                    <p className='text-[10px] font-black uppercase tracking-widest text-black'>Vault Credit: +{order.rewardPoints} PTS</p>
-                  </div>
+                  <div><p className='text-[8px] text-[#BC002D] font-black uppercase tracking-[0.3em] mb-1'>Ledger Value</p><p className='text-xl font-black tracking-tighter'>₹{order.amount.toFixed(2)}</p></div>
+                  <div className={`flex items-center gap-2 py-2 px-4 border rounded-sm ${order.status === 'Delivered' ? 'border-green-100 bg-green-50' : 'border-[#BC002D]/10 bg-white'}`}><PackageCheck size={14} className={order.status === 'Delivered' ? 'text-green-600' : 'text-[#BC002D]'} /><p className='text-[10px] font-black uppercase tracking-widest text-black'>Vault Credit: +{order.rewardPoints} PTS</p></div>
                 </div>
-
                 <div className='flex gap-4 w-full lg:w-auto'>
-                  {order.trackingNumber && (
-                    <button 
-                        onClick={() => handleTrackAsset(order.trackingNumber)} 
-                        className='flex-1 lg:flex-none bg-black text-white px-8 py-4 text-[9px] font-black uppercase tracking-[0.4em] flex items-center justify-center gap-2 hover:bg-[#BC002D] transition-all'
-                    >
-                      <Truck size={14} /> Track Asset <ExternalLink size={10} />
-                    </button>
-                  )}
-                  <button 
-                    onClick={() => loadOrderData(true)} 
-                    className='flex-1 lg:flex-none bg-white border border-black/10 px-8 py-4 text-[9px] font-black uppercase tracking-[0.4em]'
-                  >
-                    Refresh
-                  </button>
+                  {order.trackingNumber && <button onClick={() => handleTrackAsset(order.trackingNumber)} className='flex-1 lg:flex-none bg-black text-white px-8 py-4 text-[9px] font-black uppercase tracking-[0.4em] flex items-center justify-center gap-2'><Truck size={14} /> Track Asset <ExternalLink size={10} /></button>}
+                  <button onClick={() => loadOrderData(true)} className='flex-1 lg:flex-none bg-white border border-black/10 px-8 py-4 text-[9px] font-black uppercase tracking-[0.4em]'>Refresh</button>
                 </div>
               </div>
             </div>
