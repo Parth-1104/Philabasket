@@ -52,13 +52,12 @@ const Navbar = () => {
     >
         {/* Navigation Link Area */}
         <div className='flex items-center gap-1.5 px-4 py-5 transition-all duration-500'>
-            <p className='text-[10px] font-[900] tracking-[0.3em] text-black group-hover:text-[#BC002D] text-transform: capitalize transition-colors uppercase font-["Inter",sans-serif]'>
-                {menuData.title}
-            </p>
-            {/* Visual focus underline */}
-            <div className='absolute bottom-4 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-[#BC002D] transition-all duration-300 group-hover:w-1/2 opacity-0 group-hover:opacity-100' />
-        </div>
-        
+    <p className='text-[11px] font-[800] tracking-[0.25em] text-black group-hover:text-[#BC002D] transition-colors uppercase font-["Nunito",sans-serif]'>
+        {menuData.title}
+    </p>
+    {/* Visual focus underline */}
+    <div className='absolute bottom-4 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-[#BC002D] transition-all duration-300 group-hover:w-1/2 opacity-0 group-hover:opacity-100' />
+</div>
         {/* Dropdown Wrapper:
             - top-[85%]: Pulls the menu tight to the nav to close the gap.
             - invisible/opacity: Allows the delay-700 to hold the menu open for seniors.
@@ -80,7 +79,7 @@ const Navbar = () => {
                                     key={i} 
                                     to={`/collection?category=${encodeURIComponent(item)}`} 
                                     onClick={() => { setVisible(false); setHoverType(null); }}
-                                    className='text-[11px] text-gray-500 hover:text-[#BC002D] font-bold uppercase tracking-[0.15em] transition-all hover:translate-x-1 font-["Inter",sans-serif]'
+                                    className='text-[11px] text-gray-500 hover:text-[#BC002D] font-bold text-transform:capitalized tracking-[0.15em] transition-all hover:translate-x-1 font-["Inter",sans-serif]'
                                 >
                                     {item}
                                 </Link>
