@@ -11,6 +11,9 @@ const orderSchema = new mongoose.Schema({
     couponUsed: { type: String, default: null },
     discountAmount: { type: Number, default: 0 },
     amount: { type: Number, required: true },
+
+    deliveryFee: { type: Number, required: true, default: 0 },
+
     address: { type: Object, required: true },
     status: { type: String, required: true, default:'Order Placed' },
     paymentMethod: { type: String, required: true },

@@ -286,7 +286,7 @@ const placeOrder = async (req, res) => {
             userId,
             items,
             address,
-            deliveryFee,
+            deliveryFee: expectedFee,
             billingAddress: billingAddress || address,
             amount,
             pointsUsed: pointsUsed || 0,

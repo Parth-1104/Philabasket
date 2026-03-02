@@ -86,111 +86,146 @@ const Orders = () => {
   };
 
   // --- INVOICE GENERATOR ---
-  const downloadInvoice = (order) => {
-    try {
-        const doc = new jsPDF();
-        const logoImg = assets.og; 
-        doc.addImage(logoImg, 'PNG', 10, 10, 20, 20);
+ // --- INVOICE GENERATOR ---
+ const downloadInvoice = (order) => {
+  try {
+      const doc = new jsPDF();
+      const logoImg = assets.og; 
+      doc.addImage(logoImg, 'PNG', 10, 10, 20, 20);
 
-        doc.setTextColor(0, 0, 0);
-        doc.setFontSize(16);
-        doc.text("Phila Basket", 35, 18);
-        doc.setFontSize(8);
-        doc.text("G-3, Prakash Kunj Apartment, Kavi Raman Path, Boring Road", 35, 23);
-        doc.text("Patna 800001 Bihar India | philapragya@gmail.com", 35, 27);
-        doc.text("GSTIN: 10AGUPJ4257E1ZI", 35, 31);
+      // --- HEADER CONFIG ---
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(16);
+      doc.text("Phila Basket", 35, 18);
+      doc.setFontSize(8);
+      doc.text("G-3, Prakash Kunj Apartment, Kavi Raman Path, Boring Road", 35, 23);
+      doc.text("Patna 800001 Bihar India | philapragya@gmail.com", 35, 27);
+      doc.text("GSTIN: 10AGUPJ4257E1ZI", 35, 31);
 
-        doc.setFontSize(14);
-        doc.text("TAX INVOICE", 140, 18);
-        doc.setFontSize(9);
-        doc.text(`Order #: ${order.orderNo || 'N/A'}`, 140, 25);
-        doc.text(`Date: ${new Date(order.date).toLocaleDateString()}`, 140, 30);
+      doc.setFontSize(14);
+      doc.text("TAX INVOICE", 140, 18);
+      doc.setFontSize(9);
+      doc.text(`Order #: ${order.orderNo || 'N/A'}`, 140, 25);
+      doc.text(`Date: ${new Date(order.date).toLocaleDateString()}`, 140, 30);
 
-        let displayStatus = order.status.toUpperCase();
-        const method = (order.paymentMethod || "").toUpperCase();
+      // --- STATUS LOGIC ---
+      let displayStatus = (order.status || "Order Placed").toUpperCase();
+      const method = (order.paymentMethod || "").toUpperCase();
+      if (['RAZORPAY', 'STRIPE', 'UPI'].includes(method)) {
+          displayStatus = "PAID";
+      } else if (method === 'COD') {
+          displayStatus = order.status === 'Delivered' ? "PAID (CASH)" : "PENDING (COD)";
+      }
 
-        if (method === 'RAZORPAY' || method === 'STRIPE' || method === 'UPI') {
-            displayStatus = "PAID";
-        } else if (method === 'DIRECT BANK TRANSFER' || method === 'CHEQUE') {
-            displayStatus = order.status === 'Money Received' ? "PAID (BANK CLEARED)" : "ON HOLD (AWAITING CLEARANCE)";
-        } else if (method === 'COD') {
-            displayStatus = order.status === 'Delivered' ? "PAID (CASH)" : "PENDING (COD)";
-        }
+      doc.setFontSize(9);
+      doc.text(`Status: ${displayStatus}`, 140, 35);
 
-        doc.setFontSize(9);
-        doc.text(`Status: ${displayStatus}`, 140, 35);
+      const addr = order.address || {};
+      const billAddr = order.billingAddress || addr;
+      
+      // --- ADDRESSES ---
+      doc.setFontSize(10);
+      doc.text("BILL TO:", 14, 45);
+      doc.setFontSize(8);
+      doc.text(`${billAddr.firstName || ''} ${billAddr.lastName || ''}`, 14, 50);
+      doc.text(`${billAddr.street || ''}`, 14, 54);
+      doc.text(`${billAddr.city || ''}, ${billAddr.state || ''} ${billAddr.zipcode || ''}`, 14, 58);
 
-        const addr = order.address || {};
-        const billAddr = order.billingAddress || addr;
-        doc.setFontSize(10);
-        doc.text("BILL TO:", 14, 45);
-        doc.setFontSize(8);
-        doc.text(`${billAddr.firstName || ''} ${billAddr.lastName || ''}`, 14, 50);
-        doc.text(`${billAddr.street || ''}`, 14, 54);
-        doc.text(`${billAddr.city || ''}, ${billAddr.state || ''} ${billAddr.zipcode || ''}`, 14, 58);
+      doc.setFontSize(10);
+      doc.text("SHIP TO:", 110, 45);
+      doc.setFontSize(8);
+      doc.text(`${addr.firstName || ''} ${addr.lastName || ''}`, 110, 50);
+      doc.text(`${addr.street || ''}`, 110, 54);
+      doc.text(`${addr.city || ''}, ${addr.state || ''} ${addr.zipcode || ''}`, 110, 58);
 
-        doc.setFontSize(10);
-        doc.text("SHIP TO:", 110, 45);
-        doc.setFontSize(8);
-        doc.text(`${addr.firstName || ''} ${addr.lastName || ''}`, 110, 50);
-        doc.text(`${addr.street || ''}`, 110, 54);
-        doc.text(`${addr.city || ''}, ${addr.state || ''} ${addr.zipcode || ''}`, 110, 58);
+      // --- ITEMS TABLE LOGIC (MATCHING SCREENSHOT) ---
+      let totalBaseAmount = 0;
+      let totalGSTAmount = 0;
 
-        let totalBaseAmount = 0;
-        let totalGSTAmount = 0;
+      const tableRows = (order.items || []).map((item, index) => {
+          // Per screenshot: item.price is the Base Rate (Excl.)
+          const basePriceUnit = Number(item.price || 0);
+          const qty = item.quantity || 1;
+          
+          // Calculate 5% GST on the base
+          const gstUnit = basePriceUnit * 0.05;
+          const rowTotalIncl = (basePriceUnit + gstUnit) * qty;
+          
+          totalBaseAmount += basePriceUnit * qty;
+          totalGSTAmount += gstUnit * qty;
 
-        const tableRows = (order.items || []).map((item, index) => {
-            const itemPrice = item.price || 0;
-            const basePrice = itemPrice / 1.05; 
-            const gstAmount = itemPrice - basePrice;
-            const rowTotal = itemPrice * (item.quantity || 1);
-            totalBaseAmount += basePrice * (item.quantity || 1);
-            totalGSTAmount += gstAmount * (item.quantity || 1);
+          return [
+            index + 1, 
+            item.name || 'Specimen', 
+            "9704", 
+            qty, 
+            basePriceUnit.toFixed(2), // Rate (Excl.)
+            "5%", 
+            rowTotalIncl.toFixed(2)   // Amount (Incl.)
+          ];
+      });
 
-            return [index + 1, item.name || 'Specimen', "9704", item.quantity || 1, basePrice.toFixed(2), "5%", rowTotal.toFixed(2)];
-        });
+      autoTable(doc, {
+          startY: 70,
+          head: [['#', 'Item & Description', 'HSN', 'Qty', 'Rate (Excl.)', 'IGST', 'Amount (Incl.)']],
+          body: tableRows,
+          theme: 'grid',
+          headStyles: { fillColor: [188, 0, 45] },
+          styles: { fontSize: 8 }
+      });
 
-        autoTable(doc, {
-            startY: 70,
-            head: [['#', 'Item & Description', 'HSN', 'Qty', 'Rate (Excl.)', 'IGST', 'Amount (Incl.)']],
-            body: tableRows,
-            theme: 'grid',
-            headStyles: { fillColor: [188, 0, 45] }
-        });
+      // --- TOTALS & SUBSIDY SECTION ---
+      const finalY = doc.lastAutoTable.finalY + 10;
+      
+      const userCountry = (addr.country || "India").trim().toLowerCase();
+      const isIndia = userCountry === 'india';
+      
+      // Fetch dynamic fee from order object
+      const shippingCharge = order.deliveryFee !== undefined ? Number(order.deliveryFee) : (isIndia ? 125 : 750); 
+      
+      const couponDiscount = Number(order.discountAmount || 0);
+      const pointsDiscount = Number(order.pointsUsed || 0) / 10;
+      const finalPayable = Number(order.amount || 0);
 
-        const finalY = doc.lastAutoTable.finalY + 10;
-        const shippingCharge = 100;
-        const discountAmount = order.discountAmount || 0;
-        const pointsWorth = (order.pointsUsed || 0) / 10;
-        const finalPayable = order.amount || 0;
+      autoTable(doc, {
+          startY: finalY,
+          margin: { left: 110 }, 
+          tableWidth: 85,
+          theme: 'plain', 
+          styles: { fontSize: 8, cellPadding: 2 },
+          body: [
+              ['Sub-Total (Base Items)', `Rs. ${totalBaseAmount.toFixed(2)}`],
+              ['IGST (5%)', `Rs. ${totalGSTAmount.toFixed(2)}`],
+              [`Shipping Charge (${isIndia ? 'Domestic' : 'Global'})`, `Rs. ${shippingCharge.toFixed(2)}`],
+              // Negative subsidy to cancel out the GST
+              [{ 
+                  content: 'Exclusive GST Subsidy (Shop Discount)', 
+                  styles: { textColor: [0, 128, 0], fontStyle: 'italic' } 
+              }, `Rs. -${totalGSTAmount.toFixed(2)}`],
+              [`Coupon Discount [${order.couponUsed || 'N/A'}]`, `Rs. -${couponDiscount.toFixed(2)}`],
+              [`Archive Credit [${order.pointsUsed || 0} PTS]`, `Rs. -${pointsDiscount.toFixed(2)}`],
+              [{ 
+                  content: 'Final Payable Amount', 
+                  styles: { fontStyle: 'bold', fontSize: 10, textColor: [188, 0, 45], borderTop: [0.1, 188, 0, 45] } 
+              }, 
+              { 
+                  content: `Rs. ${finalPayable.toFixed(2)}`, 
+                  styles: { fontStyle: 'bold', fontSize: 10, textColor: [188, 0, 45], borderTop: [0.1, 188, 0, 45] } 
+              }]
+          ],
+          columnStyles: { 1: { halign: 'right' } }
+      });
 
-        autoTable(doc, {
-            startY: finalY,
-            margin: { left: 110 }, 
-            tableWidth: 85,
-            theme: 'plain', 
-            styles: { fontSize: 8, cellPadding: 2 },
-            body: [
-                ['Sub-Total (Base Items)', `Rs. ${totalBaseAmount.toFixed(2)}`],
-                ['IGST (5%)', `Rs. ${totalGSTAmount.toFixed(2)}`],
-                ['Shipping Charge', `Rs. ${shippingCharge.toFixed(2)}`],
-                [{ content: 'Exclusive GST Subsidy (Shop Discount)', styles: { textColor: [0, 128, 0], fontStyle: 'italic' } }, `Rs. -${totalGSTAmount.toFixed(2)}`],
-                [`Coupon Discount [${order.couponUsed || 'N/A'}]`, `Rs. -${discountAmount.toFixed(2)}`],
-                [`Archive Credit [${order.pointsUsed || 0} PTS]`, `Rs. -${pointsWorth.toFixed(2)}`],
-                [{ content: 'Final Payable Amount', styles: { fontStyle: 'bold', fontSize: 10, textColor: [188, 0, 45], borderTop: [0.1, 188, 0, 45] } }, 
-                 { content: `Rs. ${finalPayable.toFixed(2)}`, styles: { fontStyle: 'bold', fontSize: 10, textColor: [188, 0, 45], borderTop: [0.1, 188, 0, 45] } }]
-            ],
-            columnStyles: { 1: { halign: 'right' } }
-        });
-
-        const summaryY = doc.lastAutoTable.finalY + 15;
-        doc.setFontSize(8);
-        doc.text("BANKING DETAILS: HDFC Bank | A/c: 01868730000112 | IFSC: HDFC0000186", 14, summaryY);
-        doc.save(`PhilaBasket_Invoice_${order.orderNo}.pdf`);
-    } catch (err) {
-        toast.error("Invoice generation failed.");
-    }
-  };
+      // --- FOOTER ---
+      const summaryY = doc.lastAutoTable.finalY + 15;
+      doc.setFontSize(8);
+      doc.text("BANKING DETAILS: HDFC Bank | A/c: 01868730000112 | IFSC: HDFC0000186", 14, summaryY);
+      doc.save(`PhilaBasket_Invoice_${order.orderNo}.pdf`);
+  } catch (err) {
+      console.error(err);
+      toast.error("Invoice generation failed.");
+  }
+};
 
   const cancelOrder = async (orderId) => {
     if (!window.confirm("Are you sure you want to terminate this acquisition protocol?")) return;
