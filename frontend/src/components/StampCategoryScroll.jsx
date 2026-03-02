@@ -68,13 +68,7 @@ const StampCategoryScroll = () => {
   if (featuredCategories.length === 0) return null;
 
   return (
-    <div className='my-5'>
-        <div className='px-4 sm:px-[5vw] mb-4'>
-            <h2 className='text-xl font-bold text-gray-800 uppercase tracking-tighter'>
-                Featured <span className='text-[#BC002D]'>Specimens</span>
-            </h2>
-        </div>
-
+    <div className='my-2'>
       <div className='relative group mt-5'>
         {/* Navigation Arrows */}
         <button onClick={() => scroll('left')} className='absolute left-2 sm:left-5 top-1/2 z-20 bg-white/90 p-2 rounded-full shadow-lg hidden group-hover:flex items-center justify-center -translate-y-1/2 border border-gray-100 hover:bg-black hover:invert transition-all'>

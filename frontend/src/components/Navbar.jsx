@@ -1,23 +1,36 @@
 import React, { useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 import { assets } from '../assets/assets';
 import { Link, NavLink } from 'react-router-dom';
 import { ShopContext } from '../context/ShopContext';
 import { 
   Search, User, Heart, ShoppingBag, Menu, X, Package,
-  ChevronRight, LogOut, Trophy, ArrowLeft, Users, Gift, TrendingUp
+  ChevronRight, LogOut, ArrowLeft, Users
 } from 'lucide-react';
 
 const Navbar = () => {
     const [visible, setVisible] = useState(false);
-    const [showRewardsDropdown, setShowRewardsDropdown] = useState(false);
+    // State for Dynamic Header Data
+    const [headerData, setHeaderData] = useState({ marqueeText: "", navMenu: [] });
     
     const { 
-        currency, setShowSearch, getCartCount, 
+        setShowSearch, getCartCount, backendUrl,
         navigate, token, wishlist, setToken, setCartItems, 
-        userPoints, fetchUserData 
+        fetchUserData 
     } = useContext(ShopContext);
 
+    // Fetch Dynamic Header Protocol from DB
+    const fetchHeader = async () => {
+        try {
+            const res = await axios.get(backendUrl + '/api/header/get');
+            if (res.data.success) setHeaderData(res.data.data);
+        } catch (error) {
+            console.error("Header Sync Error:", error);
+        }
+    };
+
     useEffect(() => {
+        fetchHeader();
         if (token) fetchUserData(); 
     }, [token]);
 
@@ -28,46 +41,55 @@ const Navbar = () => {
         setCartItems({});
     };
 
-    const CATEGORY_GROUPS = {
-        philatelic: { title: "MINT VARIETY", items: { "MINT & SHEETS": ["SheetLet", "Miniature Sheets", "Full Sheet","Year Pack","Block of Four","Block of Four with Traffic light","Joint Issue"], "SPECIALS": ["First Day Cover", "My Stamp", "Definitive"] }},
-        thematic: { title: "THEMES", items: { "NATURE": ["WildLife", "Bird Stamps", "Yoga"], "CULTURE": ["Cinema", "Gandhi", "Space"] }},
-        gifting: { title: "GIFTING", items: { "POSTAL STATIONARY": ["Postcard","Greeting Card","Presentation Pack","BOPP","Ancillaries"] }},
-        Foreign_Stamps: { title: "FOREIGN STAMPS", items: { "SPECIAL": ["Foreign Stamps","Joint Issue","Classic Items","Foreign First Day Covers","Foreign Miniature Sheets"] }},
-    };
+    // Updated MegaMenu to handle Dynamic JSON Structure
+ // Inside your Navbar.jsx, update the MegaMenu helper component:
 
-    const MegaMenu = ({ menuData }) => (
-        <div className='group relative flex flex-col items-center gap-1 cursor-pointer '>
-            <div className='flex items-center gap-1.5 px-2 transition-all duration-500'>
-                <p className='text-[10px] font-black tracking-[0.4em] text-black group-hover:text-[#BC002D] transition-colors'>{menuData.title}</p>
-            </div>
-            <div className='absolute top-full left-1/2 -translate-x-1/2 pt-8 hidden group-hover:block z-[110]'>
-                <div className='bg-white border-t-2 border-[#BC002D] p-10 flex gap-16 w-max shadow-2xl rounded-br-[40px]'>
-                    {Object.entries(menuData.items).map(([groupName, items], idx) => (
-                        <div key={idx} className='flex flex-col min-w-[160px]'>
-                            <h3 className='text-[9px] font-black text-[#BC002D] mb-6 tracking-[0.3em] border-b border-gray-100 pb-3'>{groupName}</h3>
-                            <div className='flex flex-col gap-4'>
-                                {items.map((item, i) => (
-                                    <Link key={i} onClick={() => { window.scrollTo(0,0); setVisible(false); }} to={`/collection?category=${encodeURIComponent(item)}`} className='text-[10px] text-gray-400 hover:text-[#BC002D] font-bold uppercase tracking-[0.2em] transition-all hover:translate-x-1'>{item}</Link>
-                                ))}
-                            </div>
+const MegaMenu = ({ menuData }) => (
+    <div className='group relative flex flex-col items-center gap-1 cursor-pointer '>
+        <div className='flex items-center gap-1.5 px-2 transition-all duration-500'>
+            {/* Changed 'capitalize' or standard text to 'uppercase' below */}
+            <p className='text-[10px] font-black tracking-[0.4em] text-black group-hover:text-[#BC002D] transition-colors uppercase'>
+                {menuData.title}
+            </p>
+        </div>
+        
+        {/* Dropdown Content */}
+        <div className='absolute top-full left-1/2 -translate-x-1/2 pt-8 hidden group-hover:block z-[110]'>
+            <div className='bg-white border-t-2 border-[#BC002D] p-10 flex gap-16 w-max shadow-2xl rounded-br-[40px]'>
+                {menuData.groups.map((group, idx) => (
+                    <div key={idx} className='flex flex-col min-w-[160px]'>
+                        <h3 className='text-[9px] font-black text-[#BC002D] mb-6 tracking-[0.3em] border-b border-gray-100 pb-3 uppercase'>
+                            {group.groupName}
+                        </h3>
+                        <div className='flex flex-col gap-4'>
+                            {group.items.map((item, i) => (
+                                <Link 
+                                    key={i} 
+                                    to={`/collection?category=${encodeURIComponent(item)}`} 
+                                    className='text-[10px] text-gray-400 hover:text-[#BC002D] font-bold uppercase tracking-[0.2em] transition-all hover:translate-x-1'
+                                >
+                                    {item}
+                                </Link>
+                            ))}
                         </div>
-                    ))}
-                </div>
+                    </div>
+                ))}
             </div>
         </div>
-    );
+    </div>
+);
 
     return (
         <div className='sticky top-0 z-[100] w-full'>
             
-            {/* --- ANNOUNCEMENT MARQUEE --- */}
+            {/* --- DYNAMIC ANNOUNCEMENT MARQUEE --- */}
             <div className='bg-[#BC002D] py-2 overflow-hidden border-b border-black/10'>
                 <div className='flex whitespace-nowrap animate-marquee'>
-                    <p className='text-[9px] md:text-[10px] font-black  tracking-[0.4em] text-white px-18 '>
-                        •Buy More and Earn More  • Global Shipping Protocol Active • Secure SSL Acquisition Protocol • Collector's Archive Updated Weekly • Free Shipping on Orders Above ₹999 •
+                    <p className='text-[9px] md:text-[10px] font-black tracking-[0.4em] text-white px-18 '>
+                        {headerData.marqueeText || "• LOADING REGISTRY PROTOCOL •"}
                     </p>
-                    <p className='text-[9px] md:text-[10px] font-black  tracking-[0.4em] text-white px-18'>
-                        • Buy More and Earn More  • Global Shipping Protocol Active • Secure SSL Acquisition Protocol • Collector's Archive Updated Weekly • Free Shipping on Orders Above ₹999 •
+                    <p className='text-[9px] md:text-[10px] font-black tracking-[0.4em] text-white px-18'>
+                        {headerData.marqueeText || "• LOADING REGISTRY PROTOCOL •"}
                     </p>
                 </div>
             </div>
@@ -78,53 +100,45 @@ const Navbar = () => {
                 {/* LOGO */}
                 <Link to='/' className='flex-shrink-0 group'>
                     <div className='flex items-center gap-2 md:gap-3 mr-7 group cursor-pointer'>
-                        <img 
-                            src={assets.logo} 
-                            className='w-8 md:w-10 lg:w-12 group-hover:rotate-[360deg] transition-transform duration-1000 object-contain' 
-                            alt="PhilaBasket Logo" 
-                        />
-                        <img 
-                            src={assets.logo5} 
-                            className='w-24 md:w-28 lg:w-32 h-auto object-contain' 
-                            alt="PhilaBasket Text" 
-                        />
+                        <img src={assets.logo} className='w-8 md:w-10 lg:w-12 group-hover:rotate-[360deg] transition-transform duration-1000' alt="Logo" />
+                        <img src={assets.logo5} className='w-24 md:w-28 lg:w-32 h-auto' alt="TextLogo" />
                     </div>
                 </Link>
 
-                {/* DESKTOP NAVIGATION */}
-                <nav className='hidden xl:flex items-center gap-10 mr-5'>
-                    {Object.values(CATEGORY_GROUPS).map((group, index) => <MegaMenu key={index} menuData={group} />)}
+                {/* DYNAMIC DESKTOP NAVIGATION */}
+                <nav className='hidden xl:flex items-center gap-10 mr-5 capita'>
+                    {headerData.navMenu.map((tab, index) => (
+                        <MegaMenu key={index} menuData={tab} />
+                    ))}
                     <NavLink to='/updates' className='group flex items-center gap-1.5'>
                         <p className='text-[10px] font-black tracking-[0.4em] text-gray-900 uppercase'>Updates</p>
                     </NavLink>
                 </nav>
 
-                {/* UTILITIES */}
+                {/* UTILITIES (Search, Profile, Cart, etc.) */}
                 <div className='flex items-center gap-3 lg:gap-2'>
                     <div className='flex items-center gap-4 lg:gap-6'>
-                        <Search onClick={() => { setShowSearch(true); navigate('/collection') }} size={18} className='cursor-pointer text-gray-400 hover:text-[#BC002D] transition-colors' />
+                        <Search onClick={() => { setShowSearch(true); navigate('/collection') }} size={18} className='cursor-pointer text-gray-400 hover:text-[#BC002D]' />
                         
                         <Link to='/wishlist' className='relative hidden md:block group'>
-                            <Heart size={18} className={`transition-colors ${wishlist.length > 0 ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-400 group-hover:text-[#BC002D]'}`} />
+                            <Heart size={18} className={`${wishlist.length > 0 ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-400 hover:text-[#BC002D]'}`} />
                             {wishlist.length > 0 && <span className='absolute -top-2 -right-2 bg-black text-white text-[7px] w-4 h-4 rounded-full flex items-center justify-center font-black'>{wishlist.length}</span>}
                         </Link>
 
                         <div className='group relative hidden md:block'>
-                            <User onClick={() => token ? null : navigate('/login')} size={18} className='cursor-pointer text-gray-400 hover:text-black transition-colors' />
+                            <User onClick={() => token ? null : navigate('/login')} size={18} className='cursor-pointer text-gray-400 hover:text-black' />
                             {token && (
                             <div className='group-hover:block hidden absolute right-0 pt-5 w-48'>
                                 <div className='bg-white border-t-2 border-[#BC002D] p-5 shadow-2xl rounded-br-[30px]'>
-                                    <p onClick={() => {navigate('/profile'); window.scrollTo(0,0);}} className='text-[9px] font-black text-gray-400 cursor-pointer hover:text-[#BC002D] mb-4 uppercase tracking-[0.2em] flex items-center gap-2'><User size={12} /> Account Profile</p>
-                                    <p onClick={() => {navigate('/orders')
-                                        window.scrollTo(0,0);
-                                    }} className='text-[9px] font-black text-gray-400 cursor-pointer hover:text-[#BC002D] mb-4 uppercase tracking-[0.2em] flex items-center gap-2'><Package size={12} /> MY ORDERS</p>
+                                    <p onClick={() => {navigate('/profile'); window.scrollTo(0,0);}} className='text-[9px] font-black text-gray-400 cursor-pointer hover:text-[#BC002D] mb-4 uppercase tracking-[0.2em] flex items-center gap-2'><User size={12} /> Account</p>
+                                    <p onClick={() => {navigate('/orders'); window.scrollTo(0,0);}} className='text-[9px] font-black text-gray-400 cursor-pointer hover:text-[#BC002D] mb-4 uppercase tracking-[0.2em] flex items-center gap-2'><Package size={12} /> My Orders</p>
                                     <p onClick={logout} className='text-[9px] text-[#BC002D] cursor-pointer font-black uppercase tracking-[0.2em] flex items-center gap-2'><LogOut size={12} /> Sign Out</p>
                                 </div>
                             </div>
                             )}
                         </div>
 
-                        <Link to='/cart' className='hidden lg:flex relative active:scale-90 transition-transform'>
+                        <Link to='/cart' className='hidden lg:flex relative'>
                             <div className=' bg-black p-2 rounded-sm hover:bg-[#BC002D] transition-all'>
                                 <ShoppingBag size={16} className='text-white' />
                             </div>

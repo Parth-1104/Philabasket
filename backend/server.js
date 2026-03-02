@@ -16,6 +16,8 @@ import categoryRouter from './routes/categoryRoute.js'
 import exportRouter from './routes/exportRouter.js'
 import feedbackRouter from './routes/feedbackRoute.js'
 import couponRouter from './routes/couponRouter.js'
+import bannerRouter from './routes/bannerRouter.js'
+import headerRouter from './routes/headerRouter.js'
 
 // App Config
 const app = express()
@@ -51,6 +53,8 @@ app.use('/api/category', categoryRouter);
 app.use('/api/export', exportRouter);
 app.use('/api/feedback', feedbackRouter);
 app.use('/api/coupon', couponRouter);
+app.use('/api/banner',bannerRouter)
+app.use('/api/header', headerRouter);
 
 
 app.get('/',(req,res)=>{

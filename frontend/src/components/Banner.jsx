@@ -1,32 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { assets } from '../assets/assets';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShopContext } from '../context/ShopContext';
+import axios from 'axios';
 
 const Banner = () => {
+  const { backendUrl } = useContext(ShopContext);
   const [currentSlide, setCurrentSlide] = useState(0);
+  
+  // 1. Hardcoded first image for "Instant Load"
+  const [banners, setBanners] = useState([
+    { image: '/banner.png', title: "FDC Festival", isStatic: true }
+  ]);
 
-  const banners = [
-    { image: assets.banner001 || 'banner.png', title: "FDC Festival" },
-    { image: assets.banner002 || 'phila.png', title: "Royal Collection" },
-    { image: assets.banner009, title: "Royal Collection" },
-  ];
+  // 2. Fetch Admin-defined banners
+  const fetchBanners = async () => {
+    try {
+      const response = await axios.get(backendUrl + '/api/banner/list');
+      if (response.data.success && response.data.banners.length > 0) {
+        // Keep the static first image and append new ones from DB
+        setBanners([
+          { image: '/banner.png', title: "FDC Festival", isStatic: true },
+          ...response.data.banners
+        ]);
+      }
+    } catch (error) {
+      console.error("Banner Sync Error:", error);
+    }
+  };
 
   const nextSlide = () => setCurrentSlide((prev) => (prev === banners.length - 1 ? 0 : prev + 1));
   const prevSlide = () => setCurrentSlide((prev) => (prev === 0 ? banners.length - 1 : prev - 1));
 
   useEffect(() => {
+    fetchBanners();
+  }, []); // Fetch once on mount
+
+  useEffect(() => {
     const timer = setInterval(nextSlide, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [banners.length]); // Reset timer if banners list updates
 
   return (
     <div className='relative w-full overflow-hidden select-none bg-white group
-        /* RESPONSIVE HEIGHT SCALE */
-        h-[25vh]       /* Mobile: Short height to prevent huge scrolling */
-        sm:h-[35vh]    /* Tablet */
-        md:h-[50vh]    /* Small Laptop */
-        lg:h-[55vh]    /* Desktop */
-        xl:h-[60vh]    /* Ultra-wide */
+        h-[25vh] sm:h-[35vh] md:h-[50vh] lg:h-[55vh] xl:h-[60vh]
     '>
       
       {/* Slide Content */}
@@ -37,23 +54,20 @@ const Banner = () => {
             index === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
           }`}
         >
-          {/* IMAGE SCALING LOGIC:
-             - object-cover: Ensures the container is ALWAYS filled (no white gaps).
-             - object-center: Keeps the middle of the stamp/banner visible on mobile crop.
-          */}
           <img 
+              // LCP Optimization: Eager load the first static image
+              loading={index === 0 ? "eager" : "lazy"}
               draggable="false" 
               className='w-full h-full object-contain object-center sm:object-fill lg:object-contain md:object-contain' 
               src={slide.image}
               alt={slide.title} 
           />
           
-          {/* Subtle Gradient Overlay to make navigation/text pop */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-transparent pointer-events-none"></div>
         </div>
       ))}
 
-      {/* Navigation Arrows - Optimized for Touch & Mouse */}
+      {/* Navigation Arrows */}
       <div className='absolute inset-0 flex items-center justify-between px-2 md:px-4 opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none'>
         <button 
           onClick={prevSlide} 
@@ -69,7 +83,7 @@ const Banner = () => {
         </button>
       </div>
 
-      {/* Pagination - Slimmer for better visibility */}
+      {/* Pagination Indicators */}
       <div className='absolute bottom-3 md:bottom-6 left-1/2 -translate-x-1/2 flex gap-1.5 md:gap-3 z-30'>
         {banners.map((_, i) => (
           <button 
