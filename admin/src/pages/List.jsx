@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback ,useMemo} from 'react';
 import { backendUrl } from '../App';
 import { toast } from 'react-toastify';
 import { 
@@ -84,6 +84,29 @@ const List = ({ token }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editFormData, setEditFormData] = useState(null);
   const [availableCategories, setAvailableCategories] = useState([]);
+  // 1. Add these states at the top of your component
+const [allMedia, setAllMedia] = useState([]); // All items from media collection
+const [activeImageIndex, setActiveImageIndex] = useState(null); // Track which slot is being typed in
+const [imageSearch, setImageSearch] = useState("");
+
+// 2. Fetch media list when modal opens
+useEffect(() => {
+    const fetchMedia = async () => {
+        try {
+            const res = await axios.get(`${backendUrl}/api/media/all`, { headers: { token } });
+            if (res.data.success) setAllMedia(res.data.users || res.data.media);
+        } catch (err) { console.error("Media sync error", err); }
+    };
+    if (isModalOpen) fetchMedia();
+}, [isModalOpen]);
+
+// 3. Helper to filter images as you type
+const filteredMedia = useMemo(() => {
+    if (!imageSearch) return [];
+    return allMedia.filter(m => 
+        m.originalName.toLowerCase().includes(imageSearch.toLowerCase())
+    ).slice(0, 5); // Limit results for clean UI
+}, [allMedia, imageSearch]);
 
   const fetchCategories = async () => {
     try {
@@ -481,22 +504,61 @@ const List = ({ token }) => {
                   </div>
 
                   <div className='space-y-4'>
-                    <div className='flex justify-between items-center'>
-                      <h5 className='text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2'><ImageIcon size={11}/> Registry Images</h5>
-                      <button type="button" onClick={addImageSlot} className='text-[9px] font-black bg-black text-white px-3 py-1.5 rounded-full hover:bg-gray-800'>+ Add</button>
-                    </div>
-                    <div className='space-y-2'>
-                      {editFormData.image.map((img, idx) => (
-                        <div key={idx} className='flex items-center gap-2 group'>
-                          <div className='relative flex-1'>
-                            <FileText className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-300' size={12}/>
-                            <input className='w-full pl-9 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono font-bold outline-none' placeholder="bal.jpg" value={img} onChange={(e) => { const n = [...editFormData.image]; n[idx] = e.target.value; setEditFormData({ ...editFormData, image: n }); }}/>
-                          </div>
-                          <button type="button" onClick={() => removeImageSlot(idx)} className='p-2 text-red-400 hover:bg-red-50 rounded-lg'><Trash2 size={13}/></button>
-                        </div>
-                      ))}
-                    </div>
+  <div className='flex justify-between items-center'>
+    <h5 className='text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2'>
+      <ImageIcon size={11}/> Registry Images
+    </h5>
+    <button type="button" onClick={addImageSlot} className='text-[9px] font-black bg-black text-white px-3 py-1.5 rounded-full hover:bg-gray-800'>+ Add</button>
+  </div>
+
+  <div className='space-y-2'>
+    {editFormData.image.map((img, idx) => (
+      <div key={idx} className='relative flex items-center gap-2 group'>
+        <div className='relative flex-1'>
+          <FileText className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-300' size={12}/>
+          <input 
+            className='w-full pl-9 p-3 bg-gray-50 border border-gray-200 rounded-xl text-xs font-mono font-bold outline-none focus:border-[#BC002D]' 
+            placeholder="Search filename (e.g. penny.jpg)" 
+            value={activeImageIndex === idx ? imageSearch : img} 
+            onFocus={() => {
+                setActiveImageIndex(idx);
+                setImageSearch(img);
+            }}
+            onChange={(e) => setImageSearch(e.target.value)}
+            onBlur={() => setTimeout(() => setActiveImageIndex(null), 200)} // Delay to allow clicks
+          />
+
+          {/* AUTOCOMPLETE DROPDOWN */}
+          {activeImageIndex === idx && filteredMedia.length > 0 && (
+            <div className='absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-[3000] overflow-hidden'>
+              {filteredMedia.map((m) => (
+                <button
+                  key={m._id}
+                  type="button"
+                  onClick={() => {
+                    const n = [...editFormData.image];
+                    n[idx] = m.originalName;
+                    setEditFormData({ ...editFormData, image: n });
+                    setImageSearch("");
+                    setActiveImageIndex(null);
+                  }}
+                  className='w-full p-2 flex items-center gap-3 hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0'
+                >
+                  <img src={m.imageUrl} className='w-8 h-8 object-cover rounded shadow-sm' alt="" />
+                  <div className='text-left'>
+                    <p className='text-[10px] font-black text-gray-900 truncate'>{m.originalName}</p>
+                    <p className='text-[8px] text-gray-400 uppercase font-bold'>Verified Registry Asset</p>
                   </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        <button type="button" onClick={() => removeImageSlot(idx)} className='p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg'><Trash2 size={13}/></button>
+      </div>
+    ))}
+  </div>
+</div>
                 </div>
 
                 <div className='space-y-8 flex flex-col h-full'>
