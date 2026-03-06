@@ -6,7 +6,7 @@ import { toast } from 'react-toastify'
 
 const ProductItem = ({ id, _id, image, name, price, marketPrice, category, stock, isPriorityMode = false }) => {
     
-  const { formatPrice, currency, addToCart, wishlist, toggleWishlist } = useContext(ShopContext);
+  const { formatPrice, currency, addToCart, wishlist, toggleWishlist,userData } = useContext(ShopContext);
   const [isLoaded, setIsLoaded] = useState(false);
   const navigate = useNavigate();
   const productId = _id || id;
@@ -14,7 +14,15 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, stock
   // Logic check for availability
   const isOutOfStock = stock <= 0;
 
-  const potentialPoints = Math.floor(price / 10);
+  const potentialPoints = useMemo(() => {
+    const userTier = userData?.tier || 'Silver';
+    let multiplier = 0.10; // Default Silver
+
+    if (userTier === 'Gold') multiplier = 0.30;
+    if (userTier === 'Platinum') multiplier = 0.50;
+
+    return Math.floor(price * multiplier);
+  }, [price, userData?.tier]);
 
   const createSeoSlug = (text) => {
     return text.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '').replace(/--+/g, '-').trim();

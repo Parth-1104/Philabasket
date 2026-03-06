@@ -14,6 +14,7 @@ const ShopContextProvider = (props) => {
     const [deliveryFees, setDeliveryFees] = useState({ india: 125, global: 750 });
     const [currency, setCurrency] = useState('INR'); 
 
+
     // Helper to get delivery fee based on selected country logic
     const getDeliveryFee = (country = 'India') => {
         const totalAmount = getCartAmount(); // Get current cart total

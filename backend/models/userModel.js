@@ -13,6 +13,11 @@ const userSchema = new mongoose.Schema({
     // Loophole & Cap Protection
     referralCount: { type: Number, default: 0 }, 
     signupIP: { type: String }, 
+    tier: { 
+        type: String, 
+        enum: ['Silver', 'Gold', 'Platinum'], 
+        default: 'Silver' 
+    },
 
     defaultAddress: {
         street: { type: String, default: "" },
@@ -27,19 +32,34 @@ const userSchema = new mongoose.Schema({
 }, { minimize: false, timestamps: true }) // Added timestamps for better audit trails
 
 userSchema.pre('save', function (next) {
+    // 1. Generate Referral Code if missing
     if (!this.referralCode) {
         this.referralCode = "PHILA-" + Math.random().toString(36).substring(2, 8).toUpperCase();
     }
+
+    // 2. Update Tier based on points
+    // Silver: 0 - 2,99,999
+    // Gold: 3,00,000 - 4,99,999
+    // Platinum: 5,00,000+
+    const points = this.totalRewardPoints || 0;
+    
+    if (points >= 500000) {
+        this.tier = 'Platinum';
+    } else if (points >= 300000) {
+        this.tier = 'Gold';
+    } else {
+        this.tier = 'Silver';
+    }
+
     next();
 });
 
 userSchema.virtual('orders', {
-    ref: 'order',           // The model to use
-    localField: '_id',      // Find orders where 'userId'
-    foreignField: 'userId'  // matches this user's '_id'
+    ref: 'order',
+    localField: '_id',
+    foreignField: 'userId'
 });
 
-// Ensure virtuals are included in JSON/Object output
 userSchema.set('toObject', { virtuals: true });
 userSchema.set('toJSON', { virtuals: true });
 

@@ -433,39 +433,49 @@ const updateStatus = async (req, res) => {
     try {
         const { orderId, status, trackingNumber } = req.body;
         
-        const currentOrder = await orderModel.findById(orderId);
+        // Populate userId to get the user's current Tier
+        const currentOrder = await orderModel.findById(orderId).populate('userId');
         if (!currentOrder) {
             return res.json({ success: false, message: "Order not found" });
         }
 
-        // Logic for auto-shipping if tracking number is added
         let finalStatus = (trackingNumber && (status === 'Order Placed' || status === 'Packing')) ? 'Shipped' : status;
-        
         const updateFields = { status: finalStatus };
         if (trackingNumber) updateFields.trackingNumber = trackingNumber;
 
-        // --- REWARD LOGIC: TRIGGER ONLY ONCE ---
+        // --- UPDATED REWARD LOGIC: TIER BASED MULTIPLIER ---
         if (finalStatus === 'Delivered' && currentOrder.status !== 'Delivered') {
             updateFields.payment = true;
-
-            const earnedPoints = Math.floor(currentOrder.amount * 0.10);
-
-            // Record points and create ledger entry
+        
+            // 1. Calculate Item-Only Subtotal (Excluding delivery, discounts, and GST)
+            const itemSubtotal = currentOrder.items.reduce((acc, item) => {
+                return acc + (item.price * item.quantity);
+            }, 0);
+        
+            // 2. Define Multipliers based on User Tier
+            const userTier = currentOrder.userId?.tier || 'Silver';
+            let multiplier = 0.10; // Silver: 10%
+            if (userTier === 'Gold') multiplier = 0.30;      // Gold: 30%
+            if (userTier === 'Platinum') multiplier = 0.50;  // Platinum: 50%
+        
+            // 3. Calculate points based on Item Subtotal only
+            const earnedPoints = Math.floor(itemSubtotal * multiplier);
+        
             await recordRewardActivity(
-                currentOrder.userId, 
+                currentOrder.userId._id, 
                 currentOrder.address.email, 
                 earnedPoints, 
                 'earn_point', 
                 currentOrder._id
             );
-
-            await updateSoldCount(currentOrder.items);
-            console.log(`Registry Ledger Updated: ${earnedPoints} points awarded.`);
+        
+            // Logging for the Archive
+            console.log(`Registry Ledger: ${userTier} Rewards calculated on Item Value (₹${itemSubtotal}). Points: ${earnedPoints}`);
 
             try {
                 await sendEmail(
                     currentOrder.address.email, 
-                    "Acquisition Delivered - Registry Updated", 
+                    `Acquisition Delivered - ${userTier} Rewards Added`, 
                     getOrderHtmlTemplate(currentOrder) 
                 );
             } catch (emailError) {
@@ -473,18 +483,13 @@ const updateStatus = async (req, res) => {
             }
         }
 
-        // --- THE FIX: REMOVED THE 'RETURN' BLOCK ---
-        // Instead of returning an error if already delivered, we simply 
-        // skip the reward logic above and proceed to save the status.
-        
         await orderModel.findByIdAndUpdate(orderId, updateFields);
         
-        // Handle Email logic for shipping...
         if (finalStatus === 'Shipped' && trackingNumber) {
             await sendEmail(
                 currentOrder.address.email, 
                 "Items Shipped", 
-                getOrderHtmlTemplate(currentOrder, trackingNumber) 
+                getOrderHtmlTemplate(currentOrder, null, trackingNumber) 
             );
         }
 

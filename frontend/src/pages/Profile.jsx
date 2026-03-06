@@ -2,7 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { User, MapPin, ShieldCheck, Loader2, Edit3, X, History, ArrowRight, Wallet } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Loader2, Edit3, X, History, ArrowRight, Wallet,Award } from 'lucide-react';
 
 const Profile = () => {
     const { token, backendUrl, userData, fetchUserData, navigate } = useContext(ShopContext);
@@ -89,36 +89,81 @@ const Profile = () => {
                 
                 {/* --- Identity & Vault Card --- */}
                 <div className='lg:col-span-1 space-y-6'>
-                    <div className='bg-black p-8 rounded-sm text-white shadow-2xl relative overflow-hidden'>
-                        <div className='absolute top-0 right-0 w-32 h-32 bg-[#BC002D] blur-[80px] opacity-20'></div>
-                        
-                        <div className='relative z-10 flex flex-col items-center gap-5 mb-8'>
-                            <div className='w-20 h-20 bg-[#BC002D] rounded-full flex items-center justify-center text-3xl font-black shadow-lg shadow-[#BC002D]/20'>
-                                {name?.charAt(0)}
-                            </div>
-                            <div className='text-center w-full group'>
-                                <p className='text-[10px] font-black uppercase tracking-[0.2em] text-[#BC002D] mb-1'>Verified Collector</p>
-                                
-                                {isEditingName ? (
-                                    <div className='flex items-center gap-2 justify-center'>
-                                        <input 
-                                            value={name} 
-                                            onChange={(e) => setName(e.target.value)}
-                                            className='bg-transparent border-b border-[#BC002D] text-center text-xl font-bold tracking-tight outline-none w-full transition-all text-white'
-                                            autoFocus
-                                        />
-                                        <X size={16} className='cursor-pointer text-gray-500 hover:text-white' onClick={() => {setIsEditingName(false); setName(userData.name)}} />
-                                    </div>
-                                ) : (
-                                    <div className='flex items-center gap-2 justify-center cursor-pointer' onClick={() => setIsEditingName(true)}>
-                                        <h3 className='text-xl font-bold tracking-tight border-b border-transparent group-hover:border-white/20 transition-all'>{name}</h3>
-                                        <Edit3 size={14} className='text-gray-500 opacity-0 group-hover:opacity-100 transition-all' />
-                                    </div>
-                                )}
-                            </div>
-                        </div>
+    <div className={`bg-black p-8 rounded-sm text-white shadow-2xl relative overflow-hidden border-t-4 ${
+        userData?.tier === 'Platinum' ? 'border-cyan-400' : 
+        userData?.tier === 'Gold' ? 'border-amber-400' : 'border-gray-400'
+    }`}>
+        <div className='absolute top-0 right-0 w-32 h-32 bg-[#BC002D] blur-[80px] opacity-20'></div>
+        
+        <div className='relative z-10 flex flex-col items-center gap-5 mb-8'>
+            {/* TIER WRAPPED AVATAR */}
+            <div className={`w-20 h-20 rounded-full flex items-center justify-center text-3xl font-black shadow-lg relative ${
+                userData?.tier === 'Platinum' ? 'bg-gradient-to-br from-cyan-500 to-blue-600 shadow-cyan-500/20' : 
+                userData?.tier === 'Gold' ? 'bg-gradient-to-br from-amber-400 to-yellow-600 shadow-amber-500/20' : 
+                'bg-[#BC002D]'
+            }`}>
+                {name?.charAt(0)}
+                {/* SMALL TIER ICON OVERLAY */}
+                <div className='absolute -bottom-1 -right-1 bg-black p-1.5 rounded-full border border-white/10'>
+                    <Award size={12} className={
+                        userData?.tier === 'Platinum' ? 'text-cyan-400' : 
+                        userData?.tier === 'Gold' ? 'text-amber-400' : 'text-gray-400'
+                    } />
+                </div>
+            </div>
 
-                        <div className='relative z-10 space-y-4 pt-6 border-t border-white/10'>
+            <div className='text-center w-full group'>
+                <div className='flex flex-col items-center gap-1 mb-2'>
+                    <p className='text-[10px] font-black uppercase tracking-[0.2em] text-[#BC002D]'>
+                        Verified Collector
+                    </p>
+                    {/* DYNAMIC TIER BADGE */}
+                    <span className={`px-3 py-0.5 rounded-full text-[8px] font-black uppercase tracking-widest border ${
+                        userData?.tier === 'Platinum' ? 'bg-cyan-500/10 border-cyan-500/50 text-cyan-400' : 
+                        userData?.tier === 'Gold' ? 'bg-amber-500/10 border-amber-500/50 text-amber-400' : 
+                        'bg-gray-500/10 border-gray-500/50 text-gray-400'
+                    }`}>
+                        {userData?.tier || 'Silver'} Status
+                    </span>
+                </div>
+                
+                {isEditingName ? (
+                    <div className='flex items-center gap-2 justify-center'>
+                        <input 
+                            value={name} 
+                            onChange={(e) => setName(e.target.value)}
+                            className='bg-transparent border-b border-[#BC002D] text-center text-xl font-bold tracking-tight outline-none w-full transition-all text-white'
+                            autoFocus
+                        />
+                        <X size={16} className='cursor-pointer text-gray-500 hover:text-white' onClick={() => {setIsEditingName(false); setName(userData.name)}} />
+                    </div>
+                ) : (
+                    <div className='flex items-center gap-2 justify-center cursor-pointer' onClick={() => setIsEditingName(true)}>
+                        <h3 className='text-xl font-bold tracking-tight border-b border-transparent group-hover:border-white/20 transition-all'>{name}</h3>
+                        <Edit3 size={14} className='text-gray-500 opacity-0 group-hover:opacity-100 transition-all' />
+                    </div>
+                )}
+            </div>
+        </div>
+
+        {/* --- TIER PROGRESS PROTOCOL --- */}
+        <div className='relative z-10 mb-6'>
+            <div className='flex justify-between text-[8px] font-black uppercase tracking-widest text-gray-500 mb-2'>
+                <span>Tier Progress</span>
+                <span>{userData?.tier === 'Platinum' ? 'MAX LEVEL' : 
+                       userData?.tier === 'Gold' ? 'NEXT: PLATINUM' : 'NEXT: GOLD'}</span>
+            </div>
+            <div className='h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5'>
+                <div 
+                    className={`h-full transition-all duration-1000 ${
+                        userData?.tier === 'Platinum' ? 'bg-cyan-500 w-full' : 
+                        userData?.tier === 'Gold' ? 'bg-amber-500 w-[60%]' : 'bg-[#BC002D] w-[20%]'
+                    }`}
+                ></div>
+            </div>
+        </div>
+
+        <div className='relative z-10 space-y-4 pt-6 border-t border-white/10'>
                             <div className='flex  justify-between items-center bg-white/5 p-4 rounded-sm border border-white/5'>
                                 <div>
                                     <p className='text-[9px] font-black uppercase tracking-widest text-gray-500 mb-1'>Vault Balance</p>

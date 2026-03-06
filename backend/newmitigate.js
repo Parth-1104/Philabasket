@@ -1,49 +1,48 @@
+// backend/newmitigate.js
 import mongoose from 'mongoose';
-import 'dotenv/config'; // Loads your MONGO_URI from .env
-import orderModel from "./models/orderModel.js";
-import counterModel from "./models/counterModel.js";
+import userModel from './models/userModel.js';// CHECK THIS PATH
+import dotenv from 'dotenv';
 
-const migrate = async () => {
+dotenv.config();
+
+const migrateTiers = async () => {
     try {
-        // 1. Connect to Database
-        console.log("Connecting to Registry Database...");
-        await mongoose.connect(`${process.env.MONGODB_URI}/e-commerce`)
+        await mongoose.connect(`${process.env.MONGODB_URI}/e-commerce`);
+        console.log("Connected to Registry Database...");
 
-        console.log("Connection Secure.");
+        console.log("Running Bulk Tier Update...");
 
-        // 2. Fetch all existing orders sorted by date (oldest first)
-        const orders = await orderModel.find({}).sort({ date: 1 });
-        console.log(`Starting migration for ${orders.length} orders...`);
+        // Define the ranges
+        const ops = [
+            {
+                updateMany: {
+                    filter: { totalRewardPoints: { $gte: 500000 } },
+                    update: { $set: { tier: 'Platinum' } }
+                }
+            },
+            {
+                updateMany: {
+                    filter: { totalRewardPoints: { $gte: 300000, $lt: 500000 } },
+                    update: { $set: { tier: 'Gold' } }
+                }
+            },
+            {
+                updateMany: {
+                    filter: { totalRewardPoints: { $lt: 300000 } },
+                    update: { $set: { tier: 'Silver' } }
+                }
+            }
+        ];
 
-        // 3. Loop through and assign numbers starting from 0 to N
-        for (let i = 0; i < orders.length; i++) {
-            // Updating legacy orders with low-digit sequence
-            await orderModel.findByIdAndUpdate(orders[i]._id, { 
-                $set: { orderNo: i } 
-            });
-            
-            if (i % 10 === 0) console.log(`Processed ${i} orders...`);
-        }
+        const result = await userModel.bulkWrite(ops);
 
-        // 4. Update/Reset the Counter for new orders
-        // This ensures the NEXT order placed via the app starts at 100000
-        const counter = await counterModel.findOneAndUpdate(
-            { id: 'orderNumber' },
-            { seq: 100000 },
-            { upsert: true, new: true }
-        );
-
-        console.log(`Migration Complete.`);
-        console.log(`Legacy Range: 0 - ${orders.length - 1}`);
-        console.log(`Next Order will be: ${counter.seq}`);
-        
-        // Close connection and exit
+        console.log(`--- Migration Complete ---`);
+        console.log(`Matched: ${result.matchedCount} | Modified: ${result.modifiedCount}`);
         process.exit(0);
-
     } catch (error) {
-        console.error("Migration Protocol Failed:", error);
+        console.error("Migration Failed:", error.message);
         process.exit(1);
     }
 };
 
-migrate();
+migrateTiers();
