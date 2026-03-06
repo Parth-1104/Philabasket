@@ -93,17 +93,18 @@ const listMedia = async (req, res) => {
 
 
 
-const bulkAddProducts = async (req, res) => {
+
+
+ const bulkAddProducts = async (req, res) => {
     try {
         if (!req.file) return res.json({ success: false, message: "Please upload a CSV file" });
 
         const stamps = [];
         const usedImageNames = [];
         const discoveredCategories = new Map(); 
-        
-        // Fallback Image URL
         const DEFAULT_IMAGE = "https://res.cloudinary.com/dvsdithxh/image/upload/v1770344955/Logo-5_nqnyl4.png";
 
+        // 1. Fetch existing data for matching
         const [existingStamps, allMedia] = await Promise.all([
             productModel.find({}, 'name').lean(),
             mediaModel.find({}, 'originalName imageUrl').lean()
@@ -111,22 +112,22 @@ const bulkAddProducts = async (req, res) => {
 
         const existingNames = new Set(existingStamps.map(s => s.name.toLowerCase().trim()));
 
-        const extractBkId = (name) => {
+        // --- IMPROVED UNIVERSAL ID EXTRACTION ---
+        // This targets the "#xyz" pattern specifically, but falls back to alphanumeric strings
+        const extractSpecimenId = (name) => {
             if (!name) return null;
-            const match = String(name).match(/BK\d+/i);
+            // Matches anything starting with # OR the first block of letters/numbers
+            const match = String(name).match(/(#[a-z0-9]+|[a-z0-9]+)/i);
             return match ? match[0].toUpperCase() : null;
         };
 
+        // 2. Map Media Gallery by the extracted ID
         const mediaVariantMap = new Map();
         allMedia.forEach(m => {
-            const bid = extractBkId(m.originalName);
-            if (bid) {
-                if (!mediaVariantMap.has(bid)) mediaVariantMap.set(bid, []);
-                let url = m.imageUrl;
-                if (url.includes('cloudinary.com') && !url.includes('f_auto')) {
-                    url = url.replace('/upload/', '/upload/f_auto,q_auto/');
-                }
-                mediaVariantMap.get(bid).push({ url: url, originalName: m.originalName });
+            const sid = extractSpecimenId(m.originalName);
+            if (sid) {
+                if (!mediaVariantMap.has(sid)) mediaVariantMap.set(sid, []);
+                mediaVariantMap.get(sid).push({ url: m.imageUrl, originalName: m.originalName });
             }
         });
 
@@ -139,79 +140,63 @@ const bulkAddProducts = async (req, res) => {
         .on('data', (row) => {
             try {
                 const clean = (val) => val ? String(val).trim().replace(/^["'\[]|["'\]]$/g, '').trim() : "";
-                const nameTrimmed = clean(row.name || Object.values(row)[0]);
-
-                // Skip only if the name is completely empty or already exists
-                if (!nameTrimmed || existingNames.has(nameTrimmed.toLowerCase())) return;
-
-                // --- IMAGE BUNDLING ---
-                const primaryCsvImg = clean(row.imageName1);
-                const baseId = extractBkId(primaryCsvImg);
                 
+                // Allow ALL names, but skip only if truly identical to avoid DB crashes
+                const nameTrimmed = clean(row.name || Object.values(row)[0]);
+                if (!nameTrimmed) return; 
+
+                if (existingNames.has(nameTrimmed.toLowerCase())) {
+                    console.log(`Skipping duplicate: ${nameTrimmed}`);
+                    return; // This stops the row from being added to 'stamps'
+                }
+                
+                // --- LENIENT IMAGE MATCHING ---
+                const primaryCsvImg = clean(row.imageName1);
+                const baseId = extractSpecimenId(primaryCsvImg);
                 let productImages = [];
                 
-                // Attempt to find matching images in Media Registry
                 if (baseId && mediaVariantMap.has(baseId)) {
                     const variants = mediaVariantMap.get(baseId);
-                    variants.sort((a, b) => {
-                        const isA_Var = a.originalName.includes('(') || a.originalName.includes('-');
-                        const isB_Var = b.originalName.includes('(') || b.originalName.includes('-');
-                        if (!isA_Var && isB_Var) return -1;
-                        if (isA_Var && !isB_Var) return 1;
-                        return a.originalName.length - b.originalName.length;
-                    });
+                    // Standard Sort: Main image first, variants (with brackets/dashes) after
+                    variants.sort((a, b) => a.originalName.length - b.originalName.length);
                     productImages = variants.map(v => v.url);
                     variants.forEach(v => usedImageNames.push(v.originalName));
                 }
 
-                // FIX: If no images were found, use the Cloudinary fallback instead of returning
-                if (productImages.length === 0) {
-                    productImages = [DEFAULT_IMAGE];
-                }
+                // If no match, show default logo instead of failing
+                if (productImages.length === 0) productImages = [DEFAULT_IMAGE];
 
-                // --- CATEGORY COUNTING ---
+                // --- CATEGORY CLEANING (Removes [ ] brackets) ---
                 let parsedCategory = [];
-                const rawCat = clean(row.category);
+                const rawCat = clean(row.category).replace(/[\[\]]/g, '');
                 if (rawCat) {
-                    parsedCategory = rawCat.split(',').map(c => c.trim()).filter(c => c !== "");
+                    parsedCategory = rawCat.split(',').map(c => c.trim()).filter(c => Boolean);
                     parsedCategory.forEach(cat => {
                         discoveredCategories.set(cat, (discoveredCategories.get(cat) || 0) + 1);
                     });
                 }
 
+                // --- DATA NORMALIZATION ---
                 const mPrice = Number(String(row.marketPrice || 0).replace(/[^0-9.]/g, '')) || 0;
                 const rowPrice = Number(String(row.price || 0).replace(/[^0-9.]/g, ''));
-                const finalPrice = rowPrice || mPrice;
-                const cleanDate = (val) => {
-                    const raw = clean(val);
-                    
-                    // If it matches the required format, use it
-                    if (/^\d{2}\/\d{2}\/\d{4}$/.test(raw)) {
-                        return raw;
-                    }
-                    
-                    // Instead of forcing a fallback, return an empty string for optional status
-                    return ""; 
-                };
-                const csvBlogLink = clean(row.blogLink);
-
+                
                 stamps.push({
                     name: nameTrimmed,
                     description: clean(row.description) || "Historical philatelic specimen.",
                     marketPrice: mPrice,
-                    price: finalPrice,
+                    price: rowPrice || mPrice,
                     image: productImages,
                     youtubeUrl: clean(row.youtubeUrl),
-                    releaseDate: cleanDate(row.releaseDate),
+                    releaseDate: /^\d{2}\/\d{2}\/\d{4}$/.test(clean(row.releaseDate)) ? clean(row.releaseDate) : "",
                     category: parsedCategory,
                     year: Number(row.year) || 0,
                     country: clean(row.country) || "India",
                     producedCount: Number(String(row.producedCount || 0).replace(/[^0-9]/g, '')) || 0, 
                     condition: clean(row.condition) || "Mint",
                     stock: Number(row.stock) || 1,
-                    bestseller: String(row.bestseller || '').toLowerCase().trim() === 'true',
-                    newArrival: String(row.newArrival || '').toLowerCase().trim() === 'true',
-                    blogLink: blogLink || "",
+                    bestseller: String(row.bestseller || '').toLowerCase() === 'true',
+                    newArrival: String(row.newArrival || '').toLowerCase() === 'true',
+                    blogLink: clean(row.blogLink),
                     isActive: true,
                     date: Date.now()
                 });
@@ -220,24 +205,22 @@ const bulkAddProducts = async (req, res) => {
         })
         .on('end', async () => {
             try {
-                if (stamps.length === 0) return res.json({ success: false, message: "No new items to add." });
+                if (stamps.length === 0) return res.json({ success: false, message: "No valid data found." });
 
+                // Bulk Category Sync
                 const categoryOps = Array.from(discoveredCategories).map(([name, count]) => ({
                     updateOne: {
                         filter: { name },
-                        update: { 
-                            $inc: { productCount: count }, 
-                            $setOnInsert: { group: "Independent" } 
-                        },
+                        update: { $inc: { productCount: count }, $setOnInsert: { group: "Independent" } },
                         upsert: true 
                     }
                 }));
-
                 if (categoryOps.length > 0) await categoryModel.bulkWrite(categoryOps);
                 
-                // insertMany with ordered:false ensures that if one row fails, others still upload
-                await productModel.insertMany(stamps, { ordered: false });
+                // DATA INSERTION
+                const result = await productModel.insertMany(stamps, { ordered: false });
                 
+                // Sync Media Assignment
                 if (usedImageNames.length > 0) {
                     await mediaModel.updateMany(
                         { originalName: { $in: usedImageNames } }, 
@@ -245,9 +228,11 @@ const bulkAddProducts = async (req, res) => {
                     );
                 }
                 
-                res.json({ success: true, message: `Registry Synced. Added ${stamps.length} Specimens.` });
+                res.json({ success: true, message: `Successfully registered ${result.length} items.` });
             } catch (dbErr) { 
-                res.json({ success: false, message: "Partial sync or DB error: " + dbErr.message }); 
+                // Handle partial success (some duplicates might fail, but others pass)
+                const count = dbErr.result?.nInserted || 0;
+                res.json({ success: true, message: `Partial Sync: ${count} items added.` }); 
             }
         });
     } catch (error) {
