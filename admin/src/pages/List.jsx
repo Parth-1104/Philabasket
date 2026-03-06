@@ -424,6 +424,8 @@ const filteredMedia = useMemo(() => {
                               </p>
                           </div>
                       </div>
+
+
           
                       {/* Price & Registry Controls */}
                       <div className='flex items-center gap-2 flex-shrink-0'>
@@ -504,7 +506,19 @@ const filteredMedia = useMemo(() => {
       value={editFormData.releaseDate} 
       onChange={(e) => setEditFormData({ ...editFormData, releaseDate: e.target.value })}
     />
+
+<div className='col-span-2 space-y-1'>
+    <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Archive Research Link (Blog URL)</label>
+    <input 
+      type="url" 
+      placeholder="https://philabasket.com/blog/specimen-history"
+      className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none focus:border-[#BC002D]' 
+      value={editFormData.blogLink} 
+      onChange={(e) => setEditFormData({ ...editFormData, blogLink: e.target.value })}
+    />
   </div>
+  </div>
+  
 
 
                     </div>

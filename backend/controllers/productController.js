@@ -193,6 +193,8 @@ const bulkAddProducts = async (req, res) => {
                     // Instead of forcing a fallback, return an empty string for optional status
                     return ""; 
                 };
+                const csvBlogLink = clean(row.blogLink);
+
                 stamps.push({
                     name: nameTrimmed,
                     description: clean(row.description) || "Historical philatelic specimen.",
@@ -209,6 +211,7 @@ const bulkAddProducts = async (req, res) => {
                     stock: Number(row.stock) || 1,
                     bestseller: String(row.bestseller || '').toLowerCase().trim() === 'true',
                     newArrival: String(row.newArrival || '').toLowerCase().trim() === 'true',
+                    blogLink: blogLink || "",
                     isActive: true,
                     date: Date.now()
                 });
@@ -394,7 +397,7 @@ switch (sort) {
         // countDocuments(query) now accurately reflects the current tab (Active or Trash)
         const [products, total] = await Promise.all([
             productModel.find(query)
-                .select('name price marketPrice image category country condition year stock date bestseller description youtubeUrl releaseDate isActive isLatest newArrival producedCount isFeatured')
+                .select('name price marketPrice image category country condition year blogLink stock date bestseller description youtubeUrl releaseDate isActive isLatest newArrival producedCount isFeatured')
                 .sort(sortOrder)
                 .skip(skip)
                 .limit(limit)
@@ -474,6 +477,7 @@ const addProduct = async (req, res) => {
             isFeatured: isFeatured === "true", 
             newArrival: newArrival === "true", // New Field
             releaseDate: releaseDate || "",
+            blogLink: csvBlogLink || "",
             image: imagesUrl,
             date: Date.now()
         });
@@ -737,6 +741,17 @@ const updateProduct = async (req, res) => {
             updateData.price = Number(updateData.price);
             updateData.rewardPoints = Math.floor(updateData.price * 0.10);
         }
+        if (updateData.blogLink !== undefined) {
+            // Trim whitespace to ensure the URL validator in the model doesn't trip on spaces
+            updateData.blogLink = String(updateData.blogLink).trim();
+        }
+        
+        // --- DATABASE UPDATE ---
+        // const updatedProduct = await productModel.findByIdAndUpdate(
+        //     id, 
+        //     { $set: updateData }, 
+        //     { new: true, runValidators: true } // runValidators ensures the URL format is checked
+        // );
         
         if (updateData.stock !== undefined) {
             updateData.stock = Number(updateData.stock);

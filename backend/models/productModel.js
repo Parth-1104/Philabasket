@@ -58,6 +58,17 @@ const productSchema = new mongoose.Schema({
     // Updated: Boolean flags for shop logic
     bestseller: { type: Boolean, default: false, index: true },
     isFeatured: { type: Boolean, default: false, index: true },
+    blogLink: { 
+        type: String, 
+        default: "",
+        validate: {
+            validator: function(v) {
+                // Returns true if empty string or valid URL
+                return v === "" || /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/.test(v);
+            },
+            message: props => `${props.value} is not a valid URL for a blog link!`
+        }
+    },
 
     newArrival: { type: Boolean, default: false, index: true }, 
     releaseDate: { 

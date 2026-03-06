@@ -429,6 +429,32 @@ const handleMouseMove = (e) => {
   {/* <p className='text-[13px] text-gray-800 leading-relaxed font-medium'>
     Please Note that due to multiple listing we can not specify the place of cancellation ,also the position of stamp on FDC and Cancellation may differ from the image .Kindly treat the image as reference only not actual product 
   </p> */}
+  {productData.blogLink && (
+    <div className='mt-6 pt-6 border-t border-gray-100'>
+      <p className='text-[9px] font-black text-gray-400 tracking-[0.3em] uppercase mb-4'>Related Blog</p>
+      <a 
+        href={productData.blogLink} 
+        target="_blank" 
+        rel="noopener noreferrer"
+        className='inline-flex items-center gap-3 px-6 py-3 bg-[#BC002D] text-white rounded-xl shadow-lg shadow-red-100 hover:bg-black transition-all group'
+      >
+        <div className='flex flex-col items-start'>
+          <span className='text-[10px] font-black uppercase tracking-widest'>Read  Blog</span>
+          <span className='text-[8px] opacity-70 font-bold uppercase tracking-tighter'>Explore Stamp's History</span>
+        </div>
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          width="16" height="16" 
+          viewBox="0 0 24 24" fill="none" 
+          stroke="currentColor" strokeWidth="3" 
+          strokeLinecap="round" strokeLinejoin="round" 
+          className="group-hover:translate-x-1 transition-transform"
+        >
+          <path d="M5 12h14m-7-7 7 7-7 7"/>
+        </svg>
+      </a>
+    </div>
+  )}
 </div>
 
 
