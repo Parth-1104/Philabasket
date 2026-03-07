@@ -4,42 +4,46 @@ import 'dotenv/config';
 
 
 
+// backend/controllers/chatController.js
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// backend/controllers/chatController.js
+// backend/controllers/chatController.js
 export const chatWithRegistry = async (req, res) => {
     try {
-        const { message, history } = req.body;
+        const { message, history, productId } = req.body;
 
-        // 1. Fetch current product data to ground the AI's knowledge
-        const products = await productModel.find({ isActive: true })
-            .select('name price description country year stock category condition');
-        
-        const registryContext = products.map(p => 
-            `Name: ${p.name}, Price: ${p.price}, Year: ${p.year}, Stock: ${p.stock}, Origin: ${p.country}`
-        ).join("\n");
+        if (!message || !productId) return res.status(400).json({ success: false });
 
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+        const stamp = await productModel.findById(productId);
+        if (!stamp) return res.status(404).json({ success: false });
 
-        // 2. Start a chat session with the history provided by the frontend
-        const chat = model.startChat({
-            history: history || [],
-            generationConfig: { maxOutputTokens: 800 },
+        // Use Gemini 3 Flash with Search Tool enabled
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-2.5-flash", // Use Gemini 3 Flash for latest tools
+            tools: [{ google_search: {} }] 
         });
 
-        // 3. Instruction for the AI to act as a Philatelic Expert
-        const systemInstruction = `
-            You are the PhilaBasket's Assistant. 
-            Answer based ONLY on this registry data:
-            ${registryContext}
-            If a user asks a follow-up, use the chat history to stay in context.
-        `;
+        const formattedHistory = (history || []).map(h => ({
+            role: h.role,
+            parts: [{ text: h.parts[0].text }]
+        }));
 
-        const result = await chat.sendMessage(`${systemInstruction}\n\nUser: ${message}`);
+        const chat = model.startChat({ history: formattedHistory });
+
+        // Instruction to use search for deep history
+        const systemPrompt = `You are the PhilaBasket Archive Historian. 
+        Specimen: ${stamp.name} (${stamp.year}). 
+        TASK: Use Google Search to find specific historical context, rarity, and design details about this stamp. 
+        Present the info as an interesting "Specimen Story" in 3 sentences.`;
+
+        const result = await chat.sendMessage(`${systemPrompt}\n\nUser Question: ${message}`);
         const response = await result.response;
         
-        res.json({ success: true, reply: response.text() });
+        return res.json({ success: true, reply: response.text() });
+
     } catch (error) {
-        console.error("Chat API Error:", error);
-        res.status(500).json({ success: false, message: "Registry Assistant is currently unreachable." });
+        console.error("AI Error:", error.message);
+        res.status(500).json({ success: false, message: "Historian is busy." });
     }
 };

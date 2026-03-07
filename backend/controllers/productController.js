@@ -142,8 +142,30 @@ const listMedia = async (req, res) => {
                 const clean = (val) => val ? String(val).trim().replace(/^["'\[]|["'\]]$/g, '').trim() : "";
                 
                 // Allow ALL names, but skip only if truly identical to avoid DB crashes
-                const nameTrimmed = clean(row.name || Object.values(row)[0]);
-                if (!nameTrimmed) return; 
+               
+
+        // --- EXCEL-FRIENDLY DATE NORMALIZATION ---
+
+        
+        const nameTrimmed = clean(row.name || Object.values(row)[0]);
+        if (!nameTrimmed) return; 
+
+        if (existingNames.has(nameTrimmed.toLowerCase())) {
+            console.log(`Skipping duplicate: ${nameTrimmed}`);
+            return; 
+        }
+
+        // --- EXCEL-FRIENDLY DATE NORMALIZATION ---
+        const normalizeDate = (val) => {
+            let raw = clean(val);
+            if (!raw) return "";
+            
+            // Replace dashes or dots with slashes (Excel often uses 11-12-2024)
+            raw = raw.replace(/[\.\-]/g, '/');
+            
+            // Validate if it matches DD/MM/YYYY after replacement
+            return /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(raw) ? raw : "";
+        }; 
 
                 if (existingNames.has(nameTrimmed.toLowerCase())) {
                     console.log(`Skipping duplicate: ${nameTrimmed}`);
@@ -183,11 +205,12 @@ const listMedia = async (req, res) => {
                 stamps.push({
                     name: nameTrimmed,
                     description: clean(row.description) || "Historical philatelic specimen.",
+                    description2: clean(row.description2) || "",
                     marketPrice: mPrice,
                     price: rowPrice || mPrice,
                     image: productImages,
                     youtubeUrl: clean(row.youtubeUrl),
-                    releaseDate: /^\d{2}\/\d{2}\/\d{4}$/.test(clean(row.releaseDate)) ? clean(row.releaseDate) : "",
+                    releaseDate: normalizeDate(row.releaseDate)||"",
                     category: parsedCategory,
                     year: Number(row.year) || 0,
                     country: clean(row.country) || "India",

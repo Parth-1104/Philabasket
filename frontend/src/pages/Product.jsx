@@ -4,6 +4,7 @@ import { ShopContext } from '../context/ShopContext';
 import RelatedProducts from '../components/RelatedProducts';
 import { Heart, Loader2, Minus, Plus, PlayCircle, X, Zap, CreditCard, ShoppingBag, ChevronLeft, ChevronRight ,Calendar,Tag} from 'lucide-react';
 import { ShieldCheck, Database, Globe, Layers, AlertCircle } from 'lucide-react';
+import AIHistorian from '../components/AIhistorian';
 
 import { toast } from 'react-toastify';
 import axios from 'axios';
@@ -139,7 +140,7 @@ const handleMouseMove = (e) => {
   const potentialPoints = Math.floor(productData.price * quantity * 0.1);
 
   return (
-    <div className='bg-white min-h-screen pt-4 md:pt-10 pb-16 select-none animate-fade-in relative overflow-x-hidden'>
+    <div className='bg-white min-h-screen pt-2 md:pt-4 pb-16 select-none animate-fade-in relative overflow-x-hidden'>
 
       {/* ── ADD TO CART POPUP ──────────────────────────── */}
       {showPopup && (
@@ -172,11 +173,14 @@ const handleMouseMove = (e) => {
           {/* ════════════════════════════════════════════
               IMAGE SECTION — NOW PLACED FIRST IN SOURCE
               ════════════════════════════════════════════ */}
-          <div className='w-full lg:w-[48%] lg:sticky lg:top-28 flex flex-col gap-4'>
+          <div className='w-full lg:w-[38%] md:w-[70%] lg:sticky lg:top-18 flex flex-col gap-4'>
 
             {/* MAIN VIEWER */}
-            <div className='relative w-full bg-[#F7F7F7] rounded-3xl overflow-hidden group shadow-sm' style={{ paddingBottom: '100%' }}>
-              <div className='absolute inset-0 flex items-center justify-center p-4 md:p-10'>
+            <div className='relative w-full bg-[#F7F7F7] rounded-3xl overflow-hidden group shadow-sm' style={{ 
+      /* Mobile/Tablet: 16:10 or 4:3 Ratio | Desktop: 1:1 Square */
+      aspectRatio: window.innerWidth < 1024 ? '16/10' : '1/1' 
+    }}>
+              <div className='absolute inset-0 flex items-center justify-center p-2 md:p-3'>
 
                 {isVideoActive && activeVideo ? (
                   <div className='absolute inset-0 bg-black z-20 animate-fade-in'>
@@ -198,7 +202,7 @@ const handleMouseMove = (e) => {
 // ... inside your return/render block
 
 <div 
-    className="relative w-full h-full overflow-hidden cursor-zoom-in group"
+    className="relative w-full h-full  overflow-hidden cursor-zoom-in group "
     onMouseMove={handleMouseMove}
     onMouseLeave={() => setZoomPos({ ...zoomPos, show: false })}
 >
@@ -274,7 +278,7 @@ const handleMouseMove = (e) => {
                   <button
                     key={i}
                     onClick={() => goTo(i)}
-                    className={`shrink-0 w-16 h-16 md:w-20 md:h-20 rounded-2xl border-2 transition-all duration-200 bg-[#F7F7F7] overflow-hidden p-1.5 ${activeIndex === i ? 'border-[#BC002D] shadow-md shadow-[#BC002D]/20' : 'border-transparent opacity-50 hover:opacity-90'}`}
+                    className={`shrink-0 w-16 h-16 md:w-13 md:h-13 rounded-2xl border-2 transition-all duration-200 bg-[#F7F7F7] overflow-hidden p-1.5 ${activeIndex === i ? 'border-[#BC002D] shadow-md shadow-[#BC002D]/20' : 'border-transparent opacity-50 hover:opacity-90'}`}
                   >
                     <img src={img} className='w-full h-full object-contain' alt="" />
                   </button>
@@ -299,214 +303,210 @@ const handleMouseMove = (e) => {
               ════════════════════════════════════════════ */}
           <div className='w-full lg:w-[52%] flex flex-col gap-0'>
 
-            {/* Country + Year tags */}
-            <div className='flex items-center gap-2.5 flex-wrap mb-5'>
-              <span className='text-[#BC002D] text-[9px] font-black tracking-[0.4em] uppercase px-3.5 py-1.5 bg-[#BC002D]/8 rounded-full border border-[#BC002D]/10'>
-                {productData.country}
-              </span>
-              <span className='text-gray-400 text-[9px] font-bold tracking-[0.4em] uppercase px-3.5 py-1.5 bg-gray-50 rounded-full'>
-                {productData.year} Archive
-              </span>
-            </div>
-
-            {/* Product Name */}
-            <h1 className='text-xl md:text-2xl font-semibold lg:text-2xl font-black text-gray-900 leading-tight mb-6 capitalize tracking-tight'>
-              {productData.name}
-            </h1>
-
-            {/* Price Block */}
-            <div className='flex items-end gap-4 mb-6 pb-6 border-b border-gray-100'>
-              <div className='flex items-baseline gap-1.5'>
-                <span className='text-2xl font-serif text-[#BC002D] leading-none'>{valuationSymbol}</span>
-                <p className='text-4xl md:text-4xl font-black text-gray-900 tracking-tighter tabular-nums leading-none'>
-                  {String(formatPrice(productData.price * quantity)).replace(/[₹$]/g, '').trim()}
-                </p>
-              </div>
-              {productData.marketPrice > productData.price && (
-                <div className='flex items-baseline gap-1 mb-1 opacity-40'>
-                  <span className='text-sm font-serif text-gray-500'>{valuationSymbol}</span>
-                  <p className='text-xl font-bold text-gray-500 line-through tabular-nums'>
-                    {String(formatPrice(productData.marketPrice * quantity)).replace(/[₹$]/g, '').trim()}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Condition + Availability */}
-
-
-
-<div className='grid grid-cols-2 gap-4 mb-6'>
-    {/* CONDITION */}
-    {/* CONDITION BLOCK */}
-<div className='bg-gray-50 rounded-2xl p-4 transition-all hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-100'>
-    <div className='flex items-center gap-2 mb-1.5'>
-        <ShieldCheck size={12} className='text-[#BC002D]' />
-        <p className='text-[8px] font-black text-[#BC002D] tracking-widest uppercase'>Condition</p>
-    </div>
-    {/* FIX: Bind strictly to the database value */}
-    <p className='text-[11px] font-black text-gray-900'>
-      {productData.condition}
-    </p>
+{/* 1. Header Tags (Matching "Reveal Radiant Eyes | HOT") */}
+<div className='flex items-center gap-2 mb-4'>
+  <span className='text-gray-700 text-[10px] font-["Prata"]  tracking-widest'>
+     Country :{productData.country} 
+  </span>
+  <span className='h-3 w-[1px] bg-gray-200'></span>
+  
 </div>
 
-    {/* STOCK */}
-    <div className='bg-gray-50 rounded-2xl p-4 transition-all hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-100'>
-        <div className='flex items-center gap-2 mb-1.5'>
-            {productData.stock > 0 ? (
-                <Database size={12} className='text-[#BC002D]' />
-            ) : (
-                <AlertCircle size={12} className='text-[#BC002D]' />
-            )}
-            <p className='text-[8px] font-black text-[#BC002D] tracking-widest uppercase'>Stock</p>
-        </div>
-        <p className={`text-[11px] font-black ${productData.stock < 5 ? 'text-[#BC002D]' : 'text-green-600'}`}>
-            {productData.stock > 0 ? `${productData.stock} Specimens` : 'Exhausted / Sold'}
-        </p>
+{/* 2. Product Name */}
+<div className='flex flex-col md:flex-row justify-between items-start gap-6 mb-6'>
+  
+  {/* Left Side: Product Title and Sub-details */}
+  <div className='flex-1'>
+    <h1 className='text-2xl md:text-3xl font-bold text-gray-900 leading-tight tracking-tight mb-2'>
+      {productData.name}
+    </h1>
+    {/* Description snippet as seen in reference */}
+    <p className='text-[13px] text-gray-800 leading-relaxed font-medium'>
+      {productData.description}
+    </p>
+    <p className='text-[13px] text-gray-800 leading-relaxed font-medium'>
+      {productData.description2}
+    </p>
+  </div>
+
+  {/* Right Side: Price Block (Matching Reference Layout) */}
+  <div className='flex flex-col items-end shrink-0'>
+    <div className='flex flex-col items-end'>
+      {/* Current Price */}
+      <span className='text-3xl md:text-4xl font-bold text-gray-900 tracking-tighter'>
+        {valuationSymbol}{String(formatPrice(productData.price * quantity)).replace(/[₹$]/g, '').trim()}
+      </span>
+      
+      {/* Market Price Reference */}
+      {productData.marketPrice > productData.price && (
+        <span className='text-sm font-bold text-gray-300 line-through mt-[-4px]'>
+          {valuationSymbol}{String(formatPrice(productData.marketPrice * quantity)).replace(/[₹$]/g, '').trim()}
+        </span>
+      )}
     </div>
 
-    {/* ORIGIN */}
-    <div className='bg-gray-50 rounded-2xl p-4 transition-all hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-100'>
-        <div className='flex items-center gap-2 mb-1.5'>
-            <Globe size={12} className='text-[#BC002D]' />
-            <p className='text-[8px] font-black text-[#BC002D] tracking-widest uppercase'>Origin</p>
+    {/* Savings Badge (Matching "SAVE 35%" style) */}
+    {discount > 0 && (
+      <p className='text-[11px] font-black text-[#BC002D] uppercase tracking-widest mt-2'>
+        SAVE {discount}%
+      </p>
+    )}
+  </div>
+</div>
+
+{/* 3. Description Summary (New placement matching reference) */}
+
+
+{/* 4. Social Proof / Trusted By (Matching demo reference) */}
+
+
+{/* 5. Modernized Price Block (Matching demo reference) */}
+
+
+{/* 6. Classification Grid */}
+<div className='grid grid-cols-2 sm:grid-cols-3 gap-4 mb-10'>
+    {/* CONDITION */}
+    <div className='flex flex-col gap-2 p-4 bg-[#BC002D]/5 rounded-2xl border border-[#BC002D]/10 hover:bg-[#BC002D]/8 transition-all'>
+        <div className='flex items-center gap-2'>
+            <ShieldCheck size={14} className='text-[#BC002D]' strokeWidth={2.5} />
+            <span className='text-[9px] font-black text-[#BC002D] uppercase tracking-widest'>Condition</span>
         </div>
-        <p className='text-[11px] font-black text-gray-900 capitalize'>{productData.country || 'India'}</p>
+        <span className='text-[11px] font-black text-gray-900 leading-none'>
+            {productData.condition}
+        </span>
+    </div>
+
+    {/* AVAILABILITY */}
+    <div className='flex flex-col gap-2 p-4 bg-[#BC002D]/5 rounded-2xl border border-[#BC002D]/10 hover:bg-[#BC002D]/8 transition-all'>
+        <div className='flex items-center gap-2'>
+            <Database size={14} className='text-[#BC002D]' strokeWidth={2.5} />
+            <span className='text-[9px] font-black text-[#BC002D] uppercase tracking-widest'>Availability</span>
+        </div>
+        <span className='text-[11px] font-black text-gray-900 leading-none'>
+            {productData.stock} Specimens
+        </span>
+    </div>
+
+    {/* RELEASE DATE */}
+    <div className='flex flex-col gap-2 p-4 bg-[#BC002D]/5 rounded-2xl border border-[#BC002D]/10 hover:bg-[#BC002D]/8 transition-all'>
+        <div className='flex items-center gap-2'>
+            <Calendar size={14} className='text-[#BC002D]' strokeWidth={2.5} />
+            <span className='text-[9px] font-black text-[#BC002D] uppercase tracking-widest'>Release Date</span>
+        </div>
+        <span className='text-[11px] font-black text-gray-900 leading-none'>
+            {productData.releaseDate || "Historical Issue"}
+        </span>
     </div>
 
     {/* PRODUCED COUNT */}
-    <div className='bg-gray-50 rounded-2xl p-4 transition-all hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-100'>
-        <div className='flex items-center gap-2 mb-1.5'>
-            <Layers size={12} className='text-[#BC002D]' />
-            <p className='text-[8px] font-black text-[#BC002D] tracking-widest uppercase'>Produced Count</p>
+    <div className='flex flex-col gap-2 p-4 bg-[#BC002D]/5 rounded-2xl border border-[#BC002D]/10 hover:bg-[#BC002D]/8 transition-all'>
+        <div className='flex items-center gap-2'>
+            <Layers size={14} className='text-[#BC002D]' strokeWidth={2.5} />
+            <span className='text-[9px] font-black text-[#BC002D] uppercase tracking-widest'>Produced</span>
         </div>
-        <p className='text-[11px] font-black text-gray-900'>{productData.producedCount || 'Limited Edition'}</p>
-    </div>
-    <div className='bg-gray-50 rounded-2xl p-4 transition-all hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-100'>
-        <div className='flex items-center gap-2 mb-1.5'>
-            <Calendar size={12} className='text-[#BC002D]' />
-            <p className='text-[8px] font-black text-[#BC002D] tracking-widest uppercase'>Release Date</p>
-        </div>
-        <p className='text-[11px] font-black text-gray-900'>
-            {productData.releaseDate || 'Historical Issue'}
-        </p>
+        <span className='text-[11px] font-black text-gray-900 leading-none'>
+            {productData.producedCount||'Limited'} Units
+        </span>
     </div>
 
-    {/* TOP CATEGORIES */}
-    <div className='bg-gray-50 rounded-2xl p-4 transition-all hover:bg-white hover:shadow-sm border border-transparent hover:border-gray-100'>
-        <div className='flex items-center gap-2 mb-1.5'>
-            <Tag size={12} className='text-[#BC002D]' />
-            <p className='text-[8px] font-black text-[#BC002D] tracking-widest uppercase'>Classifications</p>
+    {/* VARIETY / CLASSIFICATION */}
+    <div className='flex flex-col gap-2 p-4 bg-[#BC002D]/5 rounded-2xl border border-[#BC002D]/10 hover:bg-[#BC002D]/8 transition-all'>
+        <div className='flex items-center gap-2'>
+            <Tag size={14} className='text-[#BC002D]' strokeWidth={2.5} />
+            <span className='text-[9px] font-black text-[#BC002D] uppercase tracking-widest'>Variety</span>
         </div>
         <div className='flex flex-wrap gap-1'>
-            {productData.category && productData.category.length > 0 ? (
-                productData.category.slice(0, 3).map((cat, index) => (
-                    <span key={index} className='text-[10px] font-black text-gray-900 bg-gray-200/50 px-1.5 py-0.5 rounded-md capitalize'>
-                        {cat}
-                    </span>
-                ))
-            ) : (
-                <p className='text-[11px] font-black text-gray-900'>General</p>
-            )}
+            {productData.category && productData.category.slice(0, 1).map((cat, i) => (
+                <span key={i} className='text-[10px] font-black text-[#BC002D] capitalize truncate'>
+                    {cat}
+                </span>
+            ))}
         </div>
+    </div>
+
+    {/* ORIGIN */}
+    <div className='flex flex-col gap-2 p-4 bg-[#BC002D]/5 rounded-2xl border border-[#BC002D]/10 hover:bg-[#BC002D]/8 transition-all'>
+        <div className='flex items-center gap-2'>
+            <Globe size={14} className='text-[#BC002D]' strokeWidth={2.5} />
+            <span className='text-[9px] font-black text-[#BC002D] uppercase tracking-widest'>Origin</span>
+        </div>
+        <span className='text-[11px] font-black text-gray-900 leading-none capitalize'>
+            {productData.country}
+        </span>
     </div>
 </div>
 
-            {/* Specs */}
+{/* 7. Action Buttons (Matching reference CTA weights) */}
+<div className='flex  gap-3'>
+  <button
+    onClick={handleInstantCheckout}
+    className='w-full bg-[#BC002D] text-white py-5 rounded-2xl text-[11px] font-black tracking-[0.3em] uppercase hover:bg-black transition-all shadow-xl shadow-red-100 flex items-center justify-center gap-3'
+  >
+     <Zap size={14} fill="white" />
+    Buy It Now
+  </button>
+  <button
+    onClick={handleAddToCart}
+    className='w-full border-2 border-gray-100 text-gray-900 py-4 rounded-2xl text-[10px] font-black tracking-[0.3em] uppercase hover:bg-gray-50 transition-all'
+  >
+    Add to Cart
+  </button>
+  
+</div>
 
+{/* Interactive & Resource Section */}
+<div className='flex flex-col md:flex-row gap-8 items-start mt-10 pt-8 border-t border-gray-100'>
+  
+  {/* AI Historian - Primary Interaction (Left Side) */}
+  
 
-            {/* Description */}
-            <div className='mb-8'>
-  <p className='text-[9px] font-black text-[#BC002D] tracking-[0.3em] uppercase mb-3'>Description</p>
-  <p className='text-[13px] text-gray-800 leading-relaxed font-medium'>
-    {productData.description.split('\n').map((line, index) => (
-      <React.Fragment key={index}>
-        {line}
-        <br />
-      </React.Fragment>
-    ))}
-  </p>
-  {/* <p className='text-[13px] text-gray-800 leading-relaxed font-medium'>
-    Please Note that due to multiple listing we can not specify the place of cancellation ,also the position of stamp on FDC and Cancellation may differ from the image .Kindly treat the image as reference only not actual product 
-  </p> */}
+  {/* Blog Section - Resource Context (Right Side / Sidebar) */}
   {productData.blogLink && (
-    <div className='mt-6 pt-6 border-t border-gray-100'>
-      <p className='text-[9px] font-black text-gray-400 tracking-[0.3em] uppercase mb-4'>Related Blog</p>
-      <a 
-        href={productData.blogLink} 
-        target="_blank" 
-        rel="noopener noreferrer"
-        className='inline-flex items-center gap-3 px-6 py-3 bg-[#BC002D] text-white rounded-xl shadow-lg shadow-red-100 hover:bg-black transition-all group'
-      >
-        <div className='flex flex-col items-start'>
-          <span className='text-[10px] font-black uppercase tracking-widest'>Read  Blog</span>
-          <span className='text-[8px] opacity-70 font-bold uppercase tracking-tighter'>Explore Stamp's History</span>
-        </div>
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          width="16" height="16" 
-          viewBox="0 0 24 24" fill="none" 
-          stroke="currentColor" strokeWidth="3" 
-          strokeLinecap="round" strokeLinejoin="round" 
-          className="group-hover:translate-x-1 transition-transform"
+    <div className='w-full md:w-[350px] shrink-0'>
+      <div className='bg-gray-50/50 rounded-3xl p-6 border border-gray-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-gray-200/50 group/blog'>
+        <p className='text-[10px] font-black text-gray-400 tracking-[0.3em] uppercase mb-6 flex items-center gap-2'>
+          <span className='w-1 h-1 bg-[#BC002D] rounded-full'></span>
+          Philatelic Insight
+        </p>
+        
+    
+        <a 
+          href={productData.blogLink} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className='flex items-center justify-between w-full px-5 py-4 bg-[#BC002D] text-white rounded-2xl shadow-lg shadow-red-100 hover:bg-black transition-all group'
         >
-          <path d="M5 12h14m-7-7 7 7-7 7"/>
-        </svg>
-      </a>
+          <div className='flex flex-col items-start'>
+            <span className='text-[10px] font-black uppercase tracking-widest'>Read Full Blog</span>
+            <span className='text-[8px] opacity-70 font-bold uppercase tracking-tighter'>Explore Stamp's History</span>
+          </div>
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="18" height="18" 
+            viewBox="0 0 24 24" fill="none" 
+            stroke="currentColor" strokeWidth="3" 
+            strokeLinecap="round" strokeLinejoin="round" 
+            className="group-hover:translate-x-1 transition-transform"
+          >
+            <path d="M5 12h14m-7-7 7 7-7 7"/>
+          </svg>
+        </a>
+      </div>
     </div>
   )}
+
+<div className='w-full md:flex-1'>
+    <AIHistorian 
+      productId={productData._id} 
+      productName={productData.name} 
+    />
+  </div>
+</div>
+
 </div>
 
 
-            
 
-            {/* Quantity */}
-            <div className='flex items-center gap-5 mb-6'>
-              <p className='text-[9px] font-black text-gray-900 tracking-widest uppercase'>Volume:</p>
-              <div className='flex items-center bg-gray-50 rounded-xl border border-gray-100 overflow-hidden'>
-                <button onClick={() => updateQuantity(quantity - 1)} className='px-4 py-3 text-gray-500 hover:text-[#BC002D] hover:bg-gray-100 transition-colors active:scale-90'>
-                  <Minus size={13} strokeWidth={3} />
-                </button>
-                <span className='w-10 text-center text-sm font-black text-gray-900 tabular-nums'>{quantity}</span>
-                <button onClick={() => updateQuantity(quantity + 1)} className='px-4 py-3 text-gray-500 hover:text-[#BC002D] hover:bg-gray-100 transition-colors active:scale-90'>
-                  <Plus size={13} strokeWidth={3} />
-                </button>
-              </div>
-            </div>
-
-            {/* CTA Buttons */}
-            <div className='flex flex-col sm:flex-row gap-3 items-stretch'>
-              {productData.stock > 0 ? (
-                <>
-                  <div className='flex gap-3 flex-1'>
-                    <button
-                        onClick={() => toggleWishlist(productData._id)}
-                        className='w-14 h-14 shrink-0 border border-gray-100 rounded-2xl flex items-center justify-center hover:border-[#BC002D]/30 hover:bg-[#BC002D]/5 transition-all active:scale-95'
-                    >
-                        <Heart size={20} className={wishlist.includes(productData._id) ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-300'} />
-                    </button>
-                    <button
-                        onClick={handleAddToCart}
-                        className='flex-1 bg-gray-900 text-white py-4 rounded-2xl text-[9px] font-black tracking-[0.4em] uppercase hover:bg-black transition-all active:scale-[0.98] shadow-lg'
-                    >
-                        Add to Cart
-                    </button>
-                  </div>
-                  <button
-                    onClick={handleInstantCheckout}
-                    className='flex-1 bg-[#BC002D] text-white py-4 rounded-2xl text-[9px] font-black tracking-[0.4em] uppercase hover:bg-[#a00025] transition-all active:scale-[0.98] flex items-center justify-center gap-2 shadow-lg shadow-[#BC002D]/25'
-                  >
-                    <Zap size={14} fill="white" />
-                    Buy Now
-                  </button>
-                </>
-              ) : (
-                <button disabled className='w-full bg-gray-100 text-gray-400 py-5 rounded-2xl text-[10px] font-black tracking-[0.5em] uppercase cursor-not-allowed'>
-                  Archive Fully Acquired
-                </button>
-              )}
-            </div>
-          </div>
         </div>
 
         {/* ── RELATED PRODUCTS ──────────────────────────── */}
