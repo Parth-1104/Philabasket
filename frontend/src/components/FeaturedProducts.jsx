@@ -99,7 +99,7 @@ const FeaturedProducts = () => {
                                         </div>
 
                                         <div className="flex-grow p-2 md:p-2">
-                                            <div className="w-full h-full bg-[#f8f8f8] flex items-center justify-center p-4 md:p-3 rounded-br-[35px] md:rounded-br-[40px]">
+                                            <div className="w-full h-full bg-[#f8f8f8] flex items-center justify-center p-0 md:p-0 rounded-br-[35px] md:rounded-br-[40px]">
                                                 <ProductItem 
                                                     id={item._id} 
                                                     _id={item._id} 
