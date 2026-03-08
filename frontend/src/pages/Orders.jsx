@@ -29,6 +29,14 @@ const Orders = () => {
   // --- PAYMENT INFO STATES ---
   const [showPaymentInfo, setShowPaymentInfo] = useState(false);
   const [selectedOrderInfo, setSelectedOrderInfo] = useState(null);
+  // Add these to your state section in Orders.js
+const [detailedRatings, setDetailedRatings] = useState({
+  packingrating: 5,
+  shippingrating: 5,
+  qualityrating: 5,
+  raterating: 5,
+  processrating: 5
+});
 
   const loadOrderData = useCallback(async (isManual = false) => {
     try {
@@ -55,35 +63,52 @@ const Orders = () => {
   // --- FEEDBACK HANDLER ---
   const handleFeedbackSubmit = async (e) => {
     e.preventDefault();
-    if (!feedbackText.trim() && !feedbackImage) return toast.error("Please add text or an image");
-
+    if (!feedbackText.trim() && !feedbackImage) return toast.error("Please add remarks or an image");
+  
     setSubmitting(true);
     const formData = new FormData();
     formData.append("orderId", currentOrder._id);
     formData.append("orderNo", currentOrder.orderNo);
     formData.append("text", feedbackText);
-    formData.append("rating", rating);
+    formData.append("rating", rating); // Overall Grade
+    
+    // Append detailed category ratings
+    Object.keys(detailedRatings).forEach(key => {
+      formData.append(key, detailedRatings[key]);
+    });
+    
     if (feedbackImage) formData.append("image", feedbackImage);
-
+    formData.append("date", Date.now()); // Required by schema
+  
     try {
       const response = await axios.post(`${backendUrl}/api/feedback/add`, formData, { 
         headers: { token } 
       });
-
+  
       if (response.data.success) {
-        toast.success("Feedback recorded in the Archive");
+        toast.success("Consignment Appraisal Recorded");
         setShowFeedbackModal(false);
-        setFeedbackText("");
-        setFeedbackImage(null);
-        setRating(5);
-      } else {
-        toast.error(response.data.message || "Archive sync failed.");
+        resetFeedbackForm();
+        fetchFeedbackStatus(); // Refresh submitted IDs
       }
     } catch (error) {
-      toast.error("Submission failed.");
+      toast.error("Archive sync failed.");
     } finally {
       setSubmitting(false);
     }
+  };
+  
+  const resetFeedbackForm = () => {
+    setFeedbackText("");
+    setFeedbackImage(null);
+    setRating(5);
+    setDetailedRatings({
+      packingrating: 5,
+      shippingrating: 5,
+      qualityrating: 5,
+      raterating: 5,
+      processrating: 5
+    });
   };
 
   // --- INVOICE GENERATOR ---
@@ -375,81 +400,87 @@ useEffect(() => {
 
       {/* FEEDBACK MODAL */}
       {showFeedbackModal && (
-        <div className='fixed inset-0 z-[5000] flex items-center justify-center p-6'>
-          <div className='absolute inset-0 bg-black/60 backdrop-blur-sm' onClick={() => setShowFeedbackModal(false)}></div>
-          <div className='bg-white w-full max-w-lg relative z-10 p-8 rounded-sm shadow-2xl animate-fade-in'>
-             <div className='flex justify-between items-center mb-6'>
-                <h3 className='font-black uppercase tracking-widest text-sm'>Consignment Feedback</h3>
-                <p className='text-[10px] font-bold text-[#BC002D]'>REGISTRY ID: #{currentOrder?.orderNo}</p>
-                <X className='cursor-pointer' onClick={() => setShowFeedbackModal(false)} />
-             </div>
-             <form onSubmit={handleFeedbackSubmit} className='flex flex-col gap-6'>
-                <div className='flex flex-col items-center gap-2 py-4 border-b border-gray-50'>
-                   <p className='text-[10px] font-black uppercase tracking-widest text-gray-400'>Specimen Grade</p>
-                   <div className='flex items-center gap-2'>
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button key={star} type="button" className='transition-transform hover:scale-125' onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)} onClick={() => setRating(star)}>
-                          <Star size={24} className={`transition-colors ${(hoverRating || rating) >= star ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-200'}`} />
-                        </button>
-                      ))}
-                   </div>
+  <div className='fixed inset-0 z-[5000] flex items-center justify-center p-4'>
+    <div className='absolute inset-0 bg-black/80 backdrop-blur-sm' onClick={() => setShowFeedbackModal(false)}></div>
+    <div className='bg-white w-full max-w-xl relative z-10 rounded-sm shadow-2xl animate-fade-in overflow-hidden'>
+      
+      {/* HEADER */}
+      <div className='bg-black p-6 text-white flex justify-between items-center'>
+        <div>
+          <h3 className='font-black uppercase tracking-[0.2em] text-xs'>Consignment Appraisal</h3>
+          <p className='text-[10px] font-bold opacity-60 mt-1'>REGISTRY: #{currentOrder?.orderNo}</p>
+        </div>
+        <X className='cursor-pointer' onClick={() => setShowFeedbackModal(false)} />
+      </div>
 
-
-                   {/* --- IMAGE UPLOAD SECTION --- */}
-<div className='flex flex-col gap-3'>
-    <p className='text-[10px] font-black uppercase tracking-widest text-gray-400'>Upload Specimen Photo (Optional)</p>
-    <div className='flex items-center gap-4'>
-        <label className='flex flex-col items-center justify-center w-20 h-20 border-2 border-dashed border-gray-200 rounded-lg cursor-pointer hover:border-[#BC002D] transition-colors'>
-            {feedbackImage ? (
-                <div className='relative w-full h-full p-1'>
-                    <img 
-                        src={URL.createObjectURL(feedbackImage)} 
-                        alt="Preview" 
-                        className='w-full h-full object-cover rounded-md' 
-                    />
-                    <div className='absolute -top-2 -right-2 bg-black text-white rounded-full p-0.5' onClick={(e) => { e.preventDefault(); setFeedbackImage(null); }}>
-                        <X size={12} />
-                    </div>
-                </div>
-            ) : (
-                <div className='flex flex-col items-center justify-center'>
-                    <Camera size={20} className='text-gray-300' />
-                    <span className='text-[8px] font-bold text-gray-400 mt-1'>ADD PHOTO</span>
-                </div>
-            )}
-            <input 
-                type="file" 
-                accept="image/*" 
-                className='hidden' 
-                onChange={(e) => setFeedbackImage(e.target.files[0])} 
-            />
-        </label>
+      <form onSubmit={handleFeedbackSubmit} className='p-8 flex flex-col gap-6 max-h-[85vh] overflow-y-auto'>
         
-        {feedbackImage && (
-            <p className='text-[10px] font-bold text-green-600 uppercase italic'>
-                Specimen Image Ready for Sync
-            </p>
-        )}
-    </div>
-</div>
-
-{/* <textarea 
-    className='w-full border border-gray-100 p-4 text-xs outline-none focus:border-[#BC002D]' 
-    rows="3" 
-    placeholder="Describe quality..." 
-    value={feedbackText} 
-    onChange={(e) => setFeedbackText(e.target.value)}
-></textarea> */}
-
-                </div>
-                <textarea className='w-full border border-gray-100 p-4 text-xs outline-none focus:border-[#BC002D]' rows="4" placeholder="Describe quality..." value={feedbackText} onChange={(e) => setFeedbackText(e.target.value)}></textarea>
-                <button type="submit" disabled={submitting} className='bg-black text-white py-4 text-[10px] font-black uppercase tracking-widest hover:bg-[#BC002D] transition-all disabled:bg-gray-400'>
-                  {submitting ? <RefreshCw className='animate-spin' size={14} /> : "Submit to Archive"}
-                </button>
-             </form>
+        {/* OVERALL STAR RATING */}
+        <div className='flex flex-col items-center gap-2 pb-6 border-b border-gray-50'>
+          <p className='text-[10px] font-black uppercase tracking-widest text-gray-400'>Overall Specimen Grade</p>
+          <div className='flex items-center gap-2'>
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button key={star} type="button" className='transition-transform hover:scale-110' 
+                onMouseEnter={() => setHoverRating(star)} onMouseLeave={() => setHoverRating(0)} onClick={() => setRating(star)}>
+                <Star size={28} className={`${(hoverRating || rating) >= star ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-100'}`} />
+              </button>
+            ))}
           </div>
         </div>
-      )}
+
+        {/* DETAILED CATEGORIES GRID */}
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+          {[
+            { id: 'qualityrating', label: 'Item Quality' },
+            { id: 'packingrating', label: 'Packing' },
+            { id: 'shippingrating', label: 'Delivery' },
+            { id: 'raterating', label: 'Value/Rate' },
+            { id: 'processrating', label: 'Process' }
+          ].map((cat) => (
+            <div key={cat.id} className='flex flex-col gap-2'>
+              <p className='text-[9px] font-black uppercase tracking-widest text-gray-400'>{cat.label}</p>
+              <div className='flex gap-1'>
+                {[1, 2, 3, 4, 5].map((val) => (
+                  <button
+                    key={val} type="button"
+                    onClick={() => setDetailedRatings(prev => ({ ...prev, [cat.id]: val }))}
+                    className={`flex-1 py-2 text-[10px] font-bold border transition-all
+                      ${detailedRatings[cat.id] === val ? 'bg-[#BC002D] border-[#BC002D] text-white' : 'bg-white border-gray-100 text-gray-300'}`}
+                  >
+                    {val}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* IMAGE UPLOAD */}
+        <div className='flex flex-col gap-3'>
+          <p className='text-[10px] font-black uppercase tracking-widest text-gray-400'>Archive Specimen Photo</p>
+          <label className='w-full h-24 border-2 border-dashed border-gray-100 rounded-sm flex flex-col items-center justify-center cursor-pointer hover:border-[#BC002D]/30 transition-all'>
+            {feedbackImage ? (
+              <img src={URL.createObjectURL(feedbackImage)} className='h-full w-full object-contain p-2' alt="Preview" />
+            ) : (
+              <div className='flex flex-col items-center'><Camera size={20} className='text-gray-200'/><span className='text-[8px] font-bold text-gray-300 mt-1'>ATTACH MEDIA</span></div>
+            )}
+            <input type="file" hidden onChange={(e) => setFeedbackImage(e.target.files[0])} />
+          </label>
+        </div>
+
+        <textarea 
+          className='w-full border border-gray-100 p-4 text-xs outline-none focus:border-[#BC002D] bg-[#FCF9F4]' 
+          rows="3" placeholder="Additional remarks for the curator..." 
+          value={feedbackText} onChange={(e) => setFeedbackText(e.target.value)}
+        ></textarea>
+
+        <button type="submit" disabled={submitting} className='bg-black text-white py-4 text-[10px] font-black uppercase tracking-widest hover:bg-[#BC002D] transition-all'>
+          {submitting ? <RefreshCw className='animate-spin mx-auto' size={14} /> : "Record Appraisal"}
+        </button>
+      </form>
+    </div>
+  </div>
+)}
 
       <div className='max-w-6xl mx-auto'>
         {processedOrders.length === 0 ? (

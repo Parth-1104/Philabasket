@@ -1,16 +1,22 @@
-import React, { useEffect, useState } from 'react'
-import axios from 'axios'
-import { toast } from 'react-toastify'
-import { Star, CheckCircle, XCircle, Image as ImageIcon, Edit3, Save, X } from 'lucide-react'
+import React, { useEffect, useState, useMemo } from 'react';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import { 
+  Star, CheckCircle, XCircle, Image as ImageIcon, Edit3, 
+  Save, X, BarChart3, List, ShieldCheck, Box, Truck, Tag, Zap, Search ,RefreshCw
+} from 'lucide-react';
 import { backendUrl } from '../App';
 
 const Feedback = ({ token }) => {
   const [list, setList] = useState([]);
+  const [view, setView] = useState('list'); // 'list' or 'analytics'
+  const [searchTerm, setSearchTerm] = useState('');
   
-  // --- EDITING STATES ---
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
-  const [editForm, setEditForm] = useState({ text: '', rating: 5 });
+  
+  // --- DETAIL & EDIT SIDEBAR STATE ---
+  const [showDetailSidebar, setShowDetailSidebar] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const fetchFeedback = async () => {
     try {
@@ -21,153 +27,228 @@ const Feedback = ({ token }) => {
     } catch (error) {
       toast.error(error.message);
     }
-  }
-
-  const toggleFeatured = async (feedbackId, currentStatus) => {
-    try {
-      const response = await axios.post(
-        backendUrl + '/api/feedback/feature', 
-        { feedbackId, status: !currentStatus }, 
-        { headers: { token } }
-      );
-      if (response.data.success) {
-        toast.success("Visibility Updated");
-        fetchFeedback();
-      }
-    } catch (error) {
-      toast.error(error.message);
-    }
-  }
-
-  // --- EDIT HANDLERS ---
-  const handleEditClick = (item) => {
-    setEditingItem(item);
-    setEditForm({ text: item.text, rating: item.rating });
-    setShowEditModal(true);
-  };
-
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await axios.post(
-        backendUrl + '/api/feedback/update', 
-        { 
-          feedbackId: editingItem._id, 
-          text: editForm.text, 
-          rating: editForm.rating,
-          isFeatured: editingItem.isFeatured 
-        }, 
-        { headers: { token } }
-      );
-      if (response.data.success) {
-        toast.success("Archive Record Modified");
-        setShowEditModal(false);
-        fetchFeedback();
-      }
-    } catch (error) {
-      toast.error("Update failed");
-    }
   };
 
   useEffect(() => { fetchFeedback(); }, [token]);
 
+  // --- ANALYTICS LOGIC ---
+  const analytics = useMemo(() => {
+    if (list.length === 0) return null;
+    const calcAvg = (key) => (list.reduce((acc, curr) => acc + (Number(curr[key]) || 5), 0) / list.length).toFixed(1);
+    return [
+      { label: 'Specimen Quality', val: calcAvg('qualityrating'), icon: ShieldCheck, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+      { label: 'Packing Integrity', val: calcAvg('packingrating'), icon: Box, color: 'text-amber-600', bg: 'bg-amber-50' },
+      { label: 'Logistics Speed', val: calcAvg('shippingrating'), icon: Truck, color: 'text-blue-600', bg: 'bg-blue-50' },
+      { label: 'Price Satisfaction', val: calcAvg('raterating'), icon: Tag, color: 'text-purple-600', bg: 'bg-purple-50' },
+    ];
+  }, [list]);
+
+  // --- HANDLERS ---
+  const handleOpenDetail = (item) => {
+    setSelectedItem({ ...item });
+    setShowDetailSidebar(true);
+  };
+
+  const handleUpdateFeedback = async (e) => {
+    e.preventDefault();
+    setIsUpdating(true);
+    try {
+      const response = await axios.post(
+        backendUrl + '/api/feedback/update', 
+        { 
+          feedbackId: selectedItem._id, 
+          text: selectedItem.text, 
+          rating: selectedItem.rating,
+          isFeatured: selectedItem.isFeatured,
+          // Technical ratings from schema
+          packingrating: selectedItem.packingrating,
+          shippingrating: selectedItem.shippingrating,
+          qualityrating: selectedItem.qualityrating,
+          raterating: selectedItem.raterating,
+          processrating: selectedItem.processrating
+        }, 
+        { headers: { token } }
+      );
+      if (response.data.success) {
+        toast.success("Registry Record Updated");
+        setShowDetailSidebar(false);
+        fetchFeedback();
+      }
+    } catch (error) {
+      toast.error("Update failed");
+    } finally { setIsUpdating(false); }
+  };
+
+  const toggleFeatured = async (feedbackId, currentStatus) => {
+    try {
+      const response = await axios.post(backendUrl + '/api/feedback/feature', 
+        { feedbackId, status: !currentStatus }, { headers: { token } });
+      if (response.data.success) {
+        toast.success("Visibility Toggled");
+        fetchFeedback();
+      }
+    } catch (error) { toast.error(error.message); }
+  };
+
+  const filteredList = list.filter(item => {
+    const name = item.userName ? item.userName.toLowerCase() : ''; // Fallback to empty string
+    const order = item.orderNo ? item.orderNo.toString() : '';    // Ensure it's a string
+    const search = searchTerm.toLowerCase();
+  
+    return name.includes(search) || order.includes(searchTerm);
+  });
+
   return (
-    <div className='p-6'>
-      <h2 className='text-xl font-black uppercase tracking-widest mb-6'>Collector Feedback Registry</h2>
-      
-      {/* EDIT MODAL */}
-      {showEditModal && (
-        <div className='fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/50 backdrop-blur-sm'>
-          <div className='bg-white p-8 rounded-lg w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200'>
-            <div className='flex justify-between items-center mb-6'>
-              <h3 className='font-black uppercase text-[10px] tracking-widest text-[#BC002D]'>Edit Feedback Record</h3>
-              <X className='cursor-pointer text-gray-400' onClick={() => setShowEditModal(false)} />
-            </div>
-            <form onSubmit={handleUpdate} className='space-y-6'>
-              <div>
-                <label className='text-[10px] font-black uppercase text-gray-400 block mb-2'>Specimen Grade</label>
-                <select 
-                  value={editForm.rating} 
-                  onChange={(e) => setEditForm({...editForm, rating: e.target.value})}
-                  className='w-full border p-3 rounded-md text-xs font-bold'
-                >
-                  {[5,4,3,2,1].map(num => <option key={num} value={num}>{num} Stars</option>)}
-                </select>
+    <div className='p-8 bg-[#FCF9F4] min-h-screen font-sans'>
+      {/* HEADER & VIEW TOGGLE */}
+      <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10'>
+        <div>
+          <h2 className='text-2xl font-black uppercase tracking-tighter text-gray-900'>Appraisal Archive</h2>
+          <p className='text-[10px] font-bold text-gray-400 uppercase tracking-widest'>Collector Feedback & Technical Grading</p>
+        </div>
+        
+        <div className='flex bg-white border border-gray-200 p-1 rounded-lg shadow-sm'>
+          <button onClick={() => setView('list')} className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${view === 'list' ? 'bg-black text-white' : 'text-gray-400 hover:text-black'}`}><List size={14}/> List</button>
+          <button onClick={() => setView('analytics')} className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${view === 'analytics' ? 'bg-black text-white' : 'text-gray-400 hover:text-black'}`}><BarChart3 size={14}/> Analytics</button>
+        </div>
+      </div>
+
+      {/* ANALYTICS VIEW */}
+      {view === 'analytics' && analytics && (
+        <div className='grid grid-cols-1 md:grid-cols-4 gap-6 animate-in fade-in duration-500'>
+          {analytics.map((stat) => (
+            <div key={stat.label} className='bg-white p-6 border border-gray-100 rounded-xl shadow-sm'>
+              <div className={`${stat.bg} ${stat.color} w-10 h-10 rounded-lg flex items-center justify-center mb-4`}><stat.icon size={20}/></div>
+              <p className='text-[9px] font-black uppercase tracking-widest text-gray-400 mb-1'>{stat.label}</p>
+              <div className='flex items-baseline gap-1'>
+                <span className='text-3xl font-black tracking-tighter'>{stat.val}</span>
+                <span className='text-xs font-bold text-gray-300'>/ 5.0</span>
               </div>
+              <div className='w-full bg-gray-100 h-1.5 rounded-full mt-4 overflow-hidden'>
+                <div className={`h-full rounded-full ${stat.color.replace('text', 'bg')}`} style={{ width: `${(stat.val / 5) * 100}%` }}></div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* LIST VIEW */}
+      {view === 'list' && (
+        <div className='space-y-6 animate-in fade-in duration-500'>
+          {/* Search Bar */}
+          <div className='relative max-w-md'>
+            <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' size={16} />
+            <input 
+              type="text" placeholder="Search Collector or Order #..." 
+              className='w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-lg text-xs outline-none focus:border-black transition-all'
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <div className='grid grid-cols-1 gap-4'>
+            {filteredList.map((item) => (
+              <div key={item._id} onClick={() => handleOpenDetail(item)} className='group bg-white border border-gray-100 p-6 rounded-xl shadow-sm hover:border-[#BC002D]/30 transition-all flex flex-col md:flex-row items-center justify-between gap-6'>
+                <div className='flex items-center gap-6 w-full md:w-auto'>
+                  <div className='w-16 h-16 bg-gray-50 rounded-lg overflow-hidden border border-gray-100 flex items-center justify-center shrink-0'>
+                    {item.image ? <img src={item.image} className='w-full h-full object-cover' /> : <ImageIcon size={20} className='text-gray-200'/>}
+                  </div>
+                  <div>
+                    <h4 className='font-black text-gray-900 tracking-tight'>{item.userName}</h4>
+                    <p className='text-[10px] font-bold text-[#BC002D] uppercase tracking-widest'>Order #{item.orderNo}</p>
+                    <div className='flex items-center gap-1 mt-1 text-amber-500'>
+                      {[...Array(5)].map((_, i) => <Star key={i} size={10} fill={i < item.rating ? "currentColor" : "none"} />)}
+                    </div>
+                  </div>
+                </div>
+
+                <div className='flex-1 max-w-md'>
+                  <p className='text-xs text-gray-500 italic line-clamp-2'>"{item.text || 'No appraisal text provided.'}"</p>
+                </div>
+
+                <div className='flex items-center gap-6 shrink-0'>
+                  <button onClick={() => toggleFeatured(item._id, item.isFeatured)} className={`flex items-center gap-2 px-4 py-2 rounded-full text-[9px] font-black uppercase transition-all ${item.isFeatured ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400 hover:text-gray-600'}`}>
+                    {item.isFeatured ? <CheckCircle size={12}/> : <XCircle size={12}/>} {item.isFeatured ? 'Featured' : 'Hidden'}
+                  </button>
+                  <button onClick={() => handleOpenDetail(item)} className='p-3 bg-gray-50 text-gray-400 hover:text-[#BC002D] hover:bg-red-50 rounded-lg transition-all'><Edit3 size={18} /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* DETAIL & EDIT SIDEBAR */}
+      {showDetailSidebar && selectedItem && (
+        <div className='fixed inset-0 z-[1000] flex justify-end'>
+          <div className='absolute inset-0 bg-black/40 backdrop-blur-sm' onClick={() => setShowDetailSidebar(false)}></div>
+          <div className='relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300'>
+            <div className='p-6 bg-black text-white flex justify-between items-center'>
               <div>
-                <label className='text-[10px] font-black uppercase text-gray-400 block mb-2'>Review Text</label>
+                <h3 className='font-black uppercase tracking-widest text-xs'>Detailed Appraisal</h3>
+                <p className='text-[10px] font-bold opacity-60'>Registry ID: #{selectedItem.orderNo}</p>
+              </div>
+              <X className='cursor-pointer hover:rotate-90 transition-transform' onClick={() => setShowDetailSidebar(false)} />
+            </div>
+
+            <form onSubmit={handleUpdateFeedback} className='flex-1 overflow-y-auto p-8 space-y-8'>
+              {/* Image & Main Star Rating */}
+              <div className='flex flex-col items-center text-center gap-4'>
+                <div className='w-32 h-32 bg-gray-50 border rounded-xl overflow-hidden flex items-center justify-center'>
+                  {selectedItem.image ? <img src={selectedItem.image} className='w-full h-full object-contain' /> : <ImageIcon size={32} className='text-gray-200'/>}
+                </div>
+                <div>
+                  <label className='text-[10px] font-black uppercase text-gray-400 block mb-2'>Overall Collector Grade</label>
+                  <div className='flex gap-1 text-amber-500'>
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star key={s} size={24} fill={s <= selectedItem.rating ? "currentColor" : "none"} className='cursor-pointer' onClick={() => setSelectedItem({...selectedItem, rating: s})} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Technical Ratings Grid */}
+              <div className='grid grid-cols-2 gap-4 pt-4 border-t border-gray-100'>
+                {[
+                  { id: 'qualityrating', label: 'Item Quality', icon: ShieldCheck },
+                  { id: 'packingrating', label: 'Packing', icon: Box },
+                  { id: 'shippingrating', label: 'Delivery', icon: Truck },
+                  { id: 'raterating', label: 'Valuation', icon: Tag }
+                ].map((metric) => (
+                  <div key={metric.id} className='bg-gray-50 p-4 rounded-lg'>
+                    <div className='flex items-center gap-2 mb-2'>
+                       <metric.icon size={12} className='text-gray-400'/>
+                       <span className='text-[9px] font-black uppercase tracking-widest text-gray-400'>{metric.label}</span>
+                    </div>
+                    <select 
+                      value={selectedItem[metric.id] || 5} 
+                      onChange={(e) => setSelectedItem({...selectedItem, [metric.id]: e.target.value})}
+                      className='w-full bg-transparent font-black text-sm outline-none'
+                    >
+                      {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} / 5</option>)}
+                    </select>
+                  </div>
+                ))}
+              </div>
+
+              <div className='space-y-2'>
+                <label className='text-[10px] font-black uppercase text-gray-400 block'>Collector Remarks</label>
                 <textarea 
-                  value={editForm.text} 
-                  onChange={(e) => setEditForm({...editForm, text: e.target.value})}
-                  className='w-full border p-3 rounded-md text-xs h-32 outline-none focus:border-[#BC002D]'
+                  value={selectedItem.text} 
+                  onChange={(e) => setSelectedItem({...selectedItem, text: e.target.value})}
+                  className='w-full border border-gray-200 p-4 rounded-lg text-xs h-32 outline-none focus:border-black bg-gray-50'
                 />
               </div>
-              <button type="submit" className='w-full bg-black text-white py-4 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-[#BC002D] transition-all'>
-                <Save size={14}/> Save Changes
+
+              <button type="submit" disabled={isUpdating} className='w-full bg-black text-white py-5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] shadow-xl hover:bg-[#BC002D] transition-all flex items-center justify-center gap-3'>
+                {isUpdating ? <RefreshCw className='animate-spin' size={14}/> : <Save size={16}/>}
+                {isUpdating ? 'Synchronizing Archive...' : 'Apply Registry Modifications'}
               </button>
             </form>
           </div>
         </div>
       )}
-
-      <div className='flex flex-col gap-4'>
-        {/* Table Header */}
-        <div className='hidden md:grid grid-cols-[1.5fr_2fr_1fr_1fr_1fr_0.5fr] items-center py-4 px-6 bg-gray-100 text-[10px] font-black uppercase tracking-widest'>
-          <span>Collector / Order</span>
-          <span>Review Text</span>
-          <span>Specimen</span>
-          <span>Rating</span>
-          <span className='text-center'>Visibility</span>
-          <span className='text-right'>Action</span>
-        </div>
-
-        {list.map((item) => (
-          <div key={item._id} className='grid grid-cols-1 md:grid-cols-[1.5fr_2fr_1fr_1fr_1fr_0.5fr] items-center gap-4 py-4 px-6 border border-gray-100 rounded-lg bg-white hover:border-[#BC002D]/30 transition-all'>
-            <div>
-              <p className='text-xs font-bold'>{item.userName}</p>
-              <p className='text-[9px] font-black text-[#BC002D] uppercase tracking-tighter'>Order #{item.orderNo}</p>
-            </div>
-            
-            <p className='text-xs text-gray-600 italic line-clamp-2'>"{item.text || 'No description'}"</p>
-            
-            <div>
-              {item.image ? (
-                <a href={item.image} target="_blank" rel="noreferrer">
-                  <img src={item.image} className='w-12 h-12 object-cover rounded-md border border-gray-100' alt="" />
-                </a>
-              ) : (
-                <span className='text-gray-200'><ImageIcon size={20} /></span>
-              )}
-            </div>
-
-            <div className='flex text-amber-500'>
-              {[...Array(item.rating)].map((_, i) => <Star key={i} size={12} fill="currentColor" />)}
-            </div>
-
-            <div className='flex justify-center'>
-              <button 
-                onClick={() => toggleFeatured(item._id, item.isFeatured)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-full text-[10px] font-black uppercase transition-all ${item.isFeatured ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-400'}`}
-              >
-                {item.isFeatured ? <CheckCircle size={14}/> : <XCircle size={14}/>}
-                {item.isFeatured ? 'Featured' : 'Hidden'}
-              </button>
-            </div>
-
-            <div className='flex justify-end'>
-              <button 
-                onClick={() => handleEditClick(item)}
-                className='p-2 text-gray-400 hover:text-[#BC002D] hover:bg-gray-50 rounded-full transition-all'
-                title="Edit Entry"
-              >
-                <Edit3 size={16} />
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
-  )
-}
+  );
+};
 
 export default Feedback;

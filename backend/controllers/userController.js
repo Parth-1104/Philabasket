@@ -9,6 +9,8 @@ import nodemailer from 'nodemailer';
 import orderModel from "../models/orderModel.js";
 // backend/controllers/userController.js
 import userRewardModel from "../models/userRewardModel.js";
+import rewardTransactionModel from '../models/rewardTranscationModel.js';
+
 
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
@@ -393,7 +395,7 @@ export const getSingleUserDetail = async (req, res) => {
 
 export const adjustRewardPoints = async (req, res) => {
     try {
-        const { userId, amount, action } = req.body;
+        const { userId, amount, action ,description } = req.body;
         const numAmount = Number(amount);
 
         // 1. Fetch user to get current points and email
@@ -406,7 +408,7 @@ export const adjustRewardPoints = async (req, res) => {
         // 2. Calculate point difference based on action
         if (action === 'add') {
             finalPoints += numAmount;
-            pointsChange = numAmount;
+            pointsChange = +numAmount;
         } else if (action === 'subtract') {
             finalPoints = Math.max(0, finalPoints - numAmount);
             pointsChange = -numAmount;
@@ -423,7 +425,7 @@ export const adjustRewardPoints = async (req, res) => {
         const transaction = new userRewardModel({
             email: user.email,
             name: `Registry Adjustment (${action.toUpperCase()})`,
-            description: `Manual adjustment by Archive Administrator.`,
+            description: description || "Manual adjustment by Archive Administrator.",
             discountValue: 0, // No monetary coupon created
             discountCode: `ADJ-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
             pointsUsed: pointsChange, // Stored as positive for deductions, negative for additions in your schema
@@ -442,6 +444,92 @@ export const adjustRewardPoints = async (req, res) => {
     } catch (error) {
         console.error("Adjustment Error:", error);
         res.json({ success: false, message: error.message });
+    }
+};
+
+
+// controllers/userController.js
+
+
+/**
+ * Fetches the complete transactional history of reward points for a specific user.
+ * Used by Admin to audit point adjustments.
+ */
+// controllers/userController.js
+
+export const getUnifiedHistoryAdmin = async (req, res) => {
+    try {
+        const { userId, email: providedEmail } = req.body;
+
+        if (!userId && !providedEmail) {
+            return res.json({ success: false, message: "Collector identification missing (ID or Email)" });
+        }
+
+        let email = providedEmail;
+
+        if (!email) {
+            const user = await userModel.findById(userId);
+            if (!user) return res.json({ success: false, message: "User not found in Registry" });
+            email = user.email;
+        }
+
+        const [transactions, coupons] = await Promise.all([
+            rewardTransactionModel.find({ userEmail: email }).lean(),
+            userRewardModel.find({ email: email }).lean()
+        ]);
+
+        // 4. Format Coupons (Manual Adjustments)
+        // LOGIC: pointsUsed < 0 is (+), pointsUsed > 0 is (-)
+        const formattedCoupons = coupons.map(c => {
+            const rawVal = c.pointsUsed || 0;
+            const isNegativeAction = rawVal > 0; 
+            const absAmount = Math.abs(rawVal);
+            
+            return {
+                _id: c._id,
+                type: 'ADJUSTMENT',
+                title: c.name || `Registry adjustment`,
+                description: c.description || `Admin protocol adjustment`,
+                amount: `${isNegativeAction ? '+' : '-'}${absAmount}`, 
+                status: c.status,
+                createdAt: c.createdAt,
+                isNegative: isNegativeAction 
+            };
+        });
+
+        // 5. Format Transactions (Order Flow)
+        // LOGIC: earn_point is (+), redeem_point is (-)
+        const formattedTransactions = transactions.map(t => {
+            const isRedemption = t.actionType === 'redeem_point';
+            const absAmount = Math.abs(t.rewardAmount || 0);
+            
+            return {
+                _id: t._id,
+                type: isRedemption ? 'REDEMPTION' : 'EARNING',
+                title: t.actionType === 'earn_point' ? 'Acquisition Reward' : 'Points Redeemed',
+                description: t.description || (t.orderId ? `Order: ${t.orderId}` : 'Point Transaction'),
+                amount: `${isRedemption ? '-' : '+'}${absAmount}`,
+                createdAt: t.createdAt,
+                isNegative: isRedemption
+            };
+        });
+
+        // 6. Merge and Sort (Newest First)
+        const combinedHistory = [...formattedCoupons, ...formattedTransactions].sort((a, b) => {
+            const dateA = new Date(a.createdAt?.$date || a.createdAt);
+            const dateB = new Date(b.createdAt?.$date || b.createdAt);
+            return dateB - dateA;
+        });
+
+        res.json({ 
+            success: true, 
+            history: combinedHistory,
+            collectorEmail: email 
+        });
+
+    } catch (error) {
+        console.error("Admin Ledger Fetch Error:", error);
+        res.json({ success: false, message: "Failed to sync admin appraisal ledger." });
     }
 };
 

@@ -328,7 +328,8 @@ const listProducts = async (req, res) => {
             onlyHidden, // New parameter for Trash view
             bestseller, 
             isFeatured,
-            newArrival 
+            newArrival ,
+            outOfStock
         } = req.query;
         
         // --- 1. BASE QUERY ---
@@ -354,6 +355,11 @@ const listProducts = async (req, res) => {
             query.newArrival = true;
         }
         if (isFeatured === 'true') query.isFeatured = true;
+
+        if (outOfStock === 'true') {
+            // Find products where stock is 0 or less
+            query.stock = { $lte: 0 }; 
+        }
 
         // --- 2. LAYERED FILTERS (Search & Categories) ---
         if (search) {

@@ -18,6 +18,8 @@ const Users = ({ token }) => {
     const [pointInput, setPointInput] = useState("");
     const [totalPages, setTotalPages] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
+
+const [adjustmentDescription, setAdjustmentDescription] = useState(""); // New state
     const navigate = useNavigate();
 
     // 1. Fetch Users with search and page parameters
@@ -50,36 +52,48 @@ const Users = ({ token }) => {
     }, [searchTerm]);
 
     // 3. Fetch Full Details for a Single User
-    const handleSelectUser = async (user) => {
-        setSelectedUser(user); // Open drawer immediately with basic info
-        setDetailLoading(true);
-        try {
-            const res = await axios.get(`${backendUrl}/api/user/detail/${user._id}`, { headers: { token } });
-            if (res.data.success) {
-                setSelectedUser(res.data.user); // Update with full order history
-            }
-        } catch (error) {
-            toast.error("Failed to load collector history");
-        } finally {
-            setDetailLoading(false);
-        }
-    };
+    // Add to your state declarations
+const [transactions, setTransactions] = useState([]);
+
+// Update the handleSelectUser function
+const handleSelectUser = async (user) => {
+    setSelectedUser(user); 
+    setDetailLoading(true);
+    setTransactions([]); // Reset previous history
+    try {
+        // Parallel fetch for details and history
+        const [detailRes, historyRes] = await Promise.all([
+            axios.get(`${backendUrl}/api/user/detail/${user._id}`, { headers: { token } }),
+            axios.post(`${backendUrl}/api/user/reward-historyadmin`, { email: user.email }, { headers: { token } })
+        ]);
+
+        if (detailRes.data.success) setSelectedUser(detailRes.data.user);
+        if (historyRes.data.success) setTransactions(historyRes.data.history);
+        
+    } catch (error) {
+        toast.error("Failed to load collector registry data");
+    } finally {
+        setDetailLoading(false);
+    }
+};
 
     const handlePointAdjustment = async (action) => {
         if (!pointInput || isNaN(pointInput)) return toast.error("Enter a valid numeric valuation");
+        if (!adjustmentDescription.trim()) return toast.error("Description required for audit log");
         
         // Add a confirmation for 'overwrite' or large subtractions
         if (action === 'overwrite' && !window.confirm("Are you sure you want to manually set the total balance? This bypasses standard accrual.")) return;
     
         try {
             const res = await axios.post(backendUrl + '/api/user/adjust-points', 
-                { userId: selectedUser._id, amount: Number(pointInput), action }, 
+                { userId: selectedUser._id, amount: Number(pointInput), action ,description: adjustmentDescription}, 
                 { headers: { token } }
             );
             
             if (res.data.success) {
                 toast.success(res.data.message);
                 setPointInput("");
+                setAdjustmentDescription("");
                 
                 // Sync main table
                 fetchUsers(currentPage);
@@ -188,21 +202,88 @@ const Users = ({ token }) => {
                                 </div>
 
                                 <div className='bg-[#BC002D]/5 border border-[#BC002D]/10 p-6 rounded-sm mb-8'>
-                                <div className='flex justify-between items-start mb-4'>
+    <div className='flex justify-between items-start mb-4'>
         <div>
             <p className='text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1'>Current Balance</p>
-            <h4 className='text-3xl font-black text-amber-400'>{selectedUser.totalRewardPoints} <span className='text-xs text-white/50'>PTS</span></h4>
+            <h4 className='text-3xl font-black text-amber-400'>{selectedUser.totalRewardPoints} <span className='text-xs text-[#BC002D]/50'>PTS</span></h4>
         </div>
         <Award className='text-amber-400 opacity-20' size={40} />
     </div>
-                                    <input type="number" value={pointInput} onChange={(e)=>setPointInput(e.target.value)} placeholder="Valuation..." className='w-full p-3 border mb-4 text-xs' />
-                                    
-                                    <div className='grid grid-cols-3 gap-2'>
-                                        <button onClick={()=>handlePointAdjustment('add')} className='bg-black text-white py-2 text-[10px] font-black uppercase'>Add</button>
-                                        <button onClick={()=>handlePointAdjustment('subtract')} className='bg-black text-white py-2 text-[10px] font-black uppercase'>Sub</button>
-                                        <button onClick={()=>handlePointAdjustment('overwrite')} className='bg-[#BC002D] text-white py-2 text-[10px] font-black uppercase'>Set</button>
-                                    </div>
-                                </div>
+
+    {/* VALUATION INPUT */}
+    <div className='space-y-3'>
+        <div>
+            <label className='text-[8px] font-black uppercase text-gray-400 ml-1'>Point Value</label>
+            <input 
+                type="number" 
+                value={pointInput} 
+                onChange={(e)=>setPointInput(e.target.value)} 
+                placeholder="0" 
+                className='w-full p-3 border text-xs outline-none focus:border-black' 
+            />
+        </div>
+
+        {/* DESCRIPTION INPUT */}
+        <div>
+            <label className='text-[8px] font-black uppercase text-gray-400 ml-1'>Adjustment Reason (Audit Log)</label>
+            <textarea 
+                value={adjustmentDescription} 
+                onChange={(e)=>setAdjustmentDescription(e.target.value)} 
+                placeholder="e.g., Loyalty bonus for bulk acquisition..." 
+                className='w-full p-3 border text-xs outline-none focus:border-black resize-none h-20' 
+            />
+        </div>
+    </div>
+    
+    <div className='grid grid-cols-3 gap-2 mt-4'>
+        <button onClick={()=>handlePointAdjustment('add')} className='bg-black text-white py-2 text-[10px] font-black uppercase hover:bg-gray-800 transition-colors'>Add</button>
+        <button onClick={()=>handlePointAdjustment('subtract')} className='bg-black text-white py-2 text-[10px] font-black uppercase hover:bg-gray-800 transition-colors'>Sub</button>
+        <button onClick={()=>handlePointAdjustment('overwrite')} className='bg-[#BC002D] text-white py-2 text-[10px] font-black uppercase hover:bg-[#a00026] transition-colors'>Set</button>
+    </div>
+    {/* --- TRANSACTION AUDIT LOG --- */}
+<div className='mb-8'>
+    <h4 className='text-[10px] font-black uppercase tracking-widest text-gray-400 mb-4'>
+        Credit Transaction Ledger
+    </h4>
+    <div className='bg-white border border-gray-100 rounded-sm overflow-hidden'>
+    {transactions.length > 0 ? (
+        <div className='divide-y divide-gray-50 max-h-60 overflow-y-auto custom-scrollbar'>
+            {transactions.map((tr, idx) => {
+                // Consolidation: If it's negative OR a redemption, it's a reduction
+                const isReduction = tr.isNegative || tr.type === 'REDEMPTION';
+
+                return (
+                    <div key={idx} className='p-3 hover:bg-gray-50 transition-colors'>
+                        <div className='flex justify-between items-start mb-1'>
+                            <span className='text-[9px] font-black text-black uppercase tracking-tight'>
+                                {tr.title || tr.name || "Registry Sync"}
+                            </span>
+                            
+                            {/* Combined logic: Red for minus (-), Emerald for plus (+) */}
+
+                            <span className={`font-black text-[10px] ${isReduction ? 'text-emerald-600' : 'text-red-600'}`}>
+                                {tr.amount} PTS
+                            </span>
+                        </div>
+                        <p className='text-[9px] text-gray-500 italic mb-1 leading-tight'>
+                            {tr.description}
+                        </p>
+                        <div className='flex justify-between items-center text-[8px] text-gray-400 uppercase font-medium mt-1'>
+                            <span className='bg-gray-50 px-1 rounded'>Code: {tr.discountCode || 'N/A'}</span>
+                            <span>{new Date(tr.createdAt).toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                );
+            })}
+        </div>
+    ) : (
+        <div className='p-6 text-center text-gray-300 text-[9px] uppercase font-bold tracking-widest'>
+            No Transactional History Found
+        </div>
+    )}
+</div>
+</div>
+</div>
 
                                 <div className='space-y-6'>
     <h4 className='text-[10px] font-black uppercase tracking-widest text-gray-400'>

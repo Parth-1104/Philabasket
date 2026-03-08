@@ -13,6 +13,7 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, stock
   
   // Logic check for availability
   const isOutOfStock = stock <= 0;
+  
 
   const potentialPoints = useMemo(() => {
     const userTier = userData?.tier || 'Silver';

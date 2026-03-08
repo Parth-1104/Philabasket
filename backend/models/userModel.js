@@ -43,9 +43,9 @@ userSchema.pre('save', function (next) {
     // Platinum: 5,00,000+
     const points = this.totalRewardPoints || 0;
     
-    if (points >= 500000) {
+    if (points >= 50000) {
         this.tier = 'Platinum';
-    } else if (points >= 300000) {
+    } else if (points >= 30000) {
         this.tier = 'Gold';
     } else {
         this.tier = 'Silver';

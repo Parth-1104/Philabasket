@@ -9,6 +9,16 @@ const feedbackSchema = new mongoose.Schema({
     text: { type: String },
     image: { type: String }, // Cloudinary URL
     rating: { type: Number, default: 5 },
+    packingrating: { type: Number, default: 5 },
+    shippingrating: { type: Number, default: 5 },
+    qualityrating: { type: Number, default: 5 },
+    raterating: { type: Number, default: 5 },
+    processrating: { type: Number, default: 5 },
+
+    
+
+
+
     isFeatured: { type: Boolean, default: false }, // For Admin Testimonials
     date: { type: Number, required: true }
 });

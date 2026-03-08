@@ -6,7 +6,7 @@ import {
   Search, Trash2, Edit3, X, Image as ImageIcon, Video, 
   Layers, Tag, Save, Eye, Youtube, Pin, Power, PowerOff, 
   EyeOff, Star, Zap, Filter, ChevronLeft, ChevronRight, 
-  RotateCcw, AlertTriangle, Package, Folder, FileText,CheckCircle,Plus,ChevronDown,CreditCard,Award
+  RotateCcw, AlertTriangle, Package, Folder, FileText,CheckCircle,Plus,ChevronDown,CreditCard,Award,ShieldCheck,Box
 } from 'lucide-react';
 
 const ITEMS_PER_PAGE = 80;
@@ -72,6 +72,8 @@ const List = ({ token }) => {
   const [selectedIds, setSelectedIds] = useState([]);
   const [filterBestseller, setFilterBestseller] = useState(false);
   const [filterNewArrival, setFilterNewArrival] = useState(false);
+  const [filterFeatured, setFilterFeatured] = useState(false);
+const [filterOutOfStock, setFilterOutOfStock] = useState(false);
 
   const [trashList, setTrashList] = useState([]);
   const [trashLoading, setTrashLoading] = useState(false);
@@ -119,7 +121,17 @@ const filteredMedia = useMemo(() => {
     try {
       setLoading(true);
       const res = await axios.get(`${backendUrl}/api/product/list`, {
-        params: { page, limit: ITEMS_PER_PAGE, search: searchTerm, includeHidden: 'false', bestseller: filterBestseller ? 'true' : undefined, newArrival: filterNewArrival ? 'true' : undefined }
+        params: { 
+          page, 
+          limit: ITEMS_PER_PAGE, 
+          search: searchTerm, 
+          includeHidden: 'false', 
+          bestseller: filterBestseller ? 'true' : undefined, 
+          newArrival: filterNewArrival ? 'true' : undefined,
+          // New Filter Parameters
+          isFeatured: filterFeatured ? 'true' : undefined,
+          outOfStock: filterOutOfStock ? 'true' : undefined
+        }
       });
       if (res.data.success) {
         setList(res.data.products);
@@ -127,8 +139,13 @@ const filteredMedia = useMemo(() => {
         setTotalPages(Math.max(1, Math.ceil(res.data.total / ITEMS_PER_PAGE)));
         setCurrentPage(page);
       }
-    } catch { toast.error("Failed to load products"); } finally { setLoading(false); }
-  }, [searchTerm, filterBestseller, filterNewArrival]);
+    } catch { 
+      toast.error("Failed to load products"); 
+    } finally { 
+      setLoading(false); 
+    }
+    // Added new dependencies so the list refreshes when toggled
+  }, [searchTerm, filterBestseller, filterNewArrival, filterFeatured, filterOutOfStock]);
 
   const fetchTrash = useCallback(async (page = 1) => {
     try {
@@ -303,12 +320,46 @@ const filteredMedia = useMemo(() => {
       {viewMode === "active" ? (
         <>
           <div className='flex flex-wrap items-center gap-3 mb-5'>
-            <div className='flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm'>
-              <Filter size={13} className='text-gray-400'/><span className='text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1'>Filter:</span>
-              <button onClick={() => setFilterBestseller(!filterBestseller)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all ${filterBestseller ? "bg-amber-100 text-amber-700 border border-amber-200" : "bg-gray-50 text-gray-400 border border-transparent hover:bg-gray-100"}`}><Star size={11}/> Bestsellers</button>
-              <button onClick={() => setFilterNewArrival(!filterNewArrival)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all ${filterNewArrival ? "bg-blue-100 text-blue-700 border border-blue-200" : "bg-gray-50 text-gray-400 border border-transparent hover:bg-gray-100"}`}><Zap size={11}/> New Arrivals</button>
-              {(filterBestseller || filterNewArrival || searchTerm) && <button onClick={() => { setFilterBestseller(false); setFilterNewArrival(false); setSearchTerm(""); }} className='text-[10px] font-bold text-[#BC002D] hover:underline ml-1 uppercase'>Reset</button>}
-            </div>
+          <div className='flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl border border-gray-200 shadow-sm'>
+  <Filter size={13} className='text-gray-400'/>
+  <span className='text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1'>Filter:</span>
+  
+  {/* Bestsellers */}
+  <button onClick={() => setFilterBestseller(!filterBestseller)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all ${filterBestseller ? "bg-amber-100 text-amber-700 border border-amber-200" : "bg-gray-50 text-gray-400 border border-transparent hover:bg-gray-100"}`}>
+    <Star size={11}/> Bestsellers
+  </button>
+  
+  {/* New Arrivals */}
+  <button onClick={() => setFilterNewArrival(!filterNewArrival)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all ${filterNewArrival ? "bg-blue-100 text-blue-700 border border-blue-200" : "bg-gray-50 text-gray-400 border border-transparent hover:bg-gray-100"}`}>
+    <Zap size={11}/> New Arrivals
+  </button>
+
+  {/* Featured */}
+  <button onClick={() => setFilterFeatured(!filterFeatured)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all ${filterFeatured ? "bg-purple-100 text-purple-700 border border-purple-200" : "bg-gray-50 text-gray-400 border border-transparent hover:bg-gray-100"}`}>
+    <ShieldCheck size={11}/> Featured
+  </button>
+
+  {/* Out of Stock */}
+  <button onClick={() => setFilterOutOfStock(!filterOutOfStock)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all ${filterOutOfStock ? "bg-red-100 text-red-700 border border-red-200" : "bg-gray-50 text-gray-400 border border-transparent hover:bg-gray-100"}`}>
+    <Box size={11}/> Out of Stock
+  </button>
+
+  {/* Reset Logic */}
+  {(filterBestseller || filterNewArrival || filterFeatured || filterOutOfStock || searchTerm) && (
+    <button 
+      onClick={() => { 
+        setFilterBestseller(false); 
+        setFilterNewArrival(false); 
+        setFilterFeatured(false);
+        setFilterOutOfStock(false);
+        setSearchTerm(""); 
+      }} 
+      className='text-[10px] font-bold text-[#BC002D] hover:underline ml-1 uppercase'
+    >
+      Reset
+    </button>
+  )}
+</div>
             <button onClick={toggleSelectAll} className='flex items-center gap-2 bg-white border border-gray-200 px-3 py-2.5 rounded-xl text-xs font-semibold text-gray-500 shadow-sm'>
               <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${selectedIds.length === list.length && list.length > 0 ? "bg-black border-black" : "border-gray-300"}`}>{selectedIds.length === list.length && list.length > 0 && <div className='w-1.5 h-1.5 bg-white rounded-full'/>}</div>
               {selectedIds.length > 0 ? `${selectedIds.length} Selected` : "Select All"}

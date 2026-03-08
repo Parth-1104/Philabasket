@@ -66,7 +66,7 @@ const Navbar = () => {
                                         key={i} 
                                         to={`/collection?category=${encodeURIComponent(item)}`} 
                                         onClick={() => setVisible(false)}
-                                        className='text-[11px] text-gray-500 hover:text-[#BC002D] font-bold tracking-[0.15em] transition-all hover:translate-x-1 font-["Inter",sans-serif]'
+                                        className='text-[13px] text-gray-800 leading-relaxed font-medium'
                                     >
                                         {item}
                                     </Link>

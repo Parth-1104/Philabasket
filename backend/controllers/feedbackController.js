@@ -13,17 +13,21 @@ import streamifier from 'streamifier';
 
 const addFeedback = async (req, res) => {
     try {
-        const { orderId, orderNo, text, rating, userId } = req.body;
+        // 1. Destructure all rating metrics from req.body
+        const { 
+            orderId, orderNo, text, rating, userId,
+            packingrating, shippingrating, qualityrating, 
+            raterating, processrating 
+        } = req.body;
 
-        // 1. One-Feedback-Per-Order Validation
+        // 2. One-Feedback-Per-Order Validation
         const existingFeedback = await feedbackModel.findOne({ orderId });
         if (existingFeedback) {
             return res.json({ success: false, message: "Feedback already exists for this order." });
         }
 
-        // 2. Stream Upload Logic for Memory Storage
+        // 3. Image Upload Logic
         let imageUrl = "";
-        
         const uploadToCloudinary = (buffer) => {
             return new Promise((resolve, reject) => {
                 const stream = cloudinary.uploader.upload_stream(
@@ -41,7 +45,7 @@ const addFeedback = async (req, res) => {
             imageUrl = await uploadToCloudinary(req.file.buffer);
         }
 
-        // 3. Save to Registry
+        // 4. Retrieve User and Save to Registry
         const user = await userModel.findById(userId);
         const feedbackData = new feedbackModel({
             userId,
@@ -50,7 +54,14 @@ const addFeedback = async (req, res) => {
             orderNo,
             text: text || "",
             image: imageUrl,
+            // Main rating
             rating: Number(rating) || 5,
+            // Mapping specific collector metrics
+            packingrating: Number(packingrating) || 5,
+            shippingrating: Number(shippingrating) || 5,
+            qualityrating: Number(qualityrating) || 5,
+            raterating: Number(raterating) || 5,
+            processrating: Number(processrating) || 5,
             date: Date.now()
         });
 

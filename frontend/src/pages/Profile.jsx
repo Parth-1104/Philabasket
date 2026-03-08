@@ -2,10 +2,11 @@ import React, { useState, useEffect, useContext } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import { User, MapPin, ShieldCheck, Loader2, Edit3, X, History, ArrowRight, Wallet,Award } from 'lucide-react';
+import { User, MapPin, ShieldCheck, Loader2, Edit3, X, History, ArrowRight, Wallet,Award,Zap } from 'lucide-react';
 
 const Profile = () => {
     const { token, backendUrl, userData, fetchUserData, navigate } = useContext(ShopContext);
+    const [showTierBenefits, setShowTierBenefits] = useState(false);
     
     const [name, setName] = useState('');
     const [isEditingName, setIsEditingName] = useState(false);
@@ -93,6 +94,15 @@ const Profile = () => {
         userData?.tier === 'Platinum' ? 'border-cyan-400' : 
         userData?.tier === 'Gold' ? 'border-amber-400' : 'border-gray-400'
     }`}>
+
+<button 
+    onClick={() => setShowTierBenefits(true)}
+    className='w-full mt-4 mb-4 flex items-center justify-center gap-2 py-2 border border-white/10 hover:border-white/30 rounded-sm text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-white transition-all bg-white/5'
+>
+    <Zap size={12} className='text-amber-400' />
+    View Tier Benefits
+</button>
+
         <div className='absolute top-0 right-0 w-32 h-32 bg-[#BC002D] blur-[80px] opacity-20'></div>
         
         <div className='relative z-10 flex flex-col items-center gap-5 mb-8'>
@@ -267,6 +277,61 @@ const Profile = () => {
                     </div>
                 </div>
             </div>
+
+            {/* --- TIER BENEFITS MODAL --- */}
+{showTierBenefits && (
+    <div className='fixed inset-0 z-[1000] flex items-center justify-center p-6'>
+        <div className='absolute inset-0 bg-black/80 backdrop-blur-sm' onClick={() => setShowTierBenefits(false)}></div>
+        <div className='bg-white w-full max-w-2xl relative z-10 p-8 rounded-sm shadow-2xl animate-in zoom-in duration-300'>
+            <div className='flex justify-between items-center mb-8 border-b pb-4'>
+                <h3 className='font-black uppercase tracking-widest text-sm text-black'>Collector Privilege Protocol</h3>
+                <X className='cursor-pointer text-gray-400 hover:text-black' onClick={() => setShowTierBenefits(false)} />
+            </div>
+
+            <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                {[
+                    { 
+                        title: 'Silver', 
+                        color: 'bg-gray-100', 
+                        border: 'border-gray-200',
+                        perks: ['10% Reward Earning', 'Standard Support', 'Registry Access']
+                    },
+                    { 
+                        title: 'Gold', 
+                        color: 'bg-amber-50', 
+                        border: 'border-amber-200',
+                        perks: ['15% Reward Earning', 'Priority Shipping', 'Early Archive Access', 'Birthday Specimens']
+                    },
+                    { 
+                        title: 'Platinum', 
+                        color: 'bg-cyan-50', 
+                        border: 'border-cyan-200',
+                        perks: ['20% Reward Earning', 'Free Domestic Shipping', 'Curator Assistance', 'Limited Specimen Invites']
+                    }
+                ].map((tier) => (
+                    <div key={tier.title} className={`${tier.color} ${tier.border} border p-5 rounded-sm flex flex-col h-full`}>
+                        <h4 className='font-black uppercase tracking-widest text-xs mb-4 text-black'>{tier.title}</h4>
+                        <ul className='space-y-3 flex-grow'>
+                            {tier.perks.map((perk, i) => (
+                                <li key={i} className='flex items-start gap-2 text-[9px] font-bold text-gray-600 uppercase leading-tight'>
+                                    <ShieldCheck size={10} className='text-[#BC002D] mt-0.5 shrink-0' />
+                                    {perk}
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                ))}
+            </div>
+
+            <button 
+                onClick={() => setShowTierBenefits(false)}
+                className='w-full mt-8 bg-black text-white py-4 text-[10px] font-black uppercase tracking-widest hover:bg-[#BC002D] transition-all'
+            >
+                Acknowledge
+            </button>
+        </div>
+    </div>
+)}
         </div>
     );
 };

@@ -173,24 +173,26 @@ useEffect(() => {
 
     // --- CART LOGIC ---
     const addToCart = async (itemId, quantity) => {
-        let cartData = structuredClone(cartItems);
+        // Find the specimen in the registry to check stock
+        const product = products.find(p => p._id === itemId);
+        const currentCartQty = cartItems[itemId] || 0;
+        const requestedTotal = currentCartQty + quantity;
     
-        if (cartData[itemId]) {
-            cartData[itemId] += quantity;
-        } else {
-            cartData[itemId] = quantity;
+        // Check if the request exceeds available stock
+        if (product && requestedTotal > product.stock) {
+            toast.error(`Limited Acquisition: Only ${product.stock} specimens available in the registry.`);
+            return; // Terminate protocol
         }
+    
+        let cartData = structuredClone(cartItems);
+        cartData[itemId] = requestedTotal;
     
         setCartItems(cartData);
         setShowSideCart(true);
     
         if (token) {
             try {
-                await axios.post(
-                    backendUrl + '/api/cart/add', 
-                    { itemId, quantity }, 
-                    { headers: { token } }
-                );
+                await axios.post(backendUrl + '/api/cart/add', { itemId, quantity }, { headers: { token } });
             } catch (error) {
                 console.error(error);
                 toast.error(error.message);
@@ -209,6 +211,14 @@ useEffect(() => {
     }
 
     const updateQuantity = async (itemId, quantity) => {
+        const product = products.find(p => p._id === itemId);
+    
+        // Block manual entry higher than stock
+        if (product && quantity > product.stock) {
+            toast.error(`Exceeds Registry Stock: Max ${product.stock} items allowed.`);
+            return;
+        }
+    
         let cartData = structuredClone(cartItems);
     
         if (quantity <= 0) {
@@ -221,11 +231,7 @@ useEffect(() => {
     
         if (token) {
             try {
-                await axios.post(
-                    backendUrl + '/api/cart/update', 
-                    { itemId, quantity }, 
-                    { headers: { token } }
-                );
+                await axios.post(backendUrl + '/api/cart/update', { itemId, quantity }, { headers: { token } });
             } catch (error) {
                 console.error(error);
                 toast.error(error.message);
