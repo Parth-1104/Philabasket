@@ -524,7 +524,7 @@ useEffect(() => {
                     {(order.paymentMethod === 'Direct Bank Transfer' || order.paymentMethod === 'Cheque' || order.status === 'On Hold') && (
                         <button onClick={() => { setSelectedOrderInfo(order); setShowPaymentInfo(true); }} className='flex items-center gap-2 text-[10px] font-black uppercase text-amber-600 hover:underline'><Landmark size={14} /> Payment Info</button>
                     )}
-                    {order.status === 'Order Placed' && <button onClick={() => cancelOrder(order._id)} className='text-[10px] font-black uppercase text-red-500 hover:bg-red-50 px-3 py-2'>Cancel Order</button>}
+                    {order.status === 'On Hold' && <button onClick={() => cancelOrder(order._id)} className='text-[10px] font-black uppercase text-red-500 hover:bg-red-50 px-3 py-2'>Cancel Order</button>}
                     
                     
                     {/* <button onClick={() => { setCurrentOrder(order); setShowFeedbackModal(true); }} className='flex items-center gap-2 text-[10px] font-black uppercase text-gray-400'><MessageSquare size={14} /> Feedback</button> */}
@@ -543,23 +543,9 @@ useEffect(() => {
     </button>
 )}
                     {/* <button onClick={() => downloadInvoice(order)} className='flex items-center gap-2 text-[10px] font-black uppercase text-[#BC002D]'><Download size={14} /> Invoice</button> */}
-                    {order.allowInvoice ? (
-        <button 
-            onClick={() => downloadInvoice(order)} 
-            className='flex items-center gap-2 text-[10px] font-black uppercase text-[#BC002D] hover:opacity-80 transition-all'
-        >
-            <Download size={14} /> 
-            Invoice
-        </button>
-    ) : (
-        <div 
-            className='flex items-center gap-2 text-[10px] font-black uppercase text-gray-300 cursor-not-allowed'
-            title="Invoice will be available once the consignment is verified by the admin."
-        >
-            {/* <Download size={14} /> 
-            Invoice Pending */}
-        </div>
-    )}
+                    
+       
+    
                 </div>
               </div>
               <div className='flex flex-col gap-6'>

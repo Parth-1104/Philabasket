@@ -137,7 +137,7 @@ const Sidebar = () => {
           />
           {!collapsed && (
             <div className='animate-in fade-in slide-in-from-left-2 duration-500'>
-              <p className='text-[13px] font-black text-gray-900 uppercase tracking-tighter leading-none'>PhilaBasket</p>
+              <p className='text-[13px] font-black text-[#192D60] uppercase tracking-tighter leading-none'>PhilaBasket</p>
               <p className='text-[10px] font-bold text-[#BC002D] uppercase tracking-widest mt-1'>Registry</p>
             </div>
           )}
@@ -148,7 +148,7 @@ const Sidebar = () => {
           {navSections.map((section) => (
             <div key={section.label}>
               {!collapsed ? (
-                <p className='text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] px-3 mb-4 opacity-50'>
+                <p className='text-[10px] font-black text-[#192D60] uppercase tracking-[0.3em] px-3 mb-4 opacity-50'>
                   {section.label}
                 </p>
               ) : (
@@ -166,7 +166,7 @@ const Sidebar = () => {
                       ${collapsed ? 'justify-center' : ''}
                       ${isActive
                         ? 'bg-gray-900 text-white shadow-lg shadow-gray-200'
-                        : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50'
+                        : 'text-[#1B2A41] hover:text-[#3B0D11] hover:bg-gray-50'
                       }`
                     }
                   >

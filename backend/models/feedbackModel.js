@@ -14,6 +14,8 @@ const feedbackSchema = new mongoose.Schema({
     qualityrating: { type: Number, default: 5 },
     raterating: { type: Number, default: 5 },
     processrating: { type: Number, default: 5 },
+    originalText: { type: String },
+    originalRating: { type: Number },
 
     
 

@@ -28,7 +28,7 @@ const FeedbackModal = ({ currentOrder, setShowFeedbackModal, handleFeedbackSubmi
   };
 
   return (
-    <div className='fixed inset-0 z-[5000] flex items-center justify-center p-4 md:p-6'>
+    <div className='fixed inset-0 z-[5000] flex items-center justify-center p-4 md:p-6 text-[#3B0D11]'>
       <div className='absolute inset-0 bg-black/80 backdrop-blur-md' onClick={() => setShowFeedbackModal(false)}></div>
       
       <div className='bg-white w-full max-w-xl relative z-10 rounded-xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300'>
@@ -45,7 +45,7 @@ const FeedbackModal = ({ currentOrder, setShowFeedbackModal, handleFeedbackSubmi
           
           {/* OVERALL GRADE - Hero Section */}
           <div className='flex flex-col items-center gap-3 pb-8 border-b border-gray-100'>
-            <p className='text-[10px] font-black uppercase tracking-widest text-gray-500'>Overall Experience</p>
+            <p className='text-[10px] font-black uppercase tracking-widest text-[#3B0D11]'>Overall Experience</p>
             <div className='flex items-center gap-3'>
               {[1, 2, 3, 4, 5].map((star) => (
                 <button 
@@ -56,7 +56,7 @@ const FeedbackModal = ({ currentOrder, setShowFeedbackModal, handleFeedbackSubmi
                   onMouseLeave={() => setHoverRating(0)} 
                   onClick={() => setRating(star)}
                 >
-                  <Star size={32} className={`transition-colors ${(hoverRating || rating) >= star ? 'fill-[#BC002D] text-[#BC002D]' : 'text-gray-100'}`} />
+                  <Star size={32} className={`transition-colors ${(hoverRating || rating) >= star ? 'fill-[#BC002D] text-[#BC002D]' : 'text-[#3B0D11]'}`} />
                 </button>
               ))}
             </div>
@@ -68,7 +68,7 @@ const FeedbackModal = ({ currentOrder, setShowFeedbackModal, handleFeedbackSubmi
               <div key={id} className='flex flex-col gap-2'>
                 <div className='flex items-center gap-2 mb-1'>
                   <Icon size={12} className="text-[#BC002D]" />
-                  <p className='text-[9px] font-black uppercase tracking-widest text-gray-400'>{label}</p>
+                  <p className='text-[9px] font-black uppercase tracking-widest text-[#3B0D11]'>{label}</p>
                 </div>
                 <div className='flex items-center gap-1.5'>
                   {[1, 2, 3, 4, 5].map((val) => (
@@ -79,7 +79,7 @@ const FeedbackModal = ({ currentOrder, setShowFeedbackModal, handleFeedbackSubmi
                       className={`w-8 h-8 rounded-md text-[10px] font-bold transition-all border 
                         ${detailedRatings[id] === val 
                           ? 'bg-[#BC002D] text-white border-[#BC002D] shadow-lg shadow-red-100' 
-                          : 'bg-white text-gray-400 border-gray-100 hover:border-gray-300'}`}
+                          : 'bg-white text-[#3B0D11] border-gray-100 hover:border-gray-300'}`}
                     >
                       {val}
                     </button>
@@ -91,7 +91,7 @@ const FeedbackModal = ({ currentOrder, setShowFeedbackModal, handleFeedbackSubmi
 
           {/* TEXT FEEDBACK */}
           <div className='flex flex-col gap-2'>
-             <p className='text-[10px] font-black uppercase tracking-widest text-gray-500'>Additional Remarks</p>
+             <p className='text-[10px] font-black uppercase tracking-widest text-[#3B0D11]'>Additional Remarks</p>
              <textarea 
                className='w-full p-4 bg-gray-50 border border-gray-100 rounded-lg text-sm focus:outline-none focus:border-[#BC002D]/30 min-h-[100px] resize-none'
                placeholder="Describe the specimen quality or shipping experience..."

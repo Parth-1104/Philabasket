@@ -3,7 +3,7 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { 
   Star, CheckCircle, XCircle, Image as ImageIcon, Edit3, 
-  Save, X, BarChart3, List, ShieldCheck, Box, Truck, Tag, Zap, Search ,RefreshCw
+  Save, X, BarChart3, List, ShieldCheck, Box, Truck, Tag, Zap, Search ,RefreshCw,Quote
 } from 'lucide-react';
 import { backendUrl } from '../App';
 
@@ -110,6 +110,8 @@ const Feedback = ({ token }) => {
         <div className='flex bg-white border border-gray-200 p-1 rounded-lg shadow-sm'>
           <button onClick={() => setView('list')} className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${view === 'list' ? 'bg-black text-white' : 'text-gray-400 hover:text-black'}`}><List size={14}/> List</button>
           <button onClick={() => setView('analytics')} className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${view === 'analytics' ? 'bg-black text-white' : 'text-gray-400 hover:text-black'}`}><BarChart3 size={14}/> Analytics</button>
+          <button onClick={() => setView('archive')} className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${view === 'archive' ? 'bg-black text-white' : 'text-gray-400 hover:text-black'}`}><Quote size={14}/>  Testimonial</button>
+
         </div>
       </div>
 
@@ -247,6 +249,56 @@ const Feedback = ({ token }) => {
           </div>
         </div>
       )}
+
+
+<button 
+  onClick={() => setView('archive')} 
+  className={`flex items-center gap-2 px-4 py-2 rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${view === 'archive' ? 'bg-[#1e3a5f] text-white' : 'text-gray-400 hover:text-black'}`}
+>
+  <ShieldCheck size={14}/> Raw Archives
+</button>
+
+
+{view === 'archive' && (
+  <div className='space-y-4 animate-in fade-in duration-500'>
+    <div className='bg-amber-50 border border-amber-200 p-4 rounded-lg mb-6'>
+       <p className='text-[10px] font-bold text-amber-800 uppercase flex items-center gap-2'>
+         <Box size={12}/> Verified Collector Manuscripts (Unedited)
+       </p>
+    </div>
+    
+    <table className='w-full bg-white border border-gray-100 rounded-xl overflow-hidden'>
+      <thead className='bg-gray-50 border-b border-gray-100'>
+        <tr>
+          <th className='p-4 text-left text-[9px] font-black uppercase text-gray-400'>Order</th>
+          <th className='p-4 text-left text-[9px] font-black uppercase text-gray-400'>Collector</th>
+          <th className='p-4 text-left text-[9px] font-black uppercase text-gray-400'>Original Message</th>
+          <th className='p-4 text-left text-[9px] font-black uppercase text-gray-400'>Current Display</th>
+        </tr>
+      </thead>
+      <tbody>
+        {filteredList.map((item) => (
+          <tr key={item._id} className='border-b border-gray-50 hover:bg-gray-50/50'>
+            <td className='p-4 text-xs font-bold'>#{item.orderNo}</td>
+            <td className='p-4 text-xs font-black'>{item.userName}</td>
+            <td className='p-4 text-xs italic text-red-600 bg-red-50/30'>
+              "{item.originalText || item.text}" 
+              <div className='mt-1 flex gap-0.5 text-amber-500'>
+                {[...Array(item.originalRating || item.rating)].map((_, i) => <Star key={i} size={8} fill="currentColor"/>)}
+              </div>
+            </td>
+            <td className='p-4 text-xs text-gray-500'>
+              "{item.text}"
+              {item.text !== item.originalText && (
+                <span className='ml-2 text-[8px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-black uppercase'>Edited</span>
+              )}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+)}
     </div>
   );
 };

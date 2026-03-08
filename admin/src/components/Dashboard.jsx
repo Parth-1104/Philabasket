@@ -97,7 +97,7 @@ const Dashboard = ({ token }) => {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 bg-white p-6 border rounded-xl shadow-sm">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-8 text-gray-800">Acquisition Trends</h3>
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-8 text-[#3B0D11]">Acquisition Trends</h3>
                     <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={stats?.salesTrend || []}>
