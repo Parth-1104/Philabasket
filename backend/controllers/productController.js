@@ -6,6 +6,120 @@ import streamifier from 'streamifier';
 import { Readable } from 'stream';
 import mediaModel from '../models/mediaModel.js';
 import categoryModel from "../models/categoryModel.js";
+import userModel from "../models/userModel.js";
+import dotenv from 'dotenv';
+import nodemailer from 'nodemailer';
+dotenv.config()
+
+import { Resend } from 'resend';
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+export const sendUpdateEmails = async (products) => {
+    try {
+        const users = await userModel.find({}, 'email name');
+        console.log(`--- INITIALIZING RESEND DISPATCH FOR ${users.length} USERS ---`);
+
+        // Resend allows batching easily
+        for (let i = 0; i < users.length; i += 100) { // Resend handles larger batches (up to 100)
+            const batch = users.slice(i, i + 100);
+            
+            await Promise.all(batch.map(user => 
+                resend.emails.send({
+                    from: 'Registry <updates@philabasket.com>', // Requires domain verification
+                    to: user.email,
+                    subject: 'Registry Update: New Specimens Archived',
+                    html: `
+                    <div style="background-color: #f4f4f4; padding: 40px 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;">
+                        <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border: 1px solid #dddddd; border-radius: 8px; overflow: hidden; shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                            
+                            <tr>
+                                <td align="center" style="padding: 40px 0; background-color: #000000;">
+                                    <h1 style="color: #ffffff; margin: 0; font-size: 26px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase;">
+                                        Phila<span style="color: #BC002D;">Basket</span>
+                                    </h1>
+                                    <div style="height: 2px; width: 40px; background-color: #BC002D; margin-top: 10px;"></div>
+                                    <p style="color: #888888; font-size: 9px; margin-top: 15px; letter-spacing: 4px; font-weight: bold; text-transform: uppercase;">
+                                        Archive Synchronization Report
+                                    </p>
+                                </td>
+                            </tr>
+                
+                            <tr>
+                                <td style="padding: 40px 40px 20px 40px;">
+                                    <p style="color: #999999; font-size: 10px; font-weight: 800; text-transform: uppercase; tracking: 2px; margin-bottom: 10px;">
+                                        Attention: ${user.name || 'Collector'}
+                                    </p>
+                                    <h2 style="color: #1a1a1a; font-size: 22px; font-weight: 800; margin: 0; line-height: 1.2;">
+                                        The following specimens have been successfully added to the global registry.
+                                    </h2>
+                                </td>
+                            </tr>
+                
+                            <tr>
+                                <td style="padding: 20px 40px;">
+                                    <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                                        ${products.map(p => `
+                                        <tr>
+                                            <td style="padding: 20px 0; border-bottom: 1px solid #f0f0f0;">
+                                                <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                                                    <tr>
+                                                        <td width="110" valign="top" style="padding-right: 20px;">
+                                                            <div style="border: 1px solid #eeeeee; padding: 4px; background-color: #f9f9f9; border-radius: 4px;">
+                                                                <img src="${p.image[0]}" alt="${p.name}" width="100" height="100" style="display: block; object-fit: cover; border-radius: 2px;">
+                                                            </div>
+                                                        </td>
+                                                        <td valign="top" style="padding-top: 5px;">
+                                                            <p style="margin: 0; font-size: 10px; color: #BC002D; font-weight: 900; text-transform: uppercase; letter-spacing: 1px;">
+                                                                Specimen ID: ${p._id.toString().slice(-6).toUpperCase()}
+                                                            </p>
+                                                            <h3 style="margin: 5px 0; font-size: 15px; font-weight: 800; color: #1a1a1a; text-transform: uppercase; line-height: 1.3;">
+                                                                ${p.name}
+                                                            </h3>
+                                                            <p style="margin: 5px 0 0 0; font-size: 16px; font-weight: 900; color: #000000;">
+                                                                ₹${p.price.toLocaleString('en-IN')}
+                                                            </p>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        `).join('')}
+                                    </table>
+                                </td>
+                            </tr>
+                
+                            <tr>
+                                <td align="center" style="padding: 40px;">
+                                    <a href="https://philabasket.com/collection" style="background-color: #BC002D; color: #ffffff; padding: 20px 40px; text-decoration: none; font-size: 12px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase; display: inline-block; border-radius: 4px; box-shadow: 0 4px 15px rgba(188, 0, 45, 0.2);">
+                                        Enter Global Archive
+                                    </a>
+                                </td>
+                            </tr>
+                
+                            <tr>
+                                <td align="center" style="padding: 30px; background-color: #1a1a1a;">
+                                    <p style="color: #666666; font-size: 9px; text-transform: uppercase; letter-spacing: 2px; margin: 0;">
+                                        Secure Philatelic Protocol • Batch ID: ${new Date().getTime().toString().slice(-6)}
+                                    </p>
+                                    <p style="color: #444444; font-size: 8px; margin-top: 15px; line-height: 1.5;">
+                                        This is an automated intelligence report from PhilaBasket. <br>
+                                        © 2026 PhilaBasket Global Registry. All Rights Reserved.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                    `
+                })
+            ));
+            
+            console.log(`[RESEND] Batch delivered to ${batch.length} collectors.`);
+        }
+    } catch (error) {
+        console.error("Resend System Error:", error);
+    }
+};
 
 // --- CLOUDINARY HELPERS ---
 const uploadToCloudinary = (fileBuffer) => {
@@ -956,12 +1070,16 @@ export const getRecentlyUpdated = async (req, res) => {
         const products = await productModel.find({})
             .sort({ updatedAt: -1 }) // Newest updates first
             .limit(30); // Limit to top 20 recent changes
+        await sendUpdateEmails(products);
 
         res.json({ success: true, products });
     } catch (error) {
         res.json({ success: false, message: error.message });
     }
 };
+
+
+
 
 export { 
     listProducts, addProduct, removeProduct, singleProduct, 
