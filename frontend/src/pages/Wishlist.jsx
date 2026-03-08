@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext,useMemo } from 'react';
 import { ShopContext } from '../context/ShopContext';
 import Title from '../components/Title';
 import ProductItem from '../components/ProductItem';
@@ -12,13 +12,17 @@ const Wishlist = () => {
     const navigate = useNavigate();
     
     // Filter products to show only saved specimens
-    const wishlistProducts = products.filter(item => wishlist.includes(item._id));
-
+    const wishlistProducts = useMemo(() => {
+        return products.filter(product => 
+            wishlist.some(wishId => (wishId._id || wishId) === product._id)
+        );
+    }, [products, wishlist]);
     const handleBuyNow = async (id) => {
         await addToCart(id, 1);
         navigate('/cart');
         window.scroll(0,0);
     };
+    
 
     return (
         <div className='pt-24 px-6 md:px-16 lg:px-24 min-h-screen bg-white select-none animate-fade-in'>

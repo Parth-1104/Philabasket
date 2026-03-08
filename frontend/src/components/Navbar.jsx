@@ -5,7 +5,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { ShopContext } from '../context/ShopContext';
 import { 
   Search, User, Heart, ShoppingBag, Menu, X, Package,
-  ChevronRight, LogOut, ArrowLeft, Users, Gift, Award
+  ChevronRight, LogOut, ArrowLeft, Users, Gift, Award,RefreshCw
 } from 'lucide-react';
 
 const Navbar = () => {
@@ -45,7 +45,7 @@ const Navbar = () => {
     };
 
     const MegaMenu = ({ menuData }) => (
-        <div className='group relative flex flex-col items-center cursor-pointer'>
+        <div className='group relative flex flex-col items-center cursor-pointer z-[9999]'>
             <div className='flex items-center gap-1.5 px-4 py-5 transition-all duration-500'>
                 <p className='text-[13px] font-[800] text-black group-hover:text-[#BC002D] transition-colors capitalize font-["Nunito",sans-serif]'>
                     {menuData.title}
@@ -80,7 +80,7 @@ const Navbar = () => {
     );
 
     return (
-        <div className='sticky top-0 z-[100] w-full'>
+        <div className='sticky top-0 z-[9999] w-full'>
             
             {/* --- MARQUEE --- */}
             {/* --- DYNAMIC ANNOUNCEMENT MARQUEE --- */}
@@ -224,22 +224,24 @@ const Navbar = () => {
     
     {/* CURRENCY TOGGLE - Now an integrated icon */}
     <div 
-    onClick={() => toggleCurrency(currency === 'INR' ? 'USD' : 'INR')} 
+    onClick={() => navigate('/orders')} 
     className='flex flex-col items-center justify-between h-[38px] cursor-pointer group active:scale-95 transition-all'
 >
-    {/* Icon Container: Fixed size to match Lucide-react icons (usually 18-20px) */}
+    {/* Icon Container: Using a box or archive icon to represent Orders */}
     <div className='flex items-center justify-center h-[20px]'>
-        <span className={`
-            text-[11px] font-black leading-none rounded-full flex items-center justify-center
-            ${currency === 'INR' ? 'text-[#BC002D] bg-[#BC002D]/5 border border-[#BC002D]/10 w-5 h-5' : 'text-gray-400 border border-gray-200 w-5 h-5'}
-        `}>
-            {currency === 'INR' ? '$' : '₹'}
-        </span>
+        <div className='relative'>
+            <Package 
+                size={18} 
+                className='text-gray-400 group-hover:text-[#BC002D] transition-colors' 
+            />
+            {/* Optional: Small notification dot if you have unfulfilled orders */}
+            {/* <span className='absolute -top-1 -right-1 w-2 h-2 bg-[#BC002D] rounded-full border-2 border-white'></span> */}
+        </div>
     </div>
     
-    {/* Label: Forced to the bottom for horizontal alignment with neighbors */}
-    <span className='text-[8px] font-black uppercase text-gray-500 tracking-tighter mt-auto'>
-        {currency === 'INR' ? 'Currency USD' : 'Currency INR'}
+    {/* Label: Aligned with your horizontal navigation theme */}
+    <span className='text-[8px] font-black uppercase text-gray-500 tracking-tighter mt-auto group-hover:text-black transition-colors'>
+        My Orders
     </span>
 </div>
 
@@ -372,7 +374,27 @@ const Navbar = () => {
                         </div>
 
                         <div className='p-8'>
-                            <button onClick={() => {toggleCurrency(currency === 'INR' ? 'USD' : 'INR')}} className='w-full mb-3 py-3 border border-gray-200 rounded-xl text-[9px] text-black uppercase tracking-widest'>Switch to {currency === 'INR' ? 'USD' : 'INR'}</button>
+                            {/* <button onClick={() => {toggleCurrency(currency === 'INR' ? 'USD' : 'INR')}} className='w-full mb-3 py-3 border border-gray-200 rounded-xl text-[9px] text-black uppercase tracking-widest'>Switch to {currency === 'INR' ? 'USD' : 'INR'}</button>
+                             */}
+                             <button 
+    onClick={() => {toggleCurrency(currency === 'INR' ? 'USD' : 'INR')}} 
+    className='w-full mb-3 py-3.5 px-4 border border-gray-200 rounded-xl flex items-center justify-center gap-3 group hover:border-[#BC002D]/30 hover:bg-[#BC002D]/5 transition-all active:scale-[0.98]'
+>
+    {/* Dynamic Symbol Container */}
+    <div className='flex items-center justify-center w-5 h-5 bg-black text-white rounded-full transition-transform  duration-500'>
+        <span className='text-[10px] font-black leading-none'>
+            {currency === 'INR' ? '$' : '₹'}
+        </span>
+    </div>
+
+    {/* Text Label */}
+    <span className='text-[9px] text-black font-black uppercase tracking-[0.2em]'>
+        Switch Registry to {currency === 'INR' ? 'USD' : 'INR'}
+    </span>
+
+    {/* Secondary Icon */}
+    <RefreshCw size={10} className='text-gray-300 group-hover:text-[#BC002D] ml-auto transition-colors' />
+</button>
                             {token ? (
                                 <button onClick={() => {logout(); setVisible(false)}} className='w-full py-5 bg-gray-900 text-white text-[11px] font-black uppercase tracking-[0.4em] rounded-xl flex items-center justify-center gap-2'><LogOut size={14}/> Logout</button>
                             ) : (

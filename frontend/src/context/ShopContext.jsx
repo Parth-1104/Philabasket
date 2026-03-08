@@ -181,9 +181,11 @@ useEffect(() => {
         }
     }
 
+    // --- UPDATED getProductsData in ShopContext.jsx ---
     const getProductsData = async () => {
         try {
-            const response = await axios.get(backendUrl + '/api/product/list');
+            // We add ?limit=1000 and isWishlist=true to get the full archival data
+            const response = await axios.get(backendUrl + '/api/product/list?limit=1000&isWishlist=true');
             if (response.data.success) {
                 setProducts(response.data.products.reverse());
             }
@@ -191,6 +193,25 @@ useEffect(() => {
             console.error(error);
         }
     }
+
+// --- OPTIMIZED STARTUP PROTOCOL ---
+useEffect(() => {
+    const initializeRegistry = async () => {
+        // 1. Always load products first so other logic has data to reference
+        await getProductsData();
+        await fetchLiveExchangeRate();
+        await fetchAdminSettings();
+        
+        const storedToken = localStorage.getItem('token');
+        if (storedToken) {
+            setToken(storedToken);
+            fetchUserData(storedToken);
+            getUserCart(storedToken);
+            getWishlistData(storedToken);
+        }
+    };
+    initializeRegistry();
+}, []);
 
     // --- CART LOGIC ---
     const addToCart = async (itemId, quantity) => {

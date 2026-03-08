@@ -18,11 +18,11 @@ const ORDERS_PER_PAGE = 10;
 const STATUS_CONFIG = {
   "Order Placed":    { color: "bg-blue-100 text-blue-700",   dot: "bg-blue-500",   icon: ShoppingBag  },
   "On Hold":         { color: "bg-gray-100 text-gray-700",   dot: "bg-gray-400",   icon: Clock        },
-  "Money Received":  { color: "bg-cyan-100 text-cyan-700",   dot: "bg-cyan-500",   icon: CreditCard   },
-  "Packing":         { color: "bg-amber-100 text-amber-700", dot: "bg-amber-400",  icon: PackageCheck },
+  // "Money Received":  { color: "bg-cyan-100 text-cyan-700",   dot: "bg-cyan-500",   icon: CreditCard   },
+  "Processing":         { color: "bg-amber-100 text-amber-700", dot: "bg-amber-400",  icon: PackageCheck },
   "Shipped":         { color: "bg-purple-100 text-purple-700", dot: "bg-purple-500", icon: Truck      },
-  "Out for delivery":{ color: "bg-orange-100 text-orange-700", dot: "bg-orange-400", icon: Truck      },
-  "Delivered":       { color: "bg-green-100 text-green-700", dot: "bg-green-500",  icon: CheckCircle2 },
+  "Complete":        { color: "bg-orange-100 text-orange-700", dot: "bg-orange-400", icon: Truck      },
+  // "Delivered":       { color: "bg-green-100 text-green-700", dot: "bg-green-500",  icon: CheckCircle2 },
   "Cancelled":       { color: "bg-red-100 text-red-700",     dot: "bg-red-500",    icon: Ban          },
 };
 
@@ -348,13 +348,13 @@ const Orders = ({ token }) => {
       onClick={downloadShippingManifest} 
       className='flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold hover:text-red-600 hover:shadow-md transition-all active:scale-95'
     >
-      <FileText size={14} /> Shipping PDF
+      <FileText size={14} /> Shipping Label PDF
     </button>
     <button 
       onClick={downloadShippingManifestcolumn} 
       className='flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold hover:text-red-600 hover:shadow-md transition-all active:scale-95'
     >
-      <FileText size={14} /> Shipping list Pdf
+      <FileText size={14} /> Shipping List Pdf
     </button>
             <button onClick={downloadRegistry} className='flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-xs font-bold hover:shadow-md transition-all active:scale-95'>
               <Download size={14} /> Export Excel
@@ -387,7 +387,7 @@ const Orders = ({ token }) => {
         {/* ── CONTROLS ── */}
         <div className='bg-white p-4 rounded-2xl border border-gray-100 flex flex-wrap justify-between items-center gap-4 shadow-sm'>
         <div className='flex flex-wrap gap-2'>
-  {["ALL", "TODAY", "Order Placed", "On Hold", "Money Received", "Shipped", "Delivered", "Cancelled"].map(s => (
+  {["ALL", "TODAY", "Order Placed","Complete", "On Hold", "Processing", "Shipped", "Delivered", "Cancelled"].map(s => (
     <button
       key={s}
       onClick={() => setFilterStatus(s)}

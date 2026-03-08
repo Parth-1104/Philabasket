@@ -469,7 +469,8 @@ const listProducts = async (req, res) => {
             bestseller, 
             isFeatured,
             newArrival ,
-            outOfStock
+            outOfStock,
+            isWishlist
         } = req.query;
         
         // --- 1. BASE QUERY ---
@@ -480,6 +481,8 @@ const listProducts = async (req, res) => {
          * - onlyHidden: returns only items in Trash (isActive: false)
          * - includeHidden != true: returns only Active items (isActive: true)
          * - includeHidden == true: returns everything
+         * 
+         * 
          */
         if (onlyHidden === 'true') {
             query.isActive = false;
@@ -495,6 +498,16 @@ const listProducts = async (req, res) => {
             query.newArrival = true;
         }
         if (isFeatured === 'true') query.isFeatured = true;
+
+        if (isWishlist === 'true') {
+            // For Wishlist, we show items regardless of isActive or Stock
+            // but we usually still exclude items explicitly moved to 'Trash'
+            query.isActive = { $in: [true, false] }; 
+        } else if (onlyHidden === 'true') {
+            query.isActive = false;
+        } else if (includeHidden !== 'true') {
+            query.isActive = true;
+        }
 
         if (outOfStock === 'true') {
             // Find products where stock is 0 or less
@@ -551,7 +564,7 @@ switch (sort) {
         // countDocuments(query) now accurately reflects the current tab (Active or Trash)
         const [products, total] = await Promise.all([
             productModel.find(query)
-                .select('name price marketPrice image category country condition year blogLink stock date bestseller description youtubeUrl releaseDate isActive isLatest newArrival producedCount isFeatured')
+                .select('name price marketPrice image category country condition year blogLink stock date bestseller description description2 youtubeUrl releaseDate isActive isLatest newArrival producedCount isFeatured')
                 .sort(sortOrder)
                 .skip(skip)
                 .limit(limit)

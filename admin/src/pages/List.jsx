@@ -258,6 +258,8 @@ const filteredMedia = useMemo(() => {
     setEditFormData({
         ...item,
         description: item.description || "",
+        description2: item.description2 || "",
+
         youtubeUrl: item.youtubeUrl || "",
         releaseDate: item.releaseDate || "",
         isLatest: item.isLatest || false,
@@ -537,39 +539,71 @@ const filteredMedia = useMemo(() => {
             </div>
 
             <div className='grid grid-cols-1 lg:grid-cols-[1fr_340px]'>
-              <form onSubmit={handleUpdate} className='p-8 grid grid-cols-1 md:grid-cols-2 gap-10 border-r border-gray-100'>
-                <div className='space-y-8'>
-                  <div className='space-y-4'>
-                    <h5 className='text-[10px] font-black text-[#BC002D] uppercase tracking-widest flex items-center gap-2'><Tag size={11}/> Specimen Identity</h5>
-                    <input className='w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none focus:border-gray-400' value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}/>
-                    <div className='grid grid-cols-2 gap-3'>
-                      <div className='space-y-1'><label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Registry Price</label><input type="number" className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none' value={editFormData.price} onChange={(e) => setEditFormData({ ...editFormData, price: e.target.value })}/></div>
-                      <div className='space-y-1'><label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Market Price</label><input type="number" className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none' value={editFormData.marketPrice} onChange={(e) => setEditFormData({ ...editFormData, marketPrice: e.target.value })}/></div>
-                      <div className='space-y-1'><label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Year</label><input type="number" className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none' value={editFormData.year} onChange={(e) => setEditFormData({ ...editFormData, year: e.target.value })}/></div>
-                      <div className='space-y-1'><label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Produced Count</label><input type="number" className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none' value={editFormData.producedCount} onChange={(e) => setEditFormData({ ...editFormData, producedCount: e.target.value })}/></div>
-                      <div className='space-y-1'><label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Stock</label><input type="number" className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none' value={editFormData.stock} onChange={(e) => setEditFormData({ ...editFormData, stock: e.target.value })}/></div>
-                      <div className='space-y-1'>
-    <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Release Date (DD/MM/YYYY)</label>
-    <input 
-      type="text" 
-      placeholder="DD/MM/YYYY"
-      className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none focus:border-blue-400' 
-      value={editFormData.releaseDate} 
-      onChange={(e) => setEditFormData({ ...editFormData, releaseDate: e.target.value })}
-    />
+  <form onSubmit={handleUpdate} className='p-8 grid grid-cols-1 md:grid-cols-2 gap-10 border-r border-gray-100'>
+    <div className='space-y-8'>
+      <div className='space-y-4'>
+        <h5 className='text-[10px] font-black text-[#BC002D] uppercase tracking-widest flex items-center gap-2'>
+          <Tag size={11} /> Specimen Identity
+        </h5>
+        
+        {/* Name Input */}
+        <input 
+          className='w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none focus:border-gray-400' 
+          value={editFormData.name} 
+          onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+        />
 
-<div className='col-span-2 space-y-1'>
-    <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Archive Research Link (Blog URL)</label>
-    <input 
-      type="url" 
-      placeholder="https://philabasket.com/blog/specimen-history"
-      className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none focus:border-[#BC002D]' 
-      value={editFormData.blogLink} 
-      onChange={(e) => setEditFormData({ ...editFormData, blogLink: e.target.value })}
-    />
-  </div>
-  </div>
-  
+        {/* Unified Specification Grid */}
+        <div className='grid grid-cols-2 gap-3'>
+          <div className='space-y-1'>
+            <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Registry Price</label>
+            <input type="number" className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none' value={editFormData.price} onChange={(e) => setEditFormData({ ...editFormData, price: e.target.value })}/>
+          </div>
+          <div className='space-y-1'>
+            <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Market Price</label>
+            <input type="number" className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none' value={editFormData.marketPrice} onChange={(e) => setEditFormData({ ...editFormData, marketPrice: e.target.value })}/>
+          </div>
+          <div className='space-y-1'>
+            <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Year</label>
+            <input type="number" className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none' value={editFormData.year} onChange={(e) => setEditFormData({ ...editFormData, year: e.target.value })}/>
+          </div>
+          <div className='space-y-1'>
+            <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Produced Count</label>
+            <input type="number" className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none' value={editFormData.producedCount} onChange={(e) => setEditFormData({ ...editFormData, producedCount: e.target.value })}/>
+          </div>
+          <div className='space-y-1'>
+            <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Stock</label>
+            <input type="number" className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none' value={editFormData.stock} onChange={(e) => setEditFormData({ ...editFormData, stock: e.target.value })}/>
+          </div>
+          <div className='space-y-1'>
+            <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Release Date</label>
+            <input type="text" placeholder="DD/MM/YYYY" className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none focus:border-[#BC002D]' value={editFormData.releaseDate} onChange={(e) => setEditFormData({ ...editFormData, releaseDate: e.target.value })}/>
+          </div>
+
+          {/* Links aligned within the same grid but taking full width (col-span-2) */}
+          <div className='col-span-2 space-y-1 mt-2'>
+            <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Archive Research Link (Blog URL)</label>
+            <input 
+              type="url" 
+              placeholder="https://philabasket.com/blog/specimen-history"
+              className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none focus:border-[#BC002D] transition-all' 
+              value={editFormData.blogLink} 
+              onChange={(e) => setEditFormData({ ...editFormData, blogLink: e.target.value })}
+            />
+          </div>
+
+          <div className='col-span-2 space-y-1'>
+            <label className='text-[9px] font-bold text-gray-400 uppercase ml-1'>Archive Video Documentation (YouTube URL)</label>
+            <input 
+              type="url" 
+              placeholder="https://youtube.com/watch?v=specimen-id"
+              className='w-full p-3.5 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-bold outline-none focus:border-[#BC002D] transition-all' 
+              value={editFormData.youtubeUrl} 
+              onChange={(e) => setEditFormData({ ...editFormData, youtubeUrl: e.target.value })}
+            />
+          </div>
+    
+   
 
 
                     </div>
@@ -584,6 +618,13 @@ const filteredMedia = useMemo(() => {
         placeholder="Enter detailed philatelic notes, historical context, or condition specifics..."
         value={editFormData.description} 
         onChange={(e) => setEditFormData({ ...editFormData, description: e.target.value })}
+    />
+    <textarea 
+        rows={6}
+        className='w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl text-sm font-medium outline-none focus:border-gray-400 focus:bg-white transition-all resize-none leading-relaxed custom-scrollbar' 
+        placeholder="Enter detailed philatelic notes, historical context, or condition specifics..."
+        value={editFormData.description2} 
+        onChange={(e) => setEditFormData({ ...editFormData, description2: e.target.value })}
     />
     <div className='flex justify-between px-1'>
         <p className='text-[8px] text-gray-300 uppercase font-bold tracking-tighter'>

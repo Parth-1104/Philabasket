@@ -323,27 +323,54 @@ useEffect(() => {
   );
 
   return (
-    <div className='bg-[#FCF9F4] min-h-screen pt-24 pb-20 px-6 md:px-16 lg:px-24 text-black select-none animate-fade-in'>
+    <div className='bg-[#FCF9F4] min-h-screen pt-24 pb-20  px-6 md:px-16 lg:px-24 text-black select-none animate-fade-in z-0'>
       
       {/* STATS HEADER */}
-      <div className='max-w-6xl mx-auto mb-8 grid grid-cols-2 md:grid-cols-4 gap-4'>
-        <div className='bg-white border border-black/5 p-4 rounded-sm'>
-          <p className='text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1'>Total Consignments</p>
-          <p className='text-2xl font-black tracking-tighter'>{processedOrders.length}</p>
+     <div className='max-w-6xl mx-auto mb-8 px-4 md:px-0'>
+    <div className='grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4'>
+        
+        {/* Total Consignments */}
+        <div className='bg-white border border-black/5 p-3 md:p-4 rounded-sm shadow-sm'>
+            <p className='text-[7px] md:text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1 truncate'>
+                Total Consignments
+            </p>
+            <p className='text-xl md:text-2xl font-black tracking-tighter'>
+                {processedOrders.length}
+            </p>
         </div>
-        <div className='bg-white border border-black/5 p-4 rounded-sm'>
-          <p className='text-[8px] text-[#BC002D] font-black uppercase tracking-widest mb-1'>Delivered Units</p>
-          <p className='text-2xl font-black tracking-tighter'>{processedOrders.filter(o => o.status === 'Delivered').length}</p>
+
+        {/* Delivered Units */}
+        <div className='bg-white border border-black/5 p-3 md:p-4 rounded-sm shadow-sm'>
+            <p className='text-[7px] md:text-[8px] text-[#BC002D] font-black uppercase tracking-widest mb-1 truncate'>
+                Delivered Units
+            </p>
+            <p className='text-xl md:text-2xl font-black tracking-tighter'>
+                {processedOrders.filter(o => o.status === 'Delivered').length}
+            </p>
         </div>
-        <div className='bg-white border border-black/5 p-4 rounded-sm hidden md:block'>
-          <p className='text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1'>Active Transit</p>
-          <p className='text-2xl font-black tracking-tighter'>{processedOrders.filter(o => o.status !== 'Delivered' && o.status !== 'Cancelled').length}</p>
+
+        {/* Active Transit - Visible on Mobile now, but with smaller text */}
+        <div className='bg-white border border-black/5 p-3 md:p-4 rounded-sm shadow-sm'>
+            <p className='text-[7px] md:text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1 truncate'>
+                Active Transit
+            </p>
+            <p className='text-xl md:text-2xl font-black tracking-tighter'>
+                {processedOrders.filter(o => o.status !== 'Delivered' && o.status !== 'Cancelled').length}
+            </p>
         </div>
-        <div className='bg-white border border-black/5 p-4 rounded-sm hidden md:block'>
-          <p className='text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1'>Total Ledger Value</p>
-          <p className='text-2xl font-black tracking-tighter'>₹{processedOrders.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()}</p>
+
+        {/* Total Ledger Value */}
+        <div className='bg-white border border-black/5 p-3 md:p-4 rounded-sm shadow-sm'>
+            <p className='text-[7px] md:text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1 truncate'>
+                Total Ledger Value
+            </p>
+            <p className='text-lg md:text-2xl font-black tracking-tighter truncate'>
+                ₹{processedOrders.reduce((acc, curr) => acc + curr.amount, 0).toLocaleString()}
+            </p>
         </div>
-      </div>
+        
+    </div>
+</div>
 
       <div className='text-3xl mb-12 flex items-center justify-between'>
         <div className='flex items-center gap-4'>
@@ -550,7 +577,7 @@ useEffect(() => {
                 </div>
                 <div className='flex gap-4 w-full lg:w-auto'>
                   {order.trackingNumber && <button onClick={() => handleTrackAsset(order.trackingNumber)} className='flex-1 lg:flex-none bg-black text-white px-8 py-4 text-[9px] font-black uppercase tracking-[0.4em] flex items-center justify-center gap-2'><Truck size={14} /> Track Asset <ExternalLink size={10} /></button>}
-                  <button onClick={() => loadOrderData(true)} className='flex-1 lg:flex-none bg-white border border-black/10 px-8 py-4 text-[9px] font-black uppercase tracking-[0.4em]'>Refresh</button>
+
                 </div>
               </div>
             </div>

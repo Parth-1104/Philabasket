@@ -317,7 +317,7 @@ const handleMouseMove = (e) => {
   
   {/* Left Side: Product Title and Sub-details */}
   <div className='flex-1'>
-    <h1 className='text-2xl md:text-3xl font-bold text-gray-900 leading-tight tracking-tight mb-2'>
+    <h1 className='text-2xl md:text-3xl font-semibold text-gray-900 leading-tight tracking-tight mb-4'>
       {productData.name}
     </h1>
     {/* Description snippet as seen in reference */}
@@ -404,7 +404,7 @@ const handleMouseMove = (e) => {
             <Layers size={14} className='text-[#BC002D]' strokeWidth={2.5} />
             <span className='text-[9px] font-black text-[#BC002D] uppercase tracking-widest'>Produced</span>
         </div>
-        <span className='text-[11px] font-black text-gray-900 leading-none'>
+        <span className='text-[11px] font-black text-gray-900 leading-none '>
             {productData.producedCount||'Limited'} Units
         </span>
     </div>
@@ -416,9 +416,9 @@ const handleMouseMove = (e) => {
             <span className='text-[9px] font-black text-[#BC002D] uppercase tracking-widest'>Variety</span>
         </div>
         <div className='flex flex-wrap gap-1'>
-            {productData.category && productData.category.slice(0, 1).map((cat, i) => (
-                <span key={i} className='text-[10px] font-black text-[#BC002D] capitalize truncate'>
-                    {cat}
+            {productData.category && productData.category.slice(0, 3).map((cat, i) => (
+                <span key={i} className='text-[10px] font-black  text-gray-900 capitalize truncate'>
+                    {cat},
                 </span>
             ))}
         </div>
@@ -437,21 +437,51 @@ const handleMouseMove = (e) => {
 </div>
 
 {/* 7. Action Buttons (Matching reference CTA weights) */}
-<div className='flex  gap-3'>
+<div className='flex gap-3'>
+  {/* --- ACTION BUTTONS (Buy Now / Add to Cart or Sold Out) --- */}
+  {productData.stock > 0 ? (
+    <>
+      <button
+        onClick={handleInstantCheckout}
+        className='w-full bg-[#BC002D] text-white py-5 rounded-2xl text-[11px] font-black tracking-[0.3em] uppercase hover:bg-black transition-all shadow-xl shadow-red-100 flex items-center justify-center gap-3'
+      >
+        <Zap size={14} fill="white" />
+        Buy It Now
+      </button>
+      <button
+        onClick={handleAddToCart}
+        className='w-full border-2 border-gray-100 text-gray-900 py-4 rounded-2xl text-[10px] font-black tracking-[0.3em] uppercase hover:bg-gray-50 transition-all'
+      >
+        Add to Cart
+      </button>
+    </>
+  ) : (
+    /* --- CONSOLIDATED SOLD OUT BUTTON --- */
+    <button
+      disabled
+      className='w-full bg-gray-100 text-gray-400 py-5 rounded-2xl text-[11px] font-black tracking-[0.3em] uppercase flex items-center justify-center gap-3 cursor-not-allowed border border-gray-200'
+    >
+      <X size={14} />
+       Sold Out
+    </button>
+  )}
+
+  {/* --- WISHLIST BUTTON (Always Available) --- */}
   <button
-    onClick={handleInstantCheckout}
-    className='w-full bg-[#BC002D] text-white py-5 rounded-2xl text-[11px] font-black tracking-[0.3em] uppercase hover:bg-black transition-all shadow-xl shadow-red-100 flex items-center justify-center gap-3'
+    onClick={() => toggleWishlist(productData._id)}
+    className={`p-5 rounded-2xl border-2 transition-all flex items-center justify-center shadow-sm
+      ${wishlist.includes(productData._id) 
+        ? 'bg-[#BC002D]/5 border-[#BC002D]/20 text-[#BC002D]' 
+        : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'
+      }`}
+    title="Secure to Vault"
   >
-     <Zap size={14} fill="white" />
-    Buy It Now
+    <Heart 
+      size={20} 
+      fill={wishlist.includes(productData._id) ? "#BC002D" : "none"} 
+      className={wishlist.includes(productData._id) ? "animate-pulse" : ""}
+    />
   </button>
-  <button
-    onClick={handleAddToCart}
-    className='w-full border-2 border-gray-100 text-gray-900 py-4 rounded-2xl text-[10px] font-black tracking-[0.3em] uppercase hover:bg-gray-50 transition-all'
-  >
-    Add to Cart
-  </button>
-  
 </div>
 
 {/* Interactive & Resource Section */}
