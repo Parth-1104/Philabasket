@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { backendUrl } from '../App';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { toast } from 'react-toastify';
 import { 
   ChevronLeft, MapPin, Phone, Mail, CreditCard, 
@@ -43,6 +45,142 @@ const OrderDetail = ({ token }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSavingItems, setIsSavingItems] = useState(false);
+
+
+  const downloadInvoice = (order) => {
+    try {
+      // Initialize jsPDF
+      const doc = new jsPDF();
+  
+      // --- 1. HEADER SECTION (TEXT ONLY) ---
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(18);
+      doc.text("Phila Basket", 14, 18); // Shifted to left margin since logo is removed
+      
+      doc.setFontSize(8);
+      doc.text("G-3, Prakash Kunj Apartment, Kavi Raman Path, Boring Road", 14, 23);
+      doc.text("Patna 800001 Bihar India | philapragya@gmail.com", 14, 27);
+      doc.text("GSTIN: 10AGUPJ4257E1ZI", 14, 31);
+  
+      // Right-aligned Invoice Header
+      doc.setFontSize(14);
+      doc.text("TAX INVOICE", 140, 18);
+      doc.setFontSize(9);
+      doc.text(`Order #: ${order.orderNo || 'N/A'}`, 140, 25);
+      doc.text(`Date: ${new Date(order.date).toLocaleDateString()}`, 140, 30);
+  
+      // --- 2. STATUS LOGIC ---
+      let displayStatus = (order.status || "Order Placed").toUpperCase();
+      const method = (order.paymentMethod || "").toUpperCase();
+      
+      if (['RAZORPAY', 'STRIPE', 'UPI'].includes(method)) {
+          displayStatus = "PAID";
+      } else if (method === 'COD') {
+          displayStatus = order.status === 'Delivered' ? "PAID (CASH)" : "PENDING (COD)";
+      }
+  
+      doc.setFontSize(9);
+      doc.text(`Status: ${displayStatus}`, 140, 35);
+  
+      // --- 3. ADDRESSES ---
+      const addr = order.address || {};
+      const billAddr = order.billingAddress || addr;
+      
+      doc.setFontSize(10);
+      doc.text("BILL TO:", 14, 45);
+      doc.setFontSize(8);
+      doc.text(`${billAddr.firstName || ''} ${billAddr.lastName || ''}`, 14, 50);
+      doc.text(`${billAddr.street || ''}`, 14, 54);
+      doc.text(`${billAddr.city || ''}, ${billAddr.state || ''} ${billAddr.zipcode || ''}`, 14, 58);
+  
+      doc.text("SHIP TO:", 110, 45);
+      doc.text(`${addr.firstName || ''} ${addr.lastName || ''}`, 110, 50);
+      doc.text(`${addr.street || ''}`, 110, 54);
+      doc.text(`${addr.city || ''}, ${addr.state || ''} ${addr.zipcode || ''}`, 110, 58);
+  
+      // --- 4. ITEMS TABLE ---
+      let totalBaseAmount = 0;
+      let totalGSTAmount = 0;
+  
+      const tableRows = (order.items || []).map((item, index) => {
+          const basePriceUnit = Number(item.price || 0);
+          const qty = item.quantity || 1;
+          const gstUnit = basePriceUnit * 0.05; // 5% GST Logic
+          const rowTotalIncl = (basePriceUnit + gstUnit) * qty;
+          
+          totalBaseAmount += basePriceUnit * qty;
+          totalGSTAmount += gstUnit * qty;
+  
+          return [
+            index + 1, 
+            item.name || 'Specimen', 
+            "9704", 
+            qty, 
+            basePriceUnit.toFixed(2),
+            "5%", 
+            rowTotalIncl.toFixed(2)
+          ];
+      });
+  
+      autoTable(doc, {
+          startY: 70,
+          head: [['#', 'Item & Description', 'HSN', 'Qty', 'Rate (Excl.)', 'IGST', 'Amount (Incl.)']],
+          body: tableRows,
+          theme: 'grid',
+          headStyles: { fillColor: [188, 0, 45] }, // Phila Basket Brand Red
+          styles: { fontSize: 8 }
+      });
+  
+      // --- 5. TOTALS SECTION ---
+      const finalY = doc.lastAutoTable.finalY + 10;
+      const userCountry = (addr.country || "India").trim().toLowerCase();
+      const isIndia = userCountry === 'india';
+  
+      const itemTotalInclGst = totalBaseAmount + totalGSTAmount;
+      let shippingCharge = order.deliveryFee !== undefined ? Number(order.deliveryFee) : (isIndia ? 125 : 750);
+      
+      // Free Shipping Logic
+      if (isIndia && itemTotalInclGst > 4999) {
+          shippingCharge = 0;
+      }
+  
+      const couponDiscount = Number(order.discountAmount || 0);
+      const pointsDiscount = Number(order.pointsUsed || 0) / 10;
+      const finalPayable = Number(order.amount || 0);
+  
+      autoTable(doc, {
+          startY: finalY,
+          margin: { left: 105 },
+          tableWidth: 90,
+          theme: 'plain', 
+          styles: { fontSize: 8, cellPadding: 2 },
+          body: [
+              ['Sub-Total (Base Items)', `Rs. ${totalBaseAmount.toFixed(2)}`],
+              ['IGST (5%)', `Rs. ${totalGSTAmount.toFixed(2)}`],
+              [`Shipping Charge`, shippingCharge === 0 ? 'FREE' : `Rs. ${shippingCharge.toFixed(2)}`],
+              [{ content: 'GST Subsidy', styles: { textColor: [0, 128, 0], fontStyle: 'italic' } }, `Rs. -${totalGSTAmount.toFixed(2)}`],
+              [`Discount`, `Rs. -${couponDiscount.toFixed(2)}`],
+              [`Archive Credits`, `Rs. -${pointsDiscount.toFixed(2)}`],
+              [{ content: 'Total Payable', styles: { fontStyle: 'bold', fontSize: 10, textColor: [188, 0, 45] } }, 
+               { content: `Rs. ${finalPayable.toFixed(2)}`, styles: { fontStyle: 'bold', fontSize: 10, textColor: [188, 0, 45] } }]
+          ],
+          columnStyles: { 1: { halign: 'right' } }
+      });
+  
+      // --- 6. FOOTER ---
+      const footerY = doc.lastAutoTable.finalY + 15;
+      doc.setFontSize(8);
+      doc.text("BANKING: HDFC Bank | A/c: 01868730000112 | IFSC: HDFC0000186", 14, footerY);
+      
+      // Save File
+      doc.save(`Invoice_${order.orderNo || 'Order'}.pdf`);
+  
+    } catch (err) {
+      console.error("PDF Error:", err);
+      toast.error("Invoice generation failed.");
+    }
+  };
+
 
   // --- EDITING LOGIC ---
   const fetchAllProducts = async () => {
@@ -343,6 +481,13 @@ const OrderDetail = ({ token }) => {
                     {isEmailing ? <RefreshCw size={12} style={{ animation: 'spin 1s linear infinite' }} /> : <Mail size={14}/>} 
                     Email Registry Invoice
                 </button>
+                <button 
+        onClick={() => downloadInvoice(order)} 
+        style={{ ...styles.secondaryBtn, marginBottom: '8px', color: '#1e3a5f', borderColor: '#1e3a5f' }}
+      >
+        <Hash size={14} /> 
+        Download PDF Invoice
+      </button>
               </div>
             </div>
           </div>
