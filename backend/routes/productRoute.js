@@ -21,6 +21,7 @@ import {
 import upload from '../middleware/multer.js';
 import adminAuth from '../middleware/adminAuth.js';
 import { chatWithRegistry } from '../controllers/chatController.js';
+import { syncMediaToProducts } from '../controllers/mediaController.js';
 
 const productRouter = express.Router();
 
@@ -63,6 +64,7 @@ productRouter.post('/query', chatWithRegistry);
 productRouter.post('/bulk-status', adminAuth, bulkUpdateStatus);
 // Add this near your other routes
 productRouter.get('/admin-list', adminAuth, listProductsForAdminEdit);
+productRouter.post('/sync-media', adminAuth, syncMediaToProducts);
 
 
 productRouter.post('/bulk-update-attributes', adminAuth, bulkUpdateAttributes);

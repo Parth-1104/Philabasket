@@ -6,7 +6,7 @@ import {
     Upload, RefreshCw, Trash2, Search, 
     Edit3, Save, X, ExternalLink, 
     Link as LinkIcon, Database,
-    ChevronLeft, ChevronRight, AlertTriangle, Copy, Check, Loader2
+    ChevronLeft, ChevronRight, AlertTriangle, Copy, Check, Loader2,Zap
 } from 'lucide-react';
 
 // ─── Lazy image with IntersectionObserver + blur-up ──────────────────────────
@@ -23,6 +23,7 @@ const LazyImage = ({ src, alt, className }) => {
         if (ref.current) observer.observe(ref.current);
         return () => observer.disconnect();
     }, []);
+
 
     return (
         <div ref={ref} className='w-full h-full relative'>
@@ -62,6 +63,40 @@ const MediaLibrary = ({ token }) => {
 
     const [inspectingAsset, setInspectingAsset] = useState(null);
     const [editValue, setEditValue] = useState("");
+    const [syncing, setSyncing] = useState(false);
+
+
+    const handleSync = async () => {
+        if (!window.confirm("Sync orphaned images to products matching #XYZ format?")) return;
+        
+        setSyncing(true);
+        const toastId = toast.loading("Syncing assets...");
+        
+        try {
+            const res = await axios.post(
+                backendUrl + '/api/product/sync-media', 
+                {}, 
+                { headers: { token } }
+            );
+            
+            if (res.data.success) {
+                // --- CHECK YOUR BROWSER CONSOLE FOR THIS ---
+                console.log("Registry Sync Details:", res.data.syncLog);
+                
+                toast.update(toastId, { 
+                    render: `Matched ${res.data.matchCount} specimens. Check console for details.`, 
+                    type: "success", 
+                    isLoading: false, 
+                    autoClose: 5000 
+                });
+                fetchGallery();
+            }
+        } catch (err) {
+            toast.update(toastId, { render: "Sync failed.", type: "error", isLoading: false });
+        } finally {
+            setSyncing(false);
+        }
+    };
 
     // ── Two-phase fetch: paint first 50, stream the rest in background ───────
     const fetchGallery = useCallback(async () => {
@@ -267,6 +302,21 @@ const MediaLibrary = ({ token }) => {
                                 onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                             />
                         </div>
+
+                        <button
+                onClick={handleSync}
+                disabled={syncing || loadingInitial}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all shadow-sm select-none border
+                    ${syncing 
+                        ? 'bg-amber-50 text-amber-600 border-amber-200 cursor-wait' 
+                        : 'bg-white text-amber-600 border-amber-200 hover:bg-amber-50'}`}
+                title="Match #XYZ patterns to Product SKUs"
+            >
+                {syncing ? <RefreshCw size={13} className='animate-spin'/> : <Zap size={13}/>}
+                {syncing ? 'Syncing...' : 'Sync to Products'}
+            </button>
+
+
                         <button
                             onClick={fetchGallery}
                             className='p-2 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors text-gray-500 hover:text-gray-800'
