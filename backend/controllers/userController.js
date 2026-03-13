@@ -298,8 +298,8 @@ const updateAddress = async (req, res) => {
 // controllers/userController.js
 export const getTopPhilatelists = async (req, res) => {
     try {
-        const topUsers = await orderModel.aggregate([
-            { $match: { payment: true } }, // Only count paid orders
+        const results = await orderModel.aggregate([
+            { $match: { payment: true } },
             {
                 $group: {
                     _id: "$userId",
@@ -307,20 +307,28 @@ export const getTopPhilatelists = async (req, res) => {
                     orderCount: { $sum: 1 }
                 }
             },
-            { $sort: { totalSpent: -1 } },
-            { $limit: 100 },
             {
                 $lookup: {
-                    from: "users", // the name of the user collection
+                    from: "users",
                     localField: "_id",
                     foreignField: "_id",
                     as: "userDetails"
                 }
             },
-            { $unwind: "$userDetails" }
+            { $unwind: "$userDetails" },
+            {
+                $facet: {
+                    byRevenue: [{ $sort: { totalSpent: -1 } }, { $limit: 100 }],
+                    byFrequency: [{ $sort: { orderCount: -1 } }, { $limit: 100 }]
+                }
+            }
         ]);
 
-        res.json({ success: true, topUsers });
+        res.json({ 
+            success: true, 
+            topUsers: results[0].byRevenue, 
+            mostFrequent: results[0].byFrequency 
+        });
     } catch (error) {
         res.json({ success: false, message: error.message });
     }

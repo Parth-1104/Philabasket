@@ -12,6 +12,8 @@ const Dashboard = ({ token }) => {
     const [topPhilatelists, setTopPhilatelists] = useState([]); // State for new aggregation
     const [loading, setLoading] = useState(true);
     const [selectedBuyer, setSelectedBuyer] = useState(null);
+    const [mostFrequentUsers, setMostFrequentUsers] = useState([]);
+    
 
     const INR_SYMBOL = "₹";
 
@@ -63,6 +65,7 @@ const Dashboard = ({ token }) => {
             }
             if (topRes.status === 'fulfilled' && topRes.value.data.success) {
                 setTopPhilatelists(topRes.value.data.topUsers);
+                setMostFrequentUsers(topRes.value.data.mostFrequent);
             }
         } catch (error) { 
             toast.error("Registry Sync Failed"); 
@@ -89,54 +92,87 @@ const Dashboard = ({ token }) => {
             
             {/* KPI ROW */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <StatCard title="Gross Revenue" value={`${INR_SYMBOL}${formatINR(stats?.totalRevenue || 0)}`} sub="Total Stored Value" />
-                <StatCard title="Top Specimen" value={stats?.topProduct?.name || "N/A"} sub="Volume Leader" />
-                <StatCard title="Order Count" value={analytics?.recentOrders?.length || 0} sub="Registry Entries" />
-                <StatCard title="System Rewards" value={`${(stats?.totalSystemPoints || 0).toLocaleString()} Pts`} sub="Philatelist Credits" />
-            </div>
+        <StatCard title="Gross Revenue" value={`${INR_SYMBOL}${formatINR(stats?.totalRevenue || 0)}`} sub="Total Stored Value" />
+        <StatCard title="Top Specimen" value={stats?.topProduct?.name || "N/A"} sub="Volume Leader" />
+        <StatCard title="Order Count" value={analytics?.recentOrders?.length || 0} sub="Registry Entries" />
+        <StatCard title="System Rewards" value={`${(stats?.totalSystemPoints || 0).toLocaleString()} Pts`} sub="Philatelist Credits" />
+    </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 bg-white p-6 border rounded-xl shadow-sm">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-8 text-[#3B0D11]">Acquisition Trends</h3>
-                    <div className="h-80">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={stats?.salesTrend || []}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f3f3" />
-                                <XAxis dataKey="date" fontSize={10} tickFormatter={(str) => new Date(str).toLocaleDateString('en-IN', {day:'numeric', month:'short'})} />
-                                <YAxis fontSize={10} tickFormatter={(v) => `${INR_SYMBOL}${formatINR(v)}`} />
-                                <Tooltip content={<CustomTooltip currency={INR_SYMBOL} formatINR={formatINR} />} />
-                                <Area type="monotone" dataKey="sales" stroke="#BC002D" fill="#BC002D" fillOpacity={0.05} />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
+    {/* ROW 2: Acquisition Trends (Full Width) */}
+    <div className="bg-white p-6 border rounded-xl shadow-sm">
+        <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-8 text-[#3B0D11]">Acquisition Trends</h3>
+        <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={stats?.salesTrend || []}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f3f3" />
+                    <XAxis dataKey="date" fontSize={10} tickFormatter={(str) => new Date(str).toLocaleDateString('en-IN', {day:'numeric', month:'short'})} />
+                    <YAxis fontSize={10} tickFormatter={(v) => `${INR_SYMBOL}${formatINR(v)}`} />
+                    <Tooltip content={<CustomTooltip currency={INR_SYMBOL} formatINR={formatINR} />} />
+                    <Area type="monotone" dataKey="sales" stroke="#BC002D" fill="#BC002D" fillOpacity={0.05} />
+                </AreaChart>
+            </ResponsiveContainer>
+        </div>
+    </div>
 
-                {/* TOP PHILATELISTS - Now using Backend Aggregation */}
-                <div className="bg-white p-6 border rounded-xl shadow-sm overflow-hidden">
-                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-6 text-gray-800">Top Philatelists</h3>
-                    <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-                    {topPhilatelists.map((buyer, index) => (
-    <div 
-        key={buyer._id} 
-        onClick={() => handleBuyerClick(buyer)} // Updated from setSelectedBuyer(buyer)
-        className="flex justify-between items-center p-3 hover:bg-gray-50 cursor-pointer border border-transparent hover:border-gray-200 rounded-lg transition-all group"
-    >
-                                <div className="flex items-center gap-3">
-                                    <span className="text-[10px] font-black text-gray-300 group-hover:text-[#BC002D]">#{index + 1}</span>
-                                    <div className="flex flex-col gap-0.5">
-                                        <p className="text-xs font-bold text-gray-800">{buyer.userDetails?.name || "Anonymous Collector"}</p>
-                                        <span className="text-[8px] font-black uppercase text-gray-400">{buyer.orderCount} Orders Verified</span>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <p className="text-sm font-black text-gray-900">{INR_SYMBOL}{formatINR(buyer.totalSpent)}</p>
-                                    <p className="text-[7px] font-black text-[#BC002D] uppercase opacity-0 group-hover:opacity-100 transition-opacity">View Details</p>
-                                </div>
+    {/* ROW 3: Collector Lists (Side-by-Side) */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Most Frequent Collectors */}
+        <div className="bg-white p-6 border rounded-xl shadow-sm overflow-hidden">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-6 text-gray-800 flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                Most Frequent Collectors
+            </h3>
+            <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                {mostFrequentUsers.map((buyer, index) => (
+                    <div 
+                        key={buyer._id} 
+                        onClick={() => handleBuyerClick(buyer)}
+                        className="flex justify-between items-center p-3 hover:bg-gray-50 cursor-pointer border border-transparent hover:border-gray-200 rounded-lg transition-all group"
+                    >
+                        <div className="flex items-center gap-3">
+                            <span className="text-[10px] font-black text-gray-300 group-hover:text-blue-600">#{index + 1}</span>
+                            <div className="flex flex-col gap-0.5">
+                                <p className="text-xs font-bold text-gray-800">{buyer.userDetails?.name || "Anonymous Collector"}</p>
+                                <span className="text-[8px] font-black uppercase text-gray-400">Total Spent: {INR_SYMBOL}{formatINR(buyer.totalSpent)}</span>
                             </div>
-                        ))}
+                        </div>
+                        <div className="text-right">
+                            <div className="bg-blue-50 px-2 py-1 rounded text-blue-700">
+                                 <p className="text-[10px] font-black">{buyer.orderCount} ORDERS</p>
+                            </div>
+                            <p className="text-[7px] font-black text-blue-600 uppercase opacity-0 group-hover:opacity-100 transition-opacity mt-1">View Details</p>
+                        </div>
                     </div>
-                </div>
+                ))}
             </div>
+        </div>
+
+        {/* Top Philatelists (Moved Down Here) */}
+        <div className="bg-white p-6 border rounded-xl shadow-sm overflow-hidden">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-6 text-gray-800">Top Philatelists</h3>
+            <div className="space-y-2 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
+                {topPhilatelists.map((buyer, index) => (
+                    <div 
+                        key={buyer._id} 
+                        onClick={() => handleBuyerClick(buyer)}
+                        className="flex justify-between items-center p-3 hover:bg-gray-50 cursor-pointer border border-transparent hover:border-gray-200 rounded-lg transition-all group"
+                    >
+                        <div className="flex items-center gap-3">
+                            <span className="text-[10px] font-black text-gray-300 group-hover:text-[#BC002D]">#{index + 1}</span>
+                            <div className="flex flex-col gap-0.5">
+                                <p className="text-xs font-bold text-gray-800">{buyer.userDetails?.name || "Anonymous Collector"}</p>
+                                <span className="text-[8px] font-black uppercase text-gray-400">{buyer.orderCount} Orders Verified</span>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-sm font-black text-gray-900">{INR_SYMBOL}{formatINR(buyer.totalSpent)}</p>
+                            <p className="text-[7px] font-black text-[#BC002D] uppercase opacity-0 group-hover:opacity-100 transition-opacity">View Details</p>
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+    </div>
 
             {/* LEDGER TABLE */}
             <div className="bg-white border rounded-xl shadow-sm overflow-hidden">

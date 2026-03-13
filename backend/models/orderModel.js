@@ -3,7 +3,7 @@ import counterModel from './counterModel.js';
 
 const orderSchema = new mongoose.Schema({
     userId: { type: mongoose.Schema.Types.ObjectId, ref: 'user', required: true },
-    orderNo: { type: Number, unique: true }, // The new sequential field
+    orderNo: { type: Number, unique: false }, // The new sequential field
     items: { type: Array, required: true },
     trackingNumber: { type: String, default: '' },
     billingAddress: { type: Object }, // Store the billing address separately
@@ -29,9 +29,9 @@ const orderSchema = new mongoose.Schema({
     address: { type: Object, required: true },
     status: { type: String, required: true, default:'Order Placed' },
     shippedDate: { type: Number, default: null },
-    paymentMethod: { type: String, required: true },
-    payment: { type: Boolean, required: true , default: false },
-    date: {type: Number, required:true},
+    paymentMethod: { type: String, required: false },
+    payment: { type: Boolean, required: false , default: false },
+    date: {type: Number, required:false},
     currency: { type: String, required: true, default: 'INR' }
 });
 

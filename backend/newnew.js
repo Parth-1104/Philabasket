@@ -1,43 +1,80 @@
-import { v2 as cloudinary } from 'cloudinary';
+import xlsx from 'xlsx';
 import mongoose from 'mongoose';
+import orderModel from './models/orderModel.js';
+import userModel from './models/userModel.js';
 import dotenv from 'dotenv';
-import productModel from './models/productModel.js';
 
 dotenv.config();
 
-// Configure with your credentials from Cloudinary Dashboard
-cloudinary.config({ 
-  cloud_name: 'darmvywhd', 
-  api_key: process.env.CLOUDINARY_API_KEY, 
-  api_secret: process.env.CLOUDINARY_API_SECRET 
-});
+const BACKUP_FILE = '/Users/parthpankajsingh/Desktop/ML Projects/test/wp_wlr_user_rewards.csv';
 
-const bulkMigrate = async () => {
-    await mongoose.connect(process.env.MONGODB_URI);
-    const products = await productModel.find({ image: { $exists: true, $ne: [] } });
+const cleanupLegacyEntries = async () => {
+    try {
+        await mongoose.connect(`${process.env.MONGODB_URI}/e-commerce`);
+        console.log("✅ Connected to PhilaBasket Registry");
 
-    console.log(`🚀 Starting migration for ${products.length} products...`);
+        // 1. Load Excel to map Order Numbers to Names
+        const workbook = xlsx.readFile(BACKUP_FILE);
+        const rows = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+        
+        const wpNameMap = new Map();
+        rows.forEach(row => {
+            const orderNo = parseInt(row['Order Number'] || row['ID']);
+            const fName = (row['First Name (Billing)'] || "").trim();
+            const lName = (row['Last Name (Billing)'] || "").trim();
+            if (orderNo) {
+                wpNameMap.set(orderNo, { 
+                    fName, 
+                    lName, 
+                    fullName: `${fName} ${lName}`.trim() 
+                });
+            }
+        });
 
-    for (let product of products) {
-        for (let oldUrl of product.image) {
-            // Only migrate if it's a WordPress URL
-            if (oldUrl.includes('https://www.philabasket.com/wp-content/uploads/2026/02/')) {
-                try {
-                    // This 'uploads' the remote URL directly to Cloudinary
-                    const result = await cloudinary.uploader.upload(oldUrl, {
-                        folder: "wp_images",
-                        use_filename: true,
-                        unique_filename: false,
-                        overwrite: false
-                    });
-                    console.log(`✅ Saved: ${result.public_id}`);
-                } catch (err) {
-                    console.error(`❌ Failed: ${oldUrl} - ${err.message}`);
+        // 2. Find all orders that currently show "Legacy Entry" or have no userId
+        const problematicOrders = await orderModel.find({
+            $or: [
+                { userId: { $exists: false } },
+                { userId: "696b5cf3cbfa2614b4bcffe3" }, // Your placeholder ID
+                { "address.firstName": "Legacy" }
+            ]
+        });
+
+        console.log(`🔍 Found ${problematicOrders.length} orders needing name/ID repair...`);
+
+        let repaired = 0;
+
+        for (const order of problematicOrders) {
+            const wpData = wpNameMap.get(order.orderNo);
+            
+            if (wpData) {
+                // Find the actual user in the user table (e.g., Vivek Divakar)
+                const actualUser = await userModel.findOne({
+                    name: { $regex: new RegExp(`^${wpData.fullName}$`, 'i') }
+                });
+
+                const updateData = {
+                    "address.firstName": wpData.fName,
+                    "address.lastName": wpData.lName,
+                };
+
+                if (actualUser) {
+                    updateData.userId = actualUser._id;
                 }
+
+                await orderModel.findByIdAndUpdate(order._id, { $set: updateData });
+                repaired++;
             }
         }
+
+        console.log(`\n🎉 Repair Complete!`);
+        console.log(`Fixed Identity for: ${repaired} orders`);
+
+    } catch (err) {
+        console.error("❌ Repair Error:", err);
+    } finally {
+        await mongoose.connection.close();
     }
-    console.log("🏁 Migration Complete!");
 };
 
-bulkMigrate();
+cleanupLegacyEntries();
