@@ -101,28 +101,49 @@ const Add = ({ token }) => {
   }
 
   // (onCsvUploadHandler remains same...)
-  const onCsvUploadHandler = async(e) => {
-    const file = e.target.files[0];
-    if (!file || loading) return;
-    if (!window.confirm(`Upload "${file.name}" to the Archive?`)) return;
-    setLoading(true);
-    const formData = new FormData();
-    formData.append("file", file);
-    try {
-        const response = await axios.post(backendUrl + "/api/product/bulk-add", formData, { headers: { token } });
-        if (response.data.success) {
-            toast.success(response.data.message);
-            setUploadMode('manual');
-        } else {
-            toast.error(response.data.message);
-        }
-    } catch (error) {
-        toast.error("Sync Error: Check Media Registry matching.");
-    } finally {
-        setLoading(false);
-        e.target.value = null;
-    }
+ // RENAMED TO BulkUpload for clarity since it handles both CSV and Excel
+ const onBulkUploadHandler = async (e) => {
+  const file = e.target.files[0];
+  if (!file || loading) return;
+
+  // Validate file type before sending to server
+  const allowedExtensions = ['xlsx', 'xls', 'csv'];
+  const fileExtension = file.name.split('.').pop().toLowerCase();
+
+  if (!allowedExtensions.includes(fileExtension)) {
+    toast.error("Invalid File Type: Please upload .xlsx, .xls, or .csv");
+    e.target.value = null;
+    return;
   }
+
+  if (!window.confirm(`Commit "${file.name}" to the Archive Registry?`)) {
+    e.target.value = null;
+    return;
+  }
+
+  setLoading(true);
+  const formData = new FormData();
+  formData.append("file", file);
+
+  try {
+      // The endpoint /bulk-add now uses our updated backend with XLSX support
+      const response = await axios.post(backendUrl + "/api/product/bulk-add", formData, { headers: { token } });
+      
+      if (response.data.success) {
+          toast.success(response.data.message);
+          setUploadMode('manual');
+      } else {
+          toast.error(response.data.message);
+      }
+  } catch (error) {
+      // More descriptive error for debugging Excel structure
+      const errorMsg = error.response?.data?.message || "Registry Sync Error: Verify column headers.";
+      toast.error(errorMsg);
+  } finally {
+      setLoading(false);
+      e.target.value = null;
+  }
+}
 
   return (
     <div className='w-full p-8 bg-white min-h-screen font-sans select-none'>
@@ -155,7 +176,14 @@ const Add = ({ token }) => {
           )}
           <UploadCloud size={48} className='text-gray-300 group-hover:text-blue-500 transition-colors mb-6' />
           <p className='mb-6 text-sm font-bold text-gray-500 uppercase tracking-widest'>Upload Stamp Registry CSV</p>
-          <input type="file" accept=".csv" disabled={loading} onChange={onCsvUploadHandler} className='block w-fit text-xs text-gray-500 file:mr-4 file:py-3 file:px-8 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-blue-600 file:text-white cursor-pointer disabled:opacity-50' />
+          <input 
+        type="file" 
+        // Updated to include Excel mime types
+        accept=".xlsx, .xls, .csv" 
+        disabled={loading} 
+        onChange={onBulkUploadHandler} 
+        className='block w-fit text-xs text-gray-500 file:mr-4 file:py-3 file:px-8 file:rounded-full file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-blue-600 file:text-white cursor-pointer disabled:opacity-50' 
+      />
         </div>
       ) : (
         <form onSubmit={onSubmitHandler} className='flex flex-col w-full items-start gap-8 max-w-5xl'>

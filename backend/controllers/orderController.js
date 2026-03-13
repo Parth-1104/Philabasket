@@ -499,16 +499,18 @@ const updateStock = async (items, type = "reduce") => {
 export const emailInvoiceToUser = async (req, res) => {
     try {
         const { orderId } = req.body;
+        
+        // Populate userId to ensure we have an email fallback
         const order = await orderModel.findById(orderId).populate('userId');
 
         if (!order) {
-            return res.json({ success: false, message: "Order not found" });
+            return res.json({ success: false, message: "Registry Record not found" });
         }
 
-        // Generate the Philately-themed HTML
+        // Generate the HTML template
         const emailHtml = getOrderHtmlTemplate(order, order.deliveryFee, order.trackingNumber);
 
-        // Send the email using your transporter utility
+        // Dispatched via Resend Utility
         const result = await sendEmail(
             order.address.email || order.userId.email,
             `Acquisition Registry: Order #${order.orderNo}`,
@@ -516,12 +518,13 @@ export const emailInvoiceToUser = async (req, res) => {
         );
 
         if (result.success) {
-            res.json({ success: true, message: "Invoice dispatched to collector" });
+            res.json({ success: true, message: "Invoice dispatched to collector via Resend" });
         } else {
-            res.json({ success: false, message: "Logistics email delivery failed" });
+            // Log the specific error for Render debugging
+            res.json({ success: false, message: "Logistics dispatch failed", error: result.error });
         }
     } catch (error) {
-        console.error(error);
+        console.error("Controller Error:", error);
         res.json({ success: false, message: error.message });
     }
 };

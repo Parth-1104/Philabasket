@@ -1,4 +1,6 @@
 import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
+
 
 const transporter = nodemailer.createTransport({
     // Use the explicit host and port instead of 'service'
@@ -20,19 +22,27 @@ const transporter = nodemailer.createTransport({
     connectionTimeout: 10000 
 });
 
+
+// Initialize with your API Key from Render Environment Variables
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 export const sendEmail = async (to, subject, html) => {
     try {
-        const info = await transporter.sendMail({
-            from: `"PhilaBasket Logistics" <${process.env.EMAIL_USER}>`,
-            to,
-            subject,
-            html,
+        const { data, error } = await resend.emails.send({
+            from: 'PhilaBasket Registry <admin@philabasket.in>', // Must be your verified domain
+            to: [to],
+            subject: subject,
+            html: html,
         });
-        console.log("Registry Dispatch Success:", info.messageId);
-        return { success: true };
+
+        if (error) {
+            console.error("Resend API Error:", error);
+            return { success: false, error };
+        }
+
+        return { success: true, data };
     } catch (error) {
-        // Log the specific error to Render logs for easier debugging
-        console.error("Mail Dispatch Protocol Failed:", error.message);
-        return { success: false, error: error.message };
+        console.error("Resend Connection Error:", error);
+        return { success: false, error };
     }
 };

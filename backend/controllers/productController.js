@@ -9,6 +9,8 @@ import categoryModel from "../models/categoryModel.js";
 import userModel from "../models/userModel.js";
 import dotenv from 'dotenv';
 import nodemailer from 'nodemailer';
+import XLSX from 'xlsx';
+
 dotenv.config()
 
 import { Resend } from 'resend';
@@ -209,33 +211,30 @@ const listMedia = async (req, res) => {
 
 
 
- const bulkAddProducts = async (req, res) => {
+
+
+
+const bulkAddProducts = async (req, res) => {
     try {
-        if (!req.file) return res.json({ success: false, message: "Please upload a CSV file" });
+        if (!req.file) return res.json({ success: false, message: "Please upload a file (CSV or Excel)" });
 
         const stamps = [];
         const usedImageNames = [];
-        const discoveredCategories = new Map(); 
+        const discoveredCategories = new Map();
         const DEFAULT_IMAGE = "https://res.cloudinary.com/dvsdithxh/image/upload/v1770344955/Logo-5_nqnyl4.png";
 
-        // 1. Fetch existing data for matching
         const [existingStamps, allMedia] = await Promise.all([
             productModel.find({}, 'name').lean(),
             mediaModel.find({}, 'originalName imageUrl').lean()
         ]);
-
         const existingNames = new Set(existingStamps.map(s => s.name.toLowerCase().trim()));
 
-        // --- IMPROVED UNIVERSAL ID EXTRACTION ---
-        // This targets the "#xyz" pattern specifically, but falls back to alphanumeric strings
         const extractSpecimenId = (name) => {
             if (!name) return null;
-            // Matches anything starting with # OR the first block of letters/numbers
             const match = String(name).match(/(#[a-z0-9]+|[a-z0-9]+)/i);
             return match ? match[0].toUpperCase() : null;
         };
 
-        // 2. Map Media Gallery by the extracted ID
         const mediaVariantMap = new Map();
         allMedia.forEach(m => {
             const sid = extractSpecimenId(m.originalName);
@@ -245,137 +244,123 @@ const listMedia = async (req, res) => {
             }
         });
 
-        const stream = Readable.from(req.file.buffer);
+        const processRow = (row) => {
+            const clean = (val) => val ? String(val).trim().replace(/^["'\[]|["'\]]$/g, '').trim() : "";
+            
+            const nameTrimmed = clean(row.name || Object.values(row)[0]);
+            if (!nameTrimmed || existingNames.has(nameTrimmed.toLowerCase())) return;
 
-        stream.pipe(csv({
-            mapHeaders: ({ header }) => header.trim().replace(/^["']|["']$/g, ''), 
-            strict: false 
-        }))
-        .on('data', (row) => {
-            try {
-                const clean = (val) => val ? String(val).trim().replace(/^["'\[]|["'\]]$/g, '').trim() : "";
-                
-                // Allow ALL names, but skip only if truly identical to avoid DB crashes
-               
+            // --- REFINED DATE NORMALIZATION ---
+            const normalizeDate = (val) => {
+                if (!val) return "";
+                // Handle Excel serial numbers (e.g. 45000)
+                if (typeof val === 'number') {
+                    const date = XLSX.SSF.parse_date_code(val);
+                    return `${String(date.d).padStart(2, '0')}/${String(date.m).padStart(2, '0')}/${date.y}`;
+                }
+                let raw = clean(val).replace(/[\.\-]/g, '/');
+                return /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(raw) ? raw : "";
+            };
 
-        // --- EXCEL-FRIENDLY DATE NORMALIZATION ---
+            const primaryCsvImg = clean(row.imageName1);
+            const baseId = extractSpecimenId(primaryCsvImg);
+            let productImages = [];
+            if (baseId && mediaVariantMap.has(baseId)) {
+                const variants = mediaVariantMap.get(baseId);
+                variants.sort((a, b) => a.originalName.length - b.originalName.length);
+                productImages = variants.map(v => v.url);
+                variants.forEach(v => usedImageNames.push(v.originalName));
+            }
+            if (productImages.length === 0) productImages = [DEFAULT_IMAGE];
 
-        
-        const nameTrimmed = clean(row.name || Object.values(row)[0]);
-        if (!nameTrimmed) return; 
+            // --- CATEGORY CLEANING (Handles comma-separated strings from Excel) ---
+            let parsedCategory = [];
+            const rawCat = clean(row.category);
+            if (rawCat) {
+                // Split, trim, and remove duplicates in one go
+                parsedCategory = [...new Set(rawCat.split(',').map(c => c.trim()).filter(Boolean))];
+                parsedCategory.forEach(cat => {
+                    discoveredCategories.set(cat, (discoveredCategories.get(cat) || 0) + 1);
+                });
+            }
 
-        if (existingNames.has(nameTrimmed.toLowerCase())) {
-            console.log(`Skipping duplicate: ${nameTrimmed}`);
-            return; 
+            const mPrice = Number(String(row.marketPrice || 0).replace(/[^0-9.]/g, '')) || 0;
+            const rowPrice = Number(String(row.price || 0).replace(/[^0-9.]/g, ''));
+
+            stamps.push({
+                name: nameTrimmed,
+                description: clean(row.description) || "Historical philatelic specimen.",
+                description2: clean(row.description2) || "",
+                marketPrice: mPrice,
+                price: rowPrice || mPrice,
+                image: productImages,
+                youtubeUrl: clean(row.youtubeUrl),
+                releaseDate: normalizeDate(row.releaseDate || row.Date), // Check common header variations
+                category: parsedCategory,
+                year: Number(row.year) || 0,
+                country: clean(row.country) || "India",
+                producedCount: Number(String(row.producedCount || 0).replace(/[^0-9]/g, '')) || 0,
+                condition: clean(row.condition) || "Mint",
+                stock: Number(row.stock) || 1,
+                bestseller: String(row.bestseller || '').toLowerCase() === 'true',
+                newArrival: String(row.newArrival || '').toLowerCase() === 'true',
+                blogLink: clean(row.blogLink),
+                isActive: true,
+                date: Date.now()
+            });
+        };
+
+        const isExcel = req.file.originalname.match(/\.(xlsx|xls)$/);
+
+        if (isExcel) {
+            const workbook = XLSX.read(req.file.buffer, { type: 'buffer', cellDates: false });
+            const sheetName = workbook.SheetNames[0];
+            const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+            rows.forEach(processRow);
+            await finalizeImport(res, stamps, discoveredCategories, usedImageNames);
+        } else {
+            const stream = Readable.from(req.file.buffer);
+            stream.pipe(csv({ mapHeaders: ({ header }) => header.trim() }))
+                .on('data', processRow)
+                .on('end', async () => {
+                    await finalizeImport(res, stamps, discoveredCategories, usedImageNames);
+                });
         }
 
-        // --- EXCEL-FRIENDLY DATE NORMALIZATION ---
-        const normalizeDate = (val) => {
-            let raw = clean(val);
-            if (!raw) return "";
-            
-            // Replace dashes or dots with slashes (Excel often uses 11-12-2024)
-            raw = raw.replace(/[\.\-]/g, '/');
-            
-            // Validate if it matches DD/MM/YYYY after replacement
-            return /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/.test(raw) ? raw : "";
-        }; 
-
-                if (existingNames.has(nameTrimmed.toLowerCase())) {
-                    console.log(`Skipping duplicate: ${nameTrimmed}`);
-                    return; // This stops the row from being added to 'stamps'
-                }
-                
-                // --- LENIENT IMAGE MATCHING ---
-                const primaryCsvImg = clean(row.imageName1);
-                const baseId = extractSpecimenId(primaryCsvImg);
-                let productImages = [];
-                
-                if (baseId && mediaVariantMap.has(baseId)) {
-                    const variants = mediaVariantMap.get(baseId);
-                    // Standard Sort: Main image first, variants (with brackets/dashes) after
-                    variants.sort((a, b) => a.originalName.length - b.originalName.length);
-                    productImages = variants.map(v => v.url);
-                    variants.forEach(v => usedImageNames.push(v.originalName));
-                }
-
-                // If no match, show default logo instead of failing
-                if (productImages.length === 0) productImages = [DEFAULT_IMAGE];
-
-                // --- CATEGORY CLEANING (Removes [ ] brackets) ---
-                let parsedCategory = [];
-                const rawCat = clean(row.category).replace(/[\[\]]/g, '');
-                if (rawCat) {
-                    parsedCategory = rawCat.split(',').map(c => c.trim()).filter(c => Boolean);
-                    parsedCategory.forEach(cat => {
-                        discoveredCategories.set(cat, (discoveredCategories.get(cat) || 0) + 1);
-                    });
-                }
-
-                // --- DATA NORMALIZATION ---
-                const mPrice = Number(String(row.marketPrice || 0).replace(/[^0-9.]/g, '')) || 0;
-                const rowPrice = Number(String(row.price || 0).replace(/[^0-9.]/g, ''));
-                
-                stamps.push({
-                    name: nameTrimmed,
-                    description: clean(row.description) || "Historical philatelic specimen.",
-                    description2: clean(row.description2) || "",
-                    marketPrice: mPrice,
-                    price: rowPrice || mPrice,
-                    image: productImages,
-                    youtubeUrl: clean(row.youtubeUrl),
-                    releaseDate: normalizeDate(row.releaseDate)||"",
-                    category: parsedCategory,
-                    year: Number(row.year) || 0,
-                    country: clean(row.country) || "India",
-                    producedCount: Number(String(row.producedCount || 0).replace(/[^0-9]/g, '')) || 0, 
-                    condition: clean(row.condition) || "Mint",
-                    stock: Number(row.stock) || 1,
-                    bestseller: String(row.bestseller || '').toLowerCase() === 'true',
-                    newArrival: String(row.newArrival || '').toLowerCase() === 'true',
-                    blogLink: clean(row.blogLink),
-                    isActive: true,
-                    date: Date.now()
-                });
-
-            } catch (err) { console.error(`Row Processing Error:`, err); }
-        })
-        .on('end', async () => {
-            try {
-                if (stamps.length === 0) return res.json({ success: false, message: "No valid data found." });
-
-                // Bulk Category Sync
-                const categoryOps = Array.from(discoveredCategories).map(([name, count]) => ({
-                    updateOne: {
-                        filter: { name },
-                        update: { $inc: { productCount: count }, $setOnInsert: { group: "Independent" } },
-                        upsert: true 
-                    }
-                }));
-                if (categoryOps.length > 0) await categoryModel.bulkWrite(categoryOps);
-                
-                // DATA INSERTION
-                const result = await productModel.insertMany(stamps, { ordered: false });
-                
-                // Sync Media Assignment
-                if (usedImageNames.length > 0) {
-                    await mediaModel.updateMany(
-                        { originalName: { $in: usedImageNames } }, 
-                        { $set: { isAssigned: true } }
-                    );
-                }
-                
-                res.json({ success: true, message: `Successfully registered ${result.length} items.` });
-            } catch (dbErr) { 
-                // Handle partial success (some duplicates might fail, but others pass)
-                const count = dbErr.result?.nInserted || 0;
-                res.json({ success: true, message: `Partial Sync: ${count} items added.` }); 
-            }
-        });
     } catch (error) {
+        console.error("Bulk Upload Error:", error);
         res.status(500).json({ success: false, message: error.message });
     }
 };
+
+// --- HELPER: DATABASE COMMIT LOGIC ---
+async function finalizeImport(res, stamps, discoveredCategories, usedImageNames) {
+    if (stamps.length === 0) return res.json({ success: false, message: "No new or valid data found." });
+
+    const categoryOps = Array.from(discoveredCategories).map(([name, count]) => ({
+        updateOne: {
+            filter: { name },
+            update: { $inc: { productCount: count }, $setOnInsert: { group: "Independent" } },
+            upsert: true
+        }
+    }));
+    
+    if (categoryOps.length > 0) await categoryModel.bulkWrite(categoryOps);
+    
+    try {
+        const result = await productModel.insertMany(stamps, { ordered: false });
+        if (usedImageNames.length > 0) {
+            await mediaModel.updateMany(
+                { originalName: { $in: usedImageNames } },
+                { $set: { isAssigned: true } }
+            );
+        }
+        res.json({ success: true, message: `Successfully registered ${result.length} items.` });
+    } catch (dbErr) {
+        const count = dbErr.result?.nInserted || 0;
+        res.json({ success: true, message: `Partial Sync: ${count} items added.` });
+    }
+}
 
 // --- CORE CRUD (Upgraded for 100k+ Items) ---
 // const listProducts = async (req, res) => {
