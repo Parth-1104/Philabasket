@@ -117,7 +117,7 @@ export const placeOrderInstamojo = async (req, res) => {
 
     } catch (error) {
         console.error("Instamojo Protocol Error:", error.response?.data || error.message);
-        res.json({ success: false, message: "Payment Gateway Initialization Failed" });
+        res.json({ success: false, message: "By instamojo protocol make payment above rupees 9" });
     }
 };
 
