@@ -170,116 +170,105 @@ useEffect(() => {
   const downloadShippingManifest = async () => {
     const toastId = toast.loading("Generating Archive Labels...");
     try {
-        const todayParam = filterStatus === "TODAY" 
-            ? `&date=${new Date().toISOString().split('T')[0]}` 
-            : "";
-        
-        const statusQuery = filterStatus === "TODAY" ? "ALL" : filterStatus;
-
         const response = await axios.post(
-            `${backendUrl}/api/order/list?limit=1000&status=${statusQuery}${todayParam}&sort=${sortBy}`, 
+            `${backendUrl}/api/order/list?limit=1000&status=${filterStatus === "TODAY" ? "ALL" : filterStatus}`, 
             {}, 
             { headers: { token } }
         );
 
         if (response.data.success) {
             const ordersData = response.data.orders;
-            // 'p' for Portrait to fit 2x2 nicely on A4
             const doc = new jsPDF('p', 'mm', 'a4');
 
-            // --- 2x2 GRID CONFIGURATION ---
-            const labelWidth = 90;   // Increased width for 2 columns
-            const labelHeight = 130; // Increased height for 2 rows
-            const startX = 15;
-            const startY = 15;
-            const marginX = 10;
-            const marginY = 10;
-            const labelsPerRow = 2;
-            const labelsPerPage = 4;
-            const padding = 8;
+            const labelWidth = 90;
+            const startX = 12;
+            const startY = 12;
+            const marginX = 6;
+            const marginY = 8;
+            const labelsPerPage = 6;
+            const padding = 6; // Increased padding for better border clearance
+            const maxTextWidth = labelWidth - (padding * 2);
 
             ordersData.forEach((order, index) => {
-                if (index > 0 && index % labelsPerPage === 0) {
-                    doc.addPage();
-                }
+                if (index > 0 && index % labelsPerPage === 0) doc.addPage();
 
                 const pageIndex = index % labelsPerPage;
-                const col = pageIndex % labelsPerRow;
-                const row = Math.floor(pageIndex / labelsPerRow);
+                const col = pageIndex % 2;
+                const row = Math.floor(pageIndex / 2);
 
                 const x = startX + (col * (labelWidth + marginX));
-                const y = startY + (row * (labelHeight + marginY));
-
-                // Draw Label Border (Light Registry Style)
-                doc.setDrawColor(200);
-                doc.setLineWidth(0.1);
-                doc.rect(x, y, labelWidth, labelHeight);
+                const y = startY + (row * (marginY + 62)); // Adjusted grid spacing
 
                 const addr = order.address || {};
                 const name = `MR. ${(`${addr.firstName || ''} ${addr.lastName || ''}`).toUpperCase()}`;
                 const phone = addr.phone?.$numberLong || addr.phone || "N/A";
-                const zip = addr.zipcode || addr.zipCode || '';
-
-                // --- DATA PREP (Including Street 2) ---
+                
                 const addressLines = [
                     addr.street || '',
-                    addr.street2 || '', // Added Street 2
+                    addr.street2 || '',
                     addr.city || '',
-                    `${addr.state || ''}, ${addr.country || ''} - ${zip}`.toUpperCase()
+                    `${addr.state || ''}, ${addr.country || ''} - ${addr.zipcode || addr.zipCode || ''}`.toUpperCase()
                 ].filter(line => line.trim() !== "");
 
-                // 1. Order ID Header
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(10);
-                doc.text(`OD: ${order.orderNo || order._id.slice(-6).toUpperCase()}`, x + padding, y + 10);
-
-                // 2. "To,"
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(9);
-                doc.text("To,", x + padding, y + 18);
-
-                // 3. RECIPIENT NAME (Auto-scaling for long names)
-                let nameFontSize = 14;
-                doc.setFont("helvetica", "bold");
-                const maxTextWidth = labelWidth - (padding * 2);
+                // --- CONTENT RENDERING ---
                 
-                // Reduce font size if name is too long
-                while (doc.getTextWidth(name) > maxTextWidth && nameFontSize > 8) {
-                    nameFontSize--;
+                // 1. Order ID & Header (Fixed position)
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(8);
+                const orderText = `ORDER: #${order.orderNo || order._id.slice(-6).toUpperCase()}`;
+                doc.text(orderText, x + labelWidth - doc.getTextWidth(orderText) - padding, y + 8);
+                
+                doc.setFont("helvetica", "normal");
+                doc.text("To,", x + padding, y + 8);
+
+                // 2. Recipient Name
+                let nameFontSize = 11;
+                doc.setFont("helvetica", "bold");
+                while (doc.getTextWidth(name) > maxTextWidth && nameFontSize > 7) {
+                    nameFontSize -= 0.5;
+                    doc.setFontSize(nameFontSize);
                 }
-                doc.setFontSize(nameFontSize);
-                doc.text(name, x + padding, y + 26);
+                doc.text(name, x + padding, y + 15);
 
-                // 4. ADDRESS BLOCK (With Wrap Logic)
+                // --- THE GAP ---
+                // currentY starts lower now to create the gap between name and address
+                let currentY = y + 21; 
+
+                // 3. Address Lines
                 doc.setFont("helvetica", "normal");
-                doc.setFontSize(11);
-                
-                let currentY = y + 36;
+                doc.setFontSize(8.5); // Slightly smaller for professional registry look
                 addressLines.forEach((line) => {
                     const wrappedLine = doc.splitTextToSize(line, maxTextWidth);
                     doc.text(wrappedLine, x + padding, currentY);
-                    currentY += (wrappedLine.length * 6); // Space between lines
+                    currentY += (wrappedLine.length * 4.6);
                 });
 
-                // 5. MOBILE (Locked to Bottom)
+                // 4. Mobile Number (Snapped with small gap)
+                currentY += 2.5; 
                 doc.setFont("helvetica", "bold");
-                doc.setFontSize(11);
-                doc.text(`MOB: ${phone}`, x + padding, y + labelHeight - padding);
+                doc.setFontSize(10);
+                doc.text(`MOB: ${phone}`, x + padding, currentY);
+
+                // --- DYNAMIC BORDER DRAWING ---
+                // We add more padding at the bottom (8mm) to ensure it's not too tight
+                const finalBoxHeight = (currentY - y) + 6; 
                 
-                // 6. Optional: Small "PhilaBasket Registry" branding at bottom right
-                doc.setFontSize(7);
+                doc.setDrawColor(180);
+                doc.setLineWidth(0.1);
+                doc.rect(x, y, labelWidth, finalBoxHeight);
+
+                // Small Brand Mark inside the box
+                doc.setFontSize(5);
                 doc.setFont("helvetica", "italic");
-                doc.setTextColor(150);
-                const brandText = "PHILABASKET ARCHIVE";
-                doc.text(brandText, x + labelWidth - doc.getTextWidth(brandText) - padding, y + labelHeight - padding);
-                doc.setTextColor(0); // Reset color
+                doc.setTextColor(200);
+                doc.text("PB REGISTRY", x + labelWidth - doc.getTextWidth("PB REGISTRY") - 2, y + finalBoxHeight - 2);
+                doc.setTextColor(0);
             });
 
-            doc.save(`Shipping_Labels_2x2_${new Date().toISOString().split('T')[0]}.pdf`);
-            toast.update(toastId, { render: "2x2 Labels Generated", type: "success", isLoading: false, autoClose: 3000 });
+            doc.save(`Compact_Labels_${new Date().toISOString().split('T')[0]}.pdf`);
+            toast.update(toastId, { render: "Labels Adjusted", type: "success", isLoading: false, autoClose: 3000 });
         }
     } catch (error) {
-        console.error("Label Export Error:", error);
         toast.update(toastId, { render: "Export Failed", type: "error", isLoading: false, autoClose: 3000 });
     }
 };

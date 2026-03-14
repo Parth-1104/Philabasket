@@ -501,18 +501,10 @@ export const adjustRewardPoints = async (req, res) => {
 
 export const getUnifiedHistoryAdmin = async (req, res) => {
     try {
-        const { userId, email: providedEmail } = req.body;
-
-        if (!userId && !providedEmail) {
-            return res.json({ success: false, message: "Collector identification missing (ID or Email)" });
-        }
-
-        let email = providedEmail;
+        const { email } = req.body;
 
         if (!email) {
-            const user = await userModel.findById(userId);
-            if (!user) return res.json({ success: false, message: "User not found in Registry" });
-            email = user.email;
+            return res.json({ success: false, message: "Collector email required" });
         }
 
         const [transactions, coupons] = await Promise.all([
@@ -520,58 +512,58 @@ export const getUnifiedHistoryAdmin = async (req, res) => {
             userRewardModel.find({ email: email }).lean()
         ]);
 
-        // 4. Format Coupons (Manual Adjustments)
-        // LOGIC: pointsUsed < 0 is (+), pointsUsed > 0 is (-)
+        // 1. Format Coupons
         const formattedCoupons = coupons.map(c => {
-            const rawVal = c.pointsUsed || 0;
-            const isNegativeAction = rawVal > 0; 
-            const absAmount = Math.abs(rawVal);
-            
+            const rawAmount = c.pointsUsed || c.require_point || 0;
             return {
                 _id: c._id,
-                type: 'ADJUSTMENT',
-                title: c.name || `Registry adjustment`,
-                description: c.description || `Admin protocol adjustment`,
-                amount: `${isNegativeAction ? '+' : '-'}${absAmount}`, 
-                status: c.status,
+                type: 'VOUCHER',
+                title: c.name || `Registry Adjustment`,
+                description: c.description || `Adjustment Ref: ${c.discountCode}`,
+                amount: Math.abs(rawAmount), 
+                status: 'used',
                 createdAt: c.createdAt,
-                isNegative: isNegativeAction 
+                isNegative: rawAmount < 0 
             };
         });
 
-        // 5. Format Transactions (Order Flow)
-        // LOGIC: earn_point is (+), redeem_point is (-)
-        const formattedTransactions = transactions.map(t => {
-            const isRedemption = t.actionType === 'redeem_point';
-            const absAmount = Math.abs(t.rewardAmount || 0);
+        // 2. Format Transactions + Fetch actual orderNo from orderModel
+        const formattedTransactions = await Promise.all(transactions.map(async (t) => {
+            const rawAmount = t.rewardAmount || 0;
+            const isRedemption = t.actionType === 'redeem_point' || rawAmount < 0;
             
+            let actualOrderNo = null;
+
+            // Fetch the sequential orderNo from the Order table if orderId exists
+            if (t.orderId) {
+                // We find by the ID stored in transaction to get the sequential orderNo
+                const orderData = await orderModel.findById(t.orderId).select('orderNo').lean();
+                actualOrderNo = orderData ? orderData.orderNo : null;
+            }
+
             return {
                 _id: t._id,
-                type: isRedemption ? 'REDEMPTION' : 'EARNING',
-                title: t.actionType === 'earn_point' ? 'Acquisition Reward' : 'Points Redeemed',
-                description: t.description || (t.orderId ? `Order: ${t.orderId}` : 'Point Transaction'),
-                amount: `${isRedemption ? '-' : '+'}${absAmount}`,
+                type: isRedemption ? 'ORDER_REDEEM' : 'ORDER_EARN',
+                title: isRedemption ? 'Registry Debit' : 'Registry Credit',
+                description: t.description || 'Acquisition Reward Transaction',
+                amount: Math.abs(rawAmount),
                 createdAt: t.createdAt,
-                isNegative: isRedemption
+                isNegative: isRedemption,
+                status: t.status || 'complete',
+                // This is now the sequential number (1, 2, 3...) from your Order Schema
+                orderNo: actualOrderNo, 
+                orderId: t.orderId // Keep for link purposes
             };
-        });
+        }));
 
-        // 6. Merge and Sort (Newest First)
         const combinedHistory = [...formattedCoupons, ...formattedTransactions].sort((a, b) => {
-            const dateA = new Date(a.createdAt?.$date || a.createdAt);
-            const dateB = new Date(b.createdAt?.$date || b.createdAt);
-            return dateB - dateA;
+            return new Date(b.createdAt) - new Date(a.createdAt);
         });
 
-        res.json({ 
-            success: true, 
-            history: combinedHistory,
-            collectorEmail: email 
-        });
-
+        res.json({ success: true, history: combinedHistory });
     } catch (error) {
-        console.error("Admin Ledger Fetch Error:", error);
-        res.json({ success: false, message: "Failed to sync admin appraisal ledger." });
+        console.error(error);
+        res.json({ success: false, message: "Archive connection failed." });
     }
 };
 

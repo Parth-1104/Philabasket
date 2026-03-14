@@ -2,6 +2,8 @@ import rewardTransactionModel from "../models/rewardTranscationModel.js";
 import userRewardModel from "../models/userRewardModel.js";
 import userModel from "../models/userModel.js"; // Needed to link ID to Email
 
+import orderModel from "../models/orderModel.js"; // Ensure this is imported
+
 export const getUnifiedHistory = async (req, res) => {
     try {
         const userId = req.user?.userId || req.body.userId;
@@ -22,46 +24,48 @@ export const getUnifiedHistory = async (req, res) => {
             userRewardModel.find({ email: email }).lean()
         ]);
 
-        // 1. Format Coupons (These are ALWAYS redemptions/subtractions)
-        // 1. Format Coupons (Now checking if pointsUsed is actually positive or negative)
-const formattedCoupons = coupons.map(c => {
-    const rawAmount = c.pointsUsed || c.require_point || 0;
-    
-    // IF pointsUsed is positive, it's a GAIN (+). 
-    // IF pointsUsed is negative, it's a LOSS (-).
-    const isNegative = rawAmount < 0; 
+        // 1. Format Coupons
+        const formattedCoupons = coupons.map(c => {
+            const rawAmount = c.pointsUsed || c.require_point || 0;
+            const isNegative = rawAmount < 0; 
 
-    return {
-        _id: c._id,
-        type: 'VOUCHER',
-        title: c.name || `Registry Adjustment`,
-        description: c.description || `Adjustment Ref: ${c.discountCode}`,
-        amount: Math.abs(rawAmount), 
-        status: 'used', // Hardcoded as per your request
-        createdAt: c.createdAt,
-        isNegative: isNegative 
-    };
-});
+            return {
+                _id: c._id,
+                type: 'VOUCHER',
+                title: c.name || `Registry Adjustment`,
+                description: c.description || `Adjustment Ref: ${c.discountCode}`,
+                amount: Math.abs(rawAmount), 
+                status: 'used',
+                createdAt: c.createdAt,
+                isNegative: isNegative 
+            };
+        });
 
-        // 2. Format Transactions (Earnings or Adjustments)
-        const formattedTransactions = transactions.map(t => {
+        // 2. Format Transactions with OrderNo Lookup
+        const formattedTransactions = await Promise.all(transactions.map(async (t) => {
             const rawAmount = t.rewardAmount || 0;
-            
-            // LOGIC: If action is earn, it's positive. If redeem, it's negative.
-            // If it's an 'adjustment', we check if the number itself is less than 0.
             const isRedemption = t.actionType === 'redeem_point' || rawAmount < 0;
+
+            let actualOrderNo = null;
+            if (t.orderId) {
+                // Lookup the sequential orderNo from the Order collection
+                const orderData = await orderModel.findById(t.orderId).select('orderNo').lean();
+                actualOrderNo = orderData ? orderData.orderNo : null;
+            }
 
             return {
                 _id: t._id,
-                type: isRedemption ? 'REDEMPTION' : 'CASHBACK',
+                type: isRedemption ? 'ORDER_REDEEM' : 'ORDER_EARN',
                 title: isRedemption ? 'Registry Debit' : 'Registry Credit',
-                description: t.description || (t.orderId ? `Order Ref: #${t.orderId.slice(-6)}` : 'Manual Adjustment'),
+                description: t.description || 'Acquisition Reward Transaction',
                 amount: Math.abs(rawAmount),
                 createdAt: t.createdAt,
                 isNegative: isRedemption,
-                status: t.status || 'completed'
+                status: t.status || 'completed',
+                orderNo: actualOrderNo, // The sequential number from your Schema
+                orderId: t.orderId // For link reference
             };
-        });
+        }));
 
         // 3. Merge and Sort
         const combinedHistory = [...formattedCoupons, ...formattedTransactions].sort((a, b) => {

@@ -16,10 +16,9 @@ import { assets } from '../assets/assets';
 const STATUS_CONFIG = {
     "Order Placed":    { color: "bg-blue-50 text-blue-800 border-blue-200",    icon: CheckCircle2 },
     "On Hold":         { color: "bg-slate-50 text-slate-700 border-slate-200", icon: Clock },
-    "Money Received":  { color: "bg-teal-50 text-teal-800 border-teal-200",    icon: CreditCard },
-    "Packing":         { color: "bg-amber-50 text-amber-800 border-amber-200", icon: PackageCheck },
+    "Processing":         { color: "bg-amber-50 text-amber-800 border-amber-200", icon: PackageCheck },
     "Shipped":         { color: "bg-violet-50 text-violet-800 border-violet-200", icon: Truck },
-    "Out for delivery":{ color: "bg-orange-50 text-orange-800 border-orange-200", icon: Truck },
+    "Complete":         { color: "bg-violet-50 text-violet-800 border-violet-200", icon: Truck },
     "Delivered":       { color: "bg-emerald-50 text-emerald-800 border-emerald-200", icon: CheckCircle2 },
     "Cancelled":       { color: "bg-red-50 text-red-800 border-red-200",        icon: Ban },
 };

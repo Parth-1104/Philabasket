@@ -815,7 +815,7 @@ const updateStatus = async (req, res) => {
         }
 
         // --- Reward Logic (Delivered) ---
-        if (finalStatus === 'Delivered' && currentOrder.status !== 'Delivered') {
+        if (finalStatus === 'Complete' && currentOrder.status !== 'Complete') {
             updateFields.payment = true;
             const itemSubtotal = currentOrder.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
             const userTier = currentOrder.userId?.tier || 'Silver';

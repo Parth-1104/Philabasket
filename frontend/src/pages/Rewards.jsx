@@ -99,6 +99,28 @@ const Rewards = () => {
                             </button>
                         </div>
                     </div>
+
+                    <div className='bg-white p-6 rounded-3xl border border-[#BC002D]/10 shadow-sm relative overflow-hidden'>
+        <div className='absolute -right-4 -bottom-4 opacity-5 rotate-12'>
+            <TrendingUp size={80} className='text-[#BC002D]' />
+        </div>
+        <div className='relative z-10'>
+            <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1'>Lifetime Savings Value</p>
+            <h5 className='text-2xl font-black tracking-tighter'>
+    <span className="text-gray-900 mr-1.5">{currency}</span>
+    <span className="text-green-600">
+        {formatPrice(stats.gained / conversionRate)}
+    </span>
+</h5>
+            <div className='mt-3 flex items-center gap-2'>
+                <div className='px-2 py-0.5 bg-green-50 rounded flex items-center gap-1'>
+                    <TrendingUp size={10} className='text-green-600' />
+                    <span className='text-[8px] font-black text-green-600 uppercase'>Sovereign Asset</span>
+                </div>
+                <p className='text-[8px] font-bold text-gray-400 uppercase italic'>Verified Valuation</p>
+            </div>
+        </div>
+    </div>
                     
                     <div className='bg-gray-50 p-8 rounded-[40px] border border-gray-100'>
                         <div className='flex items-center gap-3 mb-6'>
@@ -121,27 +143,7 @@ const Rewards = () => {
                             </div>
                         </div>
                     </div>
-                    <div className='bg-white p-6 rounded-3xl border border-[#BC002D]/10 shadow-sm relative overflow-hidden'>
-        <div className='absolute -right-4 -bottom-4 opacity-5 rotate-12'>
-            <TrendingUp size={80} className='text-[#BC002D]' />
-        </div>
-        <div className='relative z-10'>
-            <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1'>Lifetime Savings Value</p>
-            <h5 className='text-2xl font-black tracking-tighter'>
-    <span className="text-gray-900 mr-1.5">{currency}</span>
-    <span className="text-green-600">
-        {formatPrice(stats.gained / conversionRate)}
-    </span>
-</h5>
-            <div className='mt-3 flex items-center gap-2'>
-                <div className='px-2 py-0.5 bg-green-50 rounded flex items-center gap-1'>
-                    <TrendingUp size={10} className='text-green-600' />
-                    <span className='text-[8px] font-black text-green-600 uppercase'>Sovereign Asset</span>
-                </div>
-                <p className='text-[8px] font-bold text-gray-400 uppercase italic'>Verified Valuation</p>
-            </div>
-        </div>
-    </div>
+                    
                 </div>
 
 
@@ -182,17 +184,7 @@ const Rewards = () => {
                         <div key={index} className='flex flex-col bg-white rounded-2xl border border-gray-100 shadow-sm hover:border-[#BC002D]/30 transition-all group overflow-hidden mb-4'>
                             
                             {/* --- SOVEREIGN REFERENCE BAR --- */}
-                            {isOrderAction && displayOrderNo && (
-                                <div className='bg-gray-50/80 px-6 py-2 border-b border-gray-100 flex items-center justify-between'>
-                                    <div className='flex items-center gap-2'>
-                                        <span className='w-1 h-1 bg-[#BC002D] rounded-full'></span>
-                                        <p className='text-[8px] font-black text-[#BC002D] uppercase tracking-[0.2em]'>
-                                            Registry Order: <span className='text-gray-900'>#{displayOrderNo}</span>
-                                        </p>
-                                    </div>
-                                    <p className='text-[7px] font-bold text-gray-400 uppercase tracking-widest'>Verified Acquisition</p>
-                                </div>
-                            )}
+                            
                 
                             <div className='flex items-center justify-between p-6'>
                                 <div className='flex items-center gap-4'>
@@ -202,10 +194,21 @@ const Rewards = () => {
                                         {renderIcon()}
                                     </div>
                                     
+                                    
                                     <div>
+                                    {isOrderAction && displayOrderNo && (
+                                
+                                <p className='text-[8px] font-black text-[#BC002D] uppercase tracking-[0.2em]'>
+                                    Registry Order: <span className='text-gray-900'>#{displayOrderNo}</span>
+                                </p>
+                           
+                           
+                    )}
+                                   
                                         <p className='text-[10px] font-black text-gray-900 uppercase tracking-widest group-hover:text-[#BC002D] transition-colors'>
                                             {item.title}
                                         </p>
+                                       
                                         <p className='text-[8px] font-bold text-gray-400 uppercase mt-1'>
                                             {/* We clean the description if OrderNo is already shown above */}
                                             {isOrderAction ? 'Processed via Archive Ledger' : item.description} • {new Date(item.createdAt).toLocaleDateString('en-GB')}

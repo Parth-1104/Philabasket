@@ -46,7 +46,7 @@ const Users = ({ token }) => {
     }, [searchTerm]);
 
     return (
-        <div className='p-6 bg-[#FCF9F4] min-h-screen font-serif'>
+        <div className='p-0 w-full  font-serif'>
             {/* Header Section */}
             <div className='flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4'>
                 <div>
