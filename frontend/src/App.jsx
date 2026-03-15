@@ -18,6 +18,7 @@ import FaceValueSubscription from './pages/FaceValusSubscription';
 import SideCart from './components/SideCart';
 import Gifting from './pages/Gifting';
 import GlobalArchive from './pages/GlobalArchieve';
+import KnowledgeCenter from './pages/KnowledgeCenter';
 // import Rewards from './pages/Rewards';
 const Rewards=lazy(()=>import('./pages/Rewards'))
 
@@ -88,6 +89,8 @@ const App = () => {
           <Route path='/membership' element={<FaceValueSubscription />} />
           <Route path='/gifting' element={<Gifting />} />
           <Route path='/shopallcountry' element={<GlobalArchive />} />
+          <Route path='/knowledge-center' element={<KnowledgeCenter />} />
+
 
           
 

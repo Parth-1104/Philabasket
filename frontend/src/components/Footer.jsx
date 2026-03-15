@@ -104,6 +104,8 @@ const Footer = () => {
       { label: 'Rewards', path: '/rewards' },
       { label: 'Archive blogs', path: '/blogs' },
       { label: 'Catalogue', path: '/collection' },
+      { label: 'Knowledge Center', path: '/knowledge-center' },
+
 
       
       // { label: 'About the Archive', path: '/about' },
@@ -116,6 +118,8 @@ const Footer = () => {
       { label: 'Terms and condition', path: '/terms' },
       { label: 'Privacy Policy', path: '/privacy' }, // Fixed safe path
       { label: 'Frequently asked questions', path: '/faq' },
+      { label: 'Contact Us', path: '/contact' },
+
     ]
   },
   {

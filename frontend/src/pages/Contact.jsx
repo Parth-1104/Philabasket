@@ -1,31 +1,106 @@
-import React from 'react'
-import Title from '../components/Title'
-import { assets } from '../assets/assets'
-import NewsletterBox from '../components/NewsletterBox'
+import React, { useState, useContext } from 'react';
+import { Mail, Phone, MapPin, Send, Globe } from 'lucide-react';
+import { ShopContext } from '../context/ShopContext';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Contact = () => {
-  return (
-    <div>
-      
-      <div className='text-center text-2xl pt-10 border-t'>
-          <Title text1={'CONTACT'} text2={'US'} />
-      </div>
+    const { backendUrl } = useContext(ShopContext);
+    const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+    const [loading, setLoading] = useState(false);
 
-      <div className='my-10 flex flex-col justify-center md:flex-row gap-10 mb-28'>
-        <img className='w-full md:max-w-[480px]' src={assets.contact_img} alt="" />
-        <div className='flex flex-col justify-center items-start gap-6'>
-          <p className='font-semibold text-xl text-gray-600'>Our Store</p>
-          <p className=' text-gray-500'>54709 Willms Station <br /> Suite 350, Washington, USA</p>
-          <p className=' text-gray-500'>Tel: (415) 555-0132 <br /> Email: admin@forever.com</p>
-          <p className='font-semibold text-xl text-gray-600'>Careers at Forever</p>
-          <p className=' text-gray-500'>Learn more about our teams and job openings.</p>
-          <button className='border border-black px-8 py-4 text-sm hover:bg-black hover:text-white transition-all duration-500'>Explore Jobs</button>
-        </div>
-      </div>
+    const onSubmitHandler = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        try {
+            const response = await axios.post(backendUrl + '/api/contact/add', formData);
+            if (response.data.success) {
+                toast.success("Message Logged in Registry");
+                setFormData({ name: '', email: '', subject: '', message: '' });
+            }
+        } catch (error) {
+            toast.error(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-      <NewsletterBox/>
+    return (
+        <div className='bg-[#FCF9F4] min-h-screen pt-16 pb-24 px-6 md:px-16 lg:px-24 text-black font-serif'>
+            <div className='max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 mb-20'>
+                
+                {/* LEFT: INFO */}
+                <div className='lg:col-span-5 space-y-12'>
+                    <div>
+                        <p className='text-[10px] tracking-[0.6em] text-[#BC002D] uppercase font-black mb-4'>Inquiry Desk</p>
+                        <h2 className='text-4xl md:text-6xl font-bold text-gray-900 tracking-tighter uppercase'>Contact <span className='text-[#BC002D]'>Us.</span></h2>
+                    </div>
+
+                    <div className='space-y-8 pt-10 border-t border-gray-100'>
+                        <div className='flex gap-6'>
+                            <Mail size={20} className='text-[#BC002D] mt-1' />
+                            <div>
+                                <h4 className='text-xs font-black uppercase mb-1'>Registry Support</h4>
+                                <p className='text-sm text-gray-500 font-sans'>admin@philabasket.com</p>
+                            </div>
+                        </div>
+                        <div className='flex gap-6'>
+                            <MapPin size={20} className='text-[#BC002D] mt-1' />
+                            <div>
+                                <h4 className='text-xs font-black uppercase mb-1'>Archive HQ</h4>
+                                <p className='text-sm text-gray-500 font-sans'>New Delhi, India</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* RIGHT: FORM */}
+                <div className='lg:col-span-7 bg-white p-8 md:p-12 rounded-[40px] shadow-sm border border-gray-100'>
+                    <form onSubmit={onSubmitHandler} className='space-y-6'>
+                        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                            <input required value={formData.name} onChange={(e)=>setFormData({...formData, name:e.target.value})} type="text" placeholder="FULL NAME" className='w-full bg-gray-50 border-none p-4 rounded-xl text-xs font-bold focus:ring-1 ring-[#BC002D]/20 outline-none' />
+                            <input required value={formData.email} onChange={(e)=>setFormData({...formData, email:e.target.value})} type="email" placeholder="EMAIL ADDRESS" className='w-full bg-gray-50 border-none p-4 rounded-xl text-xs font-bold focus:ring-1 ring-[#BC002D]/20 outline-none' />
+                        </div>
+                        <input required value={formData.subject} onChange={(e)=>setFormData({...formData, subject:e.target.value})} type="text" placeholder="SUBJECT / INQUIRY TYPE" className='w-full bg-gray-50 border-none p-4 rounded-xl text-xs font-bold focus:ring-1 ring-[#BC002D]/20 outline-none' />
+                        <textarea required value={formData.message} onChange={(e)=>setFormData({...formData, message:e.target.value})} rows="5" placeholder="YOUR MESSAGE..." className='w-full bg-gray-50 border-none p-4 rounded-xl text-xs font-bold focus:ring-1 ring-[#BC002D]/20 outline-none'></textarea>
+                        
+                        <button disabled={loading} className='w-full py-4 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#BC002D] transition-all flex items-center justify-center gap-2'>
+                            {loading ? "Transmitting..." : <>Transmit Message <Send size={14}/></>}
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            {/* --- MAP SECTION --- */}
+            {/* --- MAP SECTION --- */}
+<div className='max-w-6xl mx-auto'>
+    <div className='flex items-center gap-4 mb-8'>
+        <Globe size={16} className='text-[#BC002D]' />
+        <h4 className='text-[10px] font-black uppercase tracking-[0.4em]'>Geographical Location</h4>
+        <div className='flex-1 h-[1px] bg-gray-200'></div>
     </div>
-  )
-}
+    
+    <div className='w-full h-[450px] rounded-[40px] overflow-hidden border border-gray-100 shadow-xl shadow-black/[0.02] transition-all duration-700 grayscale hover:grayscale-0'>
+        <iframe 
+            title="PhilaBasket HQ"
+            // Use this standard Embed URL format:
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d112061.64293375747!2d77.1328405096185!3d28.613895420353457!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b34766245%3A0x315429ac0a340798!2sNew%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1710500000000!5m2!1sen!2sin" 
+            width="100%" 
+            height="100%" 
+            style={{ border: 0 }} 
+            allowFullScreen="" 
+            loading="lazy" 
+            referrerPolicy="no-referrer-when-downgrade">
+        </iframe>
+    </div>
 
-export default Contact
+    <div className='mt-6 flex justify-between items-center text-[9px] font-bold text-gray-400 uppercase tracking-widest'>
+        <p>Co-ordinates: 28.6139° N, 77.2090° E</p>
+        <p>Archive Registry HQ</p>
+    </div>
+</div>
+        </div>
+    );
+};
+
+export default Contact;

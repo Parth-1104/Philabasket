@@ -150,14 +150,25 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, stock
     ) : (
         /* ACTIVE STATE - Full Width Add to Cart */
         <button 
-            onClick={handleAddToCart}
-            className='w-full flex items-center justify-center gap-2 py-3 bg-gray-900 text-white rounded-xl hover:bg-[#BC002D] transition-all duration-300 shadow-md shadow-black/5'
-        >
-            <ShoppingCart size={14} />
-            <span className='text-[9px] lg:text-[10px] font-black uppercase tracking-[0.2em]'>
+        onClick={handleAddToCart}
+        className='group relative w-full h-[50px] flex items-center justify-center bg-[#1a1a1a] text-white rounded-xl overflow-hidden hover:bg-[#BC002D] transition-all duration-500 ease-in-out shadow-lg shadow-[#BC002D]/10'
+    >
+        {/* CENTERED ICON (Slides in on Hover) */}
+        <div className='absolute inset-0 flex items-center justify-center -translate-x-10 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500 ease-out'>
+            <ShoppingCart size={20} className="text-white fill-white/10" />
+        </div>
+    
+        {/* TEXT & SMALL ICON (Slides out on Hover) */}
+        <div className='flex items-center gap-3 group-hover:translate-x-12 group-hover:opacity-0 transition-all duration-500 ease-in-out'>
+            <ShoppingCart size={16} className="opacity-70" />
+            <span className='text-[10px] font-black uppercase tracking-[0.25em]'>
                 Add to Cart
             </span>
-        </button>
+        </div>
+    
+        {/* SUBTLE OVERLAY GRADIENT */}
+        <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none'></div>
+    </button>
     )}
 </div>
             </div>

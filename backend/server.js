@@ -20,6 +20,7 @@ import bannerRouter from './routes/bannerRouter.js'
 import headerRouter from './routes/headerRouter.js'
 import adminRouter from './routes/adminRouter.js'
 import mediaRouter from './routes/mediaRouter.js'
+import contactRouter from './routes/contactRouter.js'
 
 // App Config
 const app = express()
@@ -61,6 +62,8 @@ app.use('/api/banner',bannerRouter)
 app.use('/api/header', headerRouter);
 app.use('/api/admin',adminRouter)
 app.use('/api/media', mediaRouter);
+app.use('/api/contact', contactRouter);
+
 
 
 app.get('/',(req,res)=>{

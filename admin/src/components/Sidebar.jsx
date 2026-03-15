@@ -80,6 +80,8 @@ const navSections = [
   { to: '/mail', icon: Mail, label: 'Direct Mail' },
   
   { to: '/news', icon: Newspaper, label: 'Newsletter' },
+  { to: '/contactus', icon: Newspaper, label: 'Contact Us ' },
+
   
   ]
   
