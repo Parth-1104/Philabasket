@@ -6,7 +6,15 @@ import { toast } from 'react-toastify';
 
 const Contact = () => {
     const { backendUrl } = useContext(ShopContext);
-    const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
+    
+    const [formData, setFormData] = useState({ 
+        name: '', 
+        email: '', 
+        phone: '', 
+        inquiryType: '', 
+        subject: '',     
+        message: '' 
+    });
     const [loading, setLoading] = useState(false);
 
     const onSubmitHandler = async (e) => {
@@ -16,7 +24,7 @@ const Contact = () => {
             const response = await axios.post(backendUrl + '/api/contact/add', formData);
             if (response.data.success) {
                 toast.success("Message Logged in Registry");
-                setFormData({ name: '', email: '', subject: '', message: '' });
+                setFormData({ name: '', email: '', phone: '', inquiryType: '', subject: '', message: '' });
             }
         } catch (error) {
             toast.error(error.message);
@@ -49,6 +57,10 @@ const Contact = () => {
                             <div>
                                 <h4 className='text-xs font-black uppercase mb-1'>Archive HQ</h4>
                                 <p className='text-sm text-gray-500 font-sans'>New Delhi, India</p>
+                                {/* Added Contact Mobile Number here */}
+                                <p className='text-[11px] text-[#BC002D] font-bold font-sans mt-2 flex items-center gap-2'>
+                                    <Phone size={12} /> +91 98765 43210
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -61,7 +73,33 @@ const Contact = () => {
                             <input required value={formData.name} onChange={(e)=>setFormData({...formData, name:e.target.value})} type="text" placeholder="FULL NAME" className='w-full bg-gray-50 border-none p-4 rounded-xl text-xs font-bold focus:ring-1 ring-[#BC002D]/20 outline-none' />
                             <input required value={formData.email} onChange={(e)=>setFormData({...formData, email:e.target.value})} type="email" placeholder="EMAIL ADDRESS" className='w-full bg-gray-50 border-none p-4 rounded-xl text-xs font-bold focus:ring-1 ring-[#BC002D]/20 outline-none' />
                         </div>
-                        <input required value={formData.subject} onChange={(e)=>setFormData({...formData, subject:e.target.value})} type="text" placeholder="SUBJECT / INQUIRY TYPE" className='w-full bg-gray-50 border-none p-4 rounded-xl text-xs font-bold focus:ring-1 ring-[#BC002D]/20 outline-none' />
+                        
+                        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                            {/* Mobile Field Restricted to 10 Digits */}
+                            <input 
+                                required 
+                                value={formData.phone} 
+                                onChange={(e)=>setFormData({...formData, phone:e.target.value.replace(/\D/g, '')})} 
+                                type="tel" 
+                                maxLength="10"
+                                pattern="[0-9]{10}"
+                                title="Please enter a valid 10-digit mobile number"
+                                placeholder="MOBILE NUMBER (10 DIGITS)" 
+                                className='w-full bg-gray-50 border-none p-4 rounded-xl text-xs font-bold focus:ring-1 ring-[#BC002D]/20 outline-none' 
+                            />
+                            
+                            <select required value={formData.inquiryType} onChange={(e)=>setFormData({...formData, inquiryType:e.target.value})} className='w-full bg-gray-50 border-none p-4 rounded-xl text-xs font-bold focus:ring-1 ring-[#BC002D]/20 outline-none cursor-pointer'>
+                                <option value="" disabled>SELECT TYPE</option>
+                                <option value="Feedback">Feedback</option>
+                                <option value="Suggestion">Suggestion</option>
+                                <option value="Order Issue">Order Issue</option>
+                                <option value="Requirement">Requirement</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+
+                        <input required value={formData.subject} onChange={(e)=>setFormData({...formData, subject:e.target.value})} type="text" placeholder="SUBJECT / TOPIC TITLE" className='w-full bg-gray-50 border-none p-4 rounded-xl text-xs font-bold focus:ring-1 ring-[#BC002D]/20 outline-none' />
+
                         <textarea required value={formData.message} onChange={(e)=>setFormData({...formData, message:e.target.value})} rows="5" placeholder="YOUR MESSAGE..." className='w-full bg-gray-50 border-none p-4 rounded-xl text-xs font-bold focus:ring-1 ring-[#BC002D]/20 outline-none'></textarea>
                         
                         <button disabled={loading} className='w-full py-4 bg-black text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-[#BC002D] transition-all flex items-center justify-center gap-2'>
@@ -72,33 +110,31 @@ const Contact = () => {
             </div>
 
             {/* --- MAP SECTION --- */}
-            {/* --- MAP SECTION --- */}
-<div className='max-w-6xl mx-auto'>
-    <div className='flex items-center gap-4 mb-8'>
-        <Globe size={16} className='text-[#BC002D]' />
-        <h4 className='text-[10px] font-black uppercase tracking-[0.4em]'>Geographical Location</h4>
-        <div className='flex-1 h-[1px] bg-gray-200'></div>
-    </div>
-    
-    <div className='w-full h-[450px] rounded-[40px] overflow-hidden border border-gray-100 shadow-xl shadow-black/[0.02] transition-all duration-700 grayscale hover:grayscale-0'>
-        <iframe 
-            title="PhilaBasket HQ"
-            // Use this standard Embed URL format:
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d112061.64293375747!2d77.1328405096185!3d28.613895420353457!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b34766245%3A0x315429ac0a340798!2sNew%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1710500000000!5m2!1sen!2sin" 
-            width="100%" 
-            height="100%" 
-            style={{ border: 0 }} 
-            allowFullScreen="" 
-            loading="lazy" 
-            referrerPolicy="no-referrer-when-downgrade">
-        </iframe>
-    </div>
+            <div className='max-w-6xl mx-auto'>
+                <div className='flex items-center gap-4 mb-8'>
+                    <Globe size={16} className='text-[#BC002D]' />
+                    <h4 className='text-[10px] font-black uppercase tracking-[0.4em]'>Geographical Location</h4>
+                    <div className='flex-1 h-[1px] bg-gray-200'></div>
+                </div>
+                
+                <div className='w-full h-[450px] rounded-[40px] overflow-hidden border border-gray-100 shadow-xl shadow-black/[0.02] transition-all duration-700 grayscale hover:grayscale-0'>
+                    <iframe 
+                        title="PhilaBasket HQ"
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d224345.8392319277!2d77.06889754725782!3d28.527280343115164!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b34766245%3A0xfa05465210e73ac2!2sDelhi!5e0!3m2!1sen!2sin!4v1710525600000!5m2!1sen!2sin" 
+                        width="100%" 
+                        height="100%" 
+                        style={{ border: 0 }} 
+                        allowFullScreen="" 
+                        loading="lazy" 
+                        referrerPolicy="no-referrer-when-downgrade">
+                    </iframe>
+                </div>
 
-    <div className='mt-6 flex justify-between items-center text-[9px] font-bold text-gray-400 uppercase tracking-widest'>
-        <p>Co-ordinates: 28.6139° N, 77.2090° E</p>
-        <p>Archive Registry HQ</p>
-    </div>
-</div>
+                <div className='mt-6 flex justify-between items-center text-[9px] font-bold text-gray-400 uppercase tracking-widest'>
+                    <p>Co-ordinates: 28.6139° N, 77.2090° E</p>
+                    <p>Archive Registry HQ</p>
+                </div>
+            </div>
         </div>
     );
 };

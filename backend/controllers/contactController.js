@@ -1,19 +1,22 @@
 import contactModel from "../models/contactModel.js";
 
-// Add to your routes/contactRoute.js
+// --- ADD CONTACT INQUIRY ---
 const addContact = async (req, res) => {
     try {
-        const { name, email, subject, message } = req.body;
+        // Destructure the new fields: phone and inquiryType
+        const { name, email, phone, inquiryType, subject, message } = req.body;
 
-        // Basic validation
-        if (!name || !email || !message) {
-            return res.json({ success: false, message: "Please fill all required fields" });
+        // Validation: Ensure mandatory fields are present
+        if (!name || !email || !phone || !message) {
+            return res.json({ success: false, message: "Missing required registry data (Name, Email, Phone, or Message)" });
         }
 
         const contactData = {
             name,
             email,
-            subject: subject || "General Inquiry", // Default if subject is empty
+            phone,         // New mandatory field
+            inquiryType: inquiryType || "General", // The dropdown value
+            subject: subject || "No Subject Provided", // The text input value
             message,
             date: Date.now()
         };
@@ -28,6 +31,7 @@ const addContact = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 }
+
 // --- GET ALL MESSAGES (For Admin Side) ---
 const listContactMessages = async (req, res) => {
     try {
@@ -43,6 +47,7 @@ const listContactMessages = async (req, res) => {
 // --- DELETE MESSAGE (For Admin Side) ---
 const deleteContactMessage = async (req, res) => {
     try {
+        // req.body.id should be the MongoDB _id of the message
         await contactModel.findByIdAndDelete(req.body.id);
         res.json({ success: true, message: "Inquiry removed from registry" });
     } catch (error) {
