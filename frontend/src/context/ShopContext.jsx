@@ -156,11 +156,13 @@ useEffect(() => {
         setCurrency(prev => prev === 'INR' ? 'USD' : 'INR');
     };
 
-    const formatPrice = (price) => {
+    const formatPrice = (price, returnNumber = false) => {
+        const numPrice = Number(price);
         if (currency === 'USD') {
-            return (price / exchangeRate).toFixed(2);
+            const converted = numPrice / exchangeRate;
+            return returnNumber ? converted : converted.toFixed(2);
         }
-        return price;
+        return returnNumber ? numPrice : numPrice.toFixed(2);
     };
 
     // --- DATA FETCHING ---

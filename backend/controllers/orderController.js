@@ -1023,89 +1023,89 @@ const verifyRazorpay = async (req, res) => {
     try {
         const { userId, razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
 
-        // 1. Verify Signature using HMAC SHA256
+        // 1. Verify Signature (Security Protocol)
         const sign = razorpay_order_id + "|" + razorpay_payment_id;
         const expectedSign = crypto
             .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
             .update(sign.toString())
             .digest("hex");
 
-        if (expectedSign === razorpay_signature) {
-            // 2. PAYMENT SUCCESSFUL: Update Registry
-            // Find the order using the receipt ID (which we stored in razorpay_order_id)
-            // Or find it by mapping razorpay_order_id if you saved it. 
-            // Better: Find the most recent unpaid order for this user
-            const orderInfo = await orderModel.findOneAndUpdate(
-                { userId, payment: false, paymentMethod: "Razorpay" }, 
-                { $set: { payment: true } },
-                { sort: { date: -1 }, new: true }
-            );
-
-            // 3. Post-Payment Logistics (Stock, Rewards, Cart)
-            for (const item of orderInfo.items) {
-                await productModel.findByIdAndUpdate(item._id, { $inc: { stock: -item.quantity } });
-            }
-            await userModel.findByIdAndUpdate(userId, { $set: { cartData: {} } });
-
-            // Trigger Notifications
-            const htmlContent = getOrderHtmlTemplate(orderInfo.toObject(), orderInfo.deliveryFee);
-            await sendEmail(orderInfo.address.email, "Acquisition Confirmed", htmlContent);
-
-            res.json({ success: true, message: "Payment Verified & Acquisition Logged" });
-        } else {
-            res.json({ success: false, message: "Security Authentication Failed" });
+        if (expectedSign !== razorpay_signature) {
+            return res.json({ success: false, message: "Security Authentication Failed" });
         }
 
+        // 2. Find specific order by Razorpay Order ID
+        const orderInfo = await orderModel.findOne({ razorpayOrderId: razorpay_order_id });
+
+        if (!orderInfo) {
+            return res.json({ success: false, message: "Order not found in registry" });
+        }
+
+        if (orderInfo.payment) {
+            return res.json({ success: true, message: "Already verified" });
+        }
+
+        // 3. Mark as Paid & Update Stock
+        orderInfo.payment = true;
+        await orderInfo.save();
+
+        // 4. Update Registry Inventory (Stock reduction)
+        for (const item of orderInfo.items) {
+            await productModel.findByIdAndUpdate(item._id, { $inc: { stock: -item.quantity } });
+        }
+
+        // 5. Clear User Cart & Deduct Reward Points if used
+        const updateData = { $set: { cartData: {} } };
+        if (orderInfo.pointsUsed > 0) {
+            updateData.$inc = { totalRewardPoints: -orderInfo.pointsUsed };
+        }
+        await userModel.findByIdAndUpdate(userId, updateData);
+
+        // 6. Dispatch Confirmations
+        const htmlContent = getOrderHtmlTemplate(orderInfo.toObject(), orderInfo.deliveryFee);
+        await sendEmail(orderInfo.address.email, "Acquisition Confirmed", htmlContent);
+
+        res.json({ success: true, message: "Acquisition Logged Successfully" });
+
     } catch (error) {
-        console.error(error);
-        res.json({ success: false, message: error.message });
+        console.error("Verification Error:", error);
+        res.status(500).json({ success: false, message: error.message });
     }
 };
 
 const placeOrderRazorpay = async (req, res) => {
     try {
-        const { userId, items, amount, address, billingAddress, currency, pointsUsed, couponUsed, discountAmount, deliveryMethod } = req.body;
+        const { 
+            userId, items, amount, address, billingAddress, 
+            currency, activeExchangeRate, pointsUsed, 
+            couponUsed, discountAmount, deliveryMethod 
+        } = req.body;
 
-        // 1. Construct the Order Data (Same logic as your standard placeOrder)
-
+        // 1. Fetch Admin Settings for Fees (Fallbacks)
         const settings = await settingsModel.findOne({}) || { 
             rate: 83, 
             indiaFee: 125, indiaFeeFast: 250, 
             globalFee: 750, globalFeeFast: 1500 
         };
 
-        // 2. CALCULATE DELIVERY FEE (Missing in your original code)
-        const isIndia = address.country.toLowerCase() === 'india';
-        const method = deliveryMethod === 'fast' ? 'fast' : 'standard';
+        // PROTOCOL: Use the live rate from frontend if available, otherwise DB
+        const currentRate = activeExchangeRate || settings.rate || 83; 
 
-        let deliveryFee = 0;
-        if (isIndia) {
-            deliveryFee = method === 'fast' ? settings.indiaFeeFast : settings.indiaFee;
-        } else {
-            deliveryFee = method === 'fast' ? settings.globalFeeFast : settings.globalFee;
-        }
-
-        // Apply Free Shipping override for Standard Domestic orders >= 4999
-        const cartAmount = items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-        if (isIndia && method === 'standard' && cartAmount >= 4999) {
-            deliveryFee = 0;
-        }
-
-        // Note: amount is coming from frontend in INR (e.g., 5000)
+        // 2. Save Order to Database (Storing base INR amount for your accounting)
         const orderData = {
             userId,
             items,
             address,
             billingAddress: billingAddress || address,
-            amount,
-            deliveryFee,
-            deliveryMethod,
+            deliveryFee, // ✅ Now captured
+            deliveryMethod: method,
+            amount, 
             pointsUsed: pointsUsed || 0,
             couponUsed: couponUsed || null,
             discountAmount: discountAmount || 0,
             currency: currency || 'INR',
-            paymentMethod: "Razorpay",
-            payment: false, // Remains false until verification
+            paymentMethod: "RAZORPAY",
+            payment: false,
             date: Date.now(),
             status: 'Order Placed'
         };
@@ -1113,24 +1113,42 @@ const placeOrderRazorpay = async (req, res) => {
         const newOrder = new orderModel(orderData);
         await newOrder.save();
 
-        // 2. Create Razorpay Order
-        // Razorpay expects amount in PAISA (INR * 100)
+        // 3. PREPARE RAZORPAY OPTIONS
+        let razorpayAmount;
+        let razorpayCurrency = currency === 'USD' ? 'USD' : 'INR';
+
+        if (currency === 'USD') {
+            // MATH: (INR Amount / Live Exchange Rate) * 100 Cents
+            // Example: (244 / 83.45) * 100 = 292.39 -> 292 cents ($2.92)
+            const usdAmount = amount / currentRate;
+            razorpayAmount = Math.round(usdAmount * 100); 
+        } else {
+            // MATH: INR * 100 Paise
+            razorpayAmount = Math.round(amount * 100);
+        }
+
         const options = {
-            amount: amount * 100, 
-            currency: "INR",
+            amount: razorpayAmount, 
+            currency: razorpayCurrency,
             receipt: newOrder._id.toString(),
         };
 
-        razorpayInstance.orders.create(options, (error, order) => {
+        // 4. Create Razorpay Order
+        razorpayInstance.orders.create(options, async (error, order) => {
             if (error) {
-                console.log(error);
-                return res.json({ success: false, message: error.description });
+                console.error("Razorpay Order Error:", error);
+                return res.json({ success: false, message: error.description || "Razorpay Error" });
             }
-            res.json({ success: true, order }); // This 'order' contains the Razorpay ID
+            
+            // CRITICAL: Save the Razorpay Order ID to our DB for verification later
+            await orderModel.findByIdAndUpdate(newOrder._id, { razorpayOrderId: order.id });
+            
+            // This 'order' object now contains the CORRECT amount and currency for the popup
+            res.json({ success: true, order }); 
         });
 
     } catch (error) {
-        console.error(error);
+        console.error("Finalize Error:", error);
         res.json({ success: false, message: error.message });
     }
 };

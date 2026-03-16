@@ -18,7 +18,7 @@ const PlaceOrder = () => {
     const { 
         navigate, backendUrl, token, cartItems, setCartItems, 
         getCartAmount, getDeliveryFee, products, currency, 
-        userData, fetchUserData, formatPrice ,deliveryFees
+        userData, fetchUserData, formatPrice ,deliveryFees,exchangeRate
     } = useContext(ShopContext);
     
     const [loading, setLoading] = useState(false);
@@ -126,6 +126,8 @@ const handleBillingCountryChange = (e) => {
         countryCode: selected ? selected.dial : prev.countryCode 
     }));
 };
+
+const symbol = currency === 'USD' ? '$' : '₹';
 
 // 2. Handle Billing Pincode (Auto-fills City/State for Billing)
 const handleBillingPincodeChange = async (e) => {
@@ -367,6 +369,8 @@ const onSubmitHandler = async (e) => {
             address: formData,
             billingAddress: sameAsShipping ? formData : billingData,
             items: orderItems,
+            currency: currency,
+            activeExchangeRate: exchangeRate,
             deliveryFee: Number(calculation.feeApplied),
             deliveryMethod: deliveryMethod,
             amount: Number(calculation.totalPayable),
@@ -667,15 +671,39 @@ const onSubmitHandler = async (e) => {
                         <div className='mt-4 flex items-center justify-between p-3 border border-dashed border-[#BC002D]/30 bg-[#BC002D]/5 rounded-sm'>
                             <div className='flex items-center gap-2'>
                                 <input type="checkbox" id="pts" checked={usePoints} onChange={() => setUsePoints(!usePoints)} className='accent-[#BC002D]' />
-                                <label htmlFor="pts" className='text-[9px] font-black text-[#BC002D] uppercase cursor-pointer'>Use Credits ({userPoints} PTS)</label>
+                                <label htmlFor="pts" className='text-[9px] font-black text-[#BC002D] uppercase cursor-pointer'>Use Credits ({userPoints} Coins)</label>
                             </div>
                         </div>
 
                         <div className='mt-6 pt-4 border-t border-gray-100 space-y-2'>
-                            {appliedCoupon && <div className='flex justify-between text-[10px] font-black text-green-600 uppercase tracking-widest'><span>Coupon</span><span>-₹{calculation.couponDeducted.toFixed(0)}</span></div>}
-                            {usePoints && <div className='flex justify-between text-[10px] font-black text-[#BC002D] uppercase tracking-widest'><span>Points</span><span>-₹{calculation.rewardDeducted.toFixed(0)}</span></div>}
-                            <div className='flex justify-between pt-4 border-t border-black'><p className='text-[10px] font-black uppercase text-gray-400'>Final Total</p><p className='text-lg font-black text-[#BC002D]'>₹{calculation.totalPayable.toFixed(2)}</p></div>
-                        </div>
+    {appliedCoupon && (
+        <div className='flex justify-between text-[10px] font-black text-green-600 uppercase tracking-widest'>
+            <span>Coupon</span>
+            <span>
+                <span className='mr-0.5'>{symbol}</span>
+                {formatPrice(calculation.couponDeducted)}
+            </span>
+        </div>
+    )}
+    
+    {usePoints && (
+        <div className='flex justify-between text-[10px] font-black text-[#BC002D] uppercase tracking-widest'>
+            <span>Points</span>
+            <span>
+                <span className='mr-0.5'>{symbol}</span>
+                {formatPrice(calculation.rewardDeducted)}
+            </span>
+        </div>
+    )}
+
+    <div className='flex justify-between pt-4 border-t border-black'>
+        <p className='text-[10px] font-black uppercase text-gray-400'>Final Total</p>
+        <p className='text-lg font-black text-[#BC002D]'>
+            <span className='text-[12px] mr-0.5'>{symbol}</span>
+            {formatPrice(calculation.totalPayable)}
+        </p>
+    </div>
+</div>
                     </div>
 
 
@@ -717,7 +745,10 @@ const onSubmitHandler = async (e) => {
             {calculation.isFreeShipping ? (
                 <span className='text-emerald-600'>FREE</span>
             ) : (
-                `₹${formData.country === 'India' ? (adminSettings?.indiaFee || 0) : (adminSettings?.globalFee || 749)}`
+                <React.Fragment>
+                <span className='text-[10px] mr-0.5 text-[#BC002D]'>{symbol}</span>
+                {formatPrice(formData.country === 'India' ? (adminSettings?.indiaFee || 0) : (adminSettings?.globalFee || 749))}
+            </React.Fragment>
             )}
         </p>
     </div>
@@ -743,7 +774,8 @@ const onSubmitHandler = async (e) => {
                 </div>
             </div>
             <p className='text-xs font-black text-right'>
-                ₹{formData.country === 'India' ? (adminSettings?.indiaFeeFast || 250) : (adminSettings?.globalFeeFast || 1500)}
+            <span className='text-[10px] mr-0.5 text-[#BC002D]'>{symbol}</span>
+            {formatPrice(formData.country === 'India' ? (adminSettings?.indiaFeeFast || 250) : (adminSettings?.globalFeeFast || 1500))}
             </p>
         </div>
     )}
