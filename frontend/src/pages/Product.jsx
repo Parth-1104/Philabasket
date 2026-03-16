@@ -108,6 +108,25 @@ const handleMouseMove = (e) => {
     setQuantity(val);
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString || dateString === "Historical Issue") return dateString;
+
+    // Split the dd/mm/yyyy string
+    const parts = dateString.split('/');
+    if (parts.length !== 3) return dateString;
+
+    const day = parts[0];
+    const monthIndex = parseInt(parts[1]) - 1;
+    const year = parts[2];
+
+    const months = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+
+    return `${day} ${months[monthIndex]} ${year}`;
+};
+
   const handleAddToCart = () => {
     addToCart(productData._id, quantity);
     setShowPopup(true);
@@ -364,7 +383,7 @@ const handleMouseMove = (e) => {
       <span className='text-[9px] font-black text-[#BC002D] uppercase tracking-widest'>Availability</span>
     </div>
     <span className='text-[11px] font-black text-gray-900 leading-none ml-[22px]'>
-      {productData.stock} Specimens
+      {productData.stock} Quantity left
     </span>
   </div>
 
@@ -375,8 +394,10 @@ const handleMouseMove = (e) => {
       <span className='text-[9px] font-black text-[#BC002D] uppercase tracking-widest'>Release Date</span>
     </div>
     <span className='text-[11px] font-black text-gray-900 leading-none ml-[22px]'>
-      {productData.releaseDate || "Historical Issue"}
-    </span>
+    {productData.releaseDate 
+        ? formatDate(productData.releaseDate) 
+        : "Historical Issue"}
+</span>
   </div>
 
   {/* PRODUCED COUNT */}

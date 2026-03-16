@@ -3,6 +3,7 @@ import { Mail, Phone, MapPin, Send, Globe } from 'lucide-react';
 import { ShopContext } from '../context/ShopContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { SiInstagram, SiFacebook, SiYoutube, SiX, SiWhatsapp } from 'react-icons/si';
 
 const Contact = () => {
     const { backendUrl } = useContext(ShopContext);
@@ -59,7 +60,7 @@ const Contact = () => {
                                 <p className='text-sm text-gray-500 font-sans'>New Delhi, India</p>
                                 {/* Added Contact Mobile Number here */}
                                 <p className='text-[11px] text-[#BC002D] font-bold font-sans mt-2 flex items-center gap-2'>
-                                    <Phone size={12} /> +91 98765 43210
+                                    <Phone size={12} /><SiWhatsapp size={12} /> +91 9999167799
                                 </p>
                             </div>
                         </div>

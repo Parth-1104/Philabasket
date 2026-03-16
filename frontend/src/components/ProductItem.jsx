@@ -81,28 +81,32 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, stock
               
               {/* POINTS BADGE */}
               {!isOutOfStock && (
-                <div className='absolute top-2 left-2 z-30 flex items-center gap-1 bg-black/80 backdrop-blur-md px-2 py-1 rounded-lg border border-white/10'>
-                  <Award size={10} className='text-amber-400' />
-                  <span className='text-[8px] font-black text-white uppercase tracking-tighter'>Earn {potentialPoints} PTS</span>
-                </div>
-              )}
+    <div className='absolute top-0 right-0 z-30 overflow-hidden w-20 h-20 pointer-events-none'>
+        <div className='absolute top-3 -right-6 w-[120px] bg-black/90 backdrop-blur-md py-1 border-y border-white/10 flex items-center justify-center gap-1 rotate-45 shadow-lg'>
+            <Award size={10} className='text-amber-400' />
+            <span className='text-[7px] font-black text-white uppercase tracking-tighter'>
+                {potentialPoints} Coins
+            </span>
+        </div>
+    </div>
+)}
 
               {/* SOLD OUT OVERLAY */}
-              {isOutOfStock && (
+              {/* {isOutOfStock && (
                 <div className='absolute inset-0 z-20 bg-white/60 backdrop-blur-[2px] flex items-center justify-center'>
                     <span className='bg-black text-white text-[10px] font-black uppercase tracking-[0.3em] px-4 py-2 rounded-full shadow-xl'>Sold Out</span>
                 </div>
-              )}
+              )} */}
 
-              <button 
+              {/* <button 
                 onClick={onToggleWishlist}
-                className='absolute top-2 right-2 z-30 p-1.5 bg-white/80 backdrop-blur-md rounded-full border border-black/10 hover:bg-[#BC002D] hover:text-white transition-all shadow-sm'
+                className='absolute top-1 left-21 z-30 p-1.5 bg-white/80 backdrop-blur-md rounded-full border border-black/10 hover:bg-[#BC002D] hover:text-white transition-all shadow-sm'
               >
                 <Heart 
                   size={14} 
                   className={`${wishlist.includes(productId) ? 'fill-[#BC002D] text-[#BC002D]' : 'text-black'} transition-colors`} 
                 />
-              </button>
+              </button> */}
 
               <div className='w-full h-full flex items-center justify-center'>
                   <img 
@@ -137,38 +141,48 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, stock
                 </div>
 
                 {/* --- ACTION BUTTONS --- */}
-                <div className='mt-2'> {/* Removed grid-cols-2 to allow full width */}
+                <div className='mt-2 flex items-center gap-2'>
+    
+    {/* 1. WISHLIST BUTTON (Always Visible, First in Row) */}
+    <button 
+        onClick={onToggleWishlist}
+        className='h-[50px] w-[50px] shrink-0 flex items-center justify-center bg-white border border-black/10 rounded-xl hover:bg-gray-50 transition-all shadow-sm'
+    >
+        <Heart 
+            size={18} 
+            className={`${wishlist.includes(productId) ? 'fill-[#BC002D] text-[#BC002D]' : 'text-black'} transition-colors`} 
+        />
+    </button>
+
+    {/* 2. CONDITIONAL CART SECTION (Sold Out vs Add to Cart) */}
     {isOutOfStock ? (
         /* SOLD OUT STATE */
-        <button 
-            disabled
-            className='w-full flex items-center justify-center gap-2 py-2.5 bg-gray-100 text-gray-400 rounded-xl cursor-not-allowed border border-gray-200'
-        >
+        <div className='flex-1 flex items-center justify-center gap-2 h-[50px] bg-gray-50 text-gray-400 rounded-xl border border-gray-200 cursor-not-allowed'>
             <Ban size={13} />
             <span className='text-[9px] font-black uppercase tracking-widest'>Sold Out</span>
-        </button>
+        </div>
     ) : (
-        /* ACTIVE STATE - Full Width Add to Cart */
+        /* ACTIVE ADD TO CART STATE */
         <button 
-        onClick={handleAddToCart}
-        className='group relative w-full h-[50px] flex items-center justify-center bg-[#1a1a1a] text-white rounded-xl overflow-hidden hover:bg-[#BC002D] transition-all duration-500 ease-in-out shadow-lg shadow-[#BC002D]/10'
-    >
-        {/* CENTERED ICON (Slides in on Hover) */}
-        <div className='absolute inset-0 flex items-center justify-center -translate-x-10 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500 ease-out'>
-            <ShoppingCart size={20} className="text-white fill-white/10" />
-        </div>
-    
-        {/* TEXT & SMALL ICON (Slides out on Hover) */}
-        <div className='flex items-center gap-3 group-hover:translate-x-12 group-hover:opacity-0 transition-all duration-500 ease-in-out'>
-            <ShoppingCart size={16} className="opacity-70" />
-            <span className='text-[10px] font-black uppercase tracking-[0.25em]'>
-                Add to Cart
-            </span>
-        </div>
-    
-        {/* SUBTLE OVERLAY GRADIENT */}
-        <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none'></div>
-    </button>
+            onClick={handleAddToCart}
+            className='group relative flex-1 h-[50px] flex items-center justify-center bg-[#1a1a1a] text-white rounded-xl overflow-hidden hover:bg-[#BC002D] transition-all duration-500 ease-in-out shadow-lg shadow-[#BC002D]/10'
+        >
+            {/* CENTERED ICON (Slides in on Hover) */}
+            <div className='absolute inset-0 flex items-center justify-center -translate-x-10 opacity-0 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-500 ease-out'>
+                <ShoppingCart size={20} className="text-white fill-white/10" />
+            </div>
+        
+            {/* TEXT & SMALL ICON (Slides out on Hover) */}
+            <div className='flex items-center gap-3 group-hover:translate-x-12 group-hover:opacity-0 transition-all duration-500 ease-in-out'>
+                <ShoppingCart size={16} className="opacity-70" />
+                <span className='text-[10px] font-black uppercase tracking-[0.25em]'>
+                    Add to Cart
+                </span>
+            </div>
+
+            {/* SHIMMER EFFECT */}
+            <div className='absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] pointer-events-none'></div>
+        </button>
     )}
 </div>
             </div>

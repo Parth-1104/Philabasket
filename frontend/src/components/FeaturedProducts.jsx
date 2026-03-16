@@ -52,7 +52,7 @@ return (
     <section className="bg-white py-8 md:py-12 overflow-hidden select-none relative border-t border-black/[0.03]">
         <div className="absolute -left-[10vw] top-[10%] h-[80%] w-[40%] bg-[#bd002d]/5 rounded-r-[600px] pointer-events-none"></div>
 
-        <div className='px-6 md:px-16 lg:px-24 relative z-10'>
+        <div className='px-6 md:px-16 lg:px-4 relative z-10'>
             
             {/* --- HEADER --- */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8">
@@ -80,8 +80,8 @@ return (
             <div className='relative group/nav'>
                 
                 {/* Scroll Buttons */}
-                <button onClick={() => scrollRegistry('left')} className="hidden  text-black lg:flex absolute -left-12 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full items-center justify-center bg-white border border-gray-100 shadow-xl opacity-0 group-hover/nav:opacity-100 transition-all"><ChevronLeft size={18} /></button>
-                <button onClick={() => scrollRegistry('right')} className="hidden text-black lg:flex absolute -right-12 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full items-center justify-center bg-white border border-gray-100 shadow-xl opacity-0 group-hover/nav:opacity-100 transition-all"><ChevronRight size={18} /></button>
+                <button onClick={() => scrollRegistry('left')} className="hidden  text-black lg:flex absolute -left-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full items-center justify-center bg-white border border-gray-100 shadow-xl opacity-0 group-hover/nav:opacity-100 transition-all"><ChevronLeft size={18} /></button>
+                <button onClick={() => scrollRegistry('right')} className="hidden text-black lg:flex absolute -right-2 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full items-center justify-center bg-white border border-gray-100 shadow-xl opacity-0 group-hover/nav:opacity-100 transition-all"><ChevronRight size={18} /></button>
 
                 <div 
                     ref={scrollRef}
@@ -95,7 +95,7 @@ return (
                                Mobile: 75% -> 40%
                                Desktop: lg:min-w-[30px] -> 22% 
                             */
-                            className='min-w-[65%] sm:min-w-[40%] lg:min-w-[22%] max-w-[280px] snap-center group relative'
+                            className='min-w-[65%] sm:min-w-[40%] lg:min-w-[18%] max-w-[150px] snap-center group relative'
                         >
                             {/* Pick Badge */}
                             <div className="absolute -top-2 -left-2 z-20 pointer-events-none scale-75 md:scale-100">

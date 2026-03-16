@@ -285,11 +285,12 @@ const LatestCollection = () => {
                 className="flex flex-col h-full transition-all duration-500 cursor-pointer relative group"
             >
                 {/* 'New' Ribbon Badge */}
-                <div className="absolute top-0 right-0 z-20 overflow-hidden w-16 h-16 pointer-events-none">
-                    <div className="absolute top-[15%] -right-[35%] bg-[#bd002d] text-white text-[6px] font-black py-1 w-[140%] text-center transform rotate-45 shadow-sm uppercase tracking-tighter">
-                        New
-                    </div>
-                </div>
+                <div className="absolute pt-5 -top-6 -left-4 z-20 pointer-events-none">
+                                <div className="bg-[#bd002d] text-white w-10 h-10 md:w-10 md:h-10 rounded-full flex flex-col items-center justify-center shadow-lg border-2 border-white transform group-hover:rotate-12 transition-all">
+                                    <span className="text-sm md:text-[13px] font-black leading-none">New</span>
+
+                                </div>
+                            </div>
 
                 {/* Specimen Content */}
                 <div className="flex-grow flex flex-col">

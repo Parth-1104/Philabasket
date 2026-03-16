@@ -57,9 +57,12 @@ const OrderDetail = ({ token }) => {
       doc.text("Phila Basket", 14, 18); // Shifted to left margin since logo is removed
       
       doc.setFontSize(8);
-      doc.text("G-3, Prakash Kunj Apartment, Kavi Raman Path, Boring Road", 14, 23);
-      doc.text("Patna 800001 Bihar India | philapragya@gmail.com", 14, 27);
-      doc.text("GSTIN: 10AGUPJ4257E1ZI", 14, 31);
+      doc.text("S - 606/607 School Block -2", 14, 23);
+      doc.text("Park end appt, Shakarpur", 14, 23);
+
+      
+      doc.text("New Delhi - 110092", 14, 27);
+      doc.text("Gst - 07APXPR4457E2Z8", 14, 31);
   
       // Right-aligned Invoice Header
       doc.setFontSize(14);
@@ -161,7 +164,7 @@ const OrderDetail = ({ token }) => {
               ['Sub-Total (Base Items)', `Rs. ${totalBaseAmount.toFixed(2)}`],
               ['IGST (5%)', `Rs. ${totalGSTAmount.toFixed(2)}`],
               [`Shipping Charge`, shippingCharge === 0 ? 'FREE' : `Rs. ${shippingCharge.toFixed(2)}`],
-              [{ content: 'GST Subsidy', styles: { textColor: [0, 128, 0], fontStyle: 'italic' } }, `Rs. -${totalGSTAmount.toFixed(2)}`],
+              [{ content: 'Discount from Philaasket', styles: { textColor: [0, 128, 0], fontStyle: 'italic' } }, `Rs. -${totalGSTAmount.toFixed(2)}`],
               [`Discount`, `Rs. -${couponDiscount.toFixed(2)}`],
               [`Archive Credits`, `Rs. -${pointsDiscount.toFixed(2)}`],
               [{ content: 'Total Payable', styles: { fontStyle: 'bold', fontSize: 10, textColor: [188, 0, 45] } }, 
@@ -173,8 +176,6 @@ const OrderDetail = ({ token }) => {
       // --- 6. FOOTER ---
       const footerY = doc.lastAutoTable.finalY + 15;
       doc.setFontSize(8);
-      doc.text("BANKING: HDFC Bank | A/c: 01868730000112 | IFSC: HDFC0000186", 14, footerY);
-      
       // Save File
       doc.save(`Invoice_${order.orderNo || 'Order'}.pdf`);
   

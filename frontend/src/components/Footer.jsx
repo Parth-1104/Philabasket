@@ -6,16 +6,17 @@ import {
   ShieldCheck, Lock, Globe, ArrowUpRight, MapPin, Phone, Mail, 
   Instagram, Facebook, Youtube, Twitter 
 } from 'lucide-react'
+  import { SiInstagram, SiFacebook, SiYoutube, SiX } from 'react-icons/si';
 
 const Footer = () => {
   // Social media protocol data
-  const socialProtocols = [
-    { label: 'Instagram', icon: <Instagram size={14} />, path: 'https://instagram.com/philabasket' },
-    { label: 'Facebook', icon: <Facebook size={14} />, path: 'https://facebook.com/philabasket' },
-    { label: 'Youtube', icon: <Youtube size={14} />, path: 'https://youtube.com/@philabasket' },
-    { label: 'Twitter', icon: <Twitter size={14} />, path: 'https://twitter.com/philabasket' },
-  ];
 
+const socialProtocols = [
+  { label: 'Instagram', icon: <SiInstagram size={18} />, path: 'https://instagram.com/philabasket', color: '#E4405F' },
+  { label: 'Facebook', icon: <SiFacebook size={18} />, path: 'https://facebook.com/philabasket', color: '#1877F2' },
+  { label: 'Youtube', icon: <SiYoutube size={18} />, path: 'https://youtube.com/@philabasket', color: '#FF0000' },
+  { label: 'Twitter', icon: <SiX size={18} />, path: 'https://twitter.com/philabasket', color: '#000000' },
+];
 
   return (
     <footer className="relative bg-white pt-32 pb-16 px-6 md:px-16 lg:px-24 overflow-hidden border-t border-black/[0.03] select-none font-sans">
@@ -49,19 +50,20 @@ const Footer = () => {
                     <p className="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Social connectivity</p>
                     <Globe size={10} className="text-gray-300" />
                 </div>
-                <div className="flex gap-4">
-                  {socialProtocols.map((social, sIdx) => (
-                    <a 
-                      key={sIdx} 
-                      href={social.path} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-[#BC002D] transition-colors duration-300"
-                    >
-                      {social.icon}
-                    </a>
-                  ))}
-                </div>
+                <div className="flex gap-5">
+  {socialProtocols.map((social, sIdx) => (
+    <a 
+      key={sIdx} 
+      href={social.path} 
+      target="_blank" 
+      rel="noopener noreferrer"
+      className="transition-all duration-300 hover:scale-110 opacity-80 hover:opacity-100"
+      style={{ color: social.color }}
+    >
+      {social.icon}
+    </a>
+  ))}
+</div>
             </div>
 
             {/* Payment Protocols */}
@@ -102,7 +104,7 @@ const Footer = () => {
       
       { label: 'Referral', path: '/referral' },
       { label: 'Rewards', path: '/rewards' },
-      { label: 'Archive blogs', path: '/blogs' },
+      { label: 'Blogs', path: '/blogs' },
       { label: 'Catalogue', path: '/collection' },
       { label: 'Knowledge Center', path: '/knowledge-center' },
 

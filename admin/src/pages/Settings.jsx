@@ -94,10 +94,10 @@ const Settings = ({ token }) => {
 
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl'>
                 {/* 1. Exchange Rate */}
-                <div className='bg-white p-6 border border-gray-100 rounded-xl shadow-sm'>
+                {/* <div className='bg-white p-6 border border-gray-100 rounded-xl shadow-sm'>
                     <div className='flex items-center gap-2 mb-4 text-[#BC002D]'><Landmark size={16}/><p className='text-[10px] font-black uppercase tracking-widest'>Exchange Rate (USD)</p></div>
                     <input onChange={(e)=>setFormData({...formData, rate: e.target.value})} value={formData.rate} className='w-full px-3 py-3 bg-gray-50 border-none font-mono text-lg rounded-lg outline-none ring-1 ring-gray-100 focus:ring-[#BC002D]/30' type="number" step="0.01" required />
-                </div>
+                </div> */}
 
                 {/* 2. India Standard */}
                 <div className='bg-white p-6 border border-gray-100 rounded-xl shadow-sm'>

@@ -13,6 +13,7 @@ import StampCategoryScroll from '../components/StampCategoryScroll'
 import FeaturedProducts from '../components/FeaturedProducts'
 import PromoPopup from '../components/Popup'
 import BlogRegistry from '../components/BlogRegistry'
+import HorizontalRegistry from '../components/HorizontalRegistry'
 
 const Home = () => {
   const latestCollectionRef = useRef(null);
@@ -30,6 +31,9 @@ const Home = () => {
       <StampCategoryScroll/>
 
       <FeaturedProducts/>
+
+
+      <HorizontalRegistry/>
 
       {/* 2. THE DISCOVERY: What is new in the archive today */}
       <div ref={latestCollectionRef}>

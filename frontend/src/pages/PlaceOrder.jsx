@@ -14,7 +14,7 @@ import {
 
 
 const PlaceOrder = () => {
-    const [method, setMethod] = useState('cod');
+    const [method, setMethod] = useState('razorpay');
     const { 
         navigate, backendUrl, token, cartItems, setCartItems, 
         getCartAmount, getDeliveryFee, products, currency, 
@@ -253,7 +253,7 @@ const handleBillingPincodeChange = async (e) => {
 // Original fee from registry
 
 // Add this state at the top of your component with other states
-const [deliveryMethod, setDeliveryMethod] = useState('standard');
+const [deliveryMethod, setDeliveryMethod] = useState('fast');
 
 const calculation = useMemo(() => {
     const cartAmount = getCartAmount();
@@ -484,7 +484,7 @@ const onSubmitHandler = async (e) => {
                 </div>
             )}
 
-            <form onSubmit={onSubmitHandler} className="bg-[#FCF9F4] min-h-screen flex flex-col lg:flex-row justify-center gap-8 xl:gap-12 pt-28 pb-20 px-6 md:px-12 lg:px-20 select-none">
+            <form onSubmit={onSubmitHandler} className="bg-white min-h-screen flex flex-col lg:flex-row justify-center gap-8 xl:gap-12 pt-28 pb-20 px-6 md:px-12 lg:px-20 select-none">
                 
                 {/* COLUMN 1: SHIPPING & BILLING */}
                 <div className='flex flex-col gap-6 w-full lg:max-w-[420px]'>
@@ -650,8 +650,11 @@ const onSubmitHandler = async (e) => {
                     <div className='bg-white border border-gray-100 p-6 shadow-sm rounded-sm'>
                         {/* Passes Country to update shipping automatically */}
                         <CartTotal country={formData.country} deliveryMethod={deliveryMethod} />
+
+
+                        {/* Coupoun code  */}
                         
-                        <div className='mt-6 flex flex-col gap-2'>
+                        {/* <div className='mt-6 flex flex-col gap-2'>
                             <div className='flex gap-2'>
                                 <input 
                                     value={couponCode} 
@@ -666,7 +669,7 @@ const onSubmitHandler = async (e) => {
                                     <button type="button" onClick={applyCoupon} className='bg-black text-white px-5 py-3 text-[9px] font-black uppercase rounded-sm'>Apply</button>
                                 )}
                             </div>
-                        </div>
+                        </div> */}
 
                         <div className='mt-4 flex items-center justify-between p-3 border border-dashed border-[#BC002D]/30 bg-[#BC002D]/5 rounded-sm'>
                             <div className='flex items-center gap-2'>
@@ -724,6 +727,34 @@ const onSubmitHandler = async (e) => {
     
     <div className='grid grid-cols-1 gap-2'>
     {/* Standard Option */}
+    
+
+    {/* Conditional Fast Option */}
+    {((formData.country === 'India' && (adminSettings?.isIndiaFastActive ?? true)) || 
+      (formData.country !== 'India' && (adminSettings?.isGlobalFastActive ?? true))) && (
+        <div 
+            onClick={() => setDeliveryMethod('fast')}
+            className={`flex items-center justify-between p-4 cursor-pointer border rounded-sm transition-all ${deliveryMethod === 'fast' ? 'border-[#BC002D] bg-[#BC002D]/5' : 'border-gray-100 bg-white'}`}
+        >
+            <div className='flex items-center gap-3'>
+                <div className={`w-2.5 h-2.5 border rounded-full ${deliveryMethod === 'fast' ? 'bg-[#BC002D] border-[#BC002D]' : 'border-gray-300'}`}></div>
+                <div>
+                    <p className='text-[10px] font-black uppercase'>
+                        {formData.country === 'India' ? '⚡ Speed Post' : ' Speed Post'}
+                    </p>
+                    <p className='text-[8px] text-gray-700 font-medium '>
+                        {formData.country === 'India' 
+                            ? 'Expected Delivery within 2-5 Days of dispatch' 
+                            : 'Expected Delivery within 15-20 Days of dispatch'}
+                    </p>
+                </div>
+            </div>
+            <p className='text-xs font-black text-right'>
+            <span className='text-[10px] mr-0.5 text-[#BC002D]'>{symbol}</span>
+            {formatPrice(formData.country === 'India' ? (adminSettings?.indiaFeeFast || 250) : (adminSettings?.globalFeeFast || 1500))}
+            </p>
+        </div>
+    )}
     <div 
         onClick={() => setDeliveryMethod('standard')}
         className={`flex items-center justify-between p-4 cursor-pointer border rounded-sm transition-all ${deliveryMethod === 'standard' ? 'border-[#BC002D] bg-[#BC002D]/5' : 'border-gray-100 bg-white'}`}
@@ -752,33 +783,6 @@ const onSubmitHandler = async (e) => {
             )}
         </p>
     </div>
-
-    {/* Conditional Fast Option */}
-    {((formData.country === 'India' && (adminSettings?.isIndiaFastActive ?? true)) || 
-      (formData.country !== 'India' && (adminSettings?.isGlobalFastActive ?? true))) && (
-        <div 
-            onClick={() => setDeliveryMethod('fast')}
-            className={`flex items-center justify-between p-4 cursor-pointer border rounded-sm transition-all ${deliveryMethod === 'fast' ? 'border-[#BC002D] bg-[#BC002D]/5' : 'border-gray-100 bg-white'}`}
-        >
-            <div className='flex items-center gap-3'>
-                <div className={`w-2.5 h-2.5 border rounded-full ${deliveryMethod === 'fast' ? 'bg-[#BC002D] border-[#BC002D]' : 'border-gray-300'}`}></div>
-                <div>
-                    <p className='text-[10px] font-black uppercase'>
-                        {formData.country === 'India' ? '⚡ Speed Post' : ' Speed Post'}
-                    </p>
-                    <p className='text-[8px] text-gray-700 font-medium '>
-                        {formData.country === 'India' 
-                            ? 'Expected Delivery within 2-5 Days of dispatch' 
-                            : 'Expected Delivery within 15-20 Days of dispatch'}
-                    </p>
-                </div>
-            </div>
-            <p className='text-xs font-black text-right'>
-            <span className='text-[10px] mr-0.5 text-[#BC002D]'>{symbol}</span>
-            {formatPrice(formData.country === 'India' ? (adminSettings?.indiaFeeFast || 250) : (adminSettings?.globalFeeFast || 1500))}
-            </p>
-        </div>
-    )}
 </div>
 </div>
 
@@ -787,11 +791,12 @@ const onSubmitHandler = async (e) => {
                         <Title text1={'PAYMENT'} text2={'PROTOCOL'} />
                         <div className='grid grid-cols-1 gap-2 mt-4'>
                             {[
-                                {id:'instamojo', label:'Instamojo / Credit / Debit', icon:CreditCard},
-                                {id:'razorpay', label:'Razorpay / UPI', icon:Smartphone},
-                                {id:'bank', label:'Bank Transfer', icon:Landmark},
-                                {id:'cheque', label:'Cheque Payment', icon:FileText},
-                                {id:'cod', label:'Cash on Delivery', icon:Mail}
+                                 {id:'razorpay', label:'Credit Card / Debit Card / UPI', icon:Smartphone},
+                                {id:'instamojo', label:'Instamojo', icon:CreditCard},
+                               
+                                {id:'bank', label:'Direct Bank Transfer', icon:Landmark},
+                                // {id:'cheque', label:'Cheque Payment', icon:FileText},
+                                // {id:'cod', label:'Cash on Delivery', icon:Mail}
                             ].map((m) => (
                                 <div key={m.id} onClick={() => setMethod(m.id)} className={`flex items-center justify-between p-4 cursor-pointer border rounded-sm ${method === m.id ? 'border-[#BC002D] bg-[#BC002D]/5' : 'border-gray-100 bg-white opacity-60'}`}>
                                     <div className='flex items-center gap-3'>
