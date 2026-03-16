@@ -33,7 +33,7 @@ app.use(express.json())
 app.use(express.json({ limit: '20mb' })); 
 app.use(express.urlencoded({ limit: '20mb', extended: true }));
 app.use(cors({
-    origin: ['https://philabasket-frontend.vercel.app', 'http://localhost:5173','http://localhost:5174','https://philabasket-admin.vercel.app','https://new.philabasket.in'],
+    origin: ['https://philabasket-frontend.vercel.app', 'http://localhost:5173','http://localhost:5174','https://philabasket-admin.vercel.app','https://new.philabasket.in','https://admin.philabasket.in'],
     credentials: true
 }))
 
