@@ -12,6 +12,7 @@ const HorizontalRegistry = () => {
     const [searchFocused, setSearchFocused] = useState(false);
     const barRef = useRef(null);
     const navigate = useNavigate();
+    const [mobileExpanded, setMobileExpanded] = useState(false);
 
     const fetchCategories = async () => {
         try {
@@ -165,65 +166,73 @@ const HorizontalRegistry = () => {
                 <div className="w-full h-px bg-white/10 mb-3" />
 
                 {/* ── ROW 2: Category Pills ── */}
-                <div className="flex items-center gap-1 overflow-x-auto hide-scrollbar pb-1">
-
-                    {/* Category Pills — hidden in search mode */}
-                    {!isSearchMode && unifiedIndex.map((entry) => (
-                        <div key={entry.name} className="relative flex-shrink-0">
-                            {entry.type === 'group' ? (
-                                <button
-                                    onClick={() => toggleGroup(entry.name)}
-                                    className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 whitespace-nowrap
-                                        ${openGroup === entry.name
-                                            ? 'bg-white text-[#bd002d]'
-                                            : 'text-white/80 hover:text-white hover:bg-white/10'
-                                        }`}
-                                >
-                                    {entry.name}
-                                    <span className={`text-[9px] font-mono font-black ${openGroup === entry.name ? 'text-[#bd002d]/60' : 'text-white/50'}`}>
-                                        ({entry.totalCount})
-                                    </span>
-                                    <ChevronDown
-                                        size={11}
-                                        strokeWidth={3}
-                                        className={`transition-transform duration-300 ${openGroup === entry.name ? 'rotate-180' : ''}`}
-                                    />
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={() => handleCategoryClick(entry.name)}
-                                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200 whitespace-nowrap"
-                                >
-                                    {entry.name}
-                                    <span className="text-[9px] font-mono font-black text-white/50">{entry.count}</span>
-                                </button>
-                            )}
-                        </div>
-                    ))}
-
-                    {/* In search mode: show flat result pills */}
-                    {isSearchMode && searchResults.map((item) => (
-                        <button
-                            key={item.name}
-                            onClick={() => handleCategoryClick(item.name)}
-                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200 whitespace-nowrap flex-shrink-0"
-                        >
-                            <span>{item.name}</span>
-                            {item.group && (
-                                <span className="text-[8px] text-white/40 font-normal normal-case tracking-normal ml-0.5">
-                                    · {item.group}
-                                </span>
-                            )}
-                            <span className="text-amber-400 font-mono font-black text-[9px]">{item.count}</span>
-                        </button>
-                    ))}
-
-                    {isSearchMode && searchResults.length === 0 && (
-                        <span className="text-white/40 text-[10px] font-bold tracking-widest px-3 flex-shrink-0">
-                            No results found
+                <div className="relative">
+    <div className={`
+        flex flex-wrap items-center gap-2 transition-all duration-500 ease-in-out overflow-hidden
+        ${!isSearchMode && !mobileExpanded ? 'max-h-[145px] lg:max-h-none' : 'max-h-[2000px]'}
+    `}>
+        {/* Category Pills */}
+        {!isSearchMode && unifiedIndex.map((entry) => (
+            <div key={entry.name} className="relative">
+                {entry.type === 'group' ? (
+                    <button
+                        onClick={() => toggleGroup(entry.name)}
+                        className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 whitespace-nowrap
+                            ${openGroup === entry.name
+                                ? 'bg-white text-[#bd002d]'
+                                : 'text-white/80 hover:text-white hover:bg-white/10'
+                            }`}
+                    >
+                        {entry.name}
+                        <span className={`text-[9px] font-mono font-black ${openGroup === entry.name ? 'text-[#bd002d]/60' : 'text-white/50'}`}>
+                            ({entry.totalCount})
                         </span>
-                    )}
-                </div>
+                        <ChevronDown
+                            size={11}
+                            strokeWidth={3}
+                            className={`transition-transform duration-300 ${openGroup === entry.name ? 'rotate-180' : ''}`}
+                        />
+                    </button>
+                ) : (
+                    <button
+                        onClick={() => handleCategoryClick(entry.name)}
+                        className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200 whitespace-nowrap"
+                    >
+                        {entry.name}
+                        <span className="text-[9px] font-mono font-black text-white/50">{entry.count}</span>
+                    </button>
+                )}
+            </div>
+        ))}
+
+        {/* Search Results */}
+        {isSearchMode && searchResults.map((item) => (
+            <button
+                key={item.name}
+                onClick={() => handleCategoryClick(item.name)}
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200 whitespace-nowrap"
+            >
+                <span>{item.name}</span>
+                <span className="text-amber-400 font-mono font-black text-[9px] ml-1">{item.count}</span>
+            </button>
+        ))}
+    </div>
+
+    {/* ── Mobile "View More" Overlay ── */}
+    {!isSearchMode && unifiedIndex.length > 8 && (
+        <div className={`
+            lg:hidden w-full pt-4 pb-1 flex justify-center
+            ${!mobileExpanded ? 'absolute bottom-0 left-0 bg-gradient-to-t from-[#bd002d] via-[#bd002d]/80 to-transparent pt-10' : ''}
+        `}>
+            <button 
+                onClick={() => setMobileExpanded(!mobileExpanded)}
+                className="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest text-white border border-white/20 transition-all"
+            >
+                {mobileExpanded ? 'Show Less' : `View All Categories (${unifiedIndex.length})`}
+            </button>
+        </div>
+    )}
+</div>
             </div>
 
             {/* ── Mega-Menu Dropdown ── */}

@@ -159,23 +159,27 @@ const LatestCollection = () => {
 
    
 
-        {latestProducts.map((item) => (
+    {latestProducts.map((item) => (
+    <div 
+        key={item._id} 
+        className='group relative flex flex-col'
+    >
+        {/* --- THE "NEW" CIRCLE BADGE (Matching your Pick badge style) --- */}
+        <div className="absolute -top-2 -left-2 z-20 pointer-events-none scale-75 md:scale-90">
+            <div className="bg-[#bd002d] text-white w-12 h-12 rounded-full flex flex-col items-center justify-center shadow-lg border-2 border-white transform group-hover:rotate-12 transition-all duration-500">
+                <span className="text-[10px] font-black uppercase tracking-tighter">New</span>
+            </div>
+        </div>
+
+        {/* --- THE CARD CONTAINER (Curved edges & Shadow) --- */}
+        <div className='h-full'>
             <div 
-                key={item._id} 
-                onClick={() => handleProductClick(item._id)} 
-                className="flex flex-col h-full transition-all duration-500 cursor-pointer relative group"
+                onClick={() => handleProductClick(item._id)}
+                className="flex flex-col h-full bg-white border border-gray-100 shadow-md cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-xl rounded-br-[40px] md:rounded-br-[50px] overflow-hidden"
             >
-                {/* 'New' Ribbon Badge */}
-                <div className="absolute pt-5 -top-6 -left-4 z-20 pointer-events-none">
-                                <div className="bg-[#bd002d] text-white w-10 h-10 md:w-10 md:h-10 rounded-full flex flex-col items-center justify-center shadow-lg border-2 border-white transform group-hover:rotate-12 transition-all">
-                                    <span className="text-sm md:text-[13px] font-black leading-none">New</span>
-
-                                </div>
-                            </div>
-
-                {/* Specimen Content */}
-                <div className="flex-grow flex flex-col">
-                    <div className="w-full flex-grow">
+                {/* Image Container with fixed Aspect Ratio to keep grid uniform */}
+                <div className="p-1 aspect-square bg-[#f8f8f8]">
+                    <div className="w-full h-full flex items-center justify-center rounded-br-[35px] md:rounded-br-[45px] overflow-hidden">
                         <ProductItem 
                             id={item._id} 
                             _id={item._id} 
@@ -190,7 +194,9 @@ const LatestCollection = () => {
                     </div>
                 </div>
             </div>
-        ))}
+        </div>
+    </div>
+))}
     </div>
 
     <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-5 gap-6 mt-5'>

@@ -26,7 +26,7 @@ const SideCart = () => {
             />
 
             {/* Side Drawer */}
-            <div className={`fixed top-0 right-0 h-full w-full sm:w-[400px] bg-white z-[101] shadow-2xl transition-transform duration-500 ease-in-out transform ${showSideCart ? 'translate-x-0' : 'translate-x-full'}`}>
+            <div className={`fixed top-0 right-0 h-full w-[80%] sm:w-[380px] md:w-[400px] bg-white z-[101] shadow-2xl transition-transform duration-500 ease-in-out transform ${showSideCart ? 'translate-x-0' : 'translate-x-full'}`}>
                 
                 <div className='flex flex-col h-full'>
                     {/* Header */}
