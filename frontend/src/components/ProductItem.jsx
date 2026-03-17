@@ -32,26 +32,25 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, stock
   const optimizedImage = useMemo(() => {
     const rawUrl = image && image[0] ? image[0] : "";
     
-    // 1. If not a Cloudinary URL, return as is
+    // 1. Return early if not Cloudinary or empty
     if (!rawUrl || !rawUrl.includes('cloudinary')) return rawUrl;
 
-    // 2. Define the watermark overlay 
-    // (Ensure 'Logo-5_go95bd' is an uploaded asset in this specific Cloudinary account)
+    // 2. Define the watermark ID
     const watermarkTransform = 'l_Logo-5_asqxkr,fl_relative,w_0.7,c_scale,o_90,a_-45';
     
     try {
-        // 3. Split the URL at '/upload/'
-        const parts = rawUrl.split('/upload/');
-        if (parts.length !== 2) return rawUrl;
+        // 3. The "Bulletproof" Split: 
+        // We split at /upload/ and rebuild. We don't care if f_auto is already there.
+        const [baseUrl, path] = rawUrl.split('/upload/');
+        
+        // 4. Remove any leading transformation segments from the path (like f_auto,q_auto/)
+        // This prevents the "double injection" that causes 400 errors.
+        const cleanPath = path.replace(/^(f_auto|q_auto|[,/])+/g, '').replace(/^\//, '');
 
-        // 4. Clean the second part by removing any existing f_auto,q_auto tags
-        // This prevents "Double Injection" errors
-        const cleanPath = parts[1].replace(/^f_auto,q_auto\//, "");
-
-        // 5. Reconstruct: [Base URL] + [/upload/] + [New Params] + [Watermark] + [Clean Path]
-        return `${parts[0]}/upload/f_auto,q_auto,w_600,${watermarkTransform}/${cleanPath}`;
+        // 5. Reconstruct with a clean slate
+        return `${baseUrl}/upload/f_auto,q_auto,w_600,${watermarkTransform}/${cleanPath}`;
     } catch (err) {
-        console.error("Cloudinary transform error:", err);
+        // Fallback to raw URL if anything goes wrong during string manipulation
         return rawUrl;
     }
 }, [image]);

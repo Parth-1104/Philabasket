@@ -188,43 +188,43 @@ const Collection = () => {
     return combined.sort((a, b) => a.name.localeCompare(b.name));
   }, [dbCategories, sidebarSearch]); // Removed openGroups from dependencies to prevent toggle-loops
 
-  const fetchFromRegistry = useCallback(async (targetPage) => {
-    if (!backendUrl) return;
-    setLoading(true);
-    try {
-        const response = await axios.get(`${backendUrl}/api/product/list`, {
-            params: { 
-                page: targetPage, 
-                limit: 50, 
-                category: activeCategory, 
-                sort: sortType, 
-                search: showSearch ? search : '',
-                // Translate the single "activeStatus" pill into specific backend keys
-                bestseller: activeStatus === 'bestseller' ? 'true' : undefined,
-                isFeatured: activeStatus === 'featured' ? 'true' : undefined,
-                newArrival: activeStatus === 'newArrival' ? 'true' : undefined,
-            }
-        });
+ // --- Inside Collection Component ---
 
-        if (response.data.success) {
-            setProducts(response.data.products);
-            setTotalFound(response.data.total);
-            
-            // Sync with global context for cart/side-panel
-            setGlobalProducts(prev => {
-                const existingIds = new Set(prev.map(p => String(p._id)));
-                const uniqueNew = response.data.products.filter(p => !existingIds.has(String(p._id)));
-                return [...prev, ...uniqueNew];
-            });
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-    } catch (error) {
-        console.error("Registry Sync Failed:", error);
-        toast.error("Registry Sync Failed");
-    } finally {
-        setLoading(false);
+ const fetchFromRegistry = useCallback(async (targetPage) => {
+  if (!backendUrl) return;
+  setLoading(true);
+  try {
+    const response = await axios.get(`${backendUrl}/api/product/list`, {
+      params: { 
+        page: targetPage, 
+        limit: 50, 
+        category: activeCategory, 
+        sort: sortType, 
+        search: showSearch ? search : '',
+        bestseller: activeStatus === 'bestseller' ? 'true' : undefined,
+        isFeatured: activeStatus === 'featured' ? 'true' : undefined,
+        newArrival: activeStatus === 'newArrival' ? 'true' : undefined,
+      }
+    });
+
+    if (response.data.success) {
+      setProducts(response.data.products); // Just set the raw data here
+      setTotalFound(response.data.total);
+      
+      setGlobalProducts(prev => {
+        const existingIds = new Set(prev.map(p => String(p._id)));
+        const uniqueNew = response.data.products.filter(p => !existingIds.has(String(p._id)));
+        return [...prev, ...uniqueNew];
+      });
     }
+  } catch (error) {
+    console.error("Registry Sync Failed:", error);
+  } finally {
+    setLoading(false);
+  }
 }, [backendUrl, activeCategory, activeStatus, sortType, search, showSearch, setGlobalProducts]);
+// Note: Changed to location.state?.priorityId for more granular dependency tracking
+// Added location.state to dependencies so the shift triggers on navigation
   useEffect(() => {
     setPage(1);
     fetchFromRegistry(1);
@@ -233,6 +233,29 @@ const Collection = () => {
   useEffect(() => {
     if (page > 1) fetchFromRegistry(page);
   }, [page, fetchFromRegistry]);
+
+  useEffect(() => {
+    const priorityId = location.state?.priorityId;
+    
+    // Only run if we have a priorityId, we are on page 1, and products have loaded
+    if (priorityId && page === 1 && products.length > 0) {
+      const priorityIndex = products.findIndex(p => String(p._id) === String(priorityId));
+      
+      // If the item exists but isn't already at the top
+      if (priorityIndex > 0) {
+        const updatedProducts = [...products];
+        const [priorityItem] = updatedProducts.splice(priorityIndex, 1);
+        updatedProducts.unshift(priorityItem);
+        
+        setProducts(updatedProducts);
+        
+        // Clear the state so it doesn't re-shift if the user sorts/filters later
+        navigate(location.pathname + location.search, { replace: true, state: {} });
+        
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  }, [products, page, location.state?.priorityId, navigate]);
 
   const handleCategorySelect = (val) => {
     if (activeCategory === val) {
