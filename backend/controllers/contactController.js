@@ -1,22 +1,23 @@
 import contactModel from "../models/contactModel.js";
 
 // --- ADD CONTACT INQUIRY ---
+// controllers/contactController.js
+import { sendEmail } from "../config/email.js"; // Ensure path is correct
+
 const addContact = async (req, res) => {
     try {
-        // Destructure the new fields: phone and inquiryType
         const { name, email, phone, inquiryType, subject, message } = req.body;
 
-        // Validation: Ensure mandatory fields are present
         if (!name || !email || !phone || !message) {
-            return res.json({ success: false, message: "Missing required registry data (Name, Email, Phone, or Message)" });
+            return res.json({ success: false, message: "Missing required registry data" });
         }
 
         const contactData = {
             name,
             email,
-            phone,         // New mandatory field
-            inquiryType: inquiryType || "General", // The dropdown value
-            subject: subject || "No Subject Provided", // The text input value
+            phone,
+            inquiryType: inquiryType || "General",
+            subject: subject || "No Subject Provided",
             message,
             date: Date.now()
         };
@@ -24,10 +25,34 @@ const addContact = async (req, res) => {
         const newContact = new contactModel(contactData);
         await newContact.save();
 
-        res.json({ success: true, message: "Message successfully logged in Registry" });
+        // ── EMAIL LOGIC FOR ADMIN ──────────────────────────────────────────
+        const adminEmail = "admin@philabasket.com";
+        const emailSubject = `New Registry Inquiry: ${inquiryType || 'General'} - ${name}`;
+        
+        const htmlContent = `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; border: 1px solid #eee; padding: 20px;">
+                <h2 style="color: #BC002D; border-bottom: 2px solid #BC002D; padding-bottom: 10px;">New Philatelic Inquiry</h2>
+                <p><strong>Collector Name:</strong> ${name}</p>
+                <p><strong>Email:</strong> ${email}</p>
+                <p><strong>Phone:</strong> ${phone}</p>
+                <p><strong>Inquiry Type:</strong> ${inquiryType || 'General'}</p>
+                <p><strong>Subject:</strong> ${subject || 'No Subject'}</p>
+                <div style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin-top: 10px;">
+                    <p style="margin: 0;"><strong>Message:</strong></p>
+                    <p style="color: #444; line-height: 1.6;">${message}</p>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+                <p style="font-size: 11px; color: #999;">Logged in PhilaBasket Registry at ${new Date().toLocaleString()}</p>
+            </div>
+        `;
+
+        // Send the email using your existing Resend utility
+        await sendEmail(adminEmail, emailSubject, htmlContent);
+
+        res.json({ success: true, message: "Message logged and Admin notified" });
 
     } catch (error) {
-        console.log(error);
+        console.error(error);
         res.json({ success: false, message: error.message });
     }
 }
