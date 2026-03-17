@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { 
-    Search, ChevronRight, Loader2, ChevronLeft 
+    Search, ChevronRight, Loader2, ChevronLeft, ArrowUpDown, TrendingDown, TrendingUp 
 } from 'lucide-react';
 import { backendUrl } from '../App';
 
@@ -14,14 +14,19 @@ const Users = ({ token }) => {
     const [totalPages, setTotalPages] = useState(1);
     const [currentPage, setCurrentPage] = useState(1);
     
+    // --- NEW SORT STATE ---
+    // Options: 'desc' (Highest), 'asc' (Lowest), or null (Default/Date)
+    const [coinSort, setCoinSort] = useState('desc'); 
+    
     const navigate = useNavigate();
 
-    // 1. Fetch Users with search and page parameters
-    const fetchUsers = async (page = 1) => {
+    // 1. Updated Fetch Logic with Sort Parameter
+    const fetchUsers = useCallback(async (page = 1) => {
         setLoading(true);
         try {
+            // Added sort parameter to the URL
             const res = await axios.get(
-                `${backendUrl}/api/user/admin-list?page=${page}&limit=10&search=${searchTerm}`, 
+                `${backendUrl}/api/user/admin-list?page=${page}&limit=10&search=${searchTerm}&sortCoins=${coinSort}`, 
                 { headers: { token } }
             );
             if (res.data.success) {
@@ -34,19 +39,23 @@ const Users = ({ token }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [token, searchTerm, coinSort]);
 
-    // 2. Search Debounce: Trigger fetch when searchTerm changes (waits 500ms)
+    // 2. Debounce Effect (Handles Search & Sort changes)
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
             fetchUsers(1); 
         }, 500);
-
         return () => clearTimeout(delayDebounceFn);
-    }, [searchTerm]);
+    }, [searchTerm, coinSort, fetchUsers]);
+
+    // Handle Sort Toggle
+    const toggleCoinSort = () => {
+        setCoinSort(prev => prev === 'desc' ? 'asc' : 'desc');
+    };
 
     return (
-        <div className='p-0 w-full  font-serif'>
+        <div className='p-0 w-full font-serif'>
             {/* Header Section */}
             <div className='flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4'>
                 <div>
@@ -56,15 +65,26 @@ const Users = ({ token }) => {
                     <p className='text-[10px] text-gray-400 uppercase font-bold tracking-widest mt-1'>Archive Master Ledger</p>
                 </div>
                 
-                <div className='relative w-full md:w-72'>
-                    <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' size={16} />
-                    <input 
-                        type="text" 
-                        placeholder="Search Archive..." 
-                        value={searchTerm} 
-                        onChange={(e)=>setSearchTerm(e.target.value)} 
-                        className='w-full pl-10 pr-4 py-2 border border-gray-100 rounded-sm text-xs outline-none focus:border-[#BC002D] bg-white transition-all' 
-                    />
+                <div className='flex items-center gap-3 w-full md:w-auto'>
+                    {/* Sort Toggle Mobile/Global */}
+                    <button 
+                        onClick={toggleCoinSort}
+                        className='flex items-center gap-2 px-4 py-2 border border-gray-100 rounded-sm bg-white text-[10px] font-black uppercase hover:border-[#BC002D] transition-all'
+                    >
+                        {coinSort === 'desc' ? <TrendingDown size={14}/> : <TrendingUp size={14}/>}
+                        {coinSort === 'desc' ? "Most Coins" : "Least Coins"}
+                    </button>
+
+                    <div className='relative flex-1 md:w-72'>
+                        <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' size={16} />
+                        <input 
+                            type="text" 
+                            placeholder="Search Archive..." 
+                            value={searchTerm} 
+                            onChange={(e)=>setSearchTerm(e.target.value)} 
+                            className='w-full pl-10 pr-4 py-2 border border-gray-100 rounded-sm text-xs outline-none focus:border-[#BC002D] bg-white transition-all' 
+                        />
+                    </div>
                 </div>
             </div>
 
@@ -75,7 +95,14 @@ const Users = ({ token }) => {
                         <tr>
                             <th className='p-4'>Collector Identity</th>
                             <th className='p-4'>Registry Code</th>
-                            <th className='p-4'>Ledger Credits</th>
+                            {/* Clickable Header Sort */}
+                            <th 
+                                className='p-4 cursor-pointer hover:text-black transition-colors flex items-center gap-2'
+                                onClick={toggleCoinSort}
+                            >
+                                Ledger Credits
+                                <ArrowUpDown size={12} className={coinSort ? "text-[#BC002D]" : ""} />
+                            </th>
                             <th className='p-4 text-right'>Access</th>
                         </tr>
                     </thead>
@@ -100,7 +127,7 @@ const Users = ({ token }) => {
                                     </td>
                                     <td className='p-4 font-mono text-[#BC002D] tracking-tighter'>{u.referralCode || 'UNASSIGNED'}</td>
                                     <td className='p-4'>
-                                        <span className='text-amber-600 bg-amber-50 px-2 py-1 rounded-sm'>
+                                        <span className={`px-2 py-1 rounded-sm ${u.totalRewardPoints > 1000 ? 'text-emerald-600 bg-emerald-50' : 'text-amber-600 bg-amber-50'}`}>
                                             {u.totalRewardPoints || 0} Coins
                                         </span>
                                     </td>
@@ -126,30 +153,16 @@ const Users = ({ token }) => {
                 </table>
             </div>
 
-            {/* PAGINATION PROTOCOL */}
+            {/* Pagination remains the same... */}
             {!loading && totalPages > 1 && (
                 <div className='flex items-center justify-center gap-6 mt-10'>
-                    <button 
-                        disabled={currentPage === 1} 
-                        onClick={() => fetchUsers(currentPage - 1)} 
-                        className='p-2 border border-gray-100 rounded-sm disabled:opacity-20 hover:bg-white hover:shadow-md transition-all'
-                    >
-                        <ChevronLeft size={16} />
-                    </button>
-                    
+                    <button disabled={currentPage === 1} onClick={() => fetchUsers(currentPage - 1)} className='p-2 border border-gray-100 rounded-sm disabled:opacity-20 hover:bg-white hover:shadow-md transition-all'><ChevronLeft size={16} /></button>
                     <div className='flex items-center gap-2'>
                         <span className='text-[10px] font-black uppercase tracking-widest text-gray-400'>Registry Page</span>
                         <span className='text-[12px] font-black text-[#BC002D]'>{currentPage}</span>
                         <span className='text-[10px] font-black uppercase tracking-widest text-gray-400'>of {totalPages}</span>
                     </div>
-
-                    <button 
-                        disabled={currentPage === totalPages} 
-                        onClick={() => fetchUsers(currentPage + 1)} 
-                        className='p-2 border border-gray-100 rounded-sm disabled:opacity-20 hover:bg-white hover:shadow-md transition-all'
-                    >
-                        <ChevronRight size={16} />
-                    </button>
+                    <button disabled={currentPage === totalPages} onClick={() => fetchUsers(currentPage + 1)} className='p-2 border border-gray-100 rounded-sm disabled:opacity-20 hover:bg-white hover:shadow-md transition-all'><ChevronRight size={16} /></button>
                 </div>
             )}
         </div>

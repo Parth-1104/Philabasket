@@ -392,31 +392,43 @@ const listUsers = async (req, res) => {
 
 export const getAllUsersData = async (req, res) => {
     try {
-        const { page = 1, limit = 10, search = "" } = req.query;
-        const skip = (page - 1) * limit;
+        const { page = 1, limit = 10, search = "", sortCoins } = req.query;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
 
-        // Build search query
+        // 1. Build search query
         const query = search ? {
             $or: [
-                { name: { $regex: search, $options: 'i' } },
-                { email: { $regex: search, $options: 'i' } }
+                { name: { $regex: search.trim(), $options: 'i' } },
+                { email: { $regex: search.trim(), $options: 'i' } },
+                { referralCode: { $regex: search.trim(), $options: 'i' } } // Added referral code search
             ]
         } : {};
 
+        // 2. Define Sort Logic
+        let sortCriteria = { createdAt: -1 }; // Default: Newest collectors first
+
+        if (sortCoins === 'desc') {
+            sortCriteria = { totalRewardPoints: -1 }; // Highest coins first
+        } else if (sortCoins === 'asc') {
+            sortCriteria = { totalRewardPoints: 1 };  // Lowest coins first
+        }
+
+        // 3. Execute Query with Pagination
         const totalUsers = await userModel.countDocuments(query);
         const users = await userModel.find(query)
             .select('-password') 
-            .sort({ createdAt: -1 })
+            .sort(sortCriteria)
             .skip(skip)
             .limit(parseInt(limit));
 
         res.json({ 
             success: true, 
             users, 
-            totalPages: Math.ceil(totalUsers / limit),
+            totalPages: Math.ceil(totalUsers / parseInt(limit)),
             currentPage: parseInt(page)
         });
     } catch (error) {
+        console.error("Registry Fetch Error:", error);
         res.json({ success: false, message: error.message });
     }
 };
