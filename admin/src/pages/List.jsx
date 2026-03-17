@@ -91,6 +91,7 @@ const [allMedia, setAllMedia] = useState([]); // All items from media collection
 const [activeImageIndex, setActiveImageIndex] = useState(null); // Track which slot is being typed in
 const [imageSearch, setImageSearch] = useState("");
 
+
 // 2. Fetch media list when modal opens
 useEffect(() => {
     const fetchMedia = async () => {
@@ -500,23 +501,123 @@ const filteredMedia = useMemo(() => {
           </div>
           {totalPages > 1 && <Pagination page={currentPage} total={totalPages} onPage={(p) => fetchList(p)}/>}
         </>
-      ) : (
-        <div className='space-y-2.5'>
-            {trashList.map(item => (
-                <div key={item._id} className='bg-white rounded-2xl border-2 border-dashed p-3.5 flex items-center justify-between opacity-70'>
-                    <div className='flex items-center gap-3 min-w-0'>
-                        <div className='w-12 h-14 bg-gray-50 rounded-xl grayscale p-1'><img src={item.image[0]} className='w-full h-full object-contain' alt=""/></div>
-                        <p className='text-sm font-bold text-gray-400 line-through truncate'>{item.name}</p>
-                    </div>
-                    <div className='flex gap-2 flex-shrink-0'>
-                        <button onClick={() => restoreFromTrash(item._id)} className='px-4 py-2 bg-emerald-50 text-emerald-700 text-[10px] font-black uppercase rounded-xl hover:bg-emerald-500 hover:text-white transition-all'>Restore</button>
-                        <button onClick={() => permanentDelete(item._id)} className='px-4 py-2 bg-red-50 text-red-700 text-[10px] font-black uppercase rounded-xl hover:bg-red-600 hover:text-white transition-all'>Delete</button>
-                    </div>
-                </div>
-            ))}
-            {trashList.length === 0 && <div className='py-20 text-center uppercase text-xs font-black text-gray-300 tracking-widest'>Trash is empty</div>}
+      // ... inside your main return, replace the trash view block ...
+) : (
+  <div className='space-y-4'>
+    {/* ── Trash Header & Select All ── */}
+    <div className='flex items-center justify-between mb-4'>
+      <button 
+        onClick={toggleTrashSelectAll} 
+        className='flex items-center gap-2 bg-white border border-gray-200 px-4 py-2.5 rounded-xl text-xs font-bold text-gray-500 shadow-sm hover:bg-gray-50 transition-all'
+      >
+        <div className={`w-4 h-4 rounded border-2 flex items-center justify-center ${trashSelectedIds.length === trashList.length && trashList.length > 0 ? "bg-[#BC002D] border-[#BC002D]" : "border-gray-300"}`}>
+          {trashSelectedIds.length === trashList.length && trashList.length > 0 && <div className='w-1.5 h-1.5 bg-white rounded-full'/>}
         </div>
+        {trashSelectedIds.length > 0 ? `${trashSelectedIds.length} Selected` : "Select All Trash"}
+      </button>
+
+      {trashSelectedIds.length > 0 && (
+        <button onClick={() => setTrashSelectedIds([])} className='text-[10px] font-black text-gray-400 uppercase hover:text-black'>
+          Clear Selection
+        </button>
       )}
+    </div>
+
+    {/* ── Trash Command Bar ── */}
+    {trashSelectedIds.length > 0 && (
+      <div className='bg-red-900 rounded-2xl p-4 flex items-center justify-between shadow-xl animate-in slide-in-from-top duration-300'>
+        <div className='flex items-center gap-3'>
+          <span className='text-[10px] font-black text-white bg-black/20 px-3 py-1.5 rounded-lg uppercase'>
+            {trashSelectedIds.length} Items in Limbo
+          </span>
+        </div>
+        <div className='flex items-center gap-2'>
+          <button 
+            onClick={() => restoreFromTrash(trashSelectedIds)}
+            className='flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all'
+          >
+            <RotateCcw size={14}/> Bulk Restore
+          </button>
+          <button 
+            onClick={() => permanentDelete(trashSelectedIds)}
+            className='flex items-center gap-2 bg-white/10 hover:bg-red-600 text-white px-5 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all'
+          >
+            <AlertTriangle size={14}/> Terminate Permanently
+          </button>
+        </div>
+      </div>
+    )}
+
+    {/* ── Trash List ── */}
+    <div className='space-y-2.5'>
+      {trashLoading && trashList.length === 0 ? (
+        <p className='text-center py-10 animate-pulse text-[10px] font-black text-gray-400 uppercase tracking-widest'>Scanning Archive Graveyard...</p>
+      ) : trashList.length === 0 ? (
+        <div className='py-20 text-center border-2 border-dashed border-gray-200 rounded-3xl'>
+          <Trash2 size={40} className='mx-auto text-gray-200 mb-3'/>
+          <p className='text-sm font-bold text-gray-300 uppercase tracking-widest'>Trash is empty</p>
+        </div>
+      ) : (
+        trashList.map(item => {
+          const isSelected = trashSelectedIds.includes(item._id);
+          return (
+            <div 
+              key={item._id} 
+              className={`bg-white rounded-2xl border-2 p-3.5 flex items-center justify-between transition-all 
+                ${isSelected ? "border-[#BC002D] bg-red-50/30" : "border-gray-100 opacity-80"}`}
+            >
+              <div className='flex items-center gap-3 min-w-0'>
+                {/* Checkbox */}
+                <button 
+                  onClick={() => toggleTrashSelect(item._id)} 
+                  className={`w-4 h-4 rounded border-2 flex-shrink-0 transition-all ${isSelected ? "bg-[#BC002D] border-[#BC002D]" : "border-gray-300 bg-white"}`}
+                >
+                  {isSelected && <div className='w-full h-full flex items-center justify-center'><div className='w-1 h-1 bg-white rounded-full'/></div>}
+                </button>
+
+                {/* Thumbnail */}
+                <div className='w-12 h-14 bg-gray-50 rounded-xl grayscale p-1 border border-gray-100'>
+                  <img src={item.image[0]} className='w-full h-full object-contain opacity-50' alt=""/>
+                </div>
+
+                <div className='min-w-0'>
+                  <p className='text-sm font-bold text-gray-500 line-through truncate mb-0.5'>{item.name}</p>
+                  <Badge color="red">In Trash</Badge>
+                </div>
+              </div>
+
+              <div className='flex gap-2 flex-shrink-0'>
+                <button 
+                  onClick={() => restoreFromTrash(item._id)} 
+                  className='p-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-500 hover:text-white transition-all'
+                  title="Restore"
+                >
+                  <RotateCcw size={14}/>
+                </button>
+                <button 
+                  onClick={() => permanentDelete(item._id)} 
+                  className='p-2.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all'
+                  title="Delete Permanently"
+                >
+                  <AlertTriangle size={14}/>
+                </button>
+              </div>
+            </div>
+          );
+        })
+      )}
+    </div>
+
+    {/* ── Trash Pagination ── */}
+    {trashTotalPages > 1 && (
+      <Pagination 
+        page={trashPage} 
+        total={trashTotalPages} 
+        onPage={(p) => fetchTrash(p)} 
+      />
+    )}
+  </div>
+)}
 
       {isModalOpen && editFormData && (
         <div className='fixed inset-0 z-[2000] flex items-center justify-center p-4 md:p-10'>

@@ -7,14 +7,26 @@ import { backendUrl } from '../App';
 const RegistryExportDesk = ({token}) => {
   const [format, setFormat] = useState('XLSX');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
-  const [statuses, setStatuses] = useState(['Order Placed', 'Packing', 'Shipped', 'Delivered']);
+  const [statuses, setStatuses] = useState(['Order Placed', 'Packing', 'Shipped', 'Delivered','Complete']);
   const [sortBy, setSortBy] = useState('Date');
   const [sortOrder, setSortOrder] = useState('Descending');
 
   const handleStatusToggle = (status) => {
-    setStatuses(prev => 
-      prev.includes(status) ? prev.filter(s => s !== status) : [...prev, status]
-    );
+    setStatuses(prev => {
+      if (status === 'Complete') {
+        // If Complete is already there, remove both Complete and Delivered
+        if (prev.includes('Complete')) {
+          return prev.filter(s => s !== 'Complete' && s !== 'Delivered');
+        } 
+        // Otherwise, add both
+        return [...prev, 'Complete', 'Delivered'];
+      }
+      
+      // Standard toggle for other statuses
+      return prev.includes(status) 
+        ? prev.filter(s => s !== status) 
+        : [...prev, status];
+    });
   };
 
   const handleExport = async () => {
@@ -81,18 +93,32 @@ const RegistryExportDesk = ({token}) => {
             </section>
 
             <section className='bg-white border border-gray-100 shadow-sm p-8 rounded-xl'>
-              <div className='flex items-center gap-3 mb-6'>
-                <ListFilter size={18} className='text-[#BC002D]'/>
-                <h4 className='text-[11px] font-black text-gray-900 uppercase tracking-widest'>Status Inclusion</h4>
-              </div>
-              <div className='flex flex-wrap gap-2'>
-                {['Order Placed', 'Packing', 'Shipped', 'Delivered', 'Cancelled'].map(s => (
-                  <button key={s} onClick={() => handleStatusToggle(s)} className={`px-4 py-2 border text-[10px] font-black uppercase rounded-full transition-all ${statuses.includes(s) ? 'bg-black text-white border-black' : 'bg-white text-gray-300 border-gray-200 hover:border-gray-400'}`}>
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </section>
+  <div className='flex items-center gap-3 mb-6'>
+    <ListFilter size={18} className='text-[#BC002D]'/>
+    <h4 className='text-[11px] font-black text-gray-900 uppercase tracking-widest'>Status Inclusion</h4>
+  </div>
+  <div className='flex flex-wrap gap-2'>
+    {['Order Placed', 'Packing', 'Shipped', 'Complete', 'Cancelled'].map(s => {
+      // Logic to determine if the button looks "Active"
+      const isActive = s === 'Complete' 
+        ? statuses.includes('Complete') || statuses.includes('Delivered')
+        : statuses.includes(s);
+
+      return (
+        <button 
+          key={s} 
+          onClick={() => handleStatusToggle(s)} 
+          className={`px-4 py-2 border text-[10px] font-black uppercase rounded-full transition-all 
+            ${isActive 
+              ? 'bg-black text-white border-black' 
+              : 'bg-white text-gray-300 border-gray-200 hover:border-gray-400'}`}
+        >
+          {s === 'Complete' ? 'Complete (Incl. Delivered)' : s}
+        </button>
+      );
+    })}
+  </div>
+</section>
           </div>
 
           {/* Column 2: Export Options */}
