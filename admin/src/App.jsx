@@ -23,9 +23,12 @@ import Users from './pages/Users'
 import BannerManager from './pages/BannerManager'
 import HeaderManager from './pages/HeaderManager'
 import Settings from './pages/Settings'
+import PresentationManager from './pages/PresentationManager'
 import OrderDetail from './pages/OrderDetail'
 import UserDetail from './components/UserDetails'
 import ContactMessages from './pages/ContactUs'
+import TriviaManager from './pages/TriviaManager'
+import TriviaLeaderboard from './pages/TriviaLeaderboard'
 export const backendUrl = import.meta.env.VITE_BACKEND_URL
 export const currency = '$'
 
@@ -67,10 +70,13 @@ const App = () => {
                 <Route path='/banner' element={<BannerManager token={token}  />} />
                 <Route path='/header' element={<HeaderManager token={token}  />} />
                 <Route path='/setting' element={<Settings token={token}  />} />
+                <Route path='/presentation' element={<PresentationManager token={token}  />} />
                 <Route path='/contactus' element={<ContactMessages token={token}  />} />
 
                 <Route path='/orders/:orderId' element={<OrderDetail token={token} />} />
                 <Route path='/users/:id' element={<UserDetail token={token} />} />
+                <Route path='/trivia' element={<TriviaManager token={token} />} />
+                <Route path='/trivia-leaderboard' element={<TriviaLeaderboard token={token} />} />
 
 
 

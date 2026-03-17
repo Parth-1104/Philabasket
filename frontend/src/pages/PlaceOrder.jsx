@@ -796,7 +796,7 @@ const onSubmitHandler = async (e) => {
                                
                                 {id:'bank', label:'Direct Bank Transfer', icon:Landmark},
                                 // {id:'cheque', label:'Cheque Payment', icon:FileText},
-                                // {id:'cod', label:'Cash on Delivery', icon:Mail}
+                                {id:'cod', label:'Cash on Delivery', icon:Mail}
                             ].map((m) => (
                                 <div key={m.id} onClick={() => setMethod(m.id)} className={`flex items-center justify-between p-4 cursor-pointer border rounded-sm ${method === m.id ? 'border-[#BC002D] bg-[#BC002D]/5' : 'border-gray-100 bg-white opacity-60'}`}>
                                     <div className='flex items-center gap-3'>

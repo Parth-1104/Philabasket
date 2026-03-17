@@ -10,6 +10,9 @@ const userSchema = new mongoose.Schema({
     resetPasswordExpires: Date,
     // Rewards System
     totalRewardPoints: { type: Number, default: 0 },
+    triviaScore: { type: Number, default: 0 },
+    // Tracks coins awarded from trivia score conversions (admin-controlled)
+    triviaCoins: { type: Number, default: 0 },
     // Loophole & Cap Protection
     referralCount: { type: Number, default: 0 }, 
     signupIP: { type: String }, 

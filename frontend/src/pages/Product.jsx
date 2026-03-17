@@ -451,7 +451,7 @@ const handleMouseMove = (e) => {
       </button>
       <button
         onClick={handleAddToCart}
-        className='w-full border-2 border-gray-100 text-gray-900 py-4 rounded-2xl text-[10px] font-black tracking-[0.3em] uppercase hover:bg-gray-50 transition-all'
+        className='w-full border-2 border-gray-100 text-gray-900 py-4 rounded-2xl text-[10px] font-black tracking-[0.3em] uppercase hover:bg-gray-50 transition-all outline-anim'
       >
         Add to Cart
       </button>
@@ -466,21 +466,22 @@ const handleMouseMove = (e) => {
     </button>
   )}
 
-  <button
-    onClick={() => toggleWishlist(productData._id)}
-    className={`p-5 rounded-2xl border-2 transition-all flex items-center justify-center shadow-sm
-    ${wishlist.includes(productData._id)
-        ? 'bg-[#BC002D]/5 border-[#BC002D]/20 text-[#BC002D]'
-        : 'bg-white border-gray-100 text-gray-400 hover:border-gray-200'
-      }`}
-    title="Secure to Vault"
-  >
-    <Heart
-      size={20}
-      fill={wishlist.includes(productData._id) ? "#BC002D" : "none"}
-      className={wishlist.includes(productData._id) ? "animate-pulse" : ""}
-    />
-  </button>
+<button
+  onClick={() => toggleWishlist(productData._id)}
+  className={`p-5 rounded-2xl border-2 transition-all duration-200 flex items-center justify-center shadow-sm
+  ${
+    wishlist.includes(productData._id)
+      ? 'bg-[#BC002D]/10 border-[#BC002D]/30 text-[#BC002D]'
+      : 'bg-white border-gray-100 text-gray-400 hover:bg-[#BC002D]/5 hover:border-[#BC002D]/20 hover:text-[#BC002D] hover:scale-105'
+  }`}
+  title="Secure to Vault"
+>
+  <Heart
+    size={20}
+    fill={wishlist.includes(productData._id) ? "#BC002D" : "none"}
+    className="transition-all duration-200"
+  />
+</button>
 </div>
 
 {/* Interactive & Resource Section */}

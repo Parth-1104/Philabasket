@@ -6,7 +6,7 @@ import { Landmark, Globe, IndianRupee, Save, Clock, Zap } from 'lucide-react';
 
 const Settings = ({ token }) => {
     const [loading, setLoading] = useState(false);
-    
+
     // Initialize with all 7 fields matching your Mongoose Schema
     const [formData, setFormData] = useState({ 
         rate: 83, 
@@ -38,7 +38,7 @@ const Settings = ({ token }) => {
     const onSubmitHandler = async (e) => {
         e.preventDefault();
         setLoading(true);
-    
+
         // Construct the payload strictly matching the Backend Controller expectations
         const payload = {
             rate: Number(formData.rate),
@@ -49,7 +49,7 @@ const Settings = ({ token }) => {
             isIndiaFastActive: Boolean(formData.isIndiaFastActive),
             isGlobalFastActive: Boolean(formData.isGlobalFastActive)
         };
-    
+
         try {
             // FIX: Direct string construction for the API endpoint
             const targetUrl = `${backendUrl}/api/admin/update-settings`;
@@ -57,7 +57,7 @@ const Settings = ({ token }) => {
             const res = await axios.post(targetUrl, payload, { 
                 headers: { token } 
             });
-    
+
             if (res.data.success) {
                 toast.success("Registry Protocols Deployed Successfully");
                 fetchSettings(); // Refresh to show the latest sync time
@@ -75,7 +75,9 @@ const Settings = ({ token }) => {
     };
 
     useEffect(() => { 
-        if (backendUrl) fetchSettings(); 
+        if (backendUrl) {
+            fetchSettings();
+        }
     }, []);
 
     return (
@@ -128,8 +130,7 @@ const Settings = ({ token }) => {
                     </div>
                     <input onChange={(e)=>setFormData({...formData, globalFeeFast: e.target.value})} value={formData.globalFeeFast} className={`w-full px-3 py-3 bg-gray-50 border-none font-mono text-lg rounded-lg outline-none ${!formData.isGlobalFastActive && 'opacity-30'}`} type="number" required />
                 </div>
-            </div>
-
+                </div>
             <button type="submit" disabled={loading} className='bg-black text-white px-10 py-5 text-[10px] font-black uppercase tracking-[0.3em] flex items-center gap-3 hover:bg-[#BC002D] transition-all rounded-xl shadow-xl active:scale-95'>
                 <Save size={14}/> {loading ? 'DEPLOYING...' : 'DEPLOY FINANCIAL REGISTRY'}
             </button>

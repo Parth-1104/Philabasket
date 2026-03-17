@@ -4,7 +4,7 @@ import { assets } from '../assets/assets'
 import {
   LayoutDashboard, PlusCircle, ClipboardList, Package, FileEdit,
   LibraryBig, MessageSquare, Upload, ImageIcon, Layers, Mail,
-  Newspaper, ChevronLeft, ChevronRight, Users, Ticket, Settings2, Monitor
+  Newspaper, ChevronLeft, ChevronRight, Users, Ticket, Settings2, Monitor, Lightbulb, Award
 } from 'lucide-react'
 
 
@@ -77,6 +77,10 @@ const navSections = [
   
   { to: '/list-blog', icon: LibraryBig, label: 'Blog Archive' },
   
+  { to: '/trivia', icon: Lightbulb, label: 'Trivia Manager' },
+  
+  { to: '/trivia-leaderboard', icon: Award, label: 'Trivia Leaderboard' },
+  
   { to: '/mail', icon: Mail, label: 'Direct Mail' },
   
   { to: '/news', icon: Newspaper, label: 'Newsletter' },
@@ -85,7 +89,14 @@ const navSections = [
   
   ]
   
-  }
+    },
+    {
+      label: 'Presentations',
+      items: [
+        { to: '/presentation', icon: FileText, label: 'Presentation Manager' },
+      ]
+    }
+  ];
   
   ]// ... navSections array remains the same ...
 
@@ -97,15 +108,29 @@ const Sidebar = () => {
     window.scrollTo({
       top: 0,
       behavior: 'smooth' // Use 'auto' for an instant jump
-    });
-  };
+    {
+    label: 'Interface Control',
+    items: [
+    { to: '/header', icon: Settings2, label: 'Header Manager' },
+    { to: '/banner', icon: Monitor, label: ' Banners Image' },
+    { to: '/media', icon: ImageIcon, label: 'Media Library' },
+    { to: '/setting', icon: ImageIcon, label: 'Delivery & Rate ' },
+    ]
+    },
 
-  return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;900&display=swap');
-        .sidebar-root { font-family: 'DM Sans', sans-serif; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
+    {
+      label: 'Presentations',
+      items: [
+        { to: '/presentation', icon: FileText, label: 'Presentation Manager' },
+      ]
+    },
+
+    {
+      label: 'Presentations',
+      items: [
+        { to: '/presentation', icon: FileText, label: 'Presentation Manager' },
+      ]
+    },
         .nav-link-item .tooltip {
           position: absolute;
           left: 58px;

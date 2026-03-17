@@ -61,6 +61,7 @@ const UserDetail = ({ token }) => {
         }
     };
 
+
     if (loading) return (
         <div className='flex flex-col items-center justify-center min-h-screen bg-[#FCF9F4] gap-4'>
             <Loader2 className='animate-spin text-[#BC002D]' size={32} />
@@ -167,6 +168,7 @@ const UserDetail = ({ token }) => {
                         <button onClick={()=>handlePointAdjustment('subtract')} className='bg-red-500 text-white py-3 rounded-xl text-[10px] font-black uppercase hover:bg-red-600 transition-all active:scale-95'>- Sub Debit</button>
                         <button onClick={()=>handlePointAdjustment('overwrite')} className='bg-white/20 text-white py-3 rounded-xl text-[10px] font-black uppercase hover:bg-white/30 transition-all'>Set Balance</button>
                     </div>
+
                 </div>
             </div>
     

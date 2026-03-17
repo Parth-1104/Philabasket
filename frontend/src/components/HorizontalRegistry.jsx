@@ -114,7 +114,7 @@ const HorizontalRegistry = () => {
     const isSearchMode = searchTerm.trim().length > 0;
 
     return (
-        <div ref={barRef} className="relative w-full z-40">
+        <div ref={barRef} className="relative max-w-7xl mx-auto z-40">
             {/* ── Main Bar ── */}
             <div className="bg-[#bd002d] rounded-2xl shadow-xl shadow-[#bd002d]/25 px-5 pt-4 pb-3">
 
