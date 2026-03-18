@@ -473,8 +473,8 @@ const filteredMedia = useMemo(() => {
 )}
                               </div>
                               
-                              <p className='text-[10px] text-gray-400 font-semibold uppercase tracking-wide'>
-                                  {item.country} • {item.year} • {item.condition}
+                              <p className='text-[10px] text-gray-700 font-semibold uppercase tracking-wide'>
+                                  {item.country} • {item.year} • {item.condition} • <span className='text-[#800000]'>Stock:{item.stock}</span>
                               </p>
                           </div>
                       </div>
