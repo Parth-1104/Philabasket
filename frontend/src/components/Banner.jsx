@@ -10,7 +10,7 @@ const Banner = () => {
   
   // 1. Hardcoded first image for "Instant Load"
   const [banners, setBanners] = useState([
-    { image: '/phila.png', title: "FDC Festival", isStatic: true }
+    { image: '/banner.png', title: "FDC Festival", isStatic: true }
   ]);
 
   // 2. Fetch Admin-defined banners
@@ -20,7 +20,7 @@ const Banner = () => {
       if (response.data.success && response.data.banners.length > 0) {
         // Keep the static first image and append new ones from DB
         setBanners([
-          { image: '/phila.png', title: "FDC Festival", isStatic: true },
+          { image: '/banner.png', title: "FDC Festival", isStatic: true },
           ...response.data.banners
         ]);
       }
