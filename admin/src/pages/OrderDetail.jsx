@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { backendUrl } from '../App';
+import { backendUrl,frontendUrl } from '../App';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { toast } from 'react-toastify';
@@ -49,6 +49,31 @@ const OrderDetail = ({ token }) => {
   const getTodayDate = () => new Date().toISOString().split('T')[0];
 
 const [courierProvider, setCourierProvider] = useState("");
+
+
+const handleLoginAsUser = async (userId) => {
+  if (!window.confirm("Enter this collector's account? A new tab will open.")) return;
+
+  try {
+      const { data } = await axios.post(
+          `${backendUrl}/api/user/impersonate`, 
+          { userId }, 
+          { headers: { token } } // Admin token
+      );
+
+      if (data.success) {
+          // Use the dynamic frontendUrl variable
+          // Ensures it works on both Localhost and Production
+          const clientUrl = `${frontendUrl}/login?impersonate=${data.token}`;
+          window.open(clientUrl, '_blank');
+      } else {
+          toast.error(data.message);
+      }
+  } catch (error) {
+      console.error("Impersonation Error:", error);
+      toast.error("Registry Protocol failed");
+  }
+};
 
 
 
@@ -420,6 +445,12 @@ const [courierProvider, setCourierProvider] = useState("");
         <div style={styles.topBar}>
           <button onClick={() => navigate(-1)} style={styles.backBtn}><ChevronLeft size={14} /> Back</button>
           <span style={styles.topBarRef}>REGISTRY REF: {order.orderNo || order._id}</span>
+          <button 
+                onClick={() => handleLoginAsUser(order.userId?._id)}
+                style={{...styles.statsBadge, background: '#BC002D', border: 'none'}}
+            >
+                <RefreshCw size={10} /> Enter Account
+            </button>
         </div>
 
         {/* Page Header */}

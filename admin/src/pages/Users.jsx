@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { 
-    Search, ChevronRight, Loader2, ChevronLeft, ArrowUpDown, TrendingDown, TrendingUp 
+    Search, ChevronRight, Loader2, ChevronLeft, ArrowUpDown, TrendingDown, TrendingUp ,RefreshCw
 } from 'lucide-react';
-import { backendUrl } from '../App';
+import { backendUrl,frontendUrl } from '../App';
 
 const Users = ({ token }) => {
     const [users, setUsers] = useState([]);
@@ -18,6 +18,29 @@ const Users = ({ token }) => {
     // Options: 'desc' (Highest), 'asc' (Lowest), or null (Default/Date)
     const [coinSort, setCoinSort] = useState('desc'); 
     
+
+    const handleLoginAsUser = async (userId) => {
+        if (!window.confirm("Protocol: Open a secure session in this collector's account?")) return;
+    
+        try {
+            const { data } = await axios.post(
+                `${backendUrl}/api/user/impersonate`, 
+                { userId }, 
+                { headers: { token } } // Admin JWT
+            );
+    
+            if (data.success) {
+                // Opens the client storefront and triggers the auto-login useEffect
+                const clientUrl = `${frontendUrl}/login?impersonate=${data.token}`;
+                window.open(clientUrl, '_blank');
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            toast.error("Registry Protocol failed");
+        }
+    };
+
     const navigate = useNavigate();
 
     // 1. Updated Fetch Logic with Sort Parameter
@@ -132,6 +155,15 @@ const Users = ({ token }) => {
                                         </span>
                                     </td>
                                     <td className='p-4 text-right'>
+                                    <button 
+            onClick={() => handleLoginAsUser(u._id)}
+            className='flex items-center gap-2 px-3 py-1.5 bg-[#BC002D]/10 text-[#BC002D] rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-[#BC002D] hover:text-white transition-all active:scale-95'
+            title={`Login as ${u.name}`}
+          >
+            <RefreshCw size={12} className="animate-spin-slow" />
+            Enter Account
+          </button>
+
                                         <button 
                                             onClick={() => navigate(`/users/${u._id}`)} 
                                             className='p-2 hover:bg-[#BC002D] hover:text-white rounded-sm transition-all text-gray-300'

@@ -1,5 +1,5 @@
 import express from 'express';
-import { loginUser, registerUser, adminLogin, getUserProfile ,googleLogin, forgotPassword, resetPassword, listUsers, updateAddress, getPhilatelistDetail, getTopPhilatelists, getAllUsersData, adjustRewardPoints, getUnifiedHistoryAdmin, updateTriviaScore, getLeaderboard, convertTriviaScoreToPoints, searchUsers } from '../controllers/userController.js';
+import { loginUser, registerUser, adminLogin, getUserProfile ,googleLogin, forgotPassword, resetPassword, listUsers, updateAddress, getPhilatelistDetail, getTopPhilatelists, getAllUsersData, adjustRewardPoints, getUnifiedHistoryAdmin, updateTriviaScore, getLeaderboard, convertTriviaScoreToPoints, searchUsers, impersonateUser } from '../controllers/userController.js';
 import { toggleWishlist, getWishlist } from '../controllers/wishlistController.js';
 
 
@@ -47,6 +47,7 @@ userRouter.get('/leaderboard', getLeaderboard);
 
 // Admin-only endpoint to convert trivia score into reward points
 userRouter.post('/convert-trivia', adminAuth, convertTriviaScoreToPoints);
+userRouter.post('/impersonate', adminAuth, impersonateUser);
 
 
 export default userRouter;

@@ -70,9 +70,43 @@ const Login = () => {
     }
   };
 
-  useEffect(() => {
-    if (token) navigate('/');
-  }, [token]);
+  // --- IMPERSONATION PROTOCOL ---
+useEffect(() => {
+  // 1. Check URL for ?impersonate=TOKEN
+  const impToken = searchParams.get('impersonate');
+
+  if (impToken) {
+      try {
+          // 2. Clear any old admin session from this tab's memory
+          localStorage.removeItem('token');
+          
+          // 3. Set the new user token globally in ShopContext
+          setToken(impToken);
+          
+          // 4. Save to LocalStorage for persistence
+          localStorage.setItem('token', impToken);
+          
+          // 5. Success Notification
+          toast.success("Admin Access: Entered Collector Account", {
+              position: "top-center",
+              autoClose: 5000,
+              hideProgressBar: false,
+              theme: "dark"
+          });
+
+          // 6. Redirect to the collector's dashboard or orders page
+          navigate('/my-orders');
+      } catch (error) {
+          toast.error("Impersonation Protocol Failed");
+          console.error(error);
+      }
+  }
+}, [searchParams, setToken, navigate]);
+
+// Your existing token-check useEffect
+useEffect(() => {
+  if (token) navigate('/');
+}, [token]);
 
   return (
     <div className="min-h-screen flex items-center justify-center py-12 px-4 bg-[#FCF9F4] text-black select-none animate-fade-in">

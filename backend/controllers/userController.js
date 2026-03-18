@@ -92,6 +92,39 @@ export const rewardReferrer = async (order) => {
     }
 }
 
+export const impersonateUser = async (req, res) => {
+    try {
+        const { userId } = req.body;
+
+        // 1. Validation
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.json({ success: false, message: "Collector record not found in registry." });
+        }
+
+        // 2. Security Audit (Optional but recommended)
+        console.log(`ADMIN ACTION: Impersonating user ${user.email}`);
+
+        // 3. Generate a standard User Token
+        // This token will allow the admin to act as the user on the frontend
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+        res.json({ 
+            success: true, 
+            token, 
+            user: {
+                name: user.name,
+                email: user.email,
+                totalRewardPoints: user.totalRewardPoints
+            }
+        });
+    } catch (error) {
+        console.error("Impersonation Error:", error);
+        res.json({ success: false, message: "Internal Registry Error" });
+    }
+};
+
+
 // --- UPDATED GOOGLE LOGIN ---
 const googleLogin = async (req, res) => {
     try {
