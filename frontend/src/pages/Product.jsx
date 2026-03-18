@@ -344,13 +344,13 @@ const handleMouseMove = (e) => {
   <div className='flex items-baseline gap-3'>
     {/* Current Price */}
     <span className='text-3xl md:text-4xl font-bold text-gray-900 tracking-tighter'>
-      {valuationSymbol}{String(formatPrice(productData.price * quantity)).replace(/[₹$]/g, '').trim()}
+      {valuationSymbol}{String(formatPrice(productData.price )).replace(/[₹$]/g, '').trim()}
     </span>
     
     {/* Market Price Reference */}
     {productData.marketPrice > productData.price && (
       <span className='text-sm font-bold text-gray-300 line-through'>
-        {valuationSymbol}{String(formatPrice(productData.marketPrice * quantity)).replace(/[₹$]/g, '').trim()}
+        {valuationSymbol}{String(formatPrice(productData.marketPrice )).replace(/[₹$]/g, '').trim()}
       </span>
     )}
 
@@ -435,6 +435,41 @@ const handleMouseMove = (e) => {
     <span className='text-[11px] font-black text-gray-900 leading-none capitalize ml-[22px]'>
       {productData.country}
     </span>
+  </div>
+</div>
+
+
+{/* 4. Quantity Selector */}
+<div className='flex flex-col gap-3 mb-8 animate-fade-in'>
+  <div className='flex items-center gap-4'>
+    <p className='text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]'>Select Quantity</p>
+    {productData.stock <= 5 && productData.stock > 0 && (
+      <span className='text-[9px] font-black text-[#BC002D] animate-pulse'>
+        ONLY {productData.stock} LEFT IN ARCHIVE
+      </span>
+    )}
+  </div>
+  
+  <div className='flex items-center gap-1 bg-gray-50 w-fit p-1.5 rounded-2xl border border-gray-100 shadow-sm'>
+    <button 
+      onClick={() => updateQuantity(quantity - 1)}
+      className='w-12 h-12 flex items-center justify-center bg-white rounded-xl border border-gray-100 text-gray-500 hover:text-[#BC002D] hover:border-[#BC002D]/20 transition-all active:scale-90 disabled:opacity-30'
+      disabled={quantity <= 1}
+    >
+      <Minus size={16} strokeWidth={3} />
+    </button>
+    
+    <div className='w-16 text-center flex flex-col justify-center'>
+      <span className='text-sm font-black text-gray-900'>{quantity}</span>
+    </div>
+
+    <button 
+      onClick={() => updateQuantity(quantity + 1)}
+      className='w-12 h-12 flex items-center justify-center bg-white rounded-xl border border-gray-100 text-gray-500 hover:text-[#BC002D] hover:border-[#BC002D]/20 transition-all active:scale-90'
+      disabled={quantity >= productData.stock}
+    >
+      <Plus size={16} strokeWidth={3} />
+    </button>
   </div>
 </div>
 
