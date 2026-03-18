@@ -250,19 +250,23 @@ const razorpayInstance = new Razorpay({
 
 const recordRewardActivity = async (userId, userEmail, amount, type, orderId = null) => {
     try {
-        // 1. Update the User's live balance
+        // 1. Determine the math: negative for redemptions, positive for earnings
+        const pointAdjustment = type === 'redeem_point' ? -Math.abs(amount) : Math.abs(amount);
+
+        // 2. Update the User's live balance with the correct sign
         await userModel.findByIdAndUpdate(userId, { 
-            $inc: { totalRewardPoints: amount } 
+            $inc: { totalRewardPoints: pointAdjustment } 
         });
 
-        // 2. Create the Archive Ledger Entry
+        // 3. Create the Archive Ledger Entry
         const transaction = new rewardTransactionModel({
             userEmail: userEmail,
-            actionType: type, // 'earn_point' or 'redeem_point'
-            rewardAmount: Math.abs(amount),
+            actionType: type,
+            rewardAmount: Math.abs(amount), // Ledger usually stores absolute values
             orderId: orderId,
             createdAt: new Date()
         });
+        
         await transaction.save();
     } catch (error) {
         console.error("Ledger Sync Failed:", error);
@@ -838,17 +842,38 @@ const updateStatus = async (req, res) => {
         }
 
         // --- Reward Logic (Delivered) ---
-        if (finalStatus === 'Complete' && currentOrder.status !== 'Complete') {
-            updateFields.payment = true;
-            const itemSubtotal = currentOrder.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-            const userTier = currentOrder.userId?.tier || 'Silver';
-            let multiplier = 0.10; 
-            if (userTier === 'Gold') multiplier = 0.30;
-            if (userTier === 'Platinum') multiplier = 0.50;
-        
-            const earnedPoints = Math.floor(itemSubtotal * multiplier);
-            await recordRewardActivity(currentOrder.userId._id, currentOrder.address.email, earnedPoints, 'earn_point', currentOrder._id);
-        }
+        // --- Reward Logic (Delivered / Complete) ---
+if (finalStatus === 'Complete' && currentOrder.status !== 'Complete') {
+    updateFields.payment = true;
+    
+    const itemSubtotal = currentOrder.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+    const userTier = currentOrder.userId?.tier || 'Silver';
+    let multiplier = 0.10; 
+    if (userTier === 'Gold') multiplier = 0.30;
+    if (userTier === 'Platinum') multiplier = 0.50;
+
+    // 1. RECORD EARNED POINTS (The Reward for Buying)
+    const earnedPoints = Math.floor(itemSubtotal * multiplier);
+    await recordRewardActivity(
+        currentOrder.userId._id, 
+        currentOrder.address.email, 
+        earnedPoints, 
+        'earn_point', 
+        currentOrder._id
+    );
+
+    // 2. RECORD USED POINTS (The "Burn" Transaction)
+    // If the collector used Archive Credits/Points on this order, log that deduction now
+    if (currentOrder.pointsUsed && currentOrder.pointsUsed > 0) {
+        await recordRewardActivity(
+            currentOrder.userId._id, 
+            currentOrder.address.email, 
+            currentOrder.pointsUsed, 
+            'redeem_point', // Ensure your model/function handles this type
+            currentOrder._id
+        );
+    }
+}
 
         await orderModel.findByIdAndUpdate(orderId, updateFields);
 
