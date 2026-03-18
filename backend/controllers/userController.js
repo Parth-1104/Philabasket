@@ -596,6 +596,100 @@ export const getUnifiedHistoryAdmin = async (req, res) => {
 };
 
 
+export const updateTriviaScore = async (req, res) => {
+    try {
+        const { userId, points } = req.body;
+
+        if (!userId || points === undefined) {
+            return res.json({ success: false, message: "User ID and points are required" });
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.json({ success: false, message: "User not found" });
+        }
+
+        user.triviaScore = (user.triviaScore || 0) + points;
+        await user.save();
+
+        res.json({ success: true, message: "Score updated", newScore: user.triviaScore });
+    } catch (error) {
+        console.error(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// Convert Trivia Score into Reward Points (Admin-only)
+export const convertTriviaScoreToPoints = async (req, res) => {
+    try {
+        const { userId, convertAmount, multiplier = 1 } = req.body;
+        const amount = Number(convertAmount);
+        const rate = Number(multiplier);
+
+        if (!userId || !convertAmount) {
+            return res.json({ success: false, message: "userId and convertAmount are required" });
+        }
+        if (!amount || amount <= 0) {
+            return res.json({ success: false, message: "convertAmount must be a positive number" });
+        }
+
+        const user = await userModel.findById(userId);
+        if (!user) {
+            return res.json({ success: false, message: "User not found" });
+        }
+
+        const availableScore = user.triviaScore || 0;
+        if (amount > availableScore) {
+            return res.json({ success: false, message: "Not enough trivia score to convert" });
+        }
+
+        const coins = Math.floor(amount * rate);
+
+        user.triviaScore = availableScore - amount;
+        user.totalRewardPoints = (user.totalRewardPoints || 0) + coins;
+        user.triviaCoins = (user.triviaCoins || 0) + coins;
+        await user.save();
+
+        // Audit transaction for admin review
+        const conversionDescription = `Converted ${amount} trivia score into ${coins} reward points`;
+        const transaction = new userRewardModel({
+            email: user.email,
+            name: "Trivia Conversion",
+            description: conversionDescription,
+            discountValue: coins,
+            pointsUsed: coins,
+            status: "used"
+        });
+        await transaction.save();
+
+        res.json({
+            success: true,
+            message: "Trivia score converted to reward points",
+            triviaScore: user.triviaScore,
+            totalRewardPoints: user.totalRewardPoints,
+            triviaCoins: user.triviaCoins
+        });
+    } catch (error) {
+        console.error(error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+
+// Get Leaderboard
+export const getLeaderboard = async (req, res) => {
+    try {
+        const leaderboard = await userModel.find({ triviaScore: { $gt: 0 } })
+            .select('name email triviaScore totalRewardPoints triviaCoins')
+            .sort({ triviaScore: -1 })
+            .limit(10);
+
+        res.json({ success: true, leaderboard });
+    } catch (error) {
+        console.error(error);
+        res.json({ success: false, message: error.message });
+    }
+};
 
 export { 
     googleLogin, 
