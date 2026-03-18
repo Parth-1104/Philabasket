@@ -158,15 +158,16 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, stock
                 <div className='mt-2 flex items-center gap-2'>
     
     {/* 1. WISHLIST BUTTON (Always Visible, First in Row) */}
-    <button 
-        onClick={onToggleWishlist}
-        className='h-[50px] w-[50px] shrink-0 flex items-center justify-center bg-white border border-black/10 rounded-xl hover:bg-[#BC002D] transition-all shadow-sm'
-    >
-        <Heart 
-            size={18} 
-            className={`${wishlist.includes(productId) ? 'fill-[#BC002D] text-[#BC002D]' : 'text-black'} transition-colors`} 
-        />
-    </button>
+    <button
+              onClick={onToggleWishlist}
+              className="h-[50px] w-[50px] shrink-0 flex items-center justify-center bg-white border border-black/10 rounded-xl transition-all duration-200 shadow-sm hover:bg-[#BC002D]/5 hover:border-[#BC002D]/20 hover:text-[#BC002D] hover:scale-105"
+            >
+              <Heart
+                size={18}
+                fill={wishlist.includes(productId) ? "#BC002D" : "none"}
+                className={`transition-all duration-200 ${wishlist.includes(productId) ? 'text-[#BC002D]' : 'text-[#BC002D]/70'}`}
+              />
+            </button>
 
     {/* 2. CONDITIONAL CART SECTION (Sold Out vs Add to Cart) */}
     {isOutOfStock ? (
