@@ -180,11 +180,11 @@ const HorizontalRegistry = () => {
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all duration-200 whitespace-nowrap
                             ${openGroup === entry.name
                                 ? 'bg-white text-[#bd002d]'
-                                : 'text-white/80 hover:text-white hover:bg-white/10'
+                                : 'text-white hover:text-white hover:bg-white/10'
                             }`}
                     >
                         {entry.name}
-                        <span className={`text-[9px] font-mono font-black ${openGroup === entry.name ? 'text-[#bd002d]/60' : 'text-white/50'}`}>
+                        <span className={`text-[9px] font-mono font-black ${openGroup === entry.name ? 'text-[#bd002d]/60' : 'text-white'}`}>
                             ({entry.totalCount})
                         </span>
                         <ChevronDown
