@@ -120,15 +120,18 @@ const ContactMessages = ({ token }) => {
                                                 <Trash2 size={18} />
                                             </button>
                                             <a 
-                                                href={`mailto:${item.email}?subject=Re: ${item.subject}`}
-                                                className='w-full p-3 flex justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all'
-                                                title="Email"
-                                            >
-                                                <Mail size={18} />
-                                            </a>
-                                            <a 
-    // The ?. and || "" ensures that if phone is missing, it won't crash
-    href={`https://wa.me/${(item.phone || "").replace(/[^0-9]/g, '')}?text=Hello ${item.name}, regarding: ${item.subject}`}
+    // Gmail Compose URL: fs=1 (fullscreen), tf=1 (text format), to (recipient), su (subject)
+    href={`https://mail.google.com/mail/?view=cm&fs=1&to=${item.email}&su=Re: ${encodeURIComponent(item.subject)}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className='w-full p-3 flex justify-center text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all'
+    title="Open in Gmail"
+>
+    <Mail size={18} />
+</a>
+
+<a 
+    href={`https://wa.me/${(item.phone || "").replace(/[^0-9]/g, '')}?text=Hello ${item.name}, regarding: ${encodeURIComponent(item.subject)}`}
     target="_blank"
     rel="noopener noreferrer"
     className='w-full p-3 flex justify-center text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all'
