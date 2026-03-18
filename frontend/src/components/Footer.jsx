@@ -177,7 +177,7 @@ const Footer = () => {
                 {
                   label: "admin@philabasket.com",
                   path: "mailto:admin@philabasket.com",
-                  icon: <Mail color="#fff" size={12} />,
+                  icon: <Mail color="#093567" size={12} />,
                 },
               ],
             },
