@@ -10,7 +10,7 @@ const Banner = () => {
   
   // 1. Hardcoded first image for "Instant Load"
   const [banners, setBanners] = useState([
-    { image: '/banner.png', title: "FDC Festival", isStatic: true }
+    { image: '/phila.png', title: "FDC Festival", isStatic: true }
   ]);
 
   // 2. Fetch Admin-defined banners
@@ -20,7 +20,7 @@ const Banner = () => {
       if (response.data.success && response.data.banners.length > 0) {
         // Keep the static first image and append new ones from DB
         setBanners([
-          { image: '/banner.png', title: "FDC Festival", isStatic: true },
+          { image: '/phila.png', title: "FDC Festival", isStatic: true },
           ...response.data.banners
         ]);
       }
@@ -58,7 +58,7 @@ const Banner = () => {
               // LCP Optimization: Eager load the first static image
               loading={index === 0 ? "eager" : "lazy"}
               draggable="false" 
-              className='w-full h-full object-contain object-center sm:object-fill lg:object-contain md:object-contain' 
+              className="w-full h-full object-cover object-center" 
               src={slide.image}
               alt={slide.title} 
           />

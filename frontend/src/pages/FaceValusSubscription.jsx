@@ -82,7 +82,7 @@ const FaceValueSubscription = () => {
                 {/* --- Right Column: Interactive Registry Form --- */}
                 <div className='lg:col-span-5'>
                     <div className='bg-white border border-gray-100 shadow-xl rounded-sm p-8  top-24'>
-                        <h4 className='text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-8'>Registry Configuration</h4>
+                        <h4 className='text-[10px] font-black uppercase tracking-[0.3em] text-gray-700 mb-8'>Registry Configuration</h4>
                         
                         <div className='space-y-6'>
                             {/* Category Select */}
@@ -138,13 +138,13 @@ const FaceValueSubscription = () => {
                                 <div className='grid grid-cols-2 gap-2'>
                                     <button 
                                         onClick={() => setSelection({...selection, shippingMode: 99})}
-                                        className={`py-2 text-[10px] font-black uppercase border ${selection.shippingMode === 99 ? 'bg-black text-white border-black' : 'border-gray-100 text-gray-400'}`}
+                                        className={`py-2 text-[10px] font-black uppercase border ${selection.shippingMode === 99 ? 'bg-black text-white border-black' : 'border-gray-100 text-gray-700'}`}
                                     >
                                         Speed Post (₹99)
                                     </button>
                                     <button 
                                         onClick={() => setSelection({...selection, shippingMode: 59})}
-                                        className={`py-2 text-[10px] font-black uppercase border ${selection.shippingMode === 59 ? 'bg-black text-white border-black' : 'border-gray-100 text-gray-400'}`}
+                                        className={`py-2 text-[10px] font-black uppercase border ${selection.shippingMode === 59 ? 'bg-black text-white border-black' : 'border-gray-100 text-gray-700'}`}
                                     >
                                         Registered (₹59)
                                     </button>
@@ -164,11 +164,11 @@ const FaceValueSubscription = () => {
 
                             {/* Summary Ledger */}
                             <div className='pt-6 border-t border-dashed border-gray-200'>
-                                <div className='flex justify-between text-[11px] font-bold uppercase text-gray-400 mb-2'>
+                                <div className='flex justify-between text-[11px] font-bold uppercase text-gray-700 mb-2'>
                                     <span>Base Service Fee</span>
                                     <span>₹{serviceCharge}</span>
                                 </div>
-                                <div className='flex justify-between text-[11px] font-bold uppercase text-gray-400 mb-4'>
+                                <div className='flex justify-between text-[11px] font-bold uppercase text-gray-700 mb-4'>
                                     <span>Sub-Total (Excl. Advance)</span>
                                     <span>₹{calculateTotal()}</span>
                                 </div>

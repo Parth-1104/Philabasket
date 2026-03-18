@@ -56,7 +56,7 @@ const BlogRegistry = () => {
                             THE <span className='text-[#BC002D] italic font-light'>ARCHIVE.</span>
                         </h2>
                     </div>
-                    <p className="max-w-sm text-[11px] md:text-[12px] text-gray-400 font-bold uppercase tracking-tight leading-relaxed border-l-2 border-gray-100 pl-4 md:pl-6">
+                    <p className="max-w-sm text-[11px] md:text-[12px] text-gray-700 font-bold uppercase tracking-tight leading-relaxed border-l-2 border-gray-100 pl-4 md:pl-6">
                         Historical provenance and rarity analysis.
                     </p>
                 </div>
@@ -124,7 +124,7 @@ const BlogRegistry = () => {
                 <div className="mt-12 md:mt-20 text-center px-4">
                     <button 
                         onClick={() => {navigate('/blogs'); window.scroll(0,0)}}
-                        className="w-full md:w-auto inline-flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 hover:text-[#BC002D] transition-colors group py-4 border-t md:border-t-0 md:border-b-2 border-gray-100"
+                        className="w-full md:w-auto inline-flex items-center justify-center gap-3 text-[10px] font-black uppercase tracking-[0.4em] text-gray-700 hover:text-[#BC002D] transition-colors group py-4 border-t md:border-t-0 md:border-b-2 border-gray-100"
                     >
                         View Full Archive <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
                     </button>

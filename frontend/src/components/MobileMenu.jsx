@@ -25,7 +25,7 @@ const MobileMenu = ({ visible, setVisible, headerData, token, logout, navigate }
                             <User size={20} />
                         </div>
                         <div>
-                            <p className='text-[10px] font-black text-gray-400 uppercase tracking-tighter'>Welcome</p>
+                            <p className='text-[10px] font-black text-gray-700 uppercase tracking-tighter'>Welcome</p>
                             <p onClick={() => token ? navigate('/profile') : navigate('/login')} className='text-sm font-bold cursor-pointer'>
                                 {token ? 'My Account' : 'Login / Signup'}
                             </p>
@@ -35,7 +35,7 @@ const MobileMenu = ({ visible, setVisible, headerData, token, logout, navigate }
 
                 {/* --- NAV MENU SECTION --- */}
                 <div className='flex-1 overflow-y-auto bg-gray-50'>
-                    <p className='p-4 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]'>Categories</p>
+                    <p className='p-4 text-[9px] font-black text-gray-700 uppercase tracking-[0.2em]'>Categories</p>
                     
                     {headerData?.navMenu?.map((menu) => (
                         <div key={menu._id} className='border-b border-gray-100 bg-white'>

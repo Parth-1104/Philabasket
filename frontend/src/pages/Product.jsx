@@ -171,12 +171,12 @@ const handleMouseMove = (e) => {
             <div className='flex-1 min-w-0'>
               <div className='flex items-center gap-2 mb-1'>
                 <div className='w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shrink-0'></div>
-                <p className='text-[9px] font-black tracking-[0.2em] text-gray-400 uppercase'>Specimen Secured</p>
+                <p className='text-[9px] font-black tracking-[0.2em] text-gray-700 uppercase'>Specimen Secured</p>
               </div>
               <p className='text-[11px] font-black text-gray-900 truncate'>{productData.name}</p>
               <p className='text-[9px] font-bold text-[#BC002D] mt-0.5'>Qty: {quantity} • Synced</p>
             </div>
-            <button onClick={() => setShowPopup(false)} className='p-1.5 hover:bg-gray-100 rounded-full shrink-0 transition-colors text-gray-400'>
+            <button onClick={() => setShowPopup(false)} className='p-1.5 hover:bg-gray-100 rounded-full shrink-0 transition-colors text-gray-700'>
               <X size={14} />
             </button>
           </div>
@@ -285,7 +285,7 @@ const handleMouseMove = (e) => {
             </div>
 
             <div className='flex items-center justify-center py-1.5 border-y border-gray-50 bg-gray-50/50 rounded-lg'>
-                   <p className='text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1.5'>
+                   <p className='text-[10px] font-bold text-gray-700 uppercase tracking-widest flex items-center gap-1.5'>
                      Purchase and earn <span className='text-[#BC002D] font-black'>{potentialPoints} Rewards Points</span>
                    </p>
                 </div>
@@ -442,7 +442,7 @@ const handleMouseMove = (e) => {
 {/* 4. Quantity Selector */}
 <div className='flex flex-col gap-3 mb-8 animate-fade-in'>
   <div className='flex items-center gap-4'>
-    <p className='text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]'>Select Quantity</p>
+    <p className='text-[10px] font-black text-gray-700 uppercase tracking-[0.3em]'>Select Quantity</p>
     {productData.stock <= 5 && productData.stock > 0 && (
       <span className='text-[9px] font-black text-[#BC002D] animate-pulse'>
         ONLY {productData.stock} LEFT IN ARCHIVE
@@ -494,7 +494,7 @@ const handleMouseMove = (e) => {
   ) : (
     <button
       disabled
-      className='w-full bg-gray-100 text-gray-400 py-5 rounded-2xl text-[11px] font-black tracking-[0.3em] uppercase flex items-center justify-center gap-3 cursor-not-allowed border border-gray-200'
+      className='w-full bg-gray-100 text-gray-700 py-5 rounded-2xl text-[11px] font-black tracking-[0.3em] uppercase flex items-center justify-center gap-3 cursor-not-allowed border border-gray-200'
     >
       <X size={14} />
       Sold Out
@@ -507,7 +507,7 @@ const handleMouseMove = (e) => {
   ${
     wishlist.includes(productData._id)
       ? 'bg-[#BC002D]/10 border-[#BC002D]/30 text-[#BC002D]'
-      : 'bg-white border-gray-100 text-gray-400 hover:bg-[#BC002D]/5 hover:border-[#BC002D]/20 hover:text-[#BC002D] hover:scale-105'
+      : 'bg-white border-gray-100 text-gray-700 hover:bg-[#BC002D]/5 hover:border-[#BC002D]/20 hover:text-[#BC002D] hover:scale-105'
   }`}
   title="Secure to Vault"
 >
@@ -524,7 +524,7 @@ const handleMouseMove = (e) => {
   {productData.blogLink && (
     <div className='w-full md:w-[350px] shrink-0'>
       <div className='bg-gray-50/50 rounded-3xl p-6 border border-gray-100 transition-all hover:bg-white hover:shadow-xl hover:shadow-gray-200/50 group/blog'>
-        <p className='text-[10px] font-black text-gray-400 tracking-[0.3em] uppercase mb-6 flex items-center gap-2'>
+        <p className='text-[10px] font-black text-gray-700 tracking-[0.3em] uppercase mb-6 flex items-center gap-2'>
           <span className='w-1 h-1 bg-[#BC002D] rounded-full'></span>
           Philatelic Insight
         </p>

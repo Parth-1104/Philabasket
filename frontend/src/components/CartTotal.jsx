@@ -122,7 +122,7 @@ const CartTotal = ({ country = 'India', deliveryMethod = 'fast' }) => {
                 <div className='flex justify-between mt-2'>
                     <div>
                         <p className='text-black font-black uppercase tracking-[0.2em] text-[10px]'>Total Acquisition</p>
-                        {/* <p className='text-[8px] text-gray-400 font-bold italic uppercase tracking-tighter'>Verified Archive Valuation</p> */}
+                        {/* <p className='text-[8px] text-gray-700 font-bold italic uppercase tracking-tighter'>Verified Archive Valuation</p> */}
                     </div>
                     <b className='font-black text-[#BC002D] text-lg tracking-tighter'>
                         {currencySymbol} {subtotal === 0 ? "0.00" : formatPrice((subtotal + gstAmount - philabasketDiscount + currentDeliveryFee).toFixed(2))}

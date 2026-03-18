@@ -13,7 +13,7 @@ const BestSeller = () => {
 
     useEffect(() => {
         const curatedBestsellers = products
-            .filter(item => item.bestseller === true || item.bestseller === "true")
+            .filter(item => (item.bestseller === true || item.bestseller === "true") && item.stock > 0)
             .sort((a, b) => b.date - a.date);
         setBestSeller(curatedBestsellers);
     }, [products]);
@@ -42,7 +42,7 @@ const BestSeller = () => {
    // ... (keep logic above the return the same)
 
 return (
-    <div className='bg-white py-12 md:py-20 lg:mt-[-5vh] overflow-hidden select-none relative border-t border-black/[0.03]'>
+    <div className='bg-white py-12 md:py-8 lg:mt-[-5vh] overflow-hidden select-none relative border-t border-black/[0.03]'>
         <div className="absolute -right-[15vw] top-[20%] h-[70%] w-[45%] bg-[#bd002d]/5 rounded-l-[600px] pointer-events-none"></div>
 
         <div className='px-6  md:px-16 lg:px-7 relative z-10'>
@@ -110,7 +110,7 @@ return (
                                     {/* High Demand Tag */}
                                     {/* <div className="absolute top-3 right-3 flex items-center gap-1 z-10">
                                         <div className="w-1 h-1 bg-[#D4AF37] rounded-full animate-pulse shadow-[0_0_5px_#D4AF37]"></div>
-                                        <span className="text-[7px] font-black text-gray-400 uppercase tracking-tighter">High Demand</span>
+                                        <span className="text-[7px] font-black text-gray-700 uppercase tracking-tighter">High Demand</span>
                                     </div> */}
                 
                                     {/* Image Container with Fixed Aspect Ratio */}
@@ -137,10 +137,10 @@ return (
             </div>
 
             {/* Verification Footer */}
-            <div className="mt-10 flex flex-col items-center gap-4">
+            {/* <div className="mt-10 flex flex-col items-center gap-4">
                 <div className='h-10 w-[1px] bg-gradient-to-b from-[#bd002d] to-transparent'></div>
                 
-            </div>
+            </div> */}
         </div>
     </div>
 )

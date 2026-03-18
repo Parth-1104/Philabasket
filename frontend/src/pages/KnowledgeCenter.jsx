@@ -339,7 +339,7 @@ const KnowledgeCenter = () => {
                     {/* <section className='bg-black rounded-[40px] p-10 text-white relative overflow-hidden'>
                         <div className='relative z-10'>
                             <h3 className='text-2xl font-bold uppercase tracking-tighter mb-4'>Stamp Anatomy 101</h3>
-                            <p className='text-gray-400 text-sm max-w-md font-sans mb-8'>Hover over the physical characteristics to understand how expert registrars evaluate a specimen.</p>
+                            <p className='text-gray-700 text-sm max-w-md font-sans mb-8'>Hover over the physical characteristics to understand how expert registrars evaluate a specimen.</p>
                             
 
                             <div className='aspect-video bg-white/5 border border-white/10 rounded-2xl flex items-center justify-center relative'>

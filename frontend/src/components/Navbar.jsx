@@ -72,53 +72,54 @@ const Navbar = () => {
 
   const MegaMenu = ({ menuData }) => (
     <div className="group relative flex flex-col items-center cursor-pointer z-[9999]">
-  {/* TOP LEVEL LINK */}
-  <div className="flex items-center gap-1.5 px-4 py-5 transition-all duration-500">
-    <p className='text-[13px] font-[800] text-black group-hover:text-[#BC002D] transition-colors capitalize font-["Nunito",sans-serif]'>
-      {menuData.title}
-    </p>
-    {/* UNDERLINE ANIMATION */}
-    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-[#BC002D] transition-all duration-300 group-hover:w-1/2 opacity-0 group-hover:opacity-100" />
-  </div>
+      {/* TOP LEVEL LINK */}
+      <div className="flex items-center gap-1.5 px-4 py-5 transition-all duration-500">
+        <p className='text-[13px] font-[800] text-black group-hover:text-[#BC002D] transition-colors capitalize font-["Nunito",sans-serif]'>
+          {menuData.title}
+        </p>
+        {/* UNDERLINE ANIMATION */}
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-0 h-0.5 bg-[#BC002D] transition-all duration-300 group-hover:w-1/2 opacity-0 group-hover:opacity-100" />
+      </div>
 
-  {/* DROPDOWN CONTAINER */}
-  <div className="absolute top-[90%] left-1/2 -translate-x-1/2 pt-2 invisible opacity-0 translate-y-4 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] z-[110]">
-    <div className="h-4 w-full bg-transparent" />
-    <div className="bg-white border-t-2 border-[#BC002D] p-10 flex gap-16 w-max shadow-[0_40px_80px_rgba(0,0,0,0.15)] rounded-br-[60px] overflow-hidden">
-      
-      {menuData.groups?.map((group, idx) => (
-        <div 
-          key={idx} 
-          className="flex flex-col min-w-[180px] animate-fade-in-up" 
-          style={{ animationDelay: `${idx * 100}ms` }} // Staggers the columns
-        >
-         {group.groupName && group.groupName.trim() !== "" && (
-  <h3 className='text-[10px] font-[900] text-[#BC002D] mb-6 tracking-[0.25em] border-b border-gray-100 pb-3 capitalize font-["Inter",sans-serif]'>
-    {group.groupName}
-  </h3>
-)}
-          
-          <div className="flex flex-col gap-4">
-            {group.items?.map((item, i) => (
-              <Link
-                key={i}
-                to={`/collection?category=${encodeURIComponent(item)}`}
-                onClick={() => setVisible(false)}
-                className="text-[12px] text-gray-500 hover:text-[#BC002D] hover:translate-x-2 transition-all duration-300 ease-out font-medium flex items-center gap-2 group/item"
-              >
-                {/* SUBTLE HOVER DOT */}
-                <span className="w-0 h-0 bg-[#BC002D] rounded-full group-hover/item:w-1 group-hover/item:h-1 transition-all" />
-                {item}
-              </Link>
-            ))}
-          </div>
+      {/* DROPDOWN CONTAINER */}
+      <div className="absolute top-[90%] left-1/2 -translate-x-1/2 pt-2 invisible opacity-0 translate-y-4 group-hover:visible group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] z-[110]">
+        <div className="h-4 w-full bg-transparent" />
+        <div className="bg-white border-t-2 border-[#BC002D] p-10 flex gap-16 w-max shadow-[0_40px_80px_rgba(0,0,0,0.15)] rounded-br-[60px] overflow-hidden">
+          {menuData.groups?.map((group, idx) => (
+            <div
+              key={idx}
+              className="flex flex-col min-w-[180px] animate-fade-in-up"
+              style={{ animationDelay: `${idx * 100}ms` }} // Staggers the columns
+            >
+              {group.groupName && group.groupName.trim() !== "" && (
+                <h3 className='text-[10px] font-[900] text-[#BC002D] mb-6 tracking-[0.25em] border-b border-gray-100 pb-3 capitalize font-["Inter",sans-serif]'>
+                  {group.groupName}
+                </h3>
+              )}
+
+              <div className="flex flex-col gap-4">
+                {group.items?.map((item, i) => (
+                  <Link
+                    key={i}
+                    to={`/collection?category=${encodeURIComponent(item)}`}
+                    onClick={() => setVisible(false)}
+                    className="text-[12px] text-gray-500 hover:text-[#BC002D] hover:translate-x-2 transition-all duration-300 ease-out font-medium flex items-center gap-2 group/item"
+                  >
+                    {/* SUBTLE HOVER DOT */}
+                    <span className="w-0 h-0 bg-[#BC002D] rounded-full group-hover/item:w-1 group-hover/item:h-1 transition-all" />
+                    {item}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
-  </div>
+      </div>
 
-  {/* CSS FOR STAGGERED ANIMATION */}
-  <style dangerouslySetInnerHTML={{ __html: `
+      {/* CSS FOR STAGGERED ANIMATION */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
     @keyframes fadeInUp {
       from { opacity: 0; transform: translateY(10px); }
       to { opacity: 1; transform: translateY(0); }
@@ -127,8 +128,10 @@ const Navbar = () => {
       animation: fadeInUp 0.5s ease forwards;
       opacity: 0;
     }
-  `}} />
-</div>
+  `,
+        }}
+      />
+    </div>
   );
 
   return (
@@ -156,7 +159,7 @@ const Navbar = () => {
         <div className="hidden lg:flex absolute right-0 lg:right-4 h-full flex items-center pl-10 bg-gradient-to-l from-[#BC002D] via-[#BC002D]/90 to-transparent z-10">
           <div className="flex items-center gap-3 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/20 mr-4">
             {/* POINTS SECTION */}
-            <div
+            {/* <div
               className="flex items-center gap-2 border-r border-white/20 pr-3 cursor-pointer hover:opacity-80 transition-opacity"
               onClick={() => navigate("/rewards")}
             >
@@ -164,10 +167,36 @@ const Navbar = () => {
               <p className="text-[9px] font-black text-white uppercase tracking-tighter">
                 {userPoints || 0} <span className="opacity-60">Coins</span>
               </p>
+            </div> */}
+            <div
+              className="flex items-center gap-2 border-r border-white/20 pr-3 cursor-pointer hover:opacity-90 transition-all"
+              onClick={() => navigate("/rewards")}
+            >
+              <Gift size={12} className="text-white" />
+              <p className="text-[10px] font-semibold text-white uppercase tracking-tight">
+                {userPoints || 0}{" "}
+                <span className="text-yellow-300 font-bold">Coins</span>
+              </p>
             </div>
 
             {/* CURRENCY TOGGLE */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 bg-white/10 p-1 rounded-full">
+              {["INR", "USD"].map((curr) => (
+                <button
+                  key={curr}
+                  onClick={() => toggleCurrency(curr)}
+                  className={`text-[10px] font-semibold px-3 py-1 rounded-full transition-all
+                ${
+                  currency === curr
+                    ? "bg-white text-[#BC002D] shadow-sm"
+                    : "bg-transparent text-white hover:bg-white/20"
+                }`}
+                >
+                  {curr}
+                </button>
+              ))}
+            </div>
+            {/* <div className="flex items-center gap-1">
               {["INR", "USD"].map((curr) => (
                 <button
                   key={curr}
@@ -177,13 +206,13 @@ const Navbar = () => {
                   {curr}
                 </button>
               ))}
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
 
       {/* --- MAIN NAVIGATION --- */}
-      <div className="flex items-center justify-between py-4 px-[6%] bg-white border-b border-black/[0.03] lg:p-[14px] w-full shadow-sm">
+      <div className="grid grid-cols-3 items-center py-4 px-[6%] bg-white border-b border-black/[0.03] lg:p-[14px] w-full shadow-sm">
         <Link to="/" className="flex-shrink-0 group">
           <div
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
@@ -191,18 +220,18 @@ const Navbar = () => {
           >
             <img
               src={assets.logo}
-              className="w-8 md:w-10 lg:w-12 group-hover:rotate-[360deg] transition-transform duration-1000 ease-in-out"
+              className="w-8 md:w-10 lg:w-[100px] group-hover:rotate-[360deg] transition-transform duration-1000 ease-in-out"
               alt=""
             />
             <img
               src={assets.logo5}
-              className="w-24 md:w-28 lg:w-32 h-auto object-contain"
+              className="w-24 md:w-28 lg:w-[180px] h-auto object-contain"
               alt=""
             />
           </div>
         </Link>
 
-        <nav className="hidden xl:flex items-center gap-3 mr-7">
+        <nav className="hidden xl:flex justify-center items-center gap-6">
           {headerData.navMenu.map((tab, index) => (
             <MegaMenu key={index} menuData={tab} />
           ))}
@@ -219,17 +248,18 @@ const Navbar = () => {
         </nav>
 
         {/* UTILITIES (Desktop) */}
-        <div className="flex items-center gap-4 lg:gap-6">
+        <div className="flex justify-end items-center gap-4 lg:gap-6">
           {/* SEARCH ICON (Already working) */}
           <div className="group relative flex flex-col items-center">
             <Search
+              color="black"
               onClick={() => {
                 setShowSearch(true);
                 navigate("/collection");
                 window.scroll(0, 0);
               }}
               size={18}
-              className="cursor-pointer text-gray-400 hover:text-[#BC002D]"
+              className="cursor-pointer text-gray-700 hover:text-[#BC002D]"
             />
             <div className="absolute top-8 scale-0 transition-all rounded bg-black px-2 py-1 text-[7px] font-black text-white group-hover:scale-100 uppercase tracking-widest z-[100]">
               Search
@@ -246,10 +276,11 @@ const Navbar = () => {
           >
             <Heart
               size={18}
+              color="#cc3314"
               className={
                 wishlist.length > 0
                   ? "fill-[#BC002D] text-[#BC002D]"
-                  : "text-gray-400 hover:text-[#BC002D]"
+                  : "text-gray-700 hover:text-[#BC002D]"
               }
             />
             {wishlist.length > 0 && (
@@ -267,7 +298,7 @@ const Navbar = () => {
             <User
               onClick={() => (token ? null : navigate("/login"))}
               size={18}
-              className="cursor-pointer text-gray-400 hover:text-black"
+              className="cursor-pointer text-gray-700 hover:text-black"
             />
             {!token && (
               <div className="absolute top-8 scale-0 transition-all rounded bg-black px-2 py-1 text-[7px] font-black text-white group-hover:scale-100 uppercase tracking-widest z-[100]">
@@ -279,13 +310,13 @@ const Navbar = () => {
                 <div className="bg-white border-t-2 border-[#BC002D] p-5 shadow-2xl rounded-br-[30px]">
                   <p
                     onClick={() => navigate("/profile")}
-                    className="text-[9px] font-black text-gray-400 cursor-pointer hover:text-[#BC002D] mb-4 uppercase flex items-center gap-2"
+                    className="text-[9px] font-black text-gray-700 cursor-pointer hover:text-[#BC002D] mb-4 uppercase flex items-center gap-2"
                   >
                     <User size={12} /> Account
                   </p>
                   <p
                     onClick={() => navigate("/orders")}
-                    className="text-[9px] font-black text-gray-400 cursor-pointer hover:text-[#BC002D] mb-4 uppercase flex items-center gap-2"
+                    className="text-[9px] font-black text-gray-700 cursor-pointer hover:text-[#BC002D] mb-4 uppercase flex items-center gap-2"
                   >
                     <Package size={12} /> My Orders
                   </p>
@@ -362,7 +393,7 @@ const Navbar = () => {
               <div className="flex items-center justify-between mb-8">
                 <button
                   onClick={() => setVisible(false)}
-                  className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400"
+                  className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-700"
                 >
                   <ArrowLeft size={14} /> Back
                 </button>
@@ -385,7 +416,7 @@ const Navbar = () => {
                     <div className="relative">
                       <Package
                         size={18}
-                        className="text-gray-400 group-hover:text-[#BC002D] transition-colors"
+                        className="text-gray-700 group-hover:text-[#BC002D] transition-colors"
                       />
                       {/* Optional: Small notification dot if you have unfulfilled orders */}
                       {/* <span className='absolute -top-1 -right-1 w-2 h-2 bg-[#BC002D] rounded-full border-2 border-white'></span> */}
@@ -408,9 +439,9 @@ const Navbar = () => {
                 >
                   <Heart
                     size={18}
-                    className={`${wishlist.length > 0 ? "fill-[#BC002D] text-[#BC002D]" : "text-gray-400"}`}
+                    className={`${wishlist.length > 0 ? "fill-[#BC002D] text-[#BC002D]" : "text-gray-700"}`}
                   />
-                  <span className="text-[8px] font-black uppercase text-gray-400 tracking-tighter">
+                  <span className="text-[8px] font-black uppercase text-gray-700 tracking-tighter">
                     Wishlist
                   </span>
                 </div>
@@ -424,7 +455,7 @@ const Navbar = () => {
                   className="flex flex-col items-center gap-1.5 cursor-pointer group active:scale-95 transition-all"
                 >
                   <Award size={18} className="text-amber-500" />
-                  <span className="text-[8px] font-black uppercase text-gray-400 tracking-tighter">
+                  <span className="text-[8px] font-black uppercase text-gray-700 tracking-tighter">
                     Rewards
                   </span>
                 </div>
@@ -440,9 +471,9 @@ const Navbar = () => {
                 >
                   <User
                     size={18}
-                    className="text-gray-400 group-hover:text-black"
+                    className="text-gray-700 group-hover:text-black"
                   />
-                  <span className="text-[8px] font-black uppercase text-gray-400 tracking-tighter">
+                  <span className="text-[8px] font-black uppercase text-gray-700 tracking-tighter">
                     {token ? "Profile" : "Account"}
                   </span>
                 </div>
@@ -507,7 +538,7 @@ const Navbar = () => {
                         {menu.groups.map((group, gIdx) => (
                           <div key={gIdx}>
                             {group.groupName && (
-                              <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">
+                              <p className="text-[9px] font-black text-gray-700 uppercase tracking-widest mb-2">
                                 {group.groupName}
                               </p>
                             )}
@@ -580,7 +611,7 @@ const Navbar = () => {
                 onClick={() => {
                   toggleCurrency(currency === "INR" ? "USD" : "INR");
                 }}
-                className="w-full mb-3 py-3.5 px-4 border border-gray-200 rounded-xl flex items-center justify-center gap-3 group hover:border-[#BC002D]/30 hover:bg-[#BC002D]/5 transition-all active:scale-[0.98]"
+                className="w-full mb-3 py-3.5 px-4 border border-gray-700 rounded-xl flex items-center justify-center gap-3 group hover:border-[#BC002D]/30 hover:bg-[#BC002D]/5 transition-all active:scale-[0.98]"
               >
                 {/* Dynamic Symbol Container */}
                 <div className="flex items-center justify-center w-5 h-5 bg-black text-white rounded-full transition-transform  duration-500">

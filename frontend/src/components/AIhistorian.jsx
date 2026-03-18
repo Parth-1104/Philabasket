@@ -122,7 +122,7 @@ const AIHistorian = ({ productId, productName }) => {
                 <div className="flex items-center gap-2">
                     <button 
                         onClick={() => { setIsMuted(!isMuted); window.speechSynthesis.cancel(); }}
-                        className={`p-2 rounded-lg transition-all ${isMuted ? 'bg-red-50 text-[#BC002D]' : 'bg-gray-50 text-gray-400'}`}
+                        className={`p-2 rounded-lg transition-all ${isMuted ? 'bg-red-50 text-[#BC002D]' : 'bg-gray-50 text-gray-700'}`}
                     >
                         {isMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
                     </button>

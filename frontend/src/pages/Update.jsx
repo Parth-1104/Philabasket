@@ -57,7 +57,7 @@ const Updates = () => {
                         <h2 className="text-5xl md:text-7xl font-bold text-gray-900 tracking-tighter leading-none uppercase">
                             Registry <span className="text-[#BC002D]">Updates.</span>
                         </h2>
-                        <p className='text-gray-400 text-[10px] uppercase font-bold tracking-[0.2em] mt-6 flex items-center gap-2'>
+                        <p className='text-gray-700 text-[10px] uppercase font-bold tracking-[0.2em] mt-6 flex items-center gap-2'>
                             <Clock size={12} /> Real-time sync with central philatelic archive
                         </p>
                     </div>

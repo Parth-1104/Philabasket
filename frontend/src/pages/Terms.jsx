@@ -68,11 +68,11 @@ const Terms = () => {
                         </p>
                         <div className='grid grid-cols-1 md:grid-cols-2 gap-10'>
                             <div className='space-y-4'>
-                                <p className='text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]'>SHIPPING PROTOCOL</p>
+                                <p className='text-[10px] font-black text-gray-700 uppercase tracking-[0.3em]'>SHIPPING PROTOCOL</p>
                                 <p className='text-xs text-gray-600 font-bold uppercase leading-loose'>Additional shipping charges shall be borne by the buyer and the exchanged material will be sent after receiving the original item for which exchange has been sought.</p>
                             </div>
                             <div className='space-y-4'>
-                                <p className='text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]'>SETTLEMENT</p>
+                                <p className='text-[10px] font-black text-gray-700 uppercase tracking-[0.3em]'>SETTLEMENT</p>
                                 <p className='text-xs text-gray-600 font-bold uppercase leading-loose'>Any difference in amount while exchanging shall be settled as per the situation and such information shall be communicated via email.</p>
                             </div>
                         </div>

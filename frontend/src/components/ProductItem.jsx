@@ -148,7 +148,7 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, stock
                         {formatPrice(price)}
                     </p>
                     {marketPrice > price && (
-                        <p className='text-[9px] lg:text-[11px] font-bold text-gray-400 tabular-nums line-through decoration-[#BC002D]/50'>
+                        <p className='text-[9px] lg:text-[11px] font-bold text-gray-700 tabular-nums line-through decoration-[#BC002D]/50'>
                             {symbol}{formatPrice(marketPrice)}
                         </p>
                     )}
@@ -172,7 +172,7 @@ const ProductItem = ({ id, _id, image, name, price, marketPrice, category, stock
     {/* 2. CONDITIONAL CART SECTION (Sold Out vs Add to Cart) */}
     {isOutOfStock ? (
         /* SOLD OUT STATE */
-        <div className='flex-1 flex items-center justify-center gap-2 h-[50px] bg-gray-50 text-gray-400 rounded-xl border border-gray-200 cursor-not-allowed'>
+        <div className='flex-1 flex items-center justify-center gap-2 h-[50px] bg-gray-50 text-gray-700 rounded-xl border border-gray-200 cursor-not-allowed'>
             <Ban size={13} />
             <span className='text-[9px] font-black uppercase tracking-widest'>Sold Out</span>
         </div>

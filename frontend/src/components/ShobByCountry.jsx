@@ -146,7 +146,7 @@ const ShopByCountry = () => {
     );
 
   return (
-    <div className="py-5 bg-white border-y border-gray-100">
+    <div className="pb-10 pt-3 px-12 bg-white border-y border-gray-100">
       <div>
         {/* Header */}
         {/* <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-6'>
@@ -164,6 +164,32 @@ const ShopByCountry = () => {
                 </div> */}
 
         {/* Flag Grid */}
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-5 gap-6 mt-5">
+                      <div className="max-w-2xl">
+                        <div className="flex items-center gap-4 mt-4">
+                          <span className="h-[1px] w-12 bg-[#BC002D]"></span>
+                          <span className="text-[10px] tracking-[0.6em] text-[#BC002D] uppercase font-black">
+                            Curated Selection
+                          </span>
+                        </div>
+                        <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tighter leading-none uppercase">
+                          Shop By <span className="text-[#bd002d] ml-1">Country.</span>
+                        </h2>
+                      </div>
+                      <button
+                        onClick={() => {
+                          navigate("/shopallcountry");
+                          window.scroll(0, 0);
+                        }}
+                        className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 group border-b border-black pb-1 text-[#BC002D] hover:border-[#BC002D] transition-all"
+                      >
+                        Explore All Countries{" "}
+                        <ArrowRight
+                          size={14}
+                          className="group-hover:translate-x-1 transition-transform"
+                        />
+                      </button>
+                    </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
           {displayedCountries.map((country) => (
             <div
@@ -188,7 +214,7 @@ const ShopByCountry = () => {
                 <p className="text-[10px] lg:text-[13px] font-semibold tracking-tight text-gray-900 text-transform:capatlized tracking-tighter text-gray-900 group-hover:text-[#BC002D] transition-colors">
                   {country.displayName}
                 </p>
-                <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest mt-1">
+                <p className="text-[8px] font-bold text-gray-700 uppercase tracking-widest mt-1">
                   {country.count.toLocaleString()} Specimens
                 </p>
               </div>

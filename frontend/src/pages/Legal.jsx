@@ -42,7 +42,7 @@ const Legal = () => {
             <div className='max-w-4xl mx-auto space-y-12'>
                 {/* Add this inside your max-w-4xl mx-auto space-y-12 container */}
 <div className='bg-gray-50 p-8 border border-gray-100 rounded-sm italic'>
-    <h3 className='font-black uppercase text-[10px] tracking-widest mb-4 text-gray-400'>
+    <h3 className='font-black uppercase text-[10px] tracking-widest mb-4 text-gray-700'>
         Policy Modifications
     </h3>
     <p className='text-[12px] text-gray-500 leading-relaxed font-sans'>
@@ -74,14 +74,14 @@ const Legal = () => {
                     <p className='text-[13px] text-gray-600 leading-relaxed font-sans mb-4'>
                         Certain providers, such as payment gateways, have their own privacy policies. We recommend reviewing their protocols to understand how your transaction data is handled, especially if those providers operate in different jurisdictions.
                     </p>
-                    <p className='text-[11px] italic text-gray-400 font-sans'>
+                    <p className='text-[11px] italic text-gray-700 font-sans'>
                         *Once you leave our registry site via a link or redirect, you are no longer governed by this Privacy Policy.
                     </p>
                 </div>
 
                 {/* Liability & Contact */}
                 <div className='border-t border-gray-200 pt-12 text-center'>
-                    <h4 className='font-black uppercase text-[10px] tracking-[0.3em] text-gray-400 mb-6'>Legal Notice & Contact</h4>
+                    <h4 className='font-black uppercase text-[10px] tracking-[0.3em] text-gray-700 mb-6'>Legal Notice & Contact</h4>
                     <p className='text-[12px] text-gray-500 max-w-2xl mx-auto leading-loose mb-8 font-sans'>
                         While we use commercially reasonable efforts to protect your data, we cannot be held liable for consequences of a security breach beyond our control. For corrections or data deletion requests, contact our Compliance Officer.
                     </p>

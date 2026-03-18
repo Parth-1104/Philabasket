@@ -62,7 +62,7 @@ const GlobalArchive = () => {
         <div className='min-h-screen flex items-center justify-center bg-white'>
             <div className='flex flex-col items-center gap-4'>
                 <Loader2 className='animate-spin text-[#BC002D]' size={40} />
-                <p className='text-[10px] font-black uppercase tracking-[0.4em] text-gray-400'>Syncing Global Jurisdictions...</p>
+                <p className='text-[10px] font-black uppercase tracking-[0.4em] text-gray-700'>Syncing Global Jurisdictions...</p>
             </div>
         </div>
     );
@@ -73,7 +73,7 @@ const GlobalArchive = () => {
             <div className='mb-16'>
                 <button 
                     onClick={() => navigate(-1)} 
-                    className='flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 hover:text-[#BC002D] mb-8 transition-colors'
+                    className='flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-700 hover:text-[#BC002D] mb-8 transition-colors'
                 >
                     <ArrowLeft size={14} /> Back to Archive
                 </button>
@@ -91,7 +91,7 @@ const GlobalArchive = () => {
 
                     {/* Search Bar */}
                     <div className='relative w-full max-w-md'>
-                        <Search size={18} className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-400' />
+                        <Search size={18} className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-700' />
                         <input 
                             type="text" 
                             placeholder="SEARCH JURISDICTION..." 
@@ -129,7 +129,7 @@ const GlobalArchive = () => {
                                 </p>
                                 <div className='flex items-center gap-2 mt-1'>
                                     <span className='h-[1px] w-4 bg-gray-200'></span>
-                                    <p className='text-[9px] font-bold text-gray-400 uppercase tracking-widest'>
+                                    <p className='text-[9px] font-bold text-gray-700 uppercase tracking-widest'>
                                         {country.count} Specimens
                                     </p>
                                     <span className='h-[1px] w-4 bg-gray-200'></span>
@@ -141,7 +141,7 @@ const GlobalArchive = () => {
             ) : (
                 <div className='py-40 text-center border border-dashed border-gray-100 rounded-3xl'>
                     <Globe size={48} className='mx-auto text-gray-200 mb-4' />
-                    <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Jurisdiction Not Found in Archive</p>
+                    <p className='text-[10px] font-black text-gray-700 uppercase tracking-widest'>Jurisdiction Not Found in Archive</p>
                 </div>
             )}
         </div>

@@ -331,7 +331,7 @@ useEffect(() => {
         
         {/* Total Consignments */}
         <div className='bg-white border border-black/5 p-3 md:p-4 rounded-sm shadow-sm'>
-            <p className='text-[7px] md:text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1 truncate'>
+            <p className='text-[7px] md:text-[8px] text-gray-700 font-black uppercase tracking-widest mb-1 truncate'>
                 Total Consignments
             </p>
             <p className='text-xl md:text-2xl font-black tracking-tighter'>
@@ -351,7 +351,7 @@ useEffect(() => {
 
         {/* Active Transit - Visible on Mobile now, but with smaller text */}
         <div className='bg-white border border-black/5 p-3 md:p-4 rounded-sm shadow-sm'>
-            <p className='text-[7px] md:text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1 truncate'>
+            <p className='text-[7px] md:text-[8px] text-gray-700 font-black uppercase tracking-widest mb-1 truncate'>
                 Active Transit
             </p>
             <p className='text-xl md:text-2xl font-black tracking-tighter'>
@@ -361,7 +361,7 @@ useEffect(() => {
 
         {/* Total Ledger Value */}
         <div className='bg-white border border-black/5 p-3 md:p-4 rounded-sm shadow-sm'>
-            <p className='text-[7px] md:text-[8px] text-gray-400 font-black uppercase tracking-widest mb-1 truncate'>
+            <p className='text-[7px] md:text-[8px] text-gray-700 font-black uppercase tracking-widest mb-1 truncate'>
                 Total Ledger Value
             </p>
             <p className='text-lg md:text-2xl font-black tracking-tighter truncate'>
@@ -392,7 +392,7 @@ useEffect(() => {
               <div className='bg-[#FCF9F4] p-5 border border-black/5'>
                   <div className='flex items-center gap-2 mb-4'>
                       <Landmark size={16} className='text-[#BC002D]' />
-                      <p className='text-[10px] font-black uppercase text-gray-400 tracking-widest'>Bank Ledger Details</p>
+                      <p className='text-[10px] font-black uppercase text-gray-700 tracking-widest'>Bank Ledger Details</p>
                   </div>
                   <div className='text-[11px] font-bold space-y-2 uppercase'>
                       <p className='flex justify-between'><span>A/C Name:</span> <span className='text-black'>PhilaBasket.com</span></p>
@@ -404,14 +404,14 @@ useEffect(() => {
               <div className='bg-[#FCF9F4] p-5 border border-black/5'>
                   <div className='flex items-center gap-2 mb-4'>
                       <Smartphone size={16} className='text-[#BC002D]' />
-                      <p className='text-[10px] font-black uppercase text-gray-400 tracking-widest'>UPI Protocol</p>
+                      <p className='text-[10px] font-black uppercase text-gray-700 tracking-widest'>UPI Protocol</p>
                   </div>
                   <p className='text-[11px] font-bold uppercase'>Google Pay / PhonePe: <span className='text-black font-black'>9999167799</span></p>
               </div>
               <div className='bg-white p-5 border border-dashed border-gray-200'>
                   <div className='flex items-center gap-2 mb-4'>
                       <MapPin size={16} className='text-[#BC002D]' />
-                      <p className='text-[10px] font-black uppercase text-gray-400 tracking-widest'>Mailing Address</p>
+                      <p className='text-[10px] font-black uppercase text-gray-700 tracking-widest'>Mailing Address</p>
                   </div>
                   <div className='text-[11px] font-bold space-y-1 uppercase leading-relaxed text-gray-600'>
                       <p className='text-black'>PhilaBasket.com</p>
@@ -444,7 +444,7 @@ useEffect(() => {
         
         {/* OVERALL STAR RATING */}
         <div className='flex flex-col items-center gap-2 pb-6 border-b border-gray-50'>
-          <p className='text-[10px] font-black uppercase tracking-widest text-gray-400'>Overall Specimen Grade</p>
+          <p className='text-[10px] font-black uppercase tracking-widest text-gray-700'>Overall Specimen Grade</p>
           <div className='flex items-center gap-2'>
             {[1, 2, 3, 4, 5].map((star) => (
               <button key={star} type="button" className='transition-transform hover:scale-110' 
@@ -465,7 +465,7 @@ useEffect(() => {
             { id: 'processrating', label: 'Process' }
           ].map((cat) => (
             <div key={cat.id} className='flex flex-col gap-2'>
-              <p className='text-[9px] font-black uppercase tracking-widest text-gray-400'>{cat.label}</p>
+              <p className='text-[9px] font-black uppercase tracking-widest text-gray-700'>{cat.label}</p>
               <div className='flex gap-1'>
                 {[1, 2, 3, 4, 5].map((val) => (
                   <button
@@ -484,7 +484,7 @@ useEffect(() => {
 
         {/* IMAGE UPLOAD */}
         <div className='flex flex-col gap-3'>
-          <p className='text-[10px] font-black uppercase tracking-widest text-gray-400'>Archive Specimen Photo</p>
+          <p className='text-[10px] font-black uppercase tracking-widest text-gray-700'>Archive Specimen Photo</p>
           <label className='w-full h-24 border-2 border-dashed border-gray-100 rounded-sm flex flex-col items-center justify-center cursor-pointer hover:border-[#BC002D]/30 transition-all'>
             {feedbackImage ? (
               <img src={URL.createObjectURL(feedbackImage)} className='h-full w-full object-contain p-2' alt="Preview" />
@@ -511,13 +511,13 @@ useEffect(() => {
 
       <div className='max-w-6xl mx-auto'>
         {processedOrders.length === 0 ? (
-          <div className='py-32 text-center bg-white border border-black/5'><p className='text-gray-400 font-serif uppercase tracking-[0.2em]'>Registry is empty</p></div>
+          <div className='py-32 text-center bg-white border border-black/5'><p className='text-gray-700 font-serif uppercase tracking-[0.2em]'>Registry is empty</p></div>
         ) : (
           processedOrders.map((order) => (
             <div key={order._id} className='py-8 border border-black/5 bg-white flex flex-col gap-6 px-8 mb-8 rounded-sm shadow-sm hover:border-[#BC002D]/30 transition-all duration-500'>
               <div className='flex flex-wrap items-center justify-between gap-4 border-b border-black/5 pb-4'>
                 <div className='flex items-center gap-6'>
-                    <div><p className='text-[8px] text-gray-400 uppercase tracking-widest font-black'>Registry ID</p><span className='text-sm font-mono font-bold text-black'>#{order.orderNo}</span></div>
+                    <div><p className='text-[8px] text-gray-700 uppercase tracking-widest font-black'>Registry ID</p><span className='text-sm font-mono font-bold text-black'>#{order.orderNo}</span></div>
                     <div className='flex items-center gap-3'><div className={`w-2 h-2 rounded-full animate-pulse ${order.status === 'Delivered' ? 'bg-green-500' : order.status === 'Cancelled' ? 'bg-gray-400' : 'bg-[#BC002D]'}`}></div><p className='text-xs font-black tracking-[0.4em] uppercase text-black'>{order.status}</p></div>
                 </div>
                 <div className='flex flex-wrap items-center gap-6'>
@@ -527,7 +527,7 @@ useEffect(() => {
                     {order.status === 'On Hold' && <button onClick={() => cancelOrder(order._id)} className='text-[10px] font-black uppercase text-red-500 hover:bg-red-50 px-3 py-2'>Cancel Order</button>}
                     
                     
-                    {/* <button onClick={() => { setCurrentOrder(order); setShowFeedbackModal(true); }} className='flex items-center gap-2 text-[10px] font-black uppercase text-gray-400'><MessageSquare size={14} /> Feedback</button> */}
+                    {/* <button onClick={() => { setCurrentOrder(order); setShowFeedbackModal(true); }} className='flex items-center gap-2 text-[10px] font-black uppercase text-gray-700'><MessageSquare size={14} /> Feedback</button> */}
                     {submittedOrderIds.includes(order._id) ? (
     <div className='flex items-center gap-2 text-[10px] font-black uppercase text-green-600 cursor-default py-2 px-3 bg-green-50 rounded-sm'>
         <PackageCheck size={14} /> 
@@ -536,7 +536,7 @@ useEffect(() => {
 ) : (
     <button 
         onClick={() => { setCurrentOrder(order); setShowFeedbackModal(true); }} 
-        className='flex items-center gap-2 text-[10px] font-black uppercase text-gray-400 hover:text-[#BC002D] transition-colors'
+        className='flex items-center gap-2 text-[10px] font-black uppercase text-gray-700 hover:text-[#BC002D] transition-colors'
     >
         <MessageSquare size={14} /> 
         Feedback
@@ -552,7 +552,7 @@ useEffect(() => {
                 {order.items.map((item, idx) => (
                   <div key={idx} className='flex items-center gap-6'>
                     <div className='w-16 h-20 bg-[#F9F9F9] border border-black/5 flex items-center justify-center shrink-0'><img src={item.image?.[0] || assets.logo} alt="" className='w-full h-full object-contain p-1' /></div>
-                    <div className='flex-1'><p className='text-md font-serif text-black tracking-tight'>{item.name}</p><div className='flex items-center gap-4 mt-1'><p className='text-[10px] text-gray-400 uppercase font-black'>Quantity: {item.quantity}</p><p className='text-[10px] text-gray-400 uppercase font-black'>{order.formattedDate}</p></div></div>
+                    <div className='flex-1'><p className='text-md font-serif text-black tracking-tight'>{item.name}</p><div className='flex items-center gap-4 mt-1'><p className='text-[10px] text-gray-700 uppercase font-black'>Quantity: {item.quantity}</p><p className='text-[10px] text-gray-700 uppercase font-black'>{order.formattedDate}</p></div></div>
                   </div>
                 ))}
               </div>

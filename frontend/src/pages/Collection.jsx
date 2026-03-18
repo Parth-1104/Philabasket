@@ -293,7 +293,7 @@ const Collection = () => {
           key={i}
           onClick={() => setPage(i)}
           className={`w-9 h-9 md:w-12 md:h-12 rounded-xl text-[10px] font-black transition-all duration-300 ${
-            page === i ? 'bg-[#BC002D] text-white shadow-lg' : 'bg-gray-50 text-gray-400 hover:bg-black hover:text-white'
+            page === i ? 'bg-[#BC002D] text-white shadow-lg' : 'bg-gray-50 text-gray-700 hover:bg-black hover:text-white'
           }`}
         >
           {i}
@@ -329,7 +329,7 @@ const Collection = () => {
             className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 border whitespace-nowrap snap-start ${
                 activeStatus === btn.id 
                 ? 'bg-[#BC002D] text-white border-[#BC002D] shadow-[0_8px_20px_rgba(188,0,45,0.25)] scale-105' 
-                : 'bg-white text-gray-400 border-gray-100 hover:border-gray-300 hover:text-gray-900 shadow-sm'
+                : 'bg-white text-gray-700 border-gray-100 hover:border-gray-300 hover:text-gray-900 shadow-sm'
             }`}
         >
             {btn.label}
@@ -384,7 +384,7 @@ const Collection = () => {
           <div className='flex items-center justify-between mb-6 md:mb-10 pb-5 border-b border-gray-100 gap-3'>
             <div className='flex flex-col gap-1.5 min-w-0'>
               <div className='flex items-center gap-2'>
-                <LayoutGrid size={12} className='text-gray-400 flex-shrink-0' />
+                <LayoutGrid size={12} className='text-gray-700 flex-shrink-0' />
                 <p className='text-[8px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-[#6A7EFC] whitespace-nowrap'>
                   <span className='text-black font-mono'>{totalFound}</span> items
                 </p>

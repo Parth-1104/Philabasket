@@ -65,12 +65,12 @@ const Rewards = () => {
                 {/* --- NEW: ANALYTICS SUMMARY MINI-CARD --- */}
                 <div className='flex items-center gap-8 bg-gray-50 p-6 rounded-3xl border border-gray-100'>
                     <div className='text-center'>
-                        <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1'>Lifetime Gained</p>
+                        <p className='text-[8px] font-black text-gray-700 uppercase tracking-widest mb-1'>Lifetime Gained</p>
                         <p className='text-xl font-bold text-green-600 tracking-tighter'>+{stats.gained.toLocaleString()}</p>
                     </div>
                     <div className='w-[1px] h-8 bg-gray-200'></div>
                     <div className='text-center'>
-                        <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1'>Total Redeemed</p>
+                        <p className='text-[8px] font-black text-gray-700 uppercase tracking-widest mb-1'>Total Redeemed</p>
                         <p className='text-xl font-bold text-gray-900 tracking-tighter'>-{stats.used.toLocaleString()}</p>
                     </div>
                 </div>
@@ -105,7 +105,7 @@ const Rewards = () => {
             <TrendingUp size={80} className='text-[#BC002D]' />
         </div>
         <div className='relative z-10'>
-            <p className='text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1'>Lifetime Savings Value</p>
+            <p className='text-[8px] font-black text-gray-700 uppercase tracking-widest mb-1'>Lifetime Savings Value</p>
             <h5 className='text-2xl font-black tracking-tighter'>
     <span className="text-gray-900 mr-1.5">{currency}</span>
     <span className="text-green-600">
@@ -117,7 +117,7 @@ const Rewards = () => {
                     <TrendingUp size={10} className='text-green-600' />
                     <span className='text-[8px] font-black text-green-600 uppercase'>Sovereign Asset</span>
                 </div>
-                <p className='text-[8px] font-bold text-gray-400 uppercase italic'>Verified Valuation</p>
+                <p className='text-[8px] font-bold text-gray-700 uppercase italic'>Verified Valuation</p>
             </div>
         </div>
     </div>
@@ -155,7 +155,7 @@ const Rewards = () => {
                 <History size={18} className='text-gray-900' />
                 <h4 className='text-sm font-black uppercase tracking-[0.3em] text-gray-900'>Registry Ledger</h4>
             </div>
-            <span className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>{history.length} Entries</span>
+            <span className='text-[10px] font-black text-gray-700 uppercase tracking-widest'>{history.length} Entries</span>
         </div>
 
         <div className='space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar'>
@@ -209,7 +209,7 @@ const Rewards = () => {
                                             {item.title}
                                         </p>
                                        
-                                        <p className='text-[8px] font-bold text-gray-400 uppercase mt-1'>
+                                        <p className='text-[8px] font-bold text-gray-700 uppercase mt-1'>
                                             {/* We clean the description if OrderNo is already shown above */}
                                             {isOrderAction ? 'Processed via Archive Ledger' : item.description} • {new Date(item.createdAt).toLocaleDateString('en-GB')}
                                         </p>
@@ -232,7 +232,7 @@ const Rewards = () => {
             ) : (
                 <div className='py-20 text-center bg-white rounded-3xl border border-dashed border-gray-200'>
                     <Trophy size={32} className='mx-auto text-gray-200 mb-4' />
-                    <p className='text-[10px] font-black text-gray-400 uppercase tracking-widest'>Registry Archive Empty.</p>
+                    <p className='text-[10px] font-black text-gray-700 uppercase tracking-widest'>Registry Archive Empty.</p>
                 </div>
             )}
         </div>

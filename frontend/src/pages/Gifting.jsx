@@ -35,7 +35,7 @@ const Gifting = () => {
         <h2 className='text-5xl md:text-7xl font-bold text-gray-900 tracking-tighter uppercase italic mb-6'>
           Gift a <span className='text-[#BC002D]'>Smile.</span>
         </h2>
-        <p className='text-[11px] text-gray-400 font-bold uppercase tracking-[0.2em] max-w-lg'>
+        <p className='text-[11px] text-gray-700 font-bold uppercase tracking-[0.2em] max-w-lg'>
           Celebrate every occasion with curated historical specimens from the Healthy Master collection.
         </p>
       </div>
@@ -46,7 +46,7 @@ const Gifting = () => {
           <div key={index} className='border border-gray-100 p-8 flex flex-col items-center text-center hover:border-[#BC002D]/30 transition-all rounded-sm'>
             <div className='text-[#BC002D] mb-4'>{feature.icon}</div>
             <h3 className='text-[12px] font-black uppercase tracking-widest mb-2'>{feature.title}</h3>
-            <p className='text-[10px] text-gray-400 font-medium leading-relaxed'>{feature.desc}</p>
+            <p className='text-[10px] text-gray-700 font-medium leading-relaxed'>{feature.desc}</p>
           </div>
         ))}
       </div>
@@ -66,7 +66,7 @@ const Gifting = () => {
           </div>
         ) : (
           <div className='py-20 text-center bg-gray-50 border border-dashed rounded-sm'>
-            <p className='text-[10px] font-black uppercase tracking-widest text-gray-400'>No specimens currently allocated to Gifting</p>
+            <p className='text-[10px] font-black uppercase tracking-widest text-gray-700'>No specimens currently allocated to Gifting</p>
           </div>
         )}
       </div>

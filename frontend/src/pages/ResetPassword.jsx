@@ -61,7 +61,7 @@ const ResetPassword = () => {
                     <div className='space-y-4'>
                         {/* New Password Field */}
                         <div className='space-y-1.5'>
-                            <p className='text-[9px] font-black uppercase text-gray-400 ml-1'>New Access Key</p>
+                            <p className='text-[9px] font-black uppercase text-gray-700 ml-1'>New Access Key</p>
                             <div className="relative group">
                                 <Lock size={14} className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-[#BC002D] transition-colors' />
                                 <input 
@@ -84,7 +84,7 @@ const ResetPassword = () => {
 
                         {/* Confirm Password Field */}
                         <div className='space-y-1.5'>
-                            <p className='text-[9px] font-black uppercase text-gray-400 ml-1'>Verify Access Key</p>
+                            <p className='text-[9px] font-black uppercase text-gray-700 ml-1'>Verify Access Key</p>
                             <div className="relative group">
                                 <RefreshCw size={14} className='absolute left-4 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-[#BC002D] transition-colors' />
                                 <input 
@@ -119,7 +119,7 @@ const ResetPassword = () => {
                     <div className='mt-6 pt-6 border-t border-gray-50 flex justify-center'>
                         <div className='flex items-center gap-2'>
                             <div className='w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse'></div>
-                            <span className='text-[8px] font-bold text-gray-400 uppercase tracking-widest'>Secured End-to-End Encryption</span>
+                            <span className='text-[8px] font-bold text-gray-700 uppercase tracking-widest'>Secured End-to-End Encryption</span>
                         </div>
                     </div>
                 </form>

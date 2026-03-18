@@ -131,7 +131,7 @@ const Contact = () => {
                     </iframe>
                 </div>
 
-                <div className='mt-6 flex justify-between items-center text-[9px] font-bold text-gray-400 uppercase tracking-widest'>
+                <div className='mt-6 flex justify-between items-center text-[9px] font-bold text-gray-700 uppercase tracking-widest'>
                     <p>Co-ordinates: 28.6139° N, 77.2090° E</p>
                     <p>Archive Registry HQ</p>
                 </div>

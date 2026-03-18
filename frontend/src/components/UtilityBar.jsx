@@ -71,12 +71,12 @@ const UtilityBar = () => {
                                 <Award size={18} className='text-amber-400' />
                                 <div className='flex flex-col'>
     <p className='text-[9px] font-black text-white uppercase'>Rewards Value</p>
-    <p className='text-[7px] font-bold text-gray-400 uppercase tracking-widest'>
+    <p className='text-[7px] font-bold text-gray-700 uppercase tracking-widest'>
         Current Worth: <span className='text-green-500'>{currency} {calculateValue().toFixed(2)}</span>
     </p>
 </div>
                             </div>
-                            <ArrowRight size={14} className='text-gray-400' />
+                            <ArrowRight size={14} className='text-gray-700' />
                         </div>
                     </div>
                 </div>

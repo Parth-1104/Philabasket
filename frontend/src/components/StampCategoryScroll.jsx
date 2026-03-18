@@ -89,7 +89,7 @@ const StampCategoryScroll = () => {
                 onClick={() => handleCategoryClick(cat.name)}
                 className='flex flex-col items-center gap-3 cursor-pointer group/item shrink-0'
               >
-                <div className='w-24 h-24 sm:w-32 sm:h-32 rounded-full border-[3px] border-[#BC002D] p-1 transition-all duration-300 group-hover/item:shadow-xl group-hover/item:scale-105'>
+                <div className='w-24 h-24 sm:w-32 sm:h-32 rounded-full border-[3px] border-[#BC002D] p-1 transition-all duration-300 group-hover/item:shadow-xl group-hover/item:scale-105 shadow-[0_0_12px_rgba(188,0,45,0.8)]'>
                   <div className='w-full h-full rounded-full overflow-hidden bg-gray-50 flex items-center justify-center'>
                     <img 
                       src={displayImage} 

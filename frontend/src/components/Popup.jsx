@@ -52,7 +52,7 @@ const PromoPopup = () => {
                             Member <br /> <span className="text-[#D4AF37]">Sovereignty.</span>
                         </h2>
                         
-                        <p className="text-[12px] text-gray-400 font-medium leading-relaxed max-w-sm mt-6 uppercase tracking-wider">
+                        <p className="text-[12px] text-gray-700 font-medium leading-relaxed max-w-sm mt-6 uppercase tracking-wider">
                             Exclusive protocols for verified archivists and global acquisition partners. Catalogy history through direct registry access.
                         </p>
                     </div>
@@ -85,7 +85,7 @@ const PromoPopup = () => {
                     {/* Floating Close Trigger */}
                     <button 
                         onClick={closePopup}
-                        className="absolute top-6 right-6 h-8 w-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-400 hover:bg-black hover:text-white transition-all duration-300"
+                        className="absolute top-6 right-6 h-8 w-8 flex items-center justify-center rounded-full bg-gray-50 text-gray-700 hover:bg-black hover:text-white transition-all duration-300"
                     >
                         <X size={16} />
                     </button>
@@ -125,7 +125,7 @@ const PromoPopup = () => {
                     <item.icon size={18} className='group-hover:text-white' />
                 </div>
                 <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-[#D4AF37] transition-colors">{item.label}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-gray-700 group-hover:text-[#D4AF37] transition-colors">{item.label}</p>
                     <p className="text-[12px] font-bold text-black uppercase tracking-tight group-hover:text-white transition-colors">{item.value}</p>
                 </div>
             </div>

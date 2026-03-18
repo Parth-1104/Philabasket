@@ -1,69 +1,66 @@
-
-import React, { useRef } from 'react'
-import Hero from '../components/Hero'
-import LatestCollection from '../components/LatestCollection'
-import BestSeller from '../components/BestSeller'
-import OurPolicy from '../components/OurPolicy'
-import NewsletterBox from '../components/NewsletterBox'
-import NewHero from '../components/NewHero'
-import Banner from '../components/Banner'
+import React, { useRef } from "react";
+import Hero from "../components/Hero";
+import LatestCollection from "../components/LatestCollection";
+import BestSeller from "../components/BestSeller";
+import OurPolicy from "../components/OurPolicy";
+import NewsletterBox from "../components/NewsletterBox";
+import NewHero from "../components/NewHero";
+import Banner from "../components/Banner";
 // import FeaturedCategories from '../components/FeaturedCategory'
-import Testimonials from '../components/Testimonila'
-import StampCategoryScroll from '../components/StampCategoryScroll'
-import FeaturedProducts from '../components/FeaturedProducts'
-import PromoPopup from '../components/Popup'
-import BlogRegistry from '../components/BlogRegistry'
-import HorizontalRegistry from '../components/HorizontalRegistry'
+import Testimonials from "../components/Testimonila";
+import StampCategoryScroll from "../components/StampCategoryScroll";
+import FeaturedProducts from "../components/FeaturedProducts";
+import PromoPopup from "../components/Popup";
+import BlogRegistry from "../components/BlogRegistry";
+import HorizontalRegistry from "../components/HorizontalRegistry";
+import ShopByCountry from "../components/ShobByCountry";
 
 const Home = () => {
   const latestCollectionRef = useRef(null);
   const scrollToCollection = () => {
-    latestCollectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+    latestCollectionRef.current?.scrollIntoView({ behavior: "smooth" });
   };
   return (
-    <div className='bg-white'>
-
-      <PromoPopup/>
+    <div className="bg-white">
+      <PromoPopup />
       {/* 1. THE HOOK: High-impact emotional entrance */}
       {/* <NewHero scrollHandler={scrollToCollection} /> */}
-      <Banner scrollHandler={scrollToCollection}/>
+      <Banner scrollHandler={scrollToCollection} />
 
-      <StampCategoryScroll/>
-
-      <FeaturedProducts/>
-
-
-      <HorizontalRegistry/>
-
-      {/* 2. THE DISCOVERY: What is new in the archive today */}
+      <StampCategoryScroll />
       <div ref={latestCollectionRef}>
-        <LatestCollection/>
+        <LatestCollection />
       </div>
 
+      <FeaturedProducts />
       <BestSeller />
+      
+      {/* 2. ShopByCountry placement: Moved outside the grid for proper full-width display */}
+      <div className=" border-t border-gray-100 ">
+        <ShopByCountry />
+      </div>
 
+      <HorizontalRegistry />
 
+      {/* 2. THE DISCOVERY: What is new in the archive today */}
 
       <NewsletterBox />
 
-      <BlogRegistry/>
+      <BlogRegistry />
 
-
-      <Testimonials/>
-
+      <Testimonials />
 
       {/* 3. THE PALATE CLEANSER: Breaks the grid pattern and builds authority/trust 
           This is essential to separate the two different product sections. */}
-      <OurPolicy/>
+      <OurPolicy />
 
       {/* 4. THE VALIDATION: High-value, most-wanted specimens 
           Placing this after Policy makes the BestSellers feel more 'verified'. */}
       {/* <BestSeller/> */}
 
       {/* 5. THE CLOSURE: Inviting them into the long-term community */}
-      
     </div>
-  )
-}
+  );
+};
 
-export default Home
+export default Home;

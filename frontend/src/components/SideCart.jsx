@@ -60,7 +60,7 @@ const SideCart = () => {
                                                 </p>
                                                 <button 
                                                     onClick={() => updateQuantity(id, 0)}
-                                                    className='mt-2 text-[9px] uppercase font-black text-gray-400 hover:text-red-600 flex items-center gap-1'
+                                                    className='mt-2 text-[9px] uppercase font-black text-gray-700 hover:text-red-600 flex items-center gap-1'
                                                 >
                                                     <Trash2 size={10} /> Remove
                                                 </button>
@@ -75,7 +75,7 @@ const SideCart = () => {
                     {/* Footer / Subtotal */}
                     <div className='p-8 bg-gray-50 border-t border-gray-100'>
                         <div className='flex justify-between items-center mb-6'>
-                            <p className='text-[10px] font-black uppercase tracking-widest text-gray-400'>Subtotal:</p>
+                            <p className='text-[10px] font-black uppercase tracking-widest text-gray-700'>Subtotal:</p>
                             <p className='text-xl font-black text-black'>{valuationSymbol}{formatPrice(getCartAmount())}</p>
                         </div>
                         

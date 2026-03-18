@@ -23,7 +23,7 @@ const referralLink = `${window.location.protocol}//${window.location.host}/login
         return (
             <div className='min-h-screen flex flex-col items-center justify-center bg-[#FCF9F4] text-center px-6'>
                 <h2 className='text-black font-serif text-3xl mb-4 italic'>Collector's Invitation Required</h2>
-                <p className='text-gray-400 text-[10px] uppercase tracking-[0.4em] mb-8'>Identity Verification Necessary for Lineage Access</p>
+                <p className='text-gray-700 text-[10px] uppercase tracking-[0.4em] mb-8'>Identity Verification Necessary for Lineage Access</p>
                 <button onClick={() => navigate('/login')} className='bg-black text-white px-12 py-4 text-[10px] font-black tracking-[0.5em] uppercase hover:bg-[#BC002D] transition-all shadow-xl'>
                     Initialize Access
                 </button>
@@ -54,7 +54,7 @@ const referralLink = `${window.location.protocol}//${window.location.host}/login
                 <h2 className='text-4xl md:text-7xl font-serif mb-6 tracking-tighter'>
                     Expand the <span className='italic font-light text-[#BC002D]'>Lineage.</span>
                 </h2>
-                <p className='text-gray-400 max-w-2xl mx-auto text-xs font-bold uppercase tracking-[0.2em] leading-relaxed'>
+                <p className='text-gray-700 max-w-2xl mx-auto text-xs font-bold uppercase tracking-[0.2em] leading-relaxed'>
                     Invite distinguished collectors to the archive. Earn 50 PTS per verified acquisition.
                 </p>
             </div>
@@ -70,12 +70,12 @@ const referralLink = `${window.location.protocol}//${window.location.host}/login
                         <h3 className='text-black font-serif text-2xl mb-8 tracking-tight'>Registry Credentials</h3>
                         <div className='space-y-6'>
                             <div className='bg-[#F9F9F9] border border-black/5 p-6 flex flex-col gap-2 rounded-sm'>
-                                <p className='text-[9px] text-gray-400 uppercase tracking-[0.4em] font-black'>Unique Registry Code</p>
+                                <p className='text-[9px] text-gray-700 uppercase tracking-[0.4em] font-black'>Unique Registry Code</p>
                                 <p className='text-3xl font-mono text-[#BC002D] tracking-[0.2em] font-black'>{referralCode}</p>
                             </div>
                             
                             <div className='relative'>
-                                <p className='text-[9px] text-gray-400 uppercase tracking-[0.4em] mb-3 font-black'>Digital Summons Link</p>
+                                <p className='text-[9px] text-gray-700 uppercase tracking-[0.4em] mb-3 font-black'>Digital Summons Link</p>
                                 <div className='bg-[#F9F9F9] border border-black/5 p-6 pr-32 truncate text-[10px] text-black/40 font-black uppercase tracking-widest'>
                                     {referralLink}
                                 </div>
@@ -97,7 +97,7 @@ const referralLink = `${window.location.protocol}//${window.location.host}/login
                                 <span className='text-[#BC002D] font-serif text-3xl opacity-20 group-hover:opacity-100 transition-opacity'>01.</span>
                                 <div>
                                     <p className='text-[10px] text-black font-black uppercase tracking-[0.3em] mb-2'>Issue Summons</p>
-                                    <p className='text-[10px] text-gray-400 font-bold leading-relaxed uppercase tracking-widest'>Share your unique link with fellow philatelists to begin their registry entry.</p>
+                                    <p className='text-[10px] text-gray-700 font-bold leading-relaxed uppercase tracking-widest'>Share your unique link with fellow philatelists to begin their registry entry.</p>
                                 </div>
                             </div>
                             
@@ -105,7 +105,7 @@ const referralLink = `${window.location.protocol}//${window.location.host}/login
                                 <span className='text-[#BC002D] font-serif text-3xl opacity-20 group-hover:opacity-100 transition-opacity'>02.</span>
                                 <div>
                                     <p className='text-[10px] text-black font-black uppercase tracking-[0.3em] mb-2'>First Acquisition</p>
-                                    <p className='text-[10px] text-gray-400 font-bold leading-relaxed uppercase tracking-widest'>Upon their first successful specimen acquisition, your vault will be credited with 500 PTS.</p>
+                                    <p className='text-[10px] text-gray-700 font-bold leading-relaxed uppercase tracking-widest'>Upon their first successful specimen acquisition, your vault will be credited with 500 PTS.</p>
                                 </div>
                             </div>
                         </div>

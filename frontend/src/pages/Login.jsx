@@ -141,7 +141,7 @@ useEffect(() => {
           <form onSubmit={onSubmitHandler} className="flex flex-col gap-6">
             {currentState === 'Sign Up' && (
               <div className="flex flex-col gap-2">
-                <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Full Name</label>
+                <label className="text-[9px] font-black text-gray-700 uppercase tracking-widest ml-1">Full Name</label>
                 <input onChange={(e) => setName(e.target.value)} value={name} type="text" className="w-full px-5 py-4 rounded-sm bg-[#F9F9F9] border border-black/5 focus:bg-white focus:border-[#BC002D]/30 outline-none transition-all text-sm" placeholder="Collector Name" required />
               </div>
             )}
@@ -154,7 +154,7 @@ useEffect(() => {
             {currentState !== 'Reset Password' && (
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center px-1">
-                  <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Access Key</label>
+                  <label className="text-[9px] font-black text-gray-700 uppercase tracking-widest">Access Key</label>
                   {currentState === 'Login' && (
                     <span onClick={() => setCurrentState('Reset Password')} className="text-[9px] text-[#BC002D] hover:underline cursor-pointer transition-colors uppercase font-bold tracking-widest">Forgot password?</span>
                   )}
@@ -197,11 +197,11 @@ useEffect(() => {
           {/* Form Footer */}
           <div className="mt-12 text-center">
             {currentState === 'Login' ? (
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest">
+              <p className="text-[10px] text-gray-700 uppercase tracking-widest">
                 New Collector? <span onClick={() => setCurrentState('Sign Up')} className="text-black font-black cursor-pointer hover:text-[#BC002D] transition-all">Create Registry Entry</span>
               </p>
             ) : (
-              <p className="text-[10px] text-gray-400 uppercase tracking-widest">
+              <p className="text-[10px] text-gray-700 uppercase tracking-widest">
                 Existing Member? <span onClick={() => setCurrentState('Login')} className="text-black font-black cursor-pointer hover:text-[#BC002D] transition-all">Return to Archive</span>
               </p>
             )}

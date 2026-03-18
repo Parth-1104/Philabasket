@@ -71,7 +71,7 @@ const ChatBot = () => {
                             </div>
                             <div>
                                 <p className="text-[10px] font-black uppercase tracking-[0.2em]">Archival Assistant</p>
-                                <p className="text-[7px] text-gray-400 uppercase tracking-widest mt-0.5">Sovereign Registry AI</p>
+                                <p className="text-[7px] text-gray-700 uppercase tracking-widest mt-0.5">Sovereign Registry AI</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
@@ -80,7 +80,7 @@ const ChatBot = () => {
                                 <MessageCircle size={16} />
                              </a>
                              <button onClick={() => setIsOpen(false)} className="hover:rotate-90 transition-transform duration-300">
-                                <X size={20} className="text-gray-400 hover:text-white" />
+                                <X size={20} className="text-gray-700 hover:text-white" />
                              </button>
                         </div>
                     </div>
@@ -100,7 +100,7 @@ const ChatBot = () => {
 
                         {/* Community Link "Quick Actions" */}
                         <div className="pt-2">
-                            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2">Protocol Extensions</p>
+                            <p className="text-[8px] font-black uppercase tracking-[0.2em] text-gray-700 mb-2">Protocol Extensions</p>
                             <div className="flex gap-2">
                                 <a 
                                     href={WHATSAPP_LINK} 
@@ -124,7 +124,7 @@ const ChatBot = () => {
                         {loading && (
                             <div className="flex items-center gap-2 pt-2">
                                 <div className="w-1.5 h-1.5 bg-[#BC002D] rounded-full animate-bounce"></div>
-                                <span className="text-[9px] font-black uppercase text-gray-400 tracking-widest">Consulting Registry...</span>
+                                <span className="text-[9px] font-black uppercase text-gray-700 tracking-widest">Consulting Registry...</span>
                             </div>
                         )}
                         <div ref={chatEndRef} />
@@ -137,7 +137,7 @@ const ChatBot = () => {
                             onChange={(e) => setInput(e.target.value)} 
                             onKeyPress={(e) => e.key === 'Enter' && handleSend()} 
                             placeholder="Ask about a specimen..." 
-                            className="flex-1 bg-gray-50 border border-gray-100 px-4 py-3 rounded-xl text-sm text-black placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-[#BC002D]/10 transition-all"
+                            className="flex-1 bg-gray-50 border border-gray-100 px-4 py-3 rounded-xl text-sm text-black placeholder:text-gray-700 outline-none focus:ring-2 focus:ring-[#BC002D]/10 transition-all"
                         />
                         <button 
                             onClick={handleSend} 

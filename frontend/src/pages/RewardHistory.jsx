@@ -41,7 +41,7 @@ const RewardHistory = () => {
                             </div>
                             <div>
                                 <p className='text-xs font-bold text-gray-900'>{item.title}</p>
-                                <p className='text-[9px] text-gray-400 font-bold uppercase tracking-tighter'>
+                                <p className='text-[9px] text-gray-700 font-bold uppercase tracking-tighter'>
                                     {new Date(item.createdAt).toLocaleDateString()} • {item.description}
                                 </p>
                             </div>

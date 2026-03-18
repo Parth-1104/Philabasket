@@ -30,7 +30,7 @@ const Shipping = () => {
                 <h2 className='text-4xl md:text-5xl font-bold text-gray-800 tracking-tighter uppercase mb-2'>
                     SHIPPING <span className='text-[#BC002D]'>& RETURNS</span>
                 </h2>
-                <p className='text-[10px] tracking-[0.4em] text-gray-400 uppercase font-black'>Logistic Protocols & Acquisition Policy</p>
+                <p className='text-[10px] tracking-[0.4em] text-gray-700 uppercase font-black'>Logistic Protocols & Acquisition Policy</p>
             </div>
 
             <div className='max-w-5xl mx-auto space-y-20'>
@@ -82,10 +82,10 @@ const Shipping = () => {
                             <div className='space-y-8'>
                                 <div>
                                     <div className='flex justify-between items-end'>
-                                        <p className='text-[9px] font-black uppercase text-gray-400'>Standard / Registered Post</p>
+                                        <p className='text-[9px] font-black uppercase text-gray-700'>Standard / Registered Post</p>
                                         <p className='text-3xl font-black tracking-tighter'>₹{fees?.indiaFee || 49}</p>
                                     </div>
-                                    <p className='text-[10px] text-gray-400 mt-2 font-bold italic'>*Expected within 5-7  working days from dispatch</p>
+                                    <p className='text-[10px] text-gray-700 mt-2 font-bold italic'>*Expected within 5-7  working days from dispatch</p>
                                 </div>
                                 {fees?.isIndiaFastActive && (
                                     <div className='pt-6 border-t border-gray-50'>
@@ -93,7 +93,7 @@ const Shipping = () => {
                                             <p className='text-[9px] font-black uppercase text-[#BC002D] flex items-center gap-1'><Zap size={10} fill="#BC002D"/> Speed Post (Priority)</p>
                                             <p className='text-3xl font-black tracking-tighter'>₹{fees?.indiaFeeFast || 99}</p>
                                         </div>
-                                        <p className='text-[10px] text-gray-400 mt-2 font-bold italic'>*Expected within 2-5 working days from dispatch</p>
+                                        <p className='text-[10px] text-gray-700 mt-2 font-bold italic'>*Expected within 2-5 working days from dispatch</p>
                                     </div>
                                 )}
                             </div>
@@ -123,7 +123,7 @@ const Shipping = () => {
 
                         </div>
                         <div className='border-t border-gray-100 pt-10 text-center md:text-left'>
-                    <p className='text-[10px] text-gray-400 font-bold uppercase italic leading-loose'>
+                    <p className='text-[10px] text-gray-700 font-bold uppercase italic leading-loose'>
                         Note: *The time of delivery may vary. Since we have no control / authority over the shipping company that is India Post (Indian Postal Department, Government of India).
                     </p>
                 </div>
@@ -144,7 +144,7 @@ const Shipping = () => {
                         
                         <div className='grid grid-cols-1 md:grid-cols-2 gap-10 items-start'>
                             <div className='space-y-4'>
-                                <h4 className='text-[10px] font-black uppercase text-gray-400 tracking-widest'>Security & Integrity</h4>
+                                <h4 className='text-[10px] font-black uppercase text-gray-700 tracking-widest'>Security & Integrity</h4>
                                 <p className='text-sm text-gray-500'>We cannot take responsibility for theft of materials in transit. But items are sent by India Post which is secure and reliable. PhilaBasket have never come across any loss / theft of stamps in 1000+ deliveries.</p>
                             </div>
                             <div className='bg-white p-6 border border-gray-100 shadow-sm rounded-sm'>
@@ -160,7 +160,7 @@ const Shipping = () => {
                                     <span className='text-xs font-bold text-gray-700'>International Buyers</span>
                                     <span className='text-xs font-black text-[#BC002D]'>12.5% Premium</span>
                                 </div>
-                                <p className='text-[9px] text-gray-400 mt-4 leading-relaxed font-bold uppercase'>Charges applied on total invoice amount. Deposited via Bank or PayPal.</p>
+                                <p className='text-[9px] text-gray-700 mt-4 leading-relaxed font-bold uppercase'>Charges applied on total invoice amount. Deposited via Bank or PayPal.</p>
                             </div>
                         </div>
                     </div>
@@ -185,7 +185,7 @@ const Shipping = () => {
                             <div className='p-6 border border-gray-100 rounded-sm'>
                                 <Mail size={18} className='text-[#BC002D] mb-4' />
                                 <h5 className='text-[10px] font-black uppercase tracking-widest mb-3'>To Initiate Refund</h5>
-                                <p className='text-[11px] font-bold text-gray-400 uppercase'>Email: admin@philabasket.com</p>
+                                <p className='text-[11px] font-bold text-gray-700 uppercase'>Email: admin@philabasket.com</p>
                             </div>
                             <div className='p-6 border border-gray-100 rounded-sm md:col-span-2'>
                                 <h5 className='text-[10px] font-black uppercase tracking-widest mb-3'>Calculation Protocol</h5>

@@ -108,7 +108,7 @@ const Testimonials = () => {
                       </div>
 
                       <div className='text-right'>
-                          <p className='text-[9px] font-black text-gray-400 uppercase tracking-tighter'>
+                          <p className='text-[9px] font-black text-gray-700 uppercase tracking-tighter'>
                               {review.date ? new Date(review.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'March 2026'}
                           </p>
                       </div>

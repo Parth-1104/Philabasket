@@ -95,7 +95,7 @@ const Profile = () => {
         <div className='px-6 md:px-16 lg:px-24 py-16 bg-[#FCF9F4] min-h-screen font-sans'>
             <div className='mb-12'>
                 <h2 className='text-4xl font-black uppercase tracking-tighter text-black'>Account Archive</h2>
-                <p className='text-[10px] text-gray-400 tracking-[0.3em] uppercase mt-2 font-black'>Collector Identity & Logistics</p>
+                <p className='text-[10px] text-gray-700 tracking-[0.3em] uppercase mt-2 font-black'>Collector Identity & Logistics</p>
             </div>
 
             <div className='grid grid-cols-1 lg:grid-cols-3 gap-12'>
@@ -121,7 +121,7 @@ const Profile = () => {
         {/* --- TIER ACTION BUTTON --- */}
         <button 
             onClick={() => setShowTierBenefits(true)}
-            className='relative z-20 w-full mb-8 flex items-center justify-center gap-2 py-2.5 border border-white/5 hover:border-white/20 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 hover:text-white transition-all bg-white/5 backdrop-blur-sm group'
+            className='relative z-20 w-full mb-8 flex items-center justify-center gap-2 py-2.5 border border-white/5 hover:border-white/20 rounded-lg text-[9px] font-black uppercase tracking-[0.2em] text-gray-700 hover:text-white transition-all bg-white/5 backdrop-blur-sm group'
         >
             <Zap size={14} className={`transition-transform group-hover:scale-125 ${
                 userData?.tier === 'Platinum' ? 'text-cyan-400' : 
@@ -143,7 +143,7 @@ const Profile = () => {
                 <div className='absolute -bottom-1 -right-1 bg-[#121212] p-2 rounded-full border border-white/10 shadow-xl'>
                     <Award size={14} className={
                         userData?.tier === 'Platinum' ? 'text-cyan-400' : 
-                        userData?.tier === 'Gold' ? 'text-amber-400' : 'text-gray-400'
+                        userData?.tier === 'Gold' ? 'text-amber-400' : 'text-gray-700'
                     } />
                 </div>
             </div>
@@ -156,7 +156,7 @@ const Profile = () => {
                     <span className={`px-4 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border transition-colors duration-700 ${
                         userData?.tier === 'Platinum' ? 'bg-cyan-500/10 border-cyan-500/40 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.1)]' : 
                         userData?.tier === 'Gold' ? 'bg-amber-500/10 border-amber-500/40 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.1)]' : 
-                        'bg-white/5 border-white/10 text-gray-400'
+                        'bg-white/5 border-white/10 text-gray-700'
                     }`}>
                         {userData?.tier || 'Silver'} Registry
                     </span>
@@ -213,7 +213,7 @@ const Profile = () => {
                 <div className="relative group/tooltip">
     <button 
         onClick={() => navigate('/rewards')}
-        className='h-12 w-12 bg-white/5 hover:bg-[#BC002D] hover:text-white text-gray-400 transition-all rounded-full flex items-center justify-center border border-white/10 group'
+        className='h-12 w-12 bg-white/5 hover:bg-[#BC002D] hover:text-white text-gray-700 transition-all rounded-full flex items-center justify-center border border-white/10 group'
     >
         <History size={18} className="group-hover:rotate-[-45deg] transition-transform" />
     </button>
@@ -276,7 +276,7 @@ const Profile = () => {
 
                         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                             <div className='md:col-span-2'>
-                                <p className='text-[9px] uppercase font-bold text-gray-400 mb-2 ml-1'>Street & Landmark</p>
+                                <p className='text-[9px] uppercase font-bold text-gray-700 mb-2 ml-1'>Street & Landmark</p>
                                 <input 
                                     value={address.street} 
                                     onChange={(e)=>setAddress({...address, street: e.target.value})} 
@@ -285,7 +285,7 @@ const Profile = () => {
                                 />
                             </div>
                             <div className='md:col-span-2'>
-    <p className='text-[9px] uppercase font-bold text-gray-400 mb-2 ml-1'>Area / Landmark (Line 2)</p>
+    <p className='text-[9px] uppercase font-bold text-gray-700 mb-2 ml-1'>Area / Landmark (Line 2)</p>
     <input 
         value={address.street2} 
         onChange={(e)=>setAddress({...address, street2: e.target.value})} 
@@ -296,7 +296,7 @@ const Profile = () => {
 
 {/* --- Country Selection --- */}
 <div className='md:col-span-2'>
-    <p className='text-[9px] uppercase font-bold text-gray-400 mb-2 ml-1'>Country / Region</p>
+    <p className='text-[9px] uppercase font-bold text-gray-700 mb-2 ml-1'>Country / Region</p>
     <input 
         type="text"
         value={address.country || ''} 
@@ -307,7 +307,7 @@ const Profile = () => {
 </div>
 
                             <div className='relative'>
-                                <p className='text-[9px] uppercase font-bold text-gray-400 mb-2 ml-1'>Postal Pincode</p>
+                                <p className='text-[9px] uppercase font-bold text-gray-700 mb-2 ml-1'>Postal Pincode</p>
                                 <input 
                                     value={address.zipCode} 
                                     onChange={handlePincodeChange} 
@@ -319,7 +319,7 @@ const Profile = () => {
                             </div>
 
                             <div>
-                                <p className='text-[9px] uppercase font-bold text-gray-400 mb-2 ml-1'>Contact Number</p>
+                                <p className='text-[9px] uppercase font-bold text-gray-700 mb-2 ml-1'>Contact Number</p>
                                 <input 
                                     value={address.phone} 
                                     onChange={(e)=>setAddress({...address, phone: e.target.value})} 
@@ -330,7 +330,7 @@ const Profile = () => {
                             </div>
 
                             <div>
-                                <p className='text-[9px] uppercase font-bold text-gray-400 mb-2 ml-1'>City (Verified)</p>
+                                <p className='text-[9px] uppercase font-bold text-gray-700 mb-2 ml-1'>City (Verified)</p>
                                 <input 
                                     readOnly 
                                     value={address.city} 
@@ -340,7 +340,7 @@ const Profile = () => {
                             </div>
 
                             <div>
-                                <p className='text-[9px] uppercase font-bold text-gray-400 mb-2 ml-1'>State (Verified)</p>
+                                <p className='text-[9px] uppercase font-bold text-gray-700 mb-2 ml-1'>State (Verified)</p>
                                 <input 
                                     readOnly 
                                     value={address.state} 
@@ -371,7 +371,7 @@ const Profile = () => {
         <div className='bg-white w-full max-w-2xl relative z-10 p-8 rounded-sm shadow-2xl animate-in zoom-in duration-300'>
             <div className='flex justify-between items-center mb-8 border-b pb-4'>
                 <h3 className='font-black uppercase tracking-widest text-sm text-black'>Collector Privilege Protocol</h3>
-                <X className='cursor-pointer text-gray-400 hover:text-black' onClick={() => setShowTierBenefits(false)} />
+                <X className='cursor-pointer text-gray-700 hover:text-black' onClick={() => setShowTierBenefits(false)} />
             </div>
 
             <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>

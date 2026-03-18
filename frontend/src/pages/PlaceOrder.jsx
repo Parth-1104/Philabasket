@@ -492,7 +492,7 @@ const onSubmitHandler = async (e) => {
                     
                     <div className='space-y-4'>
                         <div className='space-y-1.5'>
-                            <p className='text-[9px] font-black uppercase text-gray-400 ml-1'>Acquisition Region</p>
+                            <p className='text-[9px] font-black uppercase text-gray-700 ml-1'>Acquisition Region</p>
                             <select required value={formData.country} onChange={handleCountryChange} className='w-full bg-white border border-gray-100 py-3.5 px-4 text-xs outline-none focus:border-[#BC002D] rounded-sm'>
                                 {countries.map(c => <option key={c.code} value={c.name}>{c.name}</option>)}
                             </select>
@@ -507,7 +507,7 @@ const onSubmitHandler = async (e) => {
 
                         <div className='flex flex-col gap-1'>
                             <div className='flex gap-2'>
-                                <div className='w-16 bg-gray-50 border border-gray-100 flex items-center justify-center text-[10px] font-black text-gray-400 rounded-sm italic'>
+                                <div className='w-16 bg-gray-50 border border-gray-100 flex items-center justify-center text-[10px] font-black text-gray-700 rounded-sm italic'>
                                     {formData.countryCode}
                                 </div>
                                 <input 
@@ -548,13 +548,13 @@ const onSubmitHandler = async (e) => {
                                 <div className={`w-3.5 h-3.5 border flex items-center justify-center transition-all ${sameAsShipping ? 'bg-black border-black' : 'border-gray-300'}`}>
                                     {sameAsShipping && <CheckCircle size={10} className='text-white' />}
                                 </div>
-                                <span className='text-[9px] font-black uppercase text-gray-400'>Same as Shipping</span>
+                                <span className='text-[9px] font-black uppercase text-gray-700'>Same as Shipping</span>
                             </div>
                         </div>
                         {!sameAsShipping && (
     <div className='space-y-4 animate-fade-in'>
         <div className='space-y-1.5'>
-            <p className='text-[9px] font-black uppercase text-gray-400 ml-1'>Billing Region</p>
+            <p className='text-[9px] font-black uppercase text-gray-700 ml-1'>Billing Region</p>
             <select 
                 required 
                 value={billingData.country} 
@@ -574,7 +574,7 @@ const onSubmitHandler = async (e) => {
 
         <div className='flex flex-col gap-1'>
             <div className='flex gap-2'>
-                <div className='w-16 bg-gray-50 border border-gray-100 flex items-center justify-center text-[10px] font-black text-gray-400 rounded-sm italic'>
+                <div className='w-16 bg-gray-50 border border-gray-100 flex items-center justify-center text-[10px] font-black text-gray-700 rounded-sm italic'>
                     {billingData.countryCode || formData.countryCode} 
                 </div>
                 <input 
@@ -637,7 +637,7 @@ const onSubmitHandler = async (e) => {
                                 <div className='w-12 h-12 bg-gray-50 flex-shrink-0'><img src={item.image[0]} className='w-full h-full object-contain p-1' alt="" /></div>
                                 <div className='flex-1 min-w-0'>
                                     <p className='text-[10px] font-black uppercase truncate'>{item.name}</p>
-                                    <p className='text-[9px] text-gray-400 font-bold'>QTY: {cartItems[item._id]}</p>
+                                    <p className='text-[9px] text-gray-700 font-bold'>QTY: {cartItems[item._id]}</p>
                                 </div>
                                 <p className='text-[11px] font-black'>₹{item.price}</p>
                             </div>
@@ -700,7 +700,7 @@ const onSubmitHandler = async (e) => {
     )}
 
     <div className='flex justify-between pt-4 border-t border-black'>
-        <p className='text-[10px] font-black uppercase text-gray-400'>Final Total</p>
+        <p className='text-[10px] font-black uppercase text-gray-700'>Final Total</p>
         <p className='text-lg font-black text-[#BC002D]'>
             <span className='text-[12px] mr-0.5'>{symbol}</span>
             {formatPrice(calculation.totalPayable)}
@@ -712,7 +712,7 @@ const onSubmitHandler = async (e) => {
 
                     <div className='flex items-start gap-3 p-4 bg-white border border-gray-100 mt-4 rounded-sm'>
                         <input required type="checkbox" checked={agreedToTerms} onChange={() => setAgreedToTerms(!agreedToTerms)} className='mt-1 accent-black' />
-                        <p className='text-[9px] text-gray-400 font-bold uppercase leading-relaxed'>I accept the <span onClick={(e) => {e.stopPropagation(); setShowTerms(true)}} className='text-[#BC002D] cursor-pointer underline'>Acquisition Terms</span>.</p>
+                        <p className='text-[9px] text-gray-700 font-bold uppercase leading-relaxed'>I accept the <span onClick={(e) => {e.stopPropagation(); setShowTerms(true)}} className='text-[#BC002D] cursor-pointer underline'>Acquisition Terms</span>.</p>
                     </div>
 
 

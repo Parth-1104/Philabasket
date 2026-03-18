@@ -45,7 +45,7 @@ const FAQ = () => {
                         </div>
                         <div className='bg-gray-50 p-8 rounded-3xl border border-gray-100'>
                             <p className='text-[11px] font-black uppercase tracking-widest text-gray-900 mb-4'>Accepted Gateways:</p>
-                            <div className='flex flex-wrap gap-4 text-[10px] font-bold text-gray-400 uppercase'>
+                            <div className='flex flex-wrap gap-4 text-[10px] font-bold text-gray-700 uppercase'>
                                 <span>Visa / Maestro / Mastercard</span>
                                 <span className='text-gray-200'>|</span>
                                 <span>PayPal</span>
@@ -106,7 +106,7 @@ const FAQ = () => {
                             <div className='w-8 h-8 bg-gray-200 rounded-full'></div>
                             <div>
                                 <p className='text-[9px] font-black text-gray-900 uppercase'>Tushar Chowdhury</p>
-                                <p className='text-[7px] font-bold text-gray-400 uppercase'>Collector</p>
+                                <p className='text-[7px] font-bold text-gray-700 uppercase'>Collector</p>
                             </div>
                          </div>
                     </div>

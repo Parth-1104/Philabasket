@@ -53,7 +53,7 @@ const Wishlist = () => {
                                     toggleWishlist(item._id);
                                     toast.info("Specimen removed from archive");
                                 }}
-                                className='absolute top-4 right-4 z-30 p-2 bg-white/80 backdrop-blur-md rounded-full border border-black/5 text-gray-400 hover:text-[#BC002D] hover:bg-white transition-all shadow-sm'
+                                className='absolute top-4 right-4 z-30 p-2 bg-white/80 backdrop-blur-md rounded-full border border-black/5 text-gray-700 hover:text-[#BC002D] hover:bg-white transition-all shadow-sm'
                                 title="Purge from Archive"
                             >
                                 <Trash2 size={14} />
@@ -81,7 +81,7 @@ const Wishlist = () => {
                     <div className='w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-8 border border-gray-100'>
                         <img src={assets.parcel_icon} className='w-8 opacity-20 grayscale' alt="" />
                     </div>
-                    <p className='text-[11px] tracking-[0.6em] text-gray-400 uppercase font-black'>
+                    <p className='text-[11px] tracking-[0.6em] text-gray-700 uppercase font-black'>
                         Your private vault is currently empty
                     </p>
                     <button 

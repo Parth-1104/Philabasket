@@ -15,7 +15,7 @@ const Hero = ({scrollHandler}) => {
             </div>
 
             {/* Side text - Desktop only */}
-            <p className='hidden lg:block text-[14px] font-black leading-tight text-gray-400 uppercase tracking-[0.3em] text-left w-32'>
+            <p className='hidden lg:block text-[14px] font-black leading-tight text-gray-700 uppercase tracking-[0.3em] text-left w-32'>
                 Explore This Year's <span className='text-[#BC002D] italic'>Exclusive</span> Stamp Releases
             </p>
 
@@ -63,7 +63,7 @@ const Hero = ({scrollHandler}) => {
 
       {/* Attractive Offers Bottom Right - Desktop only */}
       <div className='absolute bottom-[22%] right-10 hidden lg:flex flex-col items-center gap-4 z-50'>
-          <p className='text-[10px] text-gray-400 font-black uppercase tracking-[0.2em] text-right w-32'>
+          <p className='text-[10px] text-gray-700 font-black uppercase tracking-[0.2em] text-right w-32'>
               Acquisition <span className='text-[#BC002D]'>Bonuses</span> for new collectors.
           </p>
           <div 
