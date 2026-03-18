@@ -61,7 +61,11 @@ const HorizontalRegistry = () => {
             if (!isMatch && term !== "") return;
 
             const normalizedName = normalize(cat.name);
-            const item = { name: normalizedName, count: cat.productCount || 0 };
+            const item = { 
+                name: cat.name,        // KEEP ORIGINAL: "BIRD STAMPS"
+                displayName: normalize(cat.name), // FOR UI: "Bird Stamps"
+                count: cat.productCount || 0 
+            };
             const isIndependent = !groupNameRaw || ['general', 'independent', 'none', ''].includes(groupNameLower);
 
             if (isIndependent) {
@@ -91,7 +95,8 @@ const HorizontalRegistry = () => {
             const groupNameLower = groupNameRaw.toLowerCase();
             if (catName.includes(term) || groupNameLower.includes(term)) {
                 results.push({
-                    name: normalize(cat.name),
+                    name: cat.name,        // ORIGINAL
+                    displayName: normalize(cat.name), 
                     group: groupNameRaw ? normalize(groupNameRaw) : null,
                     count: cat.productCount || 0,
                 });
@@ -100,8 +105,14 @@ const HorizontalRegistry = () => {
         return results.sort((a, b) => a.name.localeCompare(b.name));
     }, [dbCategories, searchTerm]);
 
-    const handleCategoryClick = (catName) => {
-        navigate(`/collection?category=${encodeURIComponent(catName)}`, { replace: true });
+    const handleCategoryClick = (rawName) => {
+        // 1. Use the raw database name (e.g., "BIRD STAMPS")
+        // 2. Replace spaces with '+' for the URL
+        const plusFormatted = rawName.replace(/ /g, '+');
+        
+        // 3. Navigate
+        navigate(`/collection?category=${plusFormatted}`, { replace: true });
+        
         window.scrollTo(0, 0);
         setOpenGroup(null);
         setSearchTerm("");
