@@ -59,31 +59,57 @@ const TriviaLeaderboard = ({ token }) => {
                 </td>
               </tr>
             ) : leaderboard.length > 0 ? (
-              leaderboard.map((u) => (
-                <tr key={u._id} className='hover:bg-gray-50/50 transition-colors'>
-                  <td className='p-4'>
-                    <div className='flex flex-col'>
-                      <span className='text-black'>{u.name}</span>
-                      <span className='text-[10px] text-gray-400 lowercase'>{u.email}</span>
-                    </div>
-                  </td>
-                  <td className='p-4'>
-                    <span className='text-amber-600 bg-amber-50 px-2 py-1 rounded-sm'>
-                      {u.triviaScore || 0}
-                    </span>
-                  </td>
-                  <td className='p-4'>
-                    <span className='text-green-600 bg-green-50 px-2 py-1 rounded-sm'>
-                      {u.triviaCoins || 0}
-                    </span>
-                  </td>
-                  <td className='p-4'>
-                    <span className='text-amber-600 bg-amber-50 px-2 py-1 rounded-sm'>
-                      {u.totalRewardPoints || 0}
-                    </span>
-                  </td>
-                </tr>
-              ))
+              leaderboard.map((u) => {
+                const score = u.triviaScore || 0;
+                const handleConvert = async () => {
+                  if (!score) return;
+                  if (!confirm(`Convert ${score} trivia points to ${score} coins?`)) return;
+                  try {
+                    await axios.post(`${backendUrl}/api/user/convert-trivia`, {
+                      userId: u._id,
+                      convertAmount: score,
+                      multiplier: 1
+                    }, { headers: { token } });
+                    toast.success(`Converted ${score} points to ${score} coins`);
+                    fetchLeaderboard();
+                  } catch (error) {
+                    toast.error('Conversion failed');
+                  }
+                };
+                return (
+                  <tr key={u._id} className='hover:bg-gray-50/50 transition-colors'>
+                    <td className='p-4'>
+                      <div className='flex flex-col'>
+                        <span className='text-black'>{u.name}</span>
+                        <span className='text-[10px] text-gray-400 lowercase'>{u.email}</span>
+                      </div>
+                    </td>
+                    <td className='p-4'>
+                      <span className='text-amber-600 bg-amber-50 px-2 py-1 rounded-sm'>
+                        {score}
+                      </span>
+                    </td>
+                    <td className='p-4'>
+                      <span className='text-green-600 bg-green-50 px-2 py-1 rounded-sm'>
+                        {u.triviaCoins || 0}
+                      </span>
+                    </td>
+                    <td className='p-4 flex items-center gap-2'>
+                      <span className='text-amber-600 bg-amber-50 px-2 py-1 rounded-sm'>
+                        {u.totalRewardPoints || 0}
+                      </span>
+                      {score > 0 && (
+                        <button
+                          onClick={handleConvert}
+                          className='px-3 py-1 bg-[#BC002D] text-white text-[10px] font-bold uppercase tracking-wider rounded-sm hover:bg-black transition-all whitespace-nowrap'
+                        >
+                          Convert →
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td colSpan='4' className='p-20 text-center text-gray-400 italic tracking-widest uppercase text-[10px]'>

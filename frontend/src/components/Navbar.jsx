@@ -103,7 +103,7 @@ const Navbar = () => {
                     key={i}
                     to={`/collection?category=${encodeURIComponent(item)}`}
                     onClick={() => setVisible(false)}
-                    className="text-[12px] text-gray-500 hover:text-[#BC002D] hover:translate-x-2 transition-all duration-300 ease-out font-medium flex items-center gap-2 group/item"
+                    className="text-[12px] text-gray-700 hover:text-[#BC002D] hover:translate-x-2 transition-all duration-300 ease-out font-medium flex items-center gap-2 group/item"
                   >
                     {/* SUBTLE HOVER DOT */}
                     <span className="w-0 h-0 bg-[#BC002D] rounded-full group-hover/item:w-1 group-hover/item:h-1 transition-all" />
