@@ -111,8 +111,16 @@ const LatestCollection = () => {
     window.scrollTo(0, 0);
   };
 
-  const handleProductClick = (productId) => {
-    navigate("/collection", { state: { priorityId: productId } });
+  // --- UPDATE THIS FUNCTION ---
+  const handleProductClick = (item) => {
+    // Generate a URL-friendly slug from the product name
+    const slug = item.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+    
+    // Navigate directly to the product detail page using the route: /product/:productId/:slug
+    navigate(`/product/${item._id}/${slug}`);
     window.scrollTo(0, 0);
   };
 
@@ -154,10 +162,10 @@ const LatestCollection = () => {
                 </h2>
               </div>
               <button
-                onClick={() => navigate("/collection")}
+                onClick={() => {navigate("/collection?status=newArrival");window.scroll(0,0)}}
                 className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2 group border-b border-black pb-1 text-[#BC002D] hover:border-[#BC002D] transition-all"
               >
-                Explore All Products{" "}
+                Explore New Products{" "}
                 <ArrowRight
                   size={14}
                   className="group-hover:translate-x-1 transition-transform"
@@ -167,43 +175,34 @@ const LatestCollection = () => {
 
             {/* 1. Grid setup: Removed the extra <div> that was breaking the grid layout */}
             <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-x-4 md:gap-x-6 gap-y-10 md:gap-y-16 items-stretch px-2">
-              {latestProducts.map((item) => (
-                <div key={item._id} className="group relative flex flex-col">
-                  {/* --- THE "NEW" CIRCLE BADGE (Matching your Pick badge style) --- */}
-                  <div className="absolute -top-2 -left-2 z-20 pointer-events-none scale-75 md:scale-90">
-                    <div className="bg-[#bd002d] text-white w-12 h-12 rounded-full flex flex-col items-center justify-center shadow-lg border-2 border-white transform group-hover:rotate-12 transition-all duration-500">
-                      <span className="text-[10px] font-black uppercase tracking-tighter">
-                        New
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* --- THE CARD CONTAINER (Curved edges & Shadow) --- */}
-                  <div className="h-full">
-                    <div
-                      onClick={() => handleProductClick(item._id)}
-                      className="flex flex-col h-full bg-white border border-gray-100 shadow-md cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-xl rounded-br-[40px] md:rounded-br-[50px] overflow-hidden"
-                    >
-                      {/* Image Container with fixed Aspect Ratio to keep grid uniform */}
-                      <div className="p-1 aspect-square bg-[#f8f8f8]">
-                        <div className="w-full h-full flex items-center justify-center rounded-br-[35px] md:rounded-br-[45px] overflow-hidden">
-                          <ProductItem
-                            id={item._id}
-                            _id={item._id}
-                            image={item.image}
-                            name={item.name}
-                            price={item.price}
-                            marketPrice={item.marketPrice}
-                            category={item.category ? item.category[0] : ""}
-                            stock={item.stock}
-                            isPriorityMode={true}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            {latestProducts.map((item) => (
+  <div key={item._id} className="group relative flex flex-col">
+    {/* ... Badge logic ... */}
+    <div className="h-full">
+      <div
+        // CRITICAL FIX: Pass the 'item' object here so the function can access 'item.name' for the slug
+        onClick={() => handleProductClick(item)} 
+        className="flex flex-col h-full bg-white border border-gray-100 shadow-md cursor-pointer transition-all duration-500 hover:-translate-y-2 hover:shadow-xl rounded-br-[40px] md:rounded-br-[50px] overflow-hidden"
+      >
+        <div className="p-1 aspect-square bg-[#f8f8f8]">
+          <div className="w-full h-full flex items-center justify-center rounded-br-[35px] md:rounded-br-[45px] overflow-hidden">
+            <ProductItem
+              id={item._id}
+              _id={item._id}
+              image={item.image}
+              name={item.name}
+              price={item.price}
+              marketPrice={item.marketPrice}
+              category={item.category ? item.category[0] : ""}
+              stock={item.stock}
+              isPriorityMode={true}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+))}
             </div>
 
             {/* <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-5 gap-6 mt-5">

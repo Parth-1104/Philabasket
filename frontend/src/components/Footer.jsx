@@ -106,7 +106,11 @@ const Footer = () => {
               </div>
               <div className="flex flex-wrap gap-x-5 gap-y-4 items-center opacity-100 transition-all duration-500">
                 {/* Visa */}
-
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/Visa_Inc._logo_%282021%E2%80%93present%29.svg/3840px-Visa_Inc._logo_%282021%E2%80%93present%29.svg.png"
+                  className="h-4 w-auto"
+                  alt="Visa"
+                />
                 {/* Mastercard - Fixed missing path */}
                 <img
                   src="https://upload.wikimedia.org/wikipedia/commons/2/2a/Mastercard-logo.svg"
@@ -120,8 +124,14 @@ const Footer = () => {
                   className="h-2.5 w-auto"
                   alt="Razorpay"
                 />
+                {/* UPI */}
+                <img
+                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/UPI-Logo-vector.svg/960px-UPI-Logo-vector.svg.png?_=20200901100648"
+                  className="h-2.5 w-auto"
+                  alt="Razorpay"
+                />
 
-                {/* Stripe */}
+                {/* InstaMojo */}
               </div>
             </div>
           </div>
