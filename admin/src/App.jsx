@@ -28,7 +28,7 @@ import OrderDetail from './pages/OrderDetail'
 import UserDetail from './components/UserDetails'
 import ContactMessages from './pages/ContactUs'
 import TriviaManager from './pages/TriviaManager'
-import TriviaLeaderboard from './pages/TriviaLeaderBoard'
+import TriviaLeaderboard from './pages/TriviaLeaderboard.jsx'
 export const backendUrl = import.meta.env.VITE_BACKEND_URL
 export const frontendUrl = import.meta.env.VITE_FRONTEND_URL;
 export const currency = '$'
