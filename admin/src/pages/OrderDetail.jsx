@@ -46,17 +46,47 @@ const OrderDetail = ({ token }) => {
   const [isSavingItems, setIsSavingItems] = useState(false);
 
 
-  const downloadInvoice = (order) => {
+  const downloadInvoice = async (order) => {
     try {
       const doc = new jsPDF();
       const brandColor = [188, 0, 45]; // Phila Basket Red
       const textColor = [40, 40, 40];
+
+      const logoUrl = '/Logo-5.png'; 
+  
+    const addImageFromUrl = (url) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        // Since it's a local public file, Anonymous usually isn't 
+        // strictly required but good practice for consistency
+        img.crossOrigin = "Anonymous"; 
+        img.src = url;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+          resolve(canvas.toDataURL("image/png"));
+        };
+        img.onerror = () => reject(new Error("Could not load logo from public folder"));
+      });
+    };
+
+    // Load and add the logo
+    const logoBase64 = await addImageFromUrl(logoUrl);
+    // Adjusted size to 35x12mm for a cleaner look
+    doc.addImage(logoBase64, 'PNG', 14, 10, 15, 12); 
+
+    // --- 2. HEADER SECTION (Adjusted Y-coordinates to follow logo) ---
+    // Start text lower to avoid overlapping with the logo at Y=10
+    let textY = 40;
   
       // --- 1. HEADER SECTION ---
-      doc.setTextColor(brandColor[0], brandColor[1], brandColor[2]);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(22);
-      doc.text("Phila Basket", 14, 20);
+      // doc.setTextColor(brandColor[0], brandColor[1], brandColor[2]);
+      // doc.setFont("helvetica", "bold");
+      // doc.setFontSize(22);
+      // doc.text("Phila Basket", 14, 20);
       
       doc.setTextColor(textColor[0], textColor[1], textColor[2]);
       doc.setFontSize(8);
