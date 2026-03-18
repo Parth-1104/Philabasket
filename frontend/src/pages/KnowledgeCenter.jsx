@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { BookOpen, Award, Search, Lightbulb, ChevronRight, ChevronLeft, ChevronDown } from 'lucide-react';
+import { BookOpen, Award, Search, Lightbulb, ChevronRight, ChevronLeft, ChevronDown, BarChart3 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import Title from '../components/Title';
 import axios from 'axios';
 import { ShopContext } from '../context/ShopContext';
@@ -16,6 +17,11 @@ const KnowledgeCenter = () => {
     const [answeredQuestions, setAnsweredQuestions] = useState(new Set());
     const [presentationSlide, setPresentationSlide] = useState(1);
     const [presentationAutoPlay, setPresentationAutoPlay] = useState(true);
+    const [poll, setPoll] = useState(null);
+    const [selectedOption, setSelectedOption] = useState(null);
+    const [hasVoted, setHasVoted] = useState(false);
+    const [voting, setVoting] = useState(false);
+
 
     // Fetch Trivia Data
     useEffect(() => {
@@ -61,7 +67,24 @@ const KnowledgeCenter = () => {
         fetchTrivia();
         fetchLeaderboard();
         fetchPresentation();
-    }, []);
+
+        // Fetch Poll
+        const fetchPoll = async () => {
+            try {
+                const response = await axios.get(backendUrl + '/api/poll/list');
+                if (response.data.success && response.data.poll) {
+                    setPoll(response.data.poll);
+                    // Check if user has voted
+                    if (userData && response.data.poll.votedUsers.includes(userData._id)) {
+                        setHasVoted(true);
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to fetch poll:", error);
+            }
+        };
+        fetchPoll();
+    }, [userData]); // Add userData dependency
 
     // Load answered questions from localStorage when userData is available
     useEffect(() => {
@@ -334,6 +357,106 @@ const KnowledgeCenter = () => {
                             <div className='absolute -right-20 -bottom-20 w-64 h-64 bg-[#BC002D]/20 blur-[100px]'></div>
                         </section>
                     )}
+                    {/* POLL SECTION */}
+                    
+                    {poll && (
+                        <section className='bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[40px] p-10 text-white relative overflow-hidden'>
+                            <div className='relative z-10'>
+                                <h3 className='text-2xl font-bold uppercase tracking-tighter mb-2'>Community Poll</h3>
+                                <p className='text-gray-200 text-sm max-w-md font-sans mb-6'>{poll.title}</p>
+                                
+                                <div className='bg-white/10 border border-white/20 rounded-2xl p-8 backdrop-blur-sm space-y-4'>
+                                    <p className='text-lg font-bold mb-6'>{poll.question}</p>
+                                    
+                                    {poll.options.map((option, index) => {
+                                        const isSelected = selectedOption === index;
+                                        const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
+                                        const percentage = totalVotes > 0 ? ((option.votes / totalVotes) * 100).toFixed(1) : 0;
+                                        
+                                        return (
+                                            <div key={index}>
+                                                {!hasVoted && !voting ? (
+                                                    <button
+                                                        onClick={() => setSelectedOption(index)}
+                                                        className={`w-full text-left p-4 rounded-xl border transition-all mb-2 ${
+                                                            isSelected 
+                                                                ? 'bg-white/20 border-white' 
+                                                                : 'bg-white/10 border-white/20 hover:bg-white/20'
+                                                        }`}
+                                                    >
+                                                        <div className='flex items-center gap-3'>
+                                                            <span className='font-bold w-6'>{String.fromCharCode(65 + index)}.</span>
+                                                            <span>{option.text}</span>
+                                                        </div>
+                                                    </button>
+                                                ) : (
+                                                    <div className='flex items-center justify-between p-4 bg-white/20 rounded-xl'>
+                                                        <div className='flex items-center gap-3'>
+                                                            <span className='font-bold w-6'>{String.fromCharCode(65 + index)}.</span>
+                                                            <span>{option.text}</span>
+                                                        </div>
+                                                        <div className='text-right'>
+                                                            <div className='text-sm font-bold mb-1'>{percentage}%</div>
+                                                            <div className='w-20 bg-white/20 rounded-full h-2'>
+                                                                <div 
+                                                                    className='bg-gradient-to-r from-white to-gray-200 h-2 rounded-full transition-all'
+                                                                    style={{ width: `${percentage}%` }}
+                                                                />
+                                                            </div>
+                                                            <div className='text-xs opacity-75 mt-1'>{option.votes} votes</div>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                    
+
+                                    {!hasVoted && !voting && selectedOption !== null && (
+                                        <button
+                                            onClick={async () => {
+                                                if (!token) {
+                                                    toast.error('Please login to vote!');
+                                                    return;
+                                                }
+                                                setVoting(true);
+                                                try {
+                                                    const response = await axios.post(`${backendUrl}/api/poll/vote`, { 
+                                                        optionIndex: selectedOption 
+                                                    }, { headers: { token: token } });
+                                                    if (response.data.success) {
+                                                        setPoll(response.data.poll);
+                                                        setHasVoted(true);
+                                                    }
+                                                } catch (error) {
+                                                    toast.error('Vote failed. Please try again.');
+                                                } finally {
+                                                    setVoting(false);
+                                                }
+                                            }}
+                                            className='w-full py-4 bg-white text-black text-[10px] font-black uppercase rounded-xl hover:bg-gray-100 transition-all shadow-lg'
+                                            disabled={voting}
+                                        >
+                                            {voting ? 'Voting...' : 'Submit Vote'}
+                                        </button>
+                                    )}
+
+                                    
+                                    {hasVoted && (
+                                        <div className='text-center pt-4 border-t border-white/20'>
+                                            <div className='w-12 h-12 bg-white/20 rounded-full mx-auto mb-4 flex items-center justify-center'>
+                                                <BarChart3 size={24} className='text-white' />
+                                            </div>
+                                            <p className='text-[12px] font-bold uppercase tracking-widest mb-2'>Thank You!</p>
+                                            <p className='text-sm opacity-90'>Your vote has been recorded</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            <div className='absolute -right-20 -bottom-20 w-64 h-64 bg-white/10 blur-[100px] rotate-12'></div>
+                        </section>
+                    )}
+
 
                     {/* INTERACTIVE ANATOMY SECTION */}
                     {/* <section className='bg-black rounded-[40px] p-10 text-white relative overflow-hidden'>

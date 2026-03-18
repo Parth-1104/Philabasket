@@ -23,6 +23,7 @@ import mediaRouter from './routes/mediaRouter.js'
 import contactRouter from './routes/contactRouter.js'
 import triviaRouter from './routes/triviaRouter.js'
 import presentationRouter from './routes/presentationRouter.js'
+import pollRouter from './routes/pollRouter.js'
 
 // App Config
 const app = express()
@@ -67,6 +68,7 @@ app.use('/api/media', mediaRouter);
 app.use('/api/contact', contactRouter);
 app.use('/api/trivia', triviaRouter);
 app.use('/api/presentation', presentationRouter);
+app.use('/api/poll', pollRouter);
 
 
 

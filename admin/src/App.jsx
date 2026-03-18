@@ -29,6 +29,7 @@ import UserDetail from './components/UserDetails'
 import ContactMessages from './pages/ContactUs'
 import TriviaManager from './pages/TriviaManager'
 import TriviaLeaderboard from './pages/TrivialLeaderBoard'
+import PollManager from './pages/PollManager'
 
 
 export const backendUrl = import.meta.env.VITE_BACKEND_URL
@@ -80,6 +81,7 @@ const App = () => {
                 <Route path='/users/:id' element={<UserDetail token={token} />} />
                 <Route path='/trivia' element={<TriviaManager token={token} />} />
                 <Route path='/trivia-leaderboard' element={<TriviaLeaderboard token={token} />} />
+                <Route path='/poll' element={<PollManager token={token} />} />
 
 
 

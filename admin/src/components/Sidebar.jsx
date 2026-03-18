@@ -5,7 +5,7 @@ import {
   LayoutDashboard, PlusCircle, ClipboardList, Package, FileEdit,
   LibraryBig, MessageSquare, Upload, ImageIcon, Layers, Mail,
   Newspaper, ChevronLeft, ChevronRight, Users, Ticket, Settings2,
-  Monitor, Lightbulb, Award, FileText
+  Monitor, Lightbulb, Award, FileText,BarChart3
 } from 'lucide-react'
 
 const navSections = [
@@ -44,6 +44,7 @@ const navSections = [
       { to: '/list-blog', icon: LibraryBig, label: 'Blog Archive' },
       { to: '/trivia', icon: Lightbulb, label: 'Trivia Manager' },
       { to: '/trivia-leaderboard', icon: Award, label: 'Trivia Leaderboard' },
+      { to: '/poll', icon: BarChart3, label: 'Poll Manager' },
       // { to: '/mail', icon: Mail, label: 'Direct Mail' },
       { to: '/news', icon: Newspaper, label: 'Newsletter' },
       { to: '/contactus', icon: Newspaper, label: 'Contact Us' },
