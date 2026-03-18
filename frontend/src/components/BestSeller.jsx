@@ -125,6 +125,7 @@ return (
                                                 marketPrice={item.marketPrice}
                                                 category={item.category[0]}
                                                 linkToFilter={false}
+                                                stock={item.stock}
                                             />
                                         </div>
                                     </div>
