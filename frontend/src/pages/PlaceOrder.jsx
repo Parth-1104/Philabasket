@@ -253,7 +253,7 @@ const handleBillingPincodeChange = async (e) => {
 // Original fee from registry
 
 // Add this state at the top of your component with other states
-const [deliveryMethod, setDeliveryMethod] = useState('fast');
+const [deliveryMethod, setDeliveryMethod] = useState('standard');
 
 const calculation = useMemo(() => {
     const cartAmount = getCartAmount();

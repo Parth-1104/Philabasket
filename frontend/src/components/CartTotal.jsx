@@ -3,7 +3,7 @@ import { ShopContext } from '../context/ShopContext';
 import axios from 'axios';
 import Title from './Title';
 
-const CartTotal = ({ country = 'India', deliveryMethod = 'fast' }) => {
+const CartTotal = ({ country = 'India', deliveryMethod = 'standard' }) => {
     // Keep currency and pricing logic in context, but fetch fees directly
     const { currency, backendUrl, getCartAmount, formatPrice } = useContext(ShopContext);
     const [adminFees, setAdminFees] = useState(null);
@@ -91,7 +91,7 @@ const CartTotal = ({ country = 'India', deliveryMethod = 'fast' }) => {
                 {/* Shipping Fee */}
                 <div className='flex justify-between items-center'>
                     <div>
-                        <p className='text-gray-700 font-black uppercase tracking-widest text-[9px]'>Registry Shipping Fee</p>
+                        <p className='text-gray-700 font-black uppercase tracking-widest text-[9px]'> Shipping Fee</p>
                         <p className='text-[8px] font-black text-[#BC002D] uppercase tracking-tighter'>
                             {deliveryMethod === 'fast' 
                                 ? (isIndia ? '⚡ Speed Post ' : '⚡ Speed Post') 
