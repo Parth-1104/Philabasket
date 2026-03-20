@@ -843,7 +843,7 @@ const updateStatus = async (req, res) => {
 
         // --- Reward Logic (Delivered) ---
         // --- Reward Logic (Delivered / Complete) ---
-if (finalStatus === 'Complete' && currentOrder.status !== 'Complete') {
+if (finalStatus === 'Completed' && currentOrder.status !== 'Completed') {
     updateFields.payment = true;
     
     const itemSubtotal = currentOrder.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);

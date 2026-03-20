@@ -21,7 +21,7 @@ const STATUS_CONFIG = {
   // "Money Received":  { color: "bg-cyan-100 text-cyan-700",   dot: "bg-cyan-500",   icon: CreditCard   },
   "Processing":         { color: "bg-amber-100 text-amber-700", dot: "bg-amber-400",  icon: PackageCheck },
   "Shipped":         { color: "bg-purple-100 text-purple-700", dot: "bg-purple-500", icon: Truck      },
-  "Complete":        { color: "bg-orange-100 text-orange-700", dot: "bg-orange-400", icon: Truck      },
+  "Completed":        { color: "bg-orange-100 text-orange-700", dot: "bg-orange-400", icon: Truck      },
   // "Delivered":       { color: "bg-green-100 text-green-700", dot: "bg-green-500",  icon: CheckCircle2 },
   "Cancelled":       { color: "bg-red-100 text-red-700",     dot: "bg-red-500",    icon: Ban          },
 };
@@ -157,9 +157,9 @@ const [newUserDetails, setNewUserDetails] = useState({
       let statusQuery = filterStatus;
       if (filterStatus === "TODAY") {
         statusQuery = "ALL";
-      } else if (filterStatus === "Complete") {
+      } else if (filterStatus === "Completed") {
         // Send both to backend
-        statusQuery = "Complete,Delivered";
+        statusQuery = "Completed,Delivered";
       }
   
       const searchQueryParam = searchQuery.trim() ? `&search=${encodeURIComponent(searchQuery.trim())}` : "";
@@ -208,7 +208,7 @@ useEffect(() => {
       
       const response = await axios.post(
         `${backendUrl}/api/order/list?limit=1000&status=${
-          filterStatus === "Complete" ? "Complete,Delivered" : filterStatus
+          filterStatus === "Completed" ? "Completed,Delivered" : filterStatus
         }&sort=${sortBy}`, 
         {}, 
         { headers: { token } }
@@ -282,7 +282,7 @@ useEffect(() => {
         `${backendUrl}/api/order/list?limit=1000&status=${
             filterStatus === "TODAY" 
                 ? "ALL" 
-                : (filterStatus === "Complete" ? "Complete,Delivered" : filterStatus)
+                : (filterStatus === "Completed" ? "Completed,Delivered" : filterStatus)
         }&sort=${sortBy}`, 
         {}, 
         { headers: { token } }
@@ -396,7 +396,7 @@ const response = await axios.post(
   `${backendUrl}/api/order/list?limit=1000&status=${
       filterStatus === "TODAY" 
           ? "ALL" 
-          : (filterStatus === "Complete" ? "Complete,Delivered" : filterStatus)
+          : (filterStatus === "Completed" ? "Completed,Delivered" : filterStatus)
   }&sort=${sortBy}`, 
   {}, 
   { headers: { token } }
@@ -533,7 +533,7 @@ const response = await axios.post(
             { label: "Shipped", val: (globalStats["Shipped"] || 0) + (globalStats["Out for delivery"] || 0), bg: "bg-purple-50", color: "text-purple-600" },
             { 
               label: "Done", 
-              val: (globalStats["Delivered"] || 0) + (globalStats["Complete"] || 0), 
+              val: (globalStats["Delivered"] || 0) + (globalStats["Completed"] || 0), 
               bg: "bg-green-50", 
               color: "text-green-600" 
             },
@@ -568,7 +568,7 @@ const response = await axios.post(
         )}
     </div>
         <div className='flex flex-wrap gap-2'>
-  {["ALL", "TODAY", "Order Placed","Complete", "On Hold", "Processing", "Shipped",  "Cancelled"].map(s => (
+  {["ALL", "TODAY", "Order Placed","Completed", "On Hold", "Processing", "Shipped",  "Cancelled"].map(s => (
     <button
       key={s}
       onClick={() => setFilterStatus(s)}

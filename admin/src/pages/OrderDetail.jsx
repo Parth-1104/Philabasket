@@ -18,7 +18,7 @@ const STATUS_CONFIG = {
     "On Hold":         { color: "bg-slate-50 text-slate-700 border-slate-200", icon: Clock },
     "Processing":         { color: "bg-amber-50 text-amber-800 border-amber-200", icon: PackageCheck },
     "Shipped":         { color: "bg-violet-50 text-violet-800 border-violet-200", icon: Truck },
-    "Complete":         { color: "bg-violet-50 text-violet-800 border-violet-200", icon: Truck },
+    "Completed":         { color: "bg-violet-50 text-violet-800 border-violet-200", icon: Truck },
     // "Delivered":       { color: "bg-emerald-50 text-emerald-800 border-emerald-200", icon: CheckCircle2 },
     "Cancelled":       { color: "bg-red-50 text-red-800 border-red-200",        icon: Ban },
 };
@@ -733,7 +733,7 @@ const handleLoginAsUser = async (userId) => {
                     <span style={{ 
                         fontSize: '9px', 
                         fontWeight: 800, 
-                        color: item.status === 'Delivered' || item.status === 'Complete' ? '#059669' : '#64748b' 
+                        color: item.status === 'Delivered' || item.status === 'Completed' ? '#059669' : '#64748b' 
                     }}>
                         {item.status.toUpperCase()}
                     </span>
