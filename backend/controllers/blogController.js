@@ -12,51 +12,13 @@ const removeBlog = async (req, res) => {
 }
 
 // Update Blog
-const updateBlog = async (req, res) => {
-    try {
-        const { id, title, content, category, youtubeUrl, image: existingImageUrl } = req.body;
-        
-        // Prepare the base update object
-        const updateData = { 
-            title, 
-            content, 
-            category, 
-            youtubeUrl: youtubeUrl || "" 
-        };
-
-        // Handle Image Update (Priority: New File > Existing Registry URL > Keep Current)
-        if (req.file) {
-            // Processing buffer for Cloudinary
-            const b64 = Buffer.from(req.file.buffer).toString("base64");
-            let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
-            const imageUpload = await cloudinary.uploader.upload(dataURI, { resource_type: 'image' });
-            updateData.image = imageUpload.secure_url;
-        } else if (existingImageUrl) {
-            // If admin picked a different image from the Cloudinary list
-            updateData.image = existingImageUrl;
-        }
-
-        const updatedBlog = await blogModel.findByIdAndUpdate(id, updateData, { new: true });
-        
-        if (!updatedBlog) {
-            return res.json({ success: false, message: "Registry entry not found" });
-        }
-
-        res.json({ success: true, message: "Archive Article Updated", blog: updatedBlog });
-    } catch (error) {
-        console.error("Update Error:", error);
-        res.json({ success: false, message: error.message });
-    }
-}
-
-
 const addBlog = async (req, res) => {
     try {
         const { title, content, author, category, youtubeUrl, image: existingImageUrl } = req.body;
         const imageFile = req.file;
-        let finalImageUrl = existingImageUrl;
+        let finalImageUrl = existingImageUrl || "";
 
-        // If a new file is uploaded from device, prioritize it
+        // Handle Image Upload if present
         if (imageFile) {
             const b64 = Buffer.from(imageFile.buffer).toString("base64");
             let dataURI = "data:" + imageFile.mimetype + ";base64," + b64;
@@ -64,8 +26,13 @@ const addBlog = async (req, res) => {
             finalImageUrl = imageUpload.secure_url;
         }
 
-        if (!finalImageUrl) {
-            return res.json({ success: false, message: "Specimen image is missing" });
+        // --- UPDATED SAFETY CHECK ---
+        // Block only if BOTH image and youtubeUrl are missing
+        if (!finalImageUrl && !youtubeUrl) {
+            return res.json({ 
+                success: false, 
+                message: "Archive Protocol: Provide either a Specimen Image or a YouTube Video Link." 
+            });
         }
 
         const blogData = new blogModel({
@@ -74,7 +41,7 @@ const addBlog = async (req, res) => {
             author,
             category,
             youtubeUrl: youtubeUrl || "",
-            image: finalImageUrl,
+            image: finalImageUrl, // Can now be an empty string
             date: Date.now()
         });
 
@@ -85,6 +52,34 @@ const addBlog = async (req, res) => {
         res.json({ success: false, message: error.message });
     }
 };
+
+const updateBlog = async (req, res) => {
+    try {
+        const { id, title, content, category, youtubeUrl, image: existingImageUrl } = req.body;
+        
+        const updateData = { 
+            title, 
+            content, 
+            category, 
+            youtubeUrl: youtubeUrl || "" 
+        };
+
+        if (req.file) {
+            const b64 = Buffer.from(req.file.buffer).toString("base64");
+            let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+            const imageUpload = await cloudinary.uploader.upload(dataURI, { resource_type: 'image' });
+            updateData.image = imageUpload.secure_url;
+        } else if (existingImageUrl !== undefined) {
+            // Allows explicitly setting image to empty string if removing it
+            updateData.image = existingImageUrl;
+        }
+
+        const updatedBlog = await blogModel.findByIdAndUpdate(id, updateData, { new: true });
+        res.json({ success: true, message: "Archive Article Updated" });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+}
 
 const listBlogs = async (req, res) => {
     try {

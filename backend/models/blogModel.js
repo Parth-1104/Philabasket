@@ -4,7 +4,7 @@ const blogSchema = new mongoose.Schema({
     title: { type: String, required: true },
     content: { type: String, required: true },
     author: { type: String, default: "PhilaBasket Curator" },
-    image: { type: String, required: true },
+    image: { type: String, default:"" },
     category: { type: String, default: "Registry News" },
     youtubeUrl: { type: String, default: "" }, // New Field
     date: { type: Number, required: true }

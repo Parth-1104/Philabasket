@@ -18,6 +18,7 @@ const AddBlog = ({ token }) => {
     const [allMedia, setAllMedia] = useState([]);
     const [searchQuery, setSearchQuery] = useState("");
     const [showMediaPicker, setShowMediaPicker] = useState(false);
+    const [loading, setLoading] = useState(false); // Add this line
 
     const fetchMedia = async () => {
         try {
@@ -33,27 +34,60 @@ const AddBlog = ({ token }) => {
     const onSubmitHandler = async (e) => {
         e.preventDefault();
         
+        // 1. Logic Check: Image or Video must exist
+        const hasImage = useRegistry ? !!selectedCloudinaryUrl : !!imageFile;
+        const hasVideo = !!youtubeUrl.trim();
+    
+        if (!hasImage && !hasVideo) {
+            return toast.error("Archive Protocol: Please provide either a Specimen Image or a YouTube Video.");
+        }
+    
+        // 2. Start Loading
+        setLoading(true);
+    
         const formData = new FormData();
         formData.append("title", title);
         formData.append("content", content);
         formData.append("youtubeUrl", youtubeUrl);
-
+    
+        // 3. Handle Image Logic
         if (useRegistry) {
-            if (!selectedCloudinaryUrl) return toast.error("Select an image from registry");
-            formData.append("image", selectedCloudinaryUrl); // Sent as string
+            // Send Cloudinary URL as a string
+            formData.append("image", selectedCloudinaryUrl || ""); 
         } else {
-            if (!imageFile) return toast.error("Upload an image from device");
-            formData.append("image", imageFile); // Sent as file
+            // Send File if it exists, otherwise empty string
+            if (imageFile) {
+                formData.append("image", imageFile);
+            } else {
+                formData.append("image", ""); 
+            }
         }
     
         try {
-            const response = await axios.post(backendUrl + "/api/blog/add", formData, { headers: { token } });
+            const response = await axios.post(
+                backendUrl + "/api/blog/add", 
+                formData, 
+                { headers: { token } }
+            );
+    
             if (response.data.success) {
-                toast.success("Article Published");
-                setTitle(''); setContent(''); setYoutubeUrl('');
-                setImageFile(null); setSelectedCloudinaryUrl("");
+                toast.success("Article Published to Archive");
+                // Reset Form
+                setTitle(''); 
+                setContent(''); 
+                setYoutubeUrl('');
+                setImageFile(null); 
+                setSelectedCloudinaryUrl("");
+            } else {
+                toast.error(response.data.message);
             }
-        } catch (error) { toast.error("Publishing failed"); }
+        } catch (error) {
+            console.error("Submit Error:", error);
+            // This helps you see the actual error in the browser inspect tool
+            toast.error(error.response?.data?.message || "Publishing protocol failed");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

@@ -40,7 +40,16 @@ const BlogContent = () => {
         return products.filter(item => item.blogLink === blogId || item.blogLink?.includes(blogId));
     }, [blog, products, blogId]);
 
+
+    const getYouTubeID = (url) => {
+        if (!url) return null;
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        return (match && match[2].length === 11) ? match[2] : null;
+    };
+
     if (!blog) return <div className='min-h-screen bg-white'></div>;
+
 
     return (
         <div className='bg-white min-h-screen pt-32 pb-24 px-6 select-none'>
@@ -86,19 +95,45 @@ const BlogContent = () => {
     {/* Container: Reduced to max-w-sm (approx 384px) on desktop 
         Image: max-h lowered to 300px for a more "specimen card" feel 
     */}
-    <div className='bg-gray-50 w-full lg:max-w-sm rounded-sm overflow-hidden border border-black/5 shadow-inner'>
-        <img 
-            src={blog.image} 
-            className='w-full h-auto max-h-[250px] md:max-h-[300px] object-contain mx-auto transition-transform duration-700 hover:scale-105' 
-            alt="Specimen Analysis" 
-        />
+    {blog.image && (
+    <div className='mb-12 flex flex-col items-center'>
+        <div className='bg-gray-50 w-full lg:max-w-sm rounded-sm border border-black/5'>
+            <img src={blog.image} className='w-full h-auto max-h-[300px] object-contain mx-auto' />
+        </div>
     </div>
+)}
     
     {/* Caption: Matches the width of the image container above */}
     <p className='text-[9px] text-gray-400 mt-3 italic uppercase tracking-wider text-center lg:max-w-sm'>
         Archive Figure 1.0: Visual analysis of current specimen
     </p>
 </div>
+
+{/* --- YOUTUBE VIDEO SECTION --- */}
+{blog.youtubeUrl && getYouTubeID(blog.youtubeUrl) && (
+    <div className='mb-12 max-w-3xl mx-auto'>
+        <div className='flex items-center gap-3 mb-4'>
+            <div className='w-2 h-2 bg-[#BC002D] animate-pulse rounded-full'></div>
+            <p className='text-[10px] font-black uppercase tracking-widest text-gray-900'>
+                Multimedia Analysis // <span className='text-[#BC002D]'>Video Report</span>
+            </p>
+        </div>
+        
+        <div className='relative w-full aspect-video rounded-sm overflow-hidden bg-black shadow-2xl border border-black/5'>
+            <iframe
+                className='absolute top-0 left-0 w-full h-full'
+                src={`https://www.youtube.com/embed/${getYouTubeID(blog.youtubeUrl)}?rel=0&showinfo=0`}
+                title="YouTube video player"
+                frameBorder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowFullScreen
+            ></iframe>
+        </div>
+        <p className='text-[9px] text-gray-400 mt-3 italic uppercase tracking-wider text-center'>
+            Archive Media 1.1: Cinematic specimen review
+        </p>
+    </div>
+)}
 
                 {/* Narrative Content - Optimized Typography */}
                 <div className='prose prose-sm md:prose-base max-w-none mb-24'>
