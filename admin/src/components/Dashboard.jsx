@@ -183,7 +183,7 @@ const Dashboard = ({ token }) => {
                     <table className="w-full text-left">
                         <thead className="bg-gray-50/50 text-[10px] font-black uppercase text-gray-500 border-b">
                             <tr>
-                                <th className="px-6 py-4">Registry ID</th>
+                                <th className="px-6 py-4">Order No</th>
                                 <th className="px-6 py-4">Collector</th>
                                 <th className="px-6 py-4">Status</th>
                                 <th className="px-6 py-4 text-right">Value</th>
@@ -192,7 +192,7 @@ const Dashboard = ({ token }) => {
                         <tbody className="divide-y text-xs">
                             {analytics?.recentOrders?.map((order) => (
                                 <tr key={resolveId(order)} className="hover:bg-gray-50/50">
-                                    <td className="px-6 py-4 font-mono text-blue-600 font-bold uppercase">#{ resolveId(order).slice(-8) }</td>
+                                    <td className="px-6 py-4 font-mono text-blue-600 font-bold uppercase">#{ order.orderNo }</td>
                                     <td className="px-6 py-4 font-bold text-gray-900">
                                         {order.address?.firstName ? `${order.address.firstName} ${order.address.lastName}` : "Legacy Entry"}
                                     </td>
@@ -261,7 +261,7 @@ const Dashboard = ({ token }) => {
                     <div key={resolveId(order)} className="bg-white border border-gray-100 rounded-2xl p-5 shadow-sm hover:border-gray-200 transition-all">
                         <div className="flex justify-between items-start mb-4">
                             <div>
-                                <p className="text-[11px] font-black text-gray-900 uppercase">#{resolveId(order).slice(-8).toUpperCase()}</p>
+                                <p className="text-[11px] font-black text-gray-900 uppercase">#{order.orderNo}</p>
                                 <p className="text-[9px] text-gray-400 font-bold">{new Date(order.date).toDateString()}</p>
                             </div>
                             <div className="text-right">
