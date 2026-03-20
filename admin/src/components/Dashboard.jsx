@@ -105,7 +105,15 @@ const Dashboard = ({ token }) => {
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={stats?.salesTrend || []}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f3f3" />
-                    <XAxis dataKey="date" fontSize={10} tickFormatter={(str) => new Date(str).toLocaleDateString('en-IN', {day:'numeric', month:'short'})} />
+                    <XAxis 
+    dataKey="date" 
+    fontSize={10} 
+    tickFormatter={(tick) => {
+        // Handle both ISO strings and numeric timestamps
+        const date = new Date(tick);
+        return date.toLocaleDateString('en-IN', {day:'numeric', month:'short', year:'2-digit'});
+    }} 
+/>
                     <YAxis fontSize={10} tickFormatter={(v) => `${INR_SYMBOL}${formatINR(v)}`} />
                     <Tooltip content={<CustomTooltip currency={INR_SYMBOL} formatINR={formatINR} />} />
                     <Area type="monotone" dataKey="sales" stroke="#BC002D" fill="#BC002D" fillOpacity={0.05} />
@@ -297,7 +305,7 @@ const Dashboard = ({ token }) => {
 const StatCard = ({ title, value, sub }) => (
     <div className="p-6 bg-white border border-gray-100 rounded-xl shadow-sm">
         <p className="text-[9px] font-black uppercase text-gray-400 tracking-[0.2em] mb-3">{title}</p>
-        <p className="text-2xl font-black text-gray-900 tracking-tighter">{value}</p>
+        <p className="text-2xl font-semibold text-gray-900 tracking-tighter">{value}</p>
         <p className="text-[9px] mt-4 font-bold text-gray-400 uppercase">{sub}</p>
     </div>
 );

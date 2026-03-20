@@ -416,11 +416,18 @@ const getOrderHtmlTemplate = (orderData, activeFee = null, trackingNumber = null
                             <td style="padding: 40px;">
                                 <h2 style="margin: 0 0 10px 0; font-size: 18px; font-weight: 900;">Acquisition ${trackingNumber ? 'Dispatched' : 'Successful'}</h2>
                                 <p style="font-size: 14px; color: #666;">Salutations, ${address.firstName},</p>
-                                <p style="font-size: 14px; color: #666; line-height: 1.5;">
-                                    ${trackingNumber 
-                                        ? `Your curated specimens are in transit. Consignment ID: <strong style="color:${secondaryColor}">${trackingNumber}</strong>.` 
-                                        : `Your acquisition request has been logged in our central registry. Our curators are currently finalizing your specimens for dispatch.`}
-                                </p>
+                                
+<p style="font-size: 14px; color: #666; line-height: 1.5;">
+    ${trackingNumber 
+        ? `Your curated specimens are in transit. Consignment ID: 
+           <a href="https://t.17track.net/en#nums=${trackingNumber}" 
+              target="_blank"
+              style="color: ${accentColor}; font-weight: 900; text-decoration: none; border-bottom: 1px solid ${accentColor}; display: inline-block;">
+              ${trackingNumber}
+           </a>.  ` 
+        : `Your acquisition request has been logged in our central registry. Our curators are currently finalizing your specimens for dispatch.`}
+</p>
+
 
                                 <table width="100%" style="margin: 25px 0; border-top: 1px solid #f0f0f0; border-bottom: 1px solid #f0f0f0; padding: 15px 0;">
                                     <tr>
@@ -633,7 +640,7 @@ const placeOrder = async (req, res) => {
             paymentMethod: paymentMethod || "COD", 
             payment: false,
             date: Date.now(),
-            status: status || (['Direct Bank Transfer', 'Cheque'].includes(paymentMethod) ? 'On Hold' : 'Order Placed')
+            status: status || (paymentMethod === 'Direct Bank Transfer' ? 'On Hold' : 'Order Placed')
         };
 
         const newOrder = new orderModel(orderData);
@@ -933,7 +940,7 @@ const getAdminDashboardStats = async (req, res) => {
     try {
         const orders = await orderModel.find({});
         const users = await userModel.find({});
-        const deliveredOrders = orders.filter(o => o.status === 'Delivered');
+        const deliveredOrders = orders.filter(o => o.status === 'Completed');
 
         // Total Revenue (Direct Sum)
         const totalRevenue = deliveredOrders.reduce((acc, o) => acc + (o.amount || 0), 0);
@@ -944,7 +951,7 @@ const getAdminDashboardStats = async (req, res) => {
         const topProduct = Object.entries(pSales).map(([name, qty]) => ({ name, qty })).sort((a,b) => b.qty - a.qty)[0] || { name: "N/A", qty: 0 };
 
         const salesTrendData = await orderModel.aggregate([
-            { $match: { status: "Delivered" } },
+            { $match: { status: "Completed" } },
             {
                 $project: {
                     dateStr: { 

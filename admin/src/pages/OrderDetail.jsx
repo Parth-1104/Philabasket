@@ -105,29 +105,25 @@ const handleLoginAsUser = async (userId) => {
     };
 
     // Load and add the logo
+    // 1. LOGO (Starts at Y=10, Height=12)
     const logoBase64 = await addImageFromUrl(logoUrl);
-    // Adjusted size to 35x12mm for a cleaner look
     doc.addImage(logoBase64, 'PNG', 14, 10, 15, 12); 
 
-    // --- 2. HEADER SECTION (Adjusted Y-coordinates to follow logo) ---
-    // Start text lower to avoid overlapping with the logo at Y=10
-    let textY = 40;
-  
-      // --- 1. HEADER SECTION ---
-      // doc.setTextColor(brandColor[0], brandColor[1], brandColor[2]);
-      // doc.setFont("helvetica", "bold");
-      // doc.setFontSize(22);
-      // doc.text("Phila Basket", 14, 20);
-      
-      doc.setTextColor(textColor[0], textColor[1], textColor[2]);
-      doc.setFontSize(8);
-      doc.setFont("helvetica", "normal");
-      // Corrected Y-coordinates to prevent overlap
-      doc.text("S - 606/607 School Block - 2", 14, 26);
-      doc.text("Park End Appt, Shakarpur", 14, 30);
-      doc.text("New Delhi - 110092", 14, 34);
-      doc.setFont("helvetica", "normal");
-      doc.text("GSTIN: 07APXPR4457E2Z8", 14, 38);
+    // 2. COMPANY NAME (Starts below logo)
+    doc.setTextColor(brandColor[0], brandColor[1], brandColor[2]);
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "bold");
+    doc.text("Philabasket", 14, 28); // Moved to 28 to clear the logo
+
+    // 3. ADDRESS LINES (Each incremented by 4-5 units)
+    doc.setTextColor(textColor[0], textColor[1], textColor[2]);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    
+    doc.text("S - 606/607 School Block - 2", 14, 34); // Start at 34
+    doc.text("Park End Appt, Shakarpur", 14, 38);      // +4
+    doc.text("New Delhi - 110092", 14, 42);           // +4
+    doc.text("GSTIN: 07APXPR4457E2Z8", 14, 46);       // +4
   
       // Right-aligned Invoice Header
       doc.setFontSize(16);

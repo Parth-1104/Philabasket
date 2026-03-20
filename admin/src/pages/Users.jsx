@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { 
-    Search, ChevronRight, Loader2, ChevronLeft, ArrowUpDown, TrendingDown, TrendingUp ,RefreshCw
+    Search, ChevronRight, Loader2, ChevronLeft, ArrowUpDown, TrendingDown, TrendingUp ,RefreshCw,FileText
 } from 'lucide-react';
 import { backendUrl,frontendUrl } from '../App';
 
@@ -17,6 +17,50 @@ const Users = ({ token }) => {
     // --- NEW SORT STATE ---
     // Options: 'desc' (Highest), 'asc' (Lowest), or null (Default/Date)
     const [coinSort, setCoinSort] = useState('desc'); 
+
+    const exportCollectorCSV = async () => {
+        toast.info("Preparing Registry Export...");
+        try {
+            // Fetch all users without pagination limits
+            const res = await axios.get(
+                `${backendUrl}/api/user/admin-list?limit=10000`, 
+                { headers: { token } }
+            );
+    
+            if (res.data.success) {
+                const allUsers = res.data.users;
+                
+                // 1. Define CSV Headers
+                const headers = ["Name", "Email", "Coins", "Referral Code"];
+                
+                // 2. Map data to rows
+                const csvRows = allUsers.map(u => [
+                    `"${u.name}"`, 
+                    `"${u.email}"`, 
+                    u.totalRewardPoints || 0, 
+                    `"${u.referralCode || ''}"`
+                ].join(","));
+    
+                // 3. Combine headers and rows
+                const csvContent = [headers.join(","), ...csvRows].join("\n");
+    
+                // 4. Create Download Link
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", `PhilaBasket_Registry_${new Date().toISOString().split('T')[0]}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                toast.success("Registry Exported Successfully");
+            }
+        } catch (error) {
+            toast.error("Export Protocol Failed");
+        }
+    };
     
 
     const handleLoginAsUser = async (userId) => {
@@ -97,6 +141,15 @@ const Users = ({ token }) => {
                         {coinSort === 'desc' ? <TrendingDown size={14}/> : <TrendingUp size={14}/>}
                         {coinSort === 'desc' ? "Most Coins" : "Least Coins"}
                     </button>
+
+
+                    <button 
+    onClick={exportCollectorCSV}
+    className='flex items-center gap-2 px-4 py-2 border border-emerald-100 bg-emerald-50 text-emerald-700 rounded-sm text-[10px] font-black uppercase hover:bg-emerald-100 transition-all'
+>
+    <FileText size={14}/>
+    Export CSV
+</button>
 
                     <div className='relative flex-1 md:w-72'>
                         <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-400' size={16} />
