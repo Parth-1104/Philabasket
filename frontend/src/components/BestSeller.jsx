@@ -48,7 +48,7 @@ const BestSeller = () => {
     <div className="bg-white py-12 md:py-8 lg:mt-[-5vh] overflow-hidden select-none relative border-t border-black/[0.03]">
       <div className="absolute -right-[15vw] top-[20%] h-[70%] w-[45%] bg-[#bd002d]/5 rounded-l-[600px] pointer-events-none"></div>
 
-      <div className="px-6  md:px-16 lg:px-7 relative z-10">
+      <div className="px-6  md:px-16 lg:px-12 relative z-10">
         {/* --- HEADER --- */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8">
           {/* Left Content */}

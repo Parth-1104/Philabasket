@@ -52,7 +52,7 @@ return (
     <section className="bg-white py-8 md:py-12 overflow-hidden select-none relative border-t border-black/[0.03]">
         <div className="absolute -left-[10vw] top-[10%] h-[80%] w-[40%] bg-[#bd002d]/5 rounded-r-[600px] pointer-events-none"></div>
 
-        <div className='px-6 md:px-16 lg:px-4 relative z-10'>
+        <div className='px-6 md:px-16 lg:px-12 relative z-10'>
             
             {/* --- HEADER --- */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-10 gap-8">

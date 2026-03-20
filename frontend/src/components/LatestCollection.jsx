@@ -128,7 +128,7 @@ const LatestCollection = () => {
     <div className="bg-white py-4 md:py-8 overflow-hidden select-none relative">
       <div className="absolute -left-[10vw] top-[10%] h-[80%] w-[35%] bg-[#bd002d]/5 rounded-r-[600px] pointer-events-none"></div>
 
-      <div className="px-6 md:px-16 lg:px-24 relative z-10">
+      <div className="px-6 md:px-16 lg:px-12 relative z-10">
         {/* <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 gap-8">
                     <div className="max-w-2xl">
                         <div className="flex items-center gap-4 mb-4">
