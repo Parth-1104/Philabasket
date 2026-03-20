@@ -352,11 +352,13 @@ const handleLoginAsUser = async (userId) => {
   };
 
   const updateTracking = async () => {
-    // --- 1. STRICT MANDATORY VALIDATION ---
-    // Ensuring Courier, AWB, and Date are all present
-    if (!courierProvider) return toast.error("Courier Provider is mandatory");
-    if (!trackingId) return toast.error("Tracking Number (AWB) is mandatory");
-    if (!shippedDate) return toast.error("Dispatch Date is mandatory");
+    // --- CONDITIONAL MANDATORY VALIDATION ---
+    // Only enforce strict checks if switching the status to "Shipped"
+    if (orderStatus === 'Shipped') {
+        if (!courierProvider) return toast.error("Courier Provider is mandatory for Shipped status");
+        if (!trackingId) return toast.error("Tracking Number (AWB) is mandatory for Shipped status");
+        if (!shippedDate) return toast.error("Dispatch Date is mandatory for Shipped status");
+    }
 
     setIsUpdating(true);
     
@@ -366,23 +368,22 @@ const handleLoginAsUser = async (userId) => {
             {
                 orderId, 
                 status: orderStatus, 
+                // We send these regardless; if empty, the backend handles the null/empty string
                 trackingNumber: trackingId,
-                courierProvider: courierProvider, // Added new field
-                // Convert YYYY-MM-DD string to numeric timestamp for the DB
-                shippedDate: new Date(shippedDate).getTime() 
+                courierProvider: courierProvider,
+                shippedDate: shippedDate ? new Date(shippedDate).getTime() : null 
             }, 
             { headers: { token } }
         );
 
         if (response.data.success) {
-            toast.success("Logistics Synchronized");
-            // Update local state to reflect the new registry data
+            toast.success("Registry Synchronized");
             setOrder(prev => ({ 
                 ...prev, 
                 trackingNumber: trackingId, 
                 status: orderStatus,
                 courierProvider: courierProvider,
-                shippedDate: new Date(shippedDate).getTime()
+                shippedDate: shippedDate ? new Date(shippedDate).getTime() : null
             }));
         }
     } catch (err) { 

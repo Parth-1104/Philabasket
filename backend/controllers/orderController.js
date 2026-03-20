@@ -633,7 +633,7 @@ const placeOrder = async (req, res) => {
             paymentMethod: paymentMethod || "COD", 
             payment: false,
             date: Date.now(),
-            status: status || (paymentMethod === 'Cheque' ? 'Cheque on Hold' : 'Order Placed')
+            status: status || (['Direct Bank Transfer', 'Cheque'].includes(paymentMethod) ? 'On Hold' : 'Order Placed')
         };
 
         const newOrder = new orderModel(orderData);
@@ -803,7 +803,32 @@ const updateStatus = async (req, res) => {
         if (shippedDate) {
             updateFields.shippedDate = new Date(shippedDate).getTime();
         }
+        if (finalStatus === 'Cancelled' && currentOrder.status !== 'Cancelled') {
+            
+            // A. Restore Stock to Registry
+            // Assuming updateStock(items, "restore") iterates through items and increments stock
+            await updateStock(currentOrder.items, "restore");
 
+            // B. Refund Points to Vault
+            if (currentOrder.pointsUsed && currentOrder.pointsUsed > 0) {
+                await recordRewardActivity(
+                    currentOrder.userId._id, 
+                    currentOrder.userId.email, 
+                    currentOrder.pointsUsed, 
+                    'earn_point', // Log as 'earn' so it adds back to their balance
+                    currentOrder._id
+                );
+            }
+
+            // C. Optional: Send Cancellation Email
+            try {
+                await sendEmail(
+                    currentOrder.address.email, 
+                    "Order Cancellation Protocol", 
+                    "Your acquisition has been terminated. Any used Archive Credits have been restored to your vault."
+                );
+            } catch (e) { console.error("Cancel Email Failed:", e); }
+        }
         // --- Workflow Reversal Logic ---
         if (finalStatus === 'Order Placed' && currentOrder.status !== 'Order Placed') {
             updateFields.trackingNumber = "";
@@ -1137,7 +1162,7 @@ const placeOrderRazorpay = async (req, res) => {
         const { 
             userId, items, amount, address, billingAddress, 
             currency, activeExchangeRate, pointsUsed, 
-            couponUsed, discountAmount, deliveryMethod 
+            couponUsed, discountAmount, deliveryMethod,deliveryFee 
         } = req.body;
 
         // 1. Fetch Admin Settings for Fees (Fallbacks)
@@ -1157,7 +1182,7 @@ const placeOrderRazorpay = async (req, res) => {
             address,
             billingAddress: billingAddress || address,
             deliveryFee, // ✅ Now captured
-            deliveryMethod: method,
+            deliveryMethod: deliveryMethod,
             amount, 
             pointsUsed: pointsUsed || 0,
             couponUsed: couponUsed || null,
