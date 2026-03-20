@@ -530,14 +530,18 @@ const response = await axios.post(
             { label: "New", val: globalStats["Order Placed"] || 0, bg: "bg-blue-50", color: "text-blue-600" },
             { label: "Hold", val: globalStats["On Hold"] || 0, bg: "bg-gray-100", color: "text-gray-600" },
             // { label: "Paid", val: globalStats["Money Received"] || 0, bg: "bg-cyan-50", color: "text-cyan-600" },
-            { label: "Shipped", val: (globalStats["Shipped"] || 0) + (globalStats["Out for delivery"] || 0), bg: "bg-purple-50", color: "text-purple-600" },
+            // { label: "Shipped", val: (globalStats["Shipped"] || 0) + (globalStats["Out for delivery"] || 0), bg: "bg-purple-50", color: "text-purple-600" },
             { 
               label: "Done", 
               val: (globalStats["Delivered"] || 0) + (globalStats["Completed"] || 0), 
               bg: "bg-green-50", 
               color: "text-green-600" 
             },
-            { label: "Cancel", val: globalStats["Cancelled"] || 0, bg: "bg-red-50", color: "text-red-600" },
+            { label: "Canceled", val: globalStats["Cancelled"] || 0, bg: "bg-red-50", color: "text-red-600" },
+            { label: "Refunded", val: globalStats["Refunded"] || 0, bg: "bg-red-50", color: "text-red-600" },
+            { label: "Failed", val: globalStats["Failed"] || 0, bg: "bg-red-50", color: "text-red-600" },
+
+
             { label: "Revenue", val: `₹${((globalStats.revenue || 0) / 1000).toFixed(1)}k`, bg: "bg-white", color: "text-gray-900" },
           ].map(s => (
             <div key={s.label} className={`${s.bg} p-4 rounded-2xl border border-white shadow-sm text-center`}>
@@ -568,7 +572,7 @@ const response = await axios.post(
         )}
     </div>
         <div className='flex flex-wrap gap-2'>
-  {["ALL", "TODAY", "Order Placed","Completed", "On Hold", "Processing", "Shipped",  "Cancelled"].map(s => (
+  {["ALL", "TODAY", "Order Placed","Completed", "On Hold", "Processing", "Shipped",  "Cancelled","Refunded",'Failed'].map(s => (
     <button
       key={s}
       onClick={() => setFilterStatus(s)}

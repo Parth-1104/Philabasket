@@ -126,7 +126,7 @@ const handleLoginAsUser = async (userId) => {
       doc.text("S - 606/607 School Block - 2", 14, 26);
       doc.text("Park End Appt, Shakarpur", 14, 30);
       doc.text("New Delhi - 110092", 14, 34);
-      doc.setFont("helvetica", "bold");
+      doc.setFont("helvetica", "normal");
       doc.text("GSTIN: 07APXPR4457E2Z8", 14, 38);
   
       // Right-aligned Invoice Header
@@ -149,31 +149,35 @@ const handleLoginAsUser = async (userId) => {
       const addr = order.address || {};
       const billAddr = order.billingAddress || addr;
       
-      const drawAddress = (title, data, x) => {
-          let currentY = 50;
-          doc.setFontSize(10);
-          doc.setFont("helvetica", "bold");
-          doc.text(title, x, currentY);
-          
-          currentY += 5;
-          doc.setFontSize(8);
-          doc.setFont("helvetica", "normal");
-          doc.text(`${data.firstName || ''} ${data.lastName || ''}`, x, currentY);
-          
-          if (data.street) {
-              currentY += 4;
-              doc.text(data.street, x, currentY);
-          }
-          // Only move Y and draw if street2 exists
-          if (data.street2 && data.street2.trim() !== "") {
-              currentY += 4;
-              doc.text(data.street2, x, currentY);
-          }
-          currentY += 4;
-          doc.text(`${data.city || ''}, ${data.state || ''} - ${data.zipCode || data.zipcode || ''}`, x, currentY);
-          currentY += 4;
-          doc.text(`Phone: ${data.phone || 'N/A'}`, x, currentY);
-      };
+     const drawAddress = (title, data, x) => {
+  let currentY = 50;
+  const maxWidth = 80; // width constraint for wrapping
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text(title, x, currentY);
+
+  currentY += 5;
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+
+  const addWrappedText = (text) => {
+    if (!text) return;
+    const lines = doc.splitTextToSize(text, maxWidth);
+    doc.text(lines, x, currentY);
+    currentY += lines.length * 4; // line spacing
+  };
+
+  addWrappedText(`${data.firstName || ''} ${data.lastName || ''}`);
+  addWrappedText(data.street);
+  addWrappedText(data.street2);
+
+  addWrappedText(
+    `${data.city || ''}, ${data.state || ''} - ${data.zipCode || data.zipcode || ''}`
+  );
+
+  addWrappedText(`Phone: ${data.phone || 'N/A'}`);
+};
   
       drawAddress("BILL TO:", billAddr, 14);
       drawAddress("SHIP TO:", addr, 110);
@@ -237,7 +241,9 @@ const handleLoginAsUser = async (userId) => {
         body: [
             ['Sub-Total (Excl. Tax)', `INR ${totalBaseAmount.toFixed(2)}`],
             ['GST Total (5%)', `INR ${totalGSTAmount.toFixed(2)}`],
+            ['Discount', `- INR ${totalGSTAmount.toFixed(2)}`],
             ['Delivery/Shipping', `INR ${shippingCharge.toFixed(2)}`],
+
             // Conditional Rows: Only injected if they have values
             ...(couponDiscount > 0 ? [[{ content: 'Coupon Discount', styles: { textColor: [0, 150, 0] } }, `INR -${couponDiscount.toFixed(2)}`]] : []),
             ...(pointsDiscount > 0 ? [[{ content: 'Archive Credits', styles: { textColor: [0, 150, 0] } }, `INR -${pointsDiscount.toFixed(2)}`]] : []),
@@ -262,7 +268,7 @@ const handleLoginAsUser = async (userId) => {
       doc.setFontSize(8);
       doc.setTextColor(150);
       doc.text("Thank you for your patronage. This is a computer generated invoice.", 14, pageHeight - 20);
-      doc.text("For any queries, please contact: support@philabasket.com", 14, pageHeight - 16);
+      doc.text("For any queries, please contact: admin@philabasket.com", 14, pageHeight - 16);
       
       doc.setDrawColor(200);
       doc.line(14, pageHeight - 25, 196, pageHeight - 25);

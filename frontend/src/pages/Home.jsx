@@ -34,7 +34,7 @@ const Home = () => {
 
       <FeaturedProducts />
       <BestSeller />
-      
+
       {/* 2. ShopByCountry placement: Moved outside the grid for proper full-width display */}
       <div className=" border-t border-gray-100 ">
         <ShopByCountry />

@@ -710,7 +710,7 @@ const cancelOrder = async (req, res) => {
         }
 
         // BLOCK: Prevent cancellation if already in transit
-        const blockedStatuses = ['Shipped', 'Out for delivery', 'Delivered', 'Cancelled'];
+        const blockedStatuses = ['Shipped', 'Out for delivery', 'Delivered', 'Cancelled','Refunded','Failed'];
         if (blockedStatuses.includes(order.status)) {
             return res.json({ success: false, message: `Cannot cancel: Order is currently ${order.status}` });
         }
