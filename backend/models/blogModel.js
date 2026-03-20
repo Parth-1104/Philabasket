@@ -6,6 +6,7 @@ const blogSchema = new mongoose.Schema({
     author: { type: String, default: "PhilaBasket Curator" },
     image: { type: String, required: true },
     category: { type: String, default: "Registry News" },
+    youtubeUrl: { type: String, default: "" }, // New Field
     date: { type: Number, required: true }
 });
 

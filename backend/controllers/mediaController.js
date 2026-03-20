@@ -37,30 +37,30 @@ const syncMediaToProducts = async (req, res) => {
         let matchCount = 0;
         let syncLog = [];
 
-        // --- UPDATED CONTROLLER LOGIC ---
-
         for (const asset of orphanedMedia) {
-            // 1. FILENAME REGEX: Capture from '#' up to the first space, hyphen, or dot.
-            // This correctly extracts 'B-UIQE-101' from '#B-UIQE-101.png'
-            const fileMatch = asset.originalName.match(/#([A-Z0-9-]+)/i);
+            // 1. IMPROVED REGEX: Captures everything from '#' until a SPACE or a DOUBLE HYPHEN '--'
+            // This ensures '#MS180(S)' is captured fully, and doesn't stop at 'MS180'
+            const fileMatch = asset.originalName.match(/#([^\s-]+(?:\([^)]+\))?)/i);
         
             if (fileMatch && fileMatch[1]) {
                 const productCode = fileMatch[1].trim();
         
-                // 2. PRODUCT SEARCH: Look for a product name that STARTS with this code
-                // We use the '^' anchor in regex to say "must start with this"
-                // This ensures '#ASL01' matches '#ASL01 - I Am Philatelist...'
+                // 2. ESCAPED SEARCH: Since codes like MS180(S) contain special characters '(', ')', 
+                // we must escape them before putting them into a MongoDB Regex.
+                const escapedCode = productCode.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
                 const product = await productModel.findOne({
-                    name: { $regex: `^#${productCode}`, $options: 'i' }
+                    // Ensures #MS180(S) matches #MS180(S)-Title but NOT #MS180-Title
+                    name: { $regex: `^#${escapedCode}(\\s|\\-|$)`, $options: 'i' }
                 });
         
                 if (product) {
-                    // STEP 1: CLEANUP (Remove placeholders and existing copies)
+                    // STEP 1: CLEANUP placeholders
                     await productModel.findByIdAndUpdate(product._id, {
                         $pull: { image: { $in: [DEFAULT_IMAGE, asset.imageUrl] } }
                     });
         
-                    // STEP 2: PREPEND (Move to Index 0)
+                    // STEP 2: PREPEND new image
                     await productModel.findByIdAndUpdate(product._id, {
                         $push: { 
                             image: { 
@@ -70,31 +70,14 @@ const syncMediaToProducts = async (req, res) => {
                         }
                     });
         
-                    // Update media assignment status
                     await mediaModel.findByIdAndUpdate(asset._id, { isAssigned: true });
-        
-                    syncLog.push({
-                        filename: asset.originalName,
-                        productName: product.name,
-                        codeFound: productCode
-                    });
+                    syncLog.push({ filename: asset.originalName, productName: product.name, code: productCode });
                     matchCount++;
-                } else {
-                    // LOGGING: Helps you see which codes didn't find a product
-                    console.log(`Unmatched Code: [#${productCode}] from File: [${asset.originalName}]`);
                 }
             }
         }
 
-        console.log("--- Media Sync Report (Prioritized) ---");
-        console.table(syncLog); 
-
-        res.json({ 
-            success: true, 
-            message: "Sync Protocol Complete (Images Prioritized)", 
-            matchCount,
-            syncLog 
-        });
+        res.json({ success: true, message: "Sync Protocol Complete (Variants Distinguished)", matchCount, syncLog });
 
     } catch (error) {
         console.error("Sync Error:", error);

@@ -231,7 +231,19 @@ const bulkAddProducts = async (req, res) => {
 
         const extractSpecimenId = (name) => {
             if (!name) return null;
-            const match = String(name).match(/(#[a-z0-9]+|[a-z0-9]+)/i);
+            
+            // 1. Clean the string to remove common file extensions and whitespace
+            const cleanName = String(name).split('.')[0].trim();
+        
+            // 2. Look for the "Primary Code" at the start of the filename.
+            // This pattern allows: 
+            // - Starting with # (optional)
+            // - Alphanumeric characters
+            // - Optional parentheses e.g. (S) or (M)
+            // - Stopping ONLY when it hits a space or a double hyphen, 
+            //   or grabbing the whole prefix before the first descriptive word.
+            const match = cleanName.match(/^(#[A-Z0-9]+(\([A-Z0-9]+\))?|[A-Z0-9]+(\([A-Z0-9]+\))?)/i);
+            
             return match ? match[0].toUpperCase() : null;
         };
 

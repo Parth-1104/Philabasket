@@ -14,17 +14,37 @@ const removeBlog = async (req, res) => {
 // Update Blog
 const updateBlog = async (req, res) => {
     try {
-        const { id, title, content, category } = req.body;
-        const updateData = { title, content, category };
+        const { id, title, content, category, youtubeUrl, image: existingImageUrl } = req.body;
+        
+        // Prepare the base update object
+        const updateData = { 
+            title, 
+            content, 
+            category, 
+            youtubeUrl: youtubeUrl || "" 
+        };
 
+        // Handle Image Update (Priority: New File > Existing Registry URL > Keep Current)
         if (req.file) {
-            const imageUpload = await cloudinary.uploader.upload(req.file.path, { resource_type: 'image' });
+            // Processing buffer for Cloudinary
+            const b64 = Buffer.from(req.file.buffer).toString("base64");
+            let dataURI = "data:" + req.file.mimetype + ";base64," + b64;
+            const imageUpload = await cloudinary.uploader.upload(dataURI, { resource_type: 'image' });
             updateData.image = imageUpload.secure_url;
+        } else if (existingImageUrl) {
+            // If admin picked a different image from the Cloudinary list
+            updateData.image = existingImageUrl;
         }
 
-        await blogModel.findByIdAndUpdate(id, updateData);
-        res.json({ success: true, message: "Blog Updated" });
+        const updatedBlog = await blogModel.findByIdAndUpdate(id, updateData, { new: true });
+        
+        if (!updatedBlog) {
+            return res.json({ success: false, message: "Registry entry not found" });
+        }
+
+        res.json({ success: true, message: "Archive Article Updated", blog: updatedBlog });
     } catch (error) {
+        console.error("Update Error:", error);
         res.json({ success: false, message: error.message });
     }
 }
@@ -32,28 +52,29 @@ const updateBlog = async (req, res) => {
 
 const addBlog = async (req, res) => {
     try {
-        const { title, content, author, category } = req.body;
+        const { title, content, author, category, youtubeUrl, image: existingImageUrl } = req.body;
         const imageFile = req.file;
+        let finalImageUrl = existingImageUrl;
 
-        if (!imageFile) {
-            return res.json({ success: false, message: "Specimen image is missing" });
+        // If a new file is uploaded from device, prioritize it
+        if (imageFile) {
+            const b64 = Buffer.from(imageFile.buffer).toString("base64");
+            let dataURI = "data:" + imageFile.mimetype + ";base64," + b64;
+            const imageUpload = await cloudinary.uploader.upload(dataURI, { resource_type: 'image' });
+            finalImageUrl = imageUpload.secure_url;
         }
 
-        // Convert buffer to Base64/Data URI for Cloudinary
-        const b64 = Buffer.from(imageFile.buffer).toString("base64");
-        let dataURI = "data:" + imageFile.mimetype + ";base64," + b64;
-
-        // Upload the Data URI instead of imageFile.path
-        const imageUpload = await cloudinary.uploader.upload(dataURI, { 
-            resource_type: 'image' 
-        });
+        if (!finalImageUrl) {
+            return res.json({ success: false, message: "Specimen image is missing" });
+        }
 
         const blogData = new blogModel({
             title,
             content,
             author,
             category,
-            image: imageUpload.secure_url,
+            youtubeUrl: youtubeUrl || "",
+            image: finalImageUrl,
             date: Date.now()
         });
 
@@ -61,7 +82,6 @@ const addBlog = async (req, res) => {
         res.json({ success: true, message: "Article Published to Archive" });
 
     } catch (error) {
-        console.error(error);
         res.json({ success: false, message: error.message });
     }
 };
