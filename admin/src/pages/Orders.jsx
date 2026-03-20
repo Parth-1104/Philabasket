@@ -527,12 +527,14 @@ const response = await axios.post(
         <div className='grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3'>
           {[
             { label: "Total", val: totalOrdersCount, bg: "bg-white", color: "text-gray-900" },
-            { label: "New", val: globalStats["Order Placed"] || 0, bg: "bg-blue-50", color: "text-blue-600" },
-            { label: "Hold", val: globalStats["On Hold"] || 0, bg: "bg-gray-100", color: "text-gray-600" },
+            { label: "Order Placed", val: globalStats["Order Placed"] || 0, bg: "bg-blue-50", color: "text-blue-600" },
+            { label: "On Hold", val: globalStats["On Hold"] || 0, bg: "bg-gray-100", color: "text-gray-600" },
+            { label: "Processing", val: globalStats["Processing"] || 0, bg: "bg-gray-100", color: "text-gray-600" },
+
             // { label: "Paid", val: globalStats["Money Received"] || 0, bg: "bg-cyan-50", color: "text-cyan-600" },
             // { label: "Shipped", val: (globalStats["Shipped"] || 0) + (globalStats["Out for delivery"] || 0), bg: "bg-purple-50", color: "text-purple-600" },
             { 
-              label: "Done", 
+              label: "Completed", 
               val: (globalStats["Delivered"] || 0) + (globalStats["Completed"] || 0), 
               bg: "bg-green-50", 
               color: "text-green-600" 

@@ -451,7 +451,7 @@ const handleLoginAsUser = async (userId) => {
         {/* Navigation Bar */}
         <div style={styles.topBar}>
           <button onClick={() => navigate(-1)} style={styles.backBtn}><ChevronLeft size={14} /> Back</button>
-          <span style={styles.topBarRef}>REGISTRY REF: {order.orderNo || order._id}</span>
+          {/* <span style={styles.topBarRef}>Order No : {order.orderNo || order._id}</span> */}
           <button 
                 onClick={() => handleLoginAsUser(order.userId?._id)}
                 style={{...styles.statsBadge, background: '#BC002D', border: 'none'}}
@@ -464,10 +464,21 @@ const handleLoginAsUser = async (userId) => {
         <div style={styles.pageHeader}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <p style={styles.headerLabel}>Order Details</p>
+              {/* <p style={styles.headerLabel}>Order Details</p> */}
+
+          <span style={styles.countryLabel2}>Order No : {order.orderNo || order._id}</span>
+
               {order.deliveryMethod === 'fast' && <span style={styles.priorityBadge}>⚡ Priority</span>}
             </div>
+
+
+
             <h1 style={styles.headerName}>{order.userId?.name }</h1>
+
+
+
+            
+            
             <p style={styles.countryLabel}><Globe size={11} /> {delivery?.country}</p>
           </div>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -567,15 +578,24 @@ const handleLoginAsUser = async (userId) => {
 
                         <p style={styles.addrLine}>{delivery?.city}, {delivery?.state}</p>
                         <p style={{ ...styles.addrLine, fontWeight: 700 }}>{delivery?.zipcode}, {delivery?.country}</p>
-                        <div style={{ marginTop: '10px' }}>
-                            <p style={{ fontSize: '11px', color: '#64748b' }}><Phone size={10}/> {delivery?.phone}</p>
-                            <p style={{ fontSize: '11px', color: '#64748b' }}><Mail size={10}/> {delivery?.email || order.userId?.email}</p>
-                        </div>
+                        <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+    {/* Phone Detail */}
+    <p style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Phone size={10} style={{ flexShrink: 0 }} /> 
+        <span>{delivery?.phone}</span>
+    </p>
+    
+    {/* Email Detail */}
+    <p style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Mail size={10} style={{ flexShrink: 0 }} /> 
+        <span style={{ wordBreak: 'break-all' }}>{delivery?.email || order.userId?.email}</span>
+    </p>
+</div>
                     </div>
                 </div>
 
                 {/* Billing (Only if Different) */}
-                {isDifferent && (
+                
                     <div style={styles.addrCard}>
                         <div style={styles.addrHeader}>
                             <div style={styles.addrTitleRow}><Landmark size={14} /> <span style={styles.addrTitle}>Billing Address</span></div>
@@ -588,9 +608,22 @@ const handleLoginAsUser = async (userId) => {
 
                             <p style={styles.addrLine}>{billing?.city}, {billing?.state}</p>
                             <p style={{ ...styles.addrLine, fontWeight: 700 }}>{billing?.zipcode}, {billing?.country}</p>
+                            <div style={{ marginTop: '10px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+    {/* Phone Detail */}
+    <p style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Phone size={10} style={{ flexShrink: 0 }} /> 
+        <span>{delivery?.phone}</span>
+    </p>
+    
+    {/* Email Detail */}
+    <p style={{ fontSize: '11px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <Mail size={10} style={{ flexShrink: 0 }} /> 
+        <span style={{ wordBreak: 'break-all' }}>{delivery?.email || order.userId?.email}</span>
+    </p>
+</div>
                         </div>
                     </div>
-                )}
+                
             </div>
           </div>
 
@@ -834,11 +867,13 @@ const styles = {
   container: { maxWidth: '1200px', margin: '0 auto', padding: '20px 24px' },
   topBar: { display: 'flex', justifyContent: 'space-between', marginBottom: '20px' },
   backBtn: { background: 'none', border: 'none', color: '#94a3b8', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' },
-  topBarRef: { fontSize: '10px', color: '#94a3b8', fontFamily: 'monospace' },
+  topBarRef: { fontSize: '20px', color: '#ff0000', fontFamily: 'monospace' },
   pageHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingBottom: '20px', borderBottom: '1px solid #e2e8f0', marginBottom: '24px' },
   headerLabel: { fontSize: '11px', fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', margin: 0 },
-  headerName: { fontFamily: "'Playfair Display', serif", fontSize: '32px', margin: '4px 0', color: '#0f172a' },
+  headerName: { fontFamily: "serif", fontSize: '32px', margin: '4px 0', color: '#0f172a' },
   countryLabel: { fontSize: '11px', fontWeight: 800, color: '#BC002D', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' },
+  countryLabel2: { fontSize: '21px', fontWeight: 800, color: '#BC002D', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '4px' },
+
   priorityBadge: { background: '#BC002D', color: '#fff', fontSize: '8px', fontWeight: 900, padding: '2px 8px', borderRadius: '10px', textTransform: 'uppercase' },
   statsBadge: { background: '#1e3a5f', color: '#fff', padding: '6px 12px', borderRadius: '20px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '9px', fontWeight: 800, cursor: 'pointer' },
   rewardCard: { display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '20px' },

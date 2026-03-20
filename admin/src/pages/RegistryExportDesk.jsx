@@ -126,7 +126,7 @@ const RegistryExportDesk = ({token}) => {
             <section className='bg-white border border-gray-100 shadow-sm p-8 rounded-xl'>
               <h4 className='text-[11px] font-black text-gray-400 uppercase tracking-widest mb-6'>File Extension</h4>
               <div className='grid grid-cols-3 gap-3'>
-                {['XLSX', 'CSV', 'JSON'].map(f => (
+                {['XLSX'].map(f => (
                   <button key={f} onClick={() => setFormat(f)} className={`py-6 border-2 flex flex-col items-center gap-3 rounded-xl transition-all ${format === f ? 'border-[#BC002D] bg-[#BC002D]/5 text-[#BC002D]' : 'bg-white text-gray-300 border-gray-50'}`}>
                     {f === 'JSON' ? <FileJson size={24}/> : f === 'XLSX' ? <FileSpreadsheet size={24}/> : <FileText size={24}/>}
                     <span className='text-[11px] font-black'>{f}</span>
