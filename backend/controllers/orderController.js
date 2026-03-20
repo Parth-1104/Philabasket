@@ -259,7 +259,7 @@ const recordRewardActivity = async (userId, userEmail, amount, type, orderId = n
         });
 
         // 3. Create the Archive Ledger Entry
-        const transaction = new rewardTransactionModel({
+        const transaction = new groupedLedgerModel({
             userEmail: userEmail,
             actionType: type,
             rewardAmount: Math.abs(amount), // Ledger usually stores absolute values

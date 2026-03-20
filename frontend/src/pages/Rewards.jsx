@@ -139,7 +139,7 @@ const Rewards = () => {
                             <div className='h-[1px] bg-gray-200 w-full my-2'></div>
                             <div className='flex justify-between items-center'>
                                 <p className='text-[10px] font-black text-black uppercase'>Active Savings</p>
-                                <p className='text-sm font-black text-[#BC002D]'>{userPoints}</p>
+                                <p className='text-sm font-black text-[#BC002D]'>{stats.gained-stats.used}</p>
                             </div>
                         </div>
                     </div>
