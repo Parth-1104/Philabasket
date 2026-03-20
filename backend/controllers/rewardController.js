@@ -42,22 +42,15 @@ export const getUnifiedHistory = async (req, res) => {
         });
 
         // 2. Format Transactions with OrderNo Lookup
-        // 2. Format Transactions
         const formattedTransactions = await Promise.all(transactions.map(async (t) => {
             const rawAmount = t.rewardAmount || 0;
             const isRedemption = t.actionType === 'redeem_point' || rawAmount < 0;
 
             let actualOrderNo = null;
-            
             if (t.orderId) {
-                // If it's a valid 24-character MongoDB ObjectId, query the database
-                if (t.orderId.length === 24) {
-                    const orderData = await orderModel.findById(t.orderId).select('orderNo').lean();
-                    actualOrderNo = orderData ? orderData.orderNo : null;
-                } else {
-                    // If it's already the sequential number (like "50284"), just use it!
-                    actualOrderNo = Number(t.orderId);
-                }
+                // Lookup the sequential orderNo from the Order collection
+                const orderData = await orderModel.findById(t.orderId).select('orderNo').lean();
+                actualOrderNo = orderData ? orderData.orderNo : null;
             }
 
             return {
@@ -69,8 +62,8 @@ export const getUnifiedHistory = async (req, res) => {
                 createdAt: t.createdAt,
                 isNegative: isRedemption,
                 status: t.status || 'completed',
-                orderNo: actualOrderNo, // Safely assigned now
-                orderId: t.orderId
+                orderNo: actualOrderNo, // The sequential number from your Schema
+                orderId: t.orderId // For link reference
             };
         }));
 
