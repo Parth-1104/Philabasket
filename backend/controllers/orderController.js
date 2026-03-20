@@ -10,9 +10,8 @@ import axios from 'axios';
 import rewardTransactionModel from "../models/rewardTranscationModel.js";
 import userRewardModel from "../models/userRewardModel.js";
 import settingsModel from "../models/settingModel.js";
-
-import { rewardReferrer } from "./userController.js";
 import Razorpay from 'razorpay';
+import { rewardReferrer, recordRewardActivity } from "./userController.js";
 import crypto from 'crypto'; // Built-in Node module
 
 import dotenv from 'dotenv'
@@ -249,30 +248,30 @@ const razorpayInstance = new Razorpay({
 });
 
 
-const recordRewardActivity = async (userId, userEmail, amount, type, orderId = null) => {
-    try {
-        // 1. Determine the math: negative for redemptions, positive for earnings
-        const pointAdjustment = type === 'redeem_point' ? -Math.abs(amount) : Math.abs(amount);
+// const recordRewardActivity = async (userId, userEmail, amount, type, orderId = null) => {
+//     try {
+//         // 1. Determine the math: negative for redemptions, positive for earnings
+//         const pointAdjustment = type === 'redeem_point' ? -Math.abs(amount) : Math.abs(amount);
 
-        // 2. Update the User's live balance with the correct sign
-        await userModel.findByIdAndUpdate(userId, { 
-            $inc: { totalRewardPoints: pointAdjustment } 
-        });
+//         // 2. Update the User's live balance with the correct sign
+//         await userModel.findByIdAndUpdate(userId, { 
+//             $inc: { totalRewardPoints: pointAdjustment } 
+//         });
 
-        // 3. Create the Archive Ledger Entry
-        const transaction = new groupedLedgerModel({
-            userEmail: userEmail,
-            actionType: type,
-            rewardAmount: Math.abs(amount), // Ledger usually stores absolute values
-            orderId: orderId,
-            createdAt: new Date()
-        });
+//         // 3. Create the Archive Ledger Entry
+//         const transaction = new groupedLedgerModel({
+//             userEmail: userEmail,
+//             actionType: type,
+//             rewardAmount: Math.abs(amount), // Ledger usually stores absolute values
+//             orderId: orderId,
+//             createdAt: new Date()
+//         });
         
-        await transaction.save();
-    } catch (error) {
-        console.error("Ledger Sync Failed:", error);
-    }
-};
+//         await transaction.save();
+//     } catch (error) {
+//         console.error("Ledger Sync Failed:", error);
+//     }
+// };
 
 
 // --- CONFIGURATION ---
