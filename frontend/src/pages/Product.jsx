@@ -99,11 +99,20 @@ const Product = () => {
   }, [productId, products, backendUrl, navigate]);
 
   useEffect(() => {
-    setProductData(false);
+    // setProductData(false);
     setActiveIndex(0);
     setActiveVideo(false);
     fetchProductData();
-  }, [productId, products, fetchProductData]);
+    // Only re-run when the ID changes or the function reference updates
+  }, [productId, fetchProductData]);
+  useEffect(() => {
+  if (productData?.image) {
+    productData.image.forEach((img) => {
+      const i = new Image();
+      i.src = img;
+    });
+  }
+}, [productData]);
 
   const allImages = productData ? productData.image.map(getWatermarkedUrl) : [];
   const hasVideo = productData && productData.youtubeUrl;
@@ -122,7 +131,7 @@ const Product = () => {
 
   const goTo = (index) => {
     setActiveIndex(index);
-    setIsMainLoaded(false);
+    // setIsMainLoaded(false);
     if (hasVideo && index === allImages.length) {
       setActiveVideo(true);
     } else {
@@ -308,7 +317,7 @@ const Product = () => {
                     )}
 
                     <img
-                      key={allImages[activeIndex]}
+                      // key={allImages[activeIndex]}
                       onLoad={() => setIsMainLoaded(true)}
                       className={`max-w-full max-h-full w-full h-full object-contain drop-shadow-xl transition-all duration-700 ${isMainLoaded ? "opacity-100 scale-100" : "opacity-0 scale-[0.97]"}`}
                       src={allImages[activeIndex]}
