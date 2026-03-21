@@ -854,13 +854,35 @@ const updateStatus = async (req, res) => {
         }
 
         // --- Shipping Logic (with Courier Info) ---
-        if (finalStatus === 'Shipped' && currentOrder.status !== 'Shipped') {
-            await rewardReferrer(currentOrder); 
+        // if (finalStatus === 'Shipped' && currentOrder.status !== 'Shipped') {
+        //     await rewardReferrer(currentOrder); 
+        //     try {
+        //         // Pass courierProvider to the template so the email shows "Via India Post" or "Via DTDC"
+        //         await sendEmail(
+        //             currentOrder.address.email, 
+        //             "Items Shipped", 
+        //             getOrderHtmlTemplate(
+        //                 currentOrder, 
+        //                 null, 
+        //                 trackingNumber || currentOrder.trackingNumber,
+        //                 courierProvider || currentOrder.courierProvider // New argument for template
+        //             )
+        //         );
+        //     } catch (emailError) {
+        //         console.error("Shipping Email Failed:", emailError);
+        //     }
+        // }
+
+        // --- Reward Logic (Delivered) ---
+        // --- Reward Logic (Delivered / Complete) ---
+if (finalStatus === 'Completed' && currentOrder.status !== 'Completed') {
+    updateFields.payment = true;
+                await rewardReferrer(currentOrder); 
             try {
                 // Pass courierProvider to the template so the email shows "Via India Post" or "Via DTDC"
                 await sendEmail(
                     currentOrder.address.email, 
-                    "Items Shipped", 
+                    "Complete - Order", 
                     getOrderHtmlTemplate(
                         currentOrder, 
                         null, 
@@ -871,13 +893,6 @@ const updateStatus = async (req, res) => {
             } catch (emailError) {
                 console.error("Shipping Email Failed:", emailError);
             }
-        }
-
-        // --- Reward Logic (Delivered) ---
-        // --- Reward Logic (Delivered / Complete) ---
-if (finalStatus === 'Completed' && currentOrder.status !== 'Completed') {
-    updateFields.payment = true;
-    
     const itemSubtotal = currentOrder.items.reduce((acc, item) => acc + (item.price * item.quantity), 0);
     const userTier = currentOrder.userId?.tier || 'Silver';
     let multiplier = 0.10; 

@@ -20,7 +20,7 @@ const STATUS_CONFIG = {
   "On Hold":         { color: "bg-gray-100 text-gray-700",   dot: "bg-gray-400",   icon: Clock        },
   // "Money Received":  { color: "bg-cyan-100 text-cyan-700",   dot: "bg-cyan-500",   icon: CreditCard   },
   "Processing":         { color: "bg-amber-100 text-amber-700", dot: "bg-amber-400",  icon: PackageCheck },
-  "Shipped":         { color: "bg-purple-100 text-purple-700", dot: "bg-purple-500", icon: Truck      },
+  // "Shipped":         { color: "bg-purple-100 text-purple-700", dot: "bg-purple-500", icon: Truck      },
   "Completed":        { color: "bg-orange-100 text-orange-700", dot: "bg-orange-400", icon: Truck      },
   // "Delivered":       { color: "bg-green-100 text-green-700", dot: "bg-green-500",  icon: CheckCircle2 },
   "Cancelled":       { color: "bg-red-100 text-red-700",     dot: "bg-red-500",    icon: Ban          },
@@ -574,7 +574,7 @@ const response = await axios.post(
         )}
     </div>
         <div className='flex flex-wrap gap-2'>
-  {["ALL", "TODAY", "Order Placed","Completed", "On Hold", "Processing", "Shipped",  "Cancelled","Refunded",'Failed'].map(s => (
+  {["ALL", "TODAY", "Order Placed","Completed", "On Hold", "Processing",  "Cancelled","Refunded",'Failed'].map(s => (
     <button
       key={s}
       onClick={() => setFilterStatus(s)}

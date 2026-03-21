@@ -229,24 +229,19 @@ const bulkAddProducts = async (req, res) => {
         ]);
         const existingNames = new Set(existingStamps.map(s => s.name.toLowerCase().trim()));
 
-        const extractSpecimenId = (name) => {
+const extractSpecimenId = (name) => {
             if (!name) return null;
             
             // 1. Clean the string to remove common file extensions and whitespace
             const cleanName = String(name).split('.')[0].trim();
         
-            // 2. Look for the "Primary Code" at the start of the filename.
-            // This pattern allows: 
-            // - Starting with # (optional)
-            // - Alphanumeric characters
-            // - Optional parentheses e.g. (S) or (M)
-            // - Stopping ONLY when it hits a space or a double hyphen, 
-            //   or grabbing the whole prefix before the first descriptive word.
-            const match = cleanName.match(/^(#[A-Z0-9]+(\([A-Z0-9]+\))?|[A-Z0-9]+(\([A-Z0-9]+\))?)/i);
+            // 2. FIXED REGEX: Allows an optional '#' at the start, alphanumeric chars, 
+            // AND an optional space (\s*) before the variant parentheses.
+            const match = cleanName.match(/^(#?[A-Z0-9]+\s*(?:\([A-Z0-9]+\))?)/i);
             
-            return match ? match[0].toUpperCase() : null;
+            // 3. Add .trim() just in case it captures a trailing space
+            return match ? match[0].toUpperCase().trim() : null;
         };
-
         const mediaVariantMap = new Map();
         allMedia.forEach(m => {
             const sid = extractSpecimenId(m.originalName);
