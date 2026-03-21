@@ -448,6 +448,7 @@ const onSubmitHandler = async (e) => {
                             <p>Name: PhilaBasket.com</p>
                             <p>Bank: ICICI Bank | A/C: 072105001250</p>
                             <p>IFSC: ICIC0000721</p>
+                            <p>UPI: 9999167799</p>
                         </div>
                         <div className='flex items-start gap-3 mb-6'>
                             <input type="checkbox" id="bankAgree" checked={agreedToBankTransfer} onChange={() => setAgreedToBankTransfer(!agreedToBankTransfer)} className='accent-black mt-1' />
