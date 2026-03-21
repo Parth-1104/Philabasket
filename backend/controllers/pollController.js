@@ -1,10 +1,14 @@
 import pollModel from "../models/pollModel.js";
 
 // Add Poll
+// Add Poll
 const addPoll = async (req, res) => {
     try {
         const { title, question, options, endDate } = req.body;
         
+        // FIX: Set all currently active polls to false before creating the new one
+        await pollModel.updateMany({ active: true }, { active: false });
+
         const processedOptions = (options || []).map(opt => ({
             text: opt.text || opt,
             votes: 0
@@ -15,7 +19,7 @@ const addPoll = async (req, res) => {
             question,
             options: processedOptions,
             endDate: endDate ? new Date(endDate) : null,
-            active: true
+            active: true // This is now safely the ONLY active poll
         });
 
         await pollData.save();
